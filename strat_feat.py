@@ -24,8 +24,7 @@ import sys
 import os
 from os import mkdir
 from os.path import join,exists
-from sklearn import linear_model,
-from sklearn.cluster import KMeans, MiniBatchKMeans
+from sklearn import linear_model
 import helper
 import cartopy
 from cartopy import crs as ccrs

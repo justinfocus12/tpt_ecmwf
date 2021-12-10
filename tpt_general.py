@@ -18,11 +18,13 @@ ggiantfont = {'family': 'serif', 'size': 120}
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from scipy.optimize import minimize
+import scipy.sparse as sps
 import sys
 import os
 from os import mkdir
 from os.path import join,exists
 from sklearn import linear_model
+from sklearn.cluster import KMeans, MiniBatchKMeans
 import helper
 import cartopy
 from cartopy import crs as ccrs
@@ -71,30 +73,60 @@ class WinterStratosphereTPT:
         km = MiniBatchKMeans(num_clusters).fit(X[:,:,1:].reshape((Nx*Nt,xdim-1)))
         pickle.dump(km,open(clust_filename,"wb"))
         return
-    def build_msm(self,feat_filename,clust_filename,winstrat):
+    def build_msm(self,feat_filename,clust_filename,msm_filename,winstrat):
         X = np.load(feat_filename)
         Nx,Nt,xdim = X.shape
         km = pickle.load(open(clust_filename,"rb"))
         labels = km.predict(X[:,:,1:].reshape((Nx*Nt,xdim-1))).reshape((Nx,Nt))
         P = [sps.lil_matrix((km.n_clusters,km.n_clusters)) for i in range(winstrat.Ntwint-1)]
-        centers = np.concatenate((np.zeros(km.n_clusters,1),km.cluster_centers_), axis=1)
-        idx0 = np.where(np.abs(X[:,:-1,0] - winstrat.wtime[ti]) < winstrat.dtwint/2)
+        #centers = np.concatenate((np.zeros(km.n_clusters,1),km.cluster_centers_), axis=1)
+        idx0 = np.where(np.abs(X[:,:-1,0] - winstrat.wtime[0]) < winstrat.dtwint/2)
         for ti in range(winstrat.Ntwint-1):
-            centers[:,0] = winstrat.wtime[ti]
-            idx1 = np.where(np.abs(X[:,:,1:] - winstrat.wtime[ti+1]) < winstrat.dtwint/2)
+            #centers[:,0] = winstrat.wtime[ti]
+            idx0 = np.where(np.abs(X[:,:-1,0] - winstrat.wtime[ti]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
+            idx1 = np.where(np.abs(X[:,1:,0] - winstrat.wtime[ti+1]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
+            overlap = np.where(np.subtract.outer(idx0[0],idx1[0]) == 0)
+            # Overlaps between idx0[0] and idx1[0] give tell us they're on the same trajectory
             for i in range(km.n_clusters):
-                idx0_i = idx0[np.where(labels[idx0]==i)]
                 for j in range(km.n_clusters):
-                    idx1_j = idx1[np.where(labels[idx1]==j)]
-                    P[ti][i,j] += np.sum(idx0_i == idx1_j)
-    def tpt_pipeline_dga(self,savedir,Xfile,Xclustfile,winstrat,feat_def):
+                    P[ti][i,j] += np.sum(
+                            (labels[idx0[0][overlap[0]],idx0[1][overlap[0]] == i) * 
+                            (labels[idx1[0][overlap[1]],idx1[1][overlap[1]] == j))
+            # Make sure every row and column has a nonzero entry. 
+            rowsums = P[ti].sum(1).toarray()
+            idx_rs0 = np.where(rowsums==0)[0]
+            for i in idx_rs0:
+                j = np.argmin(np.sum((km.cluster_centers_ - km.cluster_centers_[i])**2, axis=1))
+                P[ti][i,j] = 1.0
+            colsums = P[ti].sum(0).toarray()
+            idx_cs0 = np.where(rowsums==0)[0]
+            for j in idx_cs0:
+                i = np.argmin(np.sum((km.cluster_centers_ - km.cluster_centers_[j])**2, axis=1))
+                P[ti][i,j] = 1.0
+            # Advance the column index
+            idx0 = idx1.copy()
+        pickle.dump(P,open(msm_filename,"wb"))
+        return
+    def compute_forward_committor(self,P_list,time):
+        mc = tdmc_obj.TimeDependentMarkovChain(P,time)
+        G = []
+        F = []
+        for i in range(mc.Nt):
+            #G += [np.outer(np.ones(mc.Nx[i]), 1.0*(self.bdist_centers[i+1]==0))]
+            #F += [np.outer(np.ones(mc.Nx[i]), 1.0*(np.minimum(self.adist_centers[i+1],self.bdist_centers[i+1]) > 0))]
+            G += [1.0*(self.bdist_centers[i]==0)]
+            if i < mc.Nt-1: F += [1.0*np.outer(np.minimum(self.adist_centers[i],self.bdist_centers[i])>0, np.ones(mc.Nx[i+1]))]
+        self.qp = mc.dynamical_galerkin_approximation(F,G)
+        return
+    def tpt_pipeline_dga(self,feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat):
         # Do the DGA pipeline. 
-        # TODO: clean this up
         ina = np.zeros((winstrat.Ntwint,km.n_clusters),dtype=bool)
         inb = np.zeros((winstrat.Ntwint,km.n_clusters),dtype=bool)
-        ina = winstrat.ina_test(X,feat_def,self.tpt_bndy)
-        inb = winstrat.inb_test(X,feat_def,self.tpt_bndy)
-        return
+        km = pickle.load(open(clust_filename,"rb"))
+        P_list = pickle.load(open(msm_filename,"rb"))
+        qp = self.compute_forward_committor(P_list,winstrat.wtime)
+        # Do the time-dependent Markov Chain analysis
+        return result_dga
     def compute_rate_direct(self,src_tag,dest_tag):
         # This is meant for full-winter trajectories
         ab_tag = (src_tag==0)*(dest_tag==1)
