@@ -28,7 +28,7 @@ feat_display_dir = join(featdir,"display2")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2021-11-24")
+daydir = join(resultsdir,"2021-12-09")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -50,8 +50,9 @@ fall_years_s2s = np.arange(1996,2017)
 file_list_e2 = []
 for i_fy in range(len(fall_years_e2)):
     file_list_e2 += [join(datadir_e2,"%s-11-01_to_%s-04-30.nc"%(fall_years_e2[i_fy],fall_years_e2[i_fy]+1))]
-# TODO: specify files for s2s
+file_list_s2s = [join(datadir_s2s,f) for f in os.listdir(datadir_s2s) if f.endswith(".nc")]
 ftidx_e2 = np.random.choice(np.arange(len(file_list_e2)),size=15,replace=False)
+dga_idx_s2s = np.random.choice(np.arange(len(file_list_s2s)),size=100,replace=False) # Subset of filed to use for DGA.
 print("ftidx_e2 = {}".format(ftidx_e2))
 
 winter_day0 = 0.0
@@ -61,6 +62,9 @@ Npc_per_level_max = 6
 create_features_flag =         0
 display_features_flag =        0
 evaluate_database_e2 =         0
+evaluate_database_s2s =        1
+tpt_e2_flag =                  0
+tpt_s2s_flag =                 1
 
 feature_file = join(featdir,"feat_def")
 winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring_day0,Npc_per_level_max)
@@ -79,24 +83,46 @@ if display_features_flag:
 # ------------------ Initialize the TPT object -------------------------------------
 feat_def = pickle.load(open(winstrat.feature_file,"rb"))
 tpt = tpt_general.WinterStratosphereTPT()
+# ----------------- Determine list of SSW definitions to consider --------------
+tthresh0 = 10.0 # First day that SSW could happen
+tthresh1 = 145.0 # Last day that SSW could happen
+uthresh_list = np.arange(5,-21,-2.5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 # ------------------ TPT direct estimates from ERA20C ------------------------------
 if evaluate_database_e2:
     winstrat.evaluate_features_database(file_list_e2,feat_def,expdir_e2,"X",winstrat.wtime[-1])
-tthresh0 = 10.0 # First day that SSW could happen
-tthresh1 = 120.0 # Last day that SSW could happen
-uthresh = 0.0
-savedir = join(expdir,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
-if not exists(savedir): mkdir(savedir)
-tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
-tpt.set_boundaries(tpt_bndy)
-tpt.tpt_pipeline_dns(expdir_e2,savedir,winstrat,feat_def)
-
-
-
-
+if tpt_e2_flag: 
+    rate_list_dns = np.zeros(len(uthresh_list))
+    for i_uth in range(len(uthresh_list)):
+        uthresh = uthresh_list[i_uth]
+        savedir = join(expdir_e2,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+        if not exists(savedir): mkdir(savedir)
+        tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
+        tpt.set_boundaries(tpt_bndy)
+        result_dns = tpt.tpt_pipeline_dns(expdir_e2,savedir,winstrat,feat_def)
+        rate_list_dns[i_uth] = result_dns["rate"]
+    
+    fig,ax = plt.subplots()
+    hdns, = ax.plot(uthresh_list,rate_list_dns,color='cyan',marker='o',label="ERA20C")
+    ax.set_xlabel("Zonal wind threshold",fontdict=font)
+    ax.set_ylabel("Rate")
+    ax.legend(handles=[hdns])
+    fig.savefig(join(expdir_e2,"rate"))
+    plt.close(fig)
 # ------------------- TPT direct estimates from S2S --------------------------------
-
-
+if evaluate_database_s2s:
+    winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,expdir_s2s,"X",winstrat.wtime[0],winstrat.wtime[-1])
+if cluster_flag:
+    tpt.cluster_features(join(expdir_s2s,"X.npy"),join(expdir_s2s,"Xclust"),num_clusters=300) # Keep it simple, Jack. Ugh do we need to cluster A and B separately? 
+if tpt_s2s_flag:
+    rate_list_s2s = np.zeros(len(uthresh_list))
+    for i_uth in range(len(uthresh_list)):
+        uthresh = uthresh_list[i_uth]
+        savedir = join(expdir_s2s,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+        if not exists(savedir): mkdir(savedir)
+        tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
+        tpt.set_boundaries(tpt_bndy)
+        result_dga = tpt.tpt_pipeline_dga(expdir_s2s,savedir,winstrat,feat_def)
+        rate_list_dga[i_uth] = result_dga["rate"]
 
 
 

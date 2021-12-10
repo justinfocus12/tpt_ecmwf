@@ -57,16 +57,46 @@ class WinterStratosphereTPT:
             plt.close(fig)
         # Compute density and backward committor
         # Compute rate
+        rate = self.compute_rate_direct(src_tag,dest_tag)
         # Compute lead time
         # Compute current (??)
+        result = {"qp": qp, "rate": rate}
+        pickle.dump(result,open(join(savedir,"result"),"wb"))
+        return result
+    def cluster_features(self,feat_filename,clust_filename,num_clusters=100):
+        # Read in a feature array from feat_filename and build clusters. Save cluster centers. Save them out in clust_filename.
+        X = np.load(feat_filename)
+        Nx,Nt,xdim = X.shape
+        # cluster based on the non-time features. 
+        km = MiniBatchKMeans(num_clusters).fit(X[:,:,1:].reshape((Nx*Nt,xdim-1)))
+        pickle.dump(km,open(clust_filename,"wb"))
         return
-    def tpt_pipeline_dga(self,savedir,file_list,winstrat,feat_def):
+    def build_msm(self,feat_filename,clust_filename,winstrat):
+        X = np.load(feat_filename)
+        Nx,Nt,xdim = X.shape
+        km = pickle.load(open(clust_filename,"rb"))
+        labels = km.predict(X[:,:,1:].reshape((Nx*Nt,xdim-1))).reshape((Nx,Nt))
+        P = [sps.lil_matrix((km.n_clusters,km.n_clusters)) for i in range(winstrat.Ntwint-1)]
+        centers = np.concatenate((np.zeros(km.n_clusters,1),km.cluster_centers_), axis=1)
+        idx0 = np.where(np.abs(X[:,:-1,0] - winstrat.wtime[ti]) < winstrat.dtwint/2)
+        for ti in range(winstrat.Ntwint-1):
+            centers[:,0] = winstrat.wtime[ti]
+            idx1 = np.where(np.abs(X[:,:,1:] - winstrat.wtime[ti+1]) < winstrat.dtwint/2)
+            for i in range(km.n_clusters):
+                idx0_i = idx0[np.where(labels[idx0]==i)]
+                for j in range(km.n_clusters):
+                    idx1_j = idx1[np.where(labels[idx1]==j)]
+                    P[ti][i,j] += np.sum(idx0_i == idx1_j)
+    def tpt_pipeline_dga(self,savedir,Xfile,Xclustfile,winstrat,feat_def):
         # Do the DGA pipeline. 
+        # TODO: clean this up
+        ina = np.zeros((winstrat.Ntwint,km.n_clusters),dtype=bool)
+        inb = np.zeros((winstrat.Ntwint,km.n_clusters),dtype=bool)
+        ina = winstrat.ina_test(X,feat_def,self.tpt_bndy)
+        inb = winstrat.inb_test(X,feat_def,self.tpt_bndy)
         return
     def compute_rate_direct(self,src_tag,dest_tag):
         # This is meant for full-winter trajectories
-        src_tag = src_dest['src_tag']
-        dest_tag = src_dest['dest_tag']
         ab_tag = (src_tag==0)*(dest_tag==1)
         absum = 1.0*(np.sum(ab_tag,axis=1) > 0)
         rate = np.mean(absum)

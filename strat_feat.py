@@ -24,7 +24,8 @@ import sys
 import os
 from os import mkdir
 from os.path import join,exists
-from sklearn import linear_model
+from sklearn import linear_model,
+from sklearn.cluster import KMeans, MiniBatchKMeans
 import helper
 import cartopy
 from cartopy import crs as ccrs
@@ -38,7 +39,7 @@ class WinterStratosphereFeatures:
         self.spring_day0 = spring_day0
         self.wtime = 24.0 * np.arange(self.winter_day0,self.spring_day0) # All times are in hours
         self.Ntwint = len(self.wtime)
-        self.szn_day_window = 5.0 # Number of days around which to average
+        self.szn_day_window = 5.0 # Number of days around which to average when unseasoning
         self.dtwint = self.wtime[1] - self.wtime[0]
         self.Npc_per_level_max = Npc_per_level_max # Determine from SVD if not specified
         self.num_wavenumbers = 2 # How many wavenumbers to look at 
@@ -131,7 +132,8 @@ class WinterStratosphereFeatures:
                 gh[i_mem] = ds['var129'][:]/grav_accel
             else:
                 raise Exception("The dssource you gave me, %s, is not recognized"%(dssource))
-        return gh,ds['time'][:],ds['plev'][:],ds['lat'][:],ds['lon'][:]
+        time = self.time_since_nov1(ds['time'])
+        return gh,time,ds['plev'][:],ds['lat'][:],ds['lon'][:]
     def compute_geostrophic_wind(self,gh,lat,lon):
         # gh shape should be (Nx,Nlev,Nlat,Nlon). 
         Omega = 2*np.pi/(3600*24*365)
@@ -184,6 +186,16 @@ class WinterStratosphereFeatures:
         print("field_szn_std[wti].shape = {}, field_unseasoned.shape = {}, field_szn_mean[wti].shape = {}".format(field_szn_std[wti].shape,field_unseasoned.shape,field_szn_mean[wti].shape))
         field = field_szn_std[wti] * field_unseasoned + field_szn_mean[wti]
         return field
+    def time_since_nov1(self,dstime):
+        Nt = dstime.size
+        date = nc.num2date(dstime[0],dstime.units,dstime.calendar)
+        year = date.year 
+        month = date.month
+        nov1_year = year*(month >= 11) + (year-1)*(month < 11)
+        nov1_date = datetime.datetime(nov1_year, 11, 1)
+        nov1_time = nc.date2num(nov1_date,dstime.units,dstime.calendar)
+        dstime_adj = nc.date2num(date,dstime.units,dstime.calendar) - nov1_time + dstime
+        return dstime_adj # This is just one-dimensional. 
     def create_features(self,data_file_list):
         # Use data in data_file_list as training, and dump the results into feature_file. Note this is NOT a DGA basis yet, just a set of features.
         # We will not YET use time-delay information, but might in the future. In which case we will just have somewhat fewer data per file. 
@@ -246,7 +258,7 @@ class WinterStratosphereFeatures:
                 "eofs": eofs, "singvals": singvals, "tot_var": tot_var,}
         pickle.dump(feat_def,open(self.feature_file,"wb"))
         return
-    def evaluate_features_database(self,file_list,feat_def,savedir,filename,max_duration):
+    def evaluate_features_database(self,file_list,feat_def,savedir,filename,tmin,tmax):
         # Stack a bunch of forecasts together. They can start at different times, but must all have same length.
         ens_start_idx = np.zeros(len(file_list), dtype=int)
         i_ens = 0
@@ -256,9 +268,9 @@ class WinterStratosphereFeatures:
             ens_start_idx[i] = i_ens
             ds = nc.Dataset(file_list[i],"r")
             Xnew = self.evaluate_features(ds,feat_def)
-            ti_final = np.where(ds['time'][:] <= max_duration)[0][-1]
-            print("ti_final = {}".format(ti_final))
-            Xnew = Xnew[:,:ti_final+1,:]
+            ti_initial = np.where(ds['time'][:] >= tmin)[0][0]
+            ti_final = np.where(ds['time'][:] <= tmax)[0][-1]
+            Xnew = Xnew[:,ti_initial:ti_final+1,:]
             if i == 0:
                 X = Xnew.copy()
             else:
