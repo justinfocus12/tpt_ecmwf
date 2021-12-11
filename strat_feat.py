@@ -303,6 +303,8 @@ class WinterStratosphereFeatures:
                     Y[:,:,i_feat_y] = X[:,:,i_feat_x]
                     i_feat_y += 1
                 i_feat_x += 1
+        print("X[:,:,1]: min={}, max={}, mean={}".format(X[:,:,1].min(),X[:,:,1].max(),X[:,:,1].mean()))
+        print("Y[:,:,1]: min={}, max={}, mean={}".format(Y[:,:,1].min(),Y[:,:,1].max(),Y[:,:,1].mean()))
         np.save(clust_feat_filename,Y)
         return 
     def evaluate_features(self,ds,feat_def):
@@ -406,6 +408,8 @@ class WinterStratosphereFeatures:
         return np.array([mag,phase]).T
     def uref_obs(self,x,feat_def):
         uref = self.reseason(x[:,0],x[:,1],feat_def["t_szn"],feat_def["uref_szn_mean"],feat_def["uref_szn_std"])
+        #print("uref = {}".format(uref))
+        #print("uref: min={}, max={}, mean={}".format(uref.min(),uref.max(),uref.mean()))
         return uref
     def observable_function_library(self):
         # Build the database of observable functions

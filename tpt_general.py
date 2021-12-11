@@ -74,12 +74,12 @@ class WinterStratosphereTPT:
         km = MiniBatchKMeans(num_clusters).fit(X[:,:,1:].reshape((Nx*Nt,xdim-1)))
         pickle.dump(km,open(clust_filename,"wb"))
         return
-    def build_msm(self,feat_filename,clust_filename,msm_filename,winstrat):
+    def build_msm(self,clust_feat_filename,clust_filename,msm_filename,winstrat):
         nnk = 4 # Number of nearest neighbors for filling in empty positions
-        X = np.load(feat_filename)
-        Nx,Nt,xdim = X.shape
+        Y = np.load(clust_feat_filename)
+        Nx,Nt,ydim = Y.shape
         km = pickle.load(open(clust_filename,"rb"))
-        labels = km.predict(X[:,:,1:].reshape((Nx*Nt,xdim-1))).reshape((Nx,Nt))
+        labels = km.predict(Y[:,:,1:].reshape((Nx*Nt,ydim-1))).reshape((Nx,Nt))
         P = [sps.lil_matrix((km.n_clusters,km.n_clusters)) for i in range(winstrat.Ntwint-1)]
         #centers = np.concatenate((np.zeros(km.n_clusters,1),km.cluster_centers_), axis=1)
         for ti in range(winstrat.Ntwint-1):
@@ -87,8 +87,8 @@ class WinterStratosphereTPT:
             #print("wtime[0] = {}".format(winstrat.wtime[0]))
             #print("X[0,:3,0] = {}".format(X[0,:3,0]))
             #print("X[:,:,0] range = {},{}".format(X[:,:,0].min(),X[:,:,0].max()))
-            idx0 = np.where(np.abs(X[:,:-1,0] - winstrat.wtime[ti]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
-            idx1 = np.where(np.abs(X[:,1:,0] - winstrat.wtime[ti+1]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
+            idx0 = np.where(np.abs(Y[:,:-1,0] - winstrat.wtime[ti]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
+            idx1 = np.where(np.abs(Y[:,1:,0] - winstrat.wtime[ti+1]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
             #print("len(idx0[0]) = {}, len(idx1[0]) = {}".format(len(idx0[0]),len(idx1[0])))
             overlap = np.where(np.subtract.outer(idx0[0],idx1[0]) == 0)
             #print("len(overlap[0]) = {}".format(len(overlap[0])))
@@ -133,21 +133,35 @@ class WinterStratosphereTPT:
             if i < mc.Nt-1: F += [1.0*np.outer((ina[i]==0)*(inb[i]==0), np.ones(mc.Nx[i+1]))]
         qp = mc.dynamical_galerkin_approximation(F,G)
         return qp
-    def tpt_pipeline_dga(self,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat):
+    def tpt_pipeline_dga(self,feat_filename,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat):
         # Label each cluster as in A or B or elsewhere
-        X = np.load(clust_feat_filename)
+        X = np.load(feat_filename)
+        Y = np.load(clust_feat_filename)
         Nx,Nt,xdim = X.shape
+        Nx,Nt,ydim = Y.shape
+        funlib = winstrat.observable_function_library()
+        uref_x = funlib["uref"]["fun"](X.reshape((Nx*Nt,xdim)))
+        uref_y = funlib["uref"]["fun"](Y.reshape((Nx*Nt,ydim)))
+        print("uref_x: min={}, max={}, mean={}".format(uref_x.min(),uref_x.max(),uref_x.mean()))
+        print("uref_y: min={}, max={}, mean={}".format(uref_y.min(),uref_y.max(),uref_y.mean()))
         km = pickle.load(open(clust_filename,"rb"))
-        labels = km.predict(X[:,:,1:].reshape((Nx*Nt,xdim-1))).reshape((Nx,Nt))
+        labels = km.predict(Y[:,:,1:].reshape((Nx*Nt,ydim-1))).reshape((Nx,Nt))
 
         ina = np.zeros((winstrat.Ntwint,km.n_clusters),dtype=bool)
         inb = np.zeros((winstrat.Ntwint,km.n_clusters),dtype=bool)
-        # Make centers X-shaped things; feautures can depend on more than what was used for clustering.
+        # Make centers Y-shaped things; feautures can depend on more than what was used for clustering.
         centers = np.concatenate((np.zeros((km.n_clusters,1)),km.cluster_centers_),axis=1)
+        print("centers[:,1]: min={}, max={}".format(centers[:,1].min(),centers[:,1].max()))
+        uref_c_min = np.inf
+        uref_c_max = -np.inf
         for ti in range(winstrat.Ntwint):
             centers[:,0] = winstrat.wtime[ti]
+            uref_c = funlib["uref"]["fun"](centers)
+            uref_c_min = min(uref_c_min,uref_c.min())
+            uref_c_max = max(uref_c_max,uref_c.max())
             ina[ti,:] = winstrat.ina_test(centers,feat_def,self.tpt_bndy)
             inb[ti,:] = winstrat.inb_test(centers,feat_def,self.tpt_bndy)
+        print("uref(centers): min={}, max={}".format(uref_c_min,uref_c_max))
         print("centers.shape = {}".format(centers.shape))
         print("sum(ina) = {}, sum(inb) = {}".format(ina.sum(),inb.sum()))
         km = pickle.load(open(clust_filename,"rb"))
@@ -155,7 +169,7 @@ class WinterStratosphereTPT:
         # Check rowsums
         for i in range(len(P_list)):
             rowsums = np.array(P_list[i].sum(1)).flatten()
-            print("rowsums: min={}, max={}".format(rowsums.min(),rowsums.max()))
+            #print("rowsums: min={}, max={}".format(rowsums.min(),rowsums.max()))
         qp = self.compute_forward_committor(P_list,winstrat.wtime,ina,inb)
         qpflat = np.concatenate(qp)
         print("qpflat.shape = {}".format(qpflat.shape))
@@ -167,13 +181,20 @@ class WinterStratosphereTPT:
         # Do the time-dependent Markov Chain analysis
         result_dga = {"qp": qp, }
         # Plot 
-        funlib = winstrat.observable_function_library()
         centers_t = np.array([centers for ti in range(winstrat.Ntwint)])
+        print("centers_t.shape = {}".format(centers_t.shape))
         for ti in range(winstrat.Ntwint):
             centers_t[ti,:,0] = winstrat.wtime[ti]
         centers_t = centers_t.reshape((winstrat.Ntwint*centers.shape[0],centers.shape[1]))
+        print("centers_t.shape = {}".format(centers_t.shape))
+        print("centers_t[:,1]: min={}, max={}".format(centers_t[:,1].min(),centers_t[:,1].max()))
+        uref_ct = funlib["uref"]["fun"](centers_t)
+        print("uref(centers_t): min={}, max={}, mean={}".format(uref_ct.min(),uref_ct.max(),uref_ct.mean()))
+        sys.exit()
         weight = np.ones(Nx*Nt)/(Nx*Nt)
         keypairs = [['time_d','uref']]
+        # Find min and max of uref
+        print("centers_t[:,1]: min={}, max={}, mean={}".format(centers_t[:,0].min(),centers_t[:,1].max(),centers_t[:,1].mean()))
         for i_kp in range(len(keypairs)):
             fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
             theta_x = np.array([funlib[keypairs[i_kp][j]]["fun"](centers_t) for j in range(2)]).T

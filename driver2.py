@@ -59,11 +59,14 @@ winter_day0 = 0.0
 spring_day0 = 150.0
 Npc_per_level_max = 6
 # Parameters to determine what to do
+# Featurization
 create_features_flag =         0
 display_features_flag =        0
+# era20c
 evaluate_database_e2 =         0
-evaluate_database_s2s =        0
 tpt_e2_flag =                  0
+# s2s
+evaluate_database_s2s =        0
 cluster_flag =                 1
 build_msm_flag =               1
 tpt_s2s_flag =                 1
@@ -122,7 +125,7 @@ if evaluate_database_s2s:
     winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,expdir_s2s,"X",winstrat.wtime[0],winstrat.wtime[-1])
 if cluster_flag:
     winstrat.evaluate_cluster_features(feat_filename,feat_def,clust_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves)
-    tpt.cluster_features(clust_feat_filename,clust_filename,num_clusters=50)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
+    tpt.cluster_features(clust_feat_filename,clust_filename,num_clusters=10)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
 if build_msm_flag:
     tpt.build_msm(clust_feat_filename,clust_filename,msm_filename,winstrat)
 if tpt_s2s_flag:
@@ -133,7 +136,7 @@ if tpt_s2s_flag:
         if not exists(savedir): mkdir(savedir)
         tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
         tpt.set_boundaries(tpt_bndy)
-        result_dga = tpt.tpt_pipeline_dga(clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat)
+        result_dga = tpt.tpt_pipeline_dga(feat_filename,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat)
         #rate_list_dga[i_uth] = result_dga["rate"]
 
 
