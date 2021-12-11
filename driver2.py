@@ -66,7 +66,7 @@ evaluate_database_s2s =        0
 tpt_e2_flag =                  0
 cluster_flag =                 1
 build_msm_flag =               1
-tpt_s2s_flag =                 0
+tpt_s2s_flag =                 1
 
 feature_file = join(featdir,"feat_def")
 winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring_day0,Npc_per_level_max)
@@ -110,14 +110,14 @@ if tpt_e2_flag:
     ax.legend(handles=[hdns])
     fig.savefig(join(expdir_e2,"rate"))
     plt.close(fig)
-# ------------------- TPT direct estimates from S2S --------------------------------
+# ------------------- DGA from S2S --------------------------------
 feat_filename = join(expdir_s2s,"X.npy")
 clust_filename = join(expdir_s2s,"kmeans")
 msm_filename = join(expdir_s2s,"msm")
 if evaluate_database_s2s:
     winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,expdir_s2s,"X",winstrat.wtime[0],winstrat.wtime[-1])
 if cluster_flag:
-    tpt.cluster_features(feat_filename,clust_filename,num_clusters=300)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
+    tpt.cluster_features(feat_filename,clust_filename,num_clusters=30)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
 if build_msm_flag:
     tpt.build_msm(feat_filename,clust_filename,msm_filename,winstrat)
 if tpt_s2s_flag:
@@ -129,7 +129,7 @@ if tpt_s2s_flag:
         tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
         tpt.set_boundaries(tpt_bndy)
         result_dga = tpt.tpt_pipeline_dga(feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat)
-        rate_list_dga[i_uth] = result_dga["rate"]
+        #rate_list_dga[i_uth] = result_dga["rate"]
 
 
 

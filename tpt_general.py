@@ -29,6 +29,7 @@ import helper
 import cartopy
 from cartopy import crs as ccrs
 import pickle
+import tdmc_obj
 
 class WinterStratosphereTPT:
     def __init__(self):
@@ -74,58 +75,94 @@ class WinterStratosphereTPT:
         pickle.dump(km,open(clust_filename,"wb"))
         return
     def build_msm(self,feat_filename,clust_filename,msm_filename,winstrat):
+        nnk = 4 # Number of nearest neighbors for filling in empty positions
         X = np.load(feat_filename)
         Nx,Nt,xdim = X.shape
         km = pickle.load(open(clust_filename,"rb"))
         labels = km.predict(X[:,:,1:].reshape((Nx*Nt,xdim-1))).reshape((Nx,Nt))
         P = [sps.lil_matrix((km.n_clusters,km.n_clusters)) for i in range(winstrat.Ntwint-1)]
         #centers = np.concatenate((np.zeros(km.n_clusters,1),km.cluster_centers_), axis=1)
-        idx0 = np.where(np.abs(X[:,:-1,0] - winstrat.wtime[0]) < winstrat.dtwint/2)
         for ti in range(winstrat.Ntwint-1):
             #centers[:,0] = winstrat.wtime[ti]
+            print("wtime[0] = {}".format(winstrat.wtime[0]))
+            print("X[0,:3,0] = {}".format(X[0,:3,0]))
+            print("X[:,:,0] range = {},{}".format(X[:,:,0].min(),X[:,:,0].max()))
             idx0 = np.where(np.abs(X[:,:-1,0] - winstrat.wtime[ti]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
             idx1 = np.where(np.abs(X[:,1:,0] - winstrat.wtime[ti+1]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
+            print("len(idx0[0]) = {}, len(idx1[0]) = {}".format(len(idx0[0]),len(idx1[0])))
             overlap = np.where(np.subtract.outer(idx0[0],idx1[0]) == 0)
+            print("len(overlap[0]) = {}".format(len(overlap[0])))
             # Overlaps between idx0[0] and idx1[0] give tell us they're on the same trajectory
             for i in range(km.n_clusters):
                 for j in range(km.n_clusters):
                     P[ti][i,j] += np.sum(
-                            (labels[idx0[0][overlap[0]],idx0[1][overlap[0]] == i) * 
-                            (labels[idx1[0][overlap[1]],idx1[1][overlap[1]] == j))
+                            (labels[idx0[0][overlap[0]],idx0[1][overlap[0]]] == i) *
+                            (labels[idx1[0][overlap[1]],idx1[1][overlap[1]]] == j)
+                            )
             # Make sure every row and column has a nonzero entry. 
-            rowsums = P[ti].sum(1).toarray()
+            rowsums = np.array(P[ti].sum(1)).flatten()
+            print("rowsums: min={}, max={}".format(rowsums.min(),rowsums.max()))
             idx_rs0 = np.where(rowsums==0)[0]
             for i in idx_rs0:
-                j = np.argmin(np.sum((km.cluster_centers_ - km.cluster_centers_[i])**2, axis=1))
-                P[ti][i,j] = 1.0
-            colsums = P[ti].sum(0).toarray()
+                nnki = min(nnk,km.n_clusters)
+                knn = np.argpartition(np.sum((km.cluster_centers_ - km.cluster_centers_[i])**2, axis=1), nnki)[:nnki]
+                P[ti][i,nnki] = 1.0/nnki
+                #j = np.argmin(np.sum((km.cluster_centers_ - km.cluster_centers_[i])**2, axis=1))
+                #P[ti][i,j] = 1.0
+            colsums = np.array(P[ti].sum(0)).flatten()
             idx_cs0 = np.where(rowsums==0)[0]
             for j in idx_cs0:
-                i = np.argmin(np.sum((km.cluster_centers_ - km.cluster_centers_[j])**2, axis=1))
-                P[ti][i,j] = 1.0
-            # Advance the column index
-            idx0 = idx1.copy()
+                knn = np.argpartition(np.sum((km.cluster_centers_ - km.cluster_centers_[j])**2, axis=1), nnk)[:nnk]
+                P[ti][nnk,j] = 1.0/nnk
+            # Now normalize rows
+            P[ti] = sps.diags(1.0 / np.array(P[ti].sum(1)).flatten()) @ P[ti]
+            # Check row sums
+            rowsums = np.array(P[ti].sum(1))
+            if np.any(np.abs(rowsums - 1.0) > 1e-10):
+                raise Exception("The rowsums of P[{}] range from {} to {}".format(ti,rowsums.min(),rowsums.max()))
         pickle.dump(P,open(msm_filename,"wb"))
         return
-    def compute_forward_committor(self,P_list,time):
-        mc = tdmc_obj.TimeDependentMarkovChain(P,time)
+    def compute_forward_committor(self,P_list,time,ina,inb):
+        mc = tdmc_obj.TimeDependentMarkovChain(P_list,time)
         G = []
         F = []
         for i in range(mc.Nt):
             #G += [np.outer(np.ones(mc.Nx[i]), 1.0*(self.bdist_centers[i+1]==0))]
             #F += [np.outer(np.ones(mc.Nx[i]), 1.0*(np.minimum(self.adist_centers[i+1],self.bdist_centers[i+1]) > 0))]
-            G += [1.0*(self.bdist_centers[i]==0)]
-            if i < mc.Nt-1: F += [1.0*np.outer(np.minimum(self.adist_centers[i],self.bdist_centers[i])>0, np.ones(mc.Nx[i+1]))]
-        self.qp = mc.dynamical_galerkin_approximation(F,G)
-        return
+            G += [1.0*inb[i]]
+            if i < mc.Nt-1: F += [1.0*np.outer((ina[i]==0)*(inb[i]==0), np.ones(mc.Nx[i+1]))]
+        qp = mc.dynamical_galerkin_approximation(F,G)
+        return qp
     def tpt_pipeline_dga(self,feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat):
-        # Do the DGA pipeline. 
+        # Label each cluster as in A or B or elsewhere
+        X = np.load(feat_filename)
+        Nx,Nt,xdim = X.shape
+        km = pickle.load(open(clust_filename,"rb"))
+        labels = km.predict(X[:,:,1:].reshape((Nx*Nt,xdim-1))).reshape((Nx,Nt))
+
         ina = np.zeros((winstrat.Ntwint,km.n_clusters),dtype=bool)
         inb = np.zeros((winstrat.Ntwint,km.n_clusters),dtype=bool)
+        centers = np.concatenate((np.zeros((km.n_clusters,1)),km.cluster_centers_),axis=1)
+        for ti in range(winstrat.Ntwint):
+            centers[:,0] = winstrat.wtime[ti]
+            ina[ti,:] = winstrat.ina_test(centers,feat_def,self.tpt_bndy)
+            inb[ti,:] = winstrat.inb_test(centers,feat_def,self.tpt_bndy)
+        print("centers.shape = {}".format(centers.shape))
+        print("sum(ina) = {}, sum(inb) = {}".format(ina.sum(),inb.sum()))
         km = pickle.load(open(clust_filename,"rb"))
         P_list = pickle.load(open(msm_filename,"rb"))
-        qp = self.compute_forward_committor(P_list,winstrat.wtime)
+        # Check rowsums
+        for i in range(len(P_list)):
+            rowsums = np.array(P_list[i].sum(1)).flatten()
+            print("rowsums: min={}, max={}".format(rowsums.min(),rowsums.max()))
+        qp = self.compute_forward_committor(P_list,winstrat.wtime,ina,inb)
+        qpflat = np.concatenate(qp)
+        print("qpflat.shape = {}".format(qpflat.shape))
+        print("qp: min={}, max={}, frac in (.2,.8) = {}".format(qpflat.min(),qpflat.max(),np.mean((qpflat>.2)*(qpflat<.8))))
+        sys.exit()
+        pickle.dump(qp,open(join(savedir,"qp"),"wb"))
         # Do the time-dependent Markov Chain analysis
+        result_dga = {"qp": qp, }
         return result_dga
     def compute_rate_direct(self,src_tag,dest_tag):
         # This is meant for full-winter trajectories

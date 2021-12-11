@@ -179,10 +179,10 @@ class WinterStratosphereFeatures:
             field_unseasoned *= 1.0/field_szn_std[wti]
         return field_unseasoned
     def reseason(self,t_field,field_unseasoned,t_szn,field_szn_mean,field_szn_std):
-        print("t_field.shape = {}, field_unseasoned.shape = {}, t_szn.shape = {}, field_szn_mean.shape = {}, field_szn_std.shape = {}".format(t_field.shape, field_unseasoned.shape, t_szn.shape, field_szn_mean.shape, field_szn_std.shape))
+        #print("t_field.shape = {}, field_unseasoned.shape = {}, t_szn.shape = {}, field_szn_mean.shape = {}, field_szn_std.shape = {}".format(t_field.shape, field_unseasoned.shape, t_szn.shape, field_szn_mean.shape, field_szn_std.shape))
         wti = ((t_field - self.wtime[0])/self.dtwint).astype(int)
         wti = np.maximum(0, np.minimum(len(self.wtime)-1, wti))
-        print("field_szn_std[wti].shape = {}, field_unseasoned.shape = {}, field_szn_mean[wti].shape = {}".format(field_szn_std[wti].shape,field_unseasoned.shape,field_szn_mean[wti].shape))
+        #print("field_szn_std[wti].shape = {}, field_unseasoned.shape = {}, field_szn_mean[wti].shape = {}".format(field_szn_std[wti].shape,field_unseasoned.shape,field_szn_mean[wti].shape))
         field = field_szn_std[wti] * field_unseasoned + field_szn_mean[wti]
         return field
     def time_since_nov1(self,dstime):
