@@ -66,9 +66,9 @@ class WinterStratosphereTPT:
         result = {"qp": qp, "rate": rate}
         pickle.dump(result,open(join(savedir,"result"),"wb"))
         return result
-    def cluster_features(self,feat_filename,clust_filename,num_clusters=100):
+    def cluster_features(self,clust_feat_filename,clust_filename,num_clusters=100):
         # Read in a feature array from feat_filename and build clusters. Save cluster centers. Save them out in clust_filename.
-        X = np.load(feat_filename)
+        X = np.load(clust_feat_filename)
         Nx,Nt,xdim = X.shape
         # cluster based on the non-time features. 
         km = MiniBatchKMeans(num_clusters).fit(X[:,:,1:].reshape((Nx*Nt,xdim-1)))
@@ -84,14 +84,14 @@ class WinterStratosphereTPT:
         #centers = np.concatenate((np.zeros(km.n_clusters,1),km.cluster_centers_), axis=1)
         for ti in range(winstrat.Ntwint-1):
             #centers[:,0] = winstrat.wtime[ti]
-            print("wtime[0] = {}".format(winstrat.wtime[0]))
-            print("X[0,:3,0] = {}".format(X[0,:3,0]))
-            print("X[:,:,0] range = {},{}".format(X[:,:,0].min(),X[:,:,0].max()))
+            #print("wtime[0] = {}".format(winstrat.wtime[0]))
+            #print("X[0,:3,0] = {}".format(X[0,:3,0]))
+            #print("X[:,:,0] range = {},{}".format(X[:,:,0].min(),X[:,:,0].max()))
             idx0 = np.where(np.abs(X[:,:-1,0] - winstrat.wtime[ti]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
             idx1 = np.where(np.abs(X[:,1:,0] - winstrat.wtime[ti+1]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
-            print("len(idx0[0]) = {}, len(idx1[0]) = {}".format(len(idx0[0]),len(idx1[0])))
+            #print("len(idx0[0]) = {}, len(idx1[0]) = {}".format(len(idx0[0]),len(idx1[0])))
             overlap = np.where(np.subtract.outer(idx0[0],idx1[0]) == 0)
-            print("len(overlap[0]) = {}".format(len(overlap[0])))
+            #print("len(overlap[0]) = {}".format(len(overlap[0])))
             # Overlaps between idx0[0] and idx1[0] give tell us they're on the same trajectory
             for i in range(km.n_clusters):
                 for j in range(km.n_clusters):
@@ -101,7 +101,7 @@ class WinterStratosphereTPT:
                             )
             # Make sure every row and column has a nonzero entry. 
             rowsums = np.array(P[ti].sum(1)).flatten()
-            print("rowsums: min={}, max={}".format(rowsums.min(),rowsums.max()))
+            #print("rowsums: min={}, max={}".format(rowsums.min(),rowsums.max()))
             idx_rs0 = np.where(rowsums==0)[0]
             for i in idx_rs0:
                 nnki = min(nnk,km.n_clusters)
@@ -133,15 +133,16 @@ class WinterStratosphereTPT:
             if i < mc.Nt-1: F += [1.0*np.outer((ina[i]==0)*(inb[i]==0), np.ones(mc.Nx[i+1]))]
         qp = mc.dynamical_galerkin_approximation(F,G)
         return qp
-    def tpt_pipeline_dga(self,feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat):
+    def tpt_pipeline_dga(self,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat):
         # Label each cluster as in A or B or elsewhere
-        X = np.load(feat_filename)
+        X = np.load(clust_feat_filename)
         Nx,Nt,xdim = X.shape
         km = pickle.load(open(clust_filename,"rb"))
         labels = km.predict(X[:,:,1:].reshape((Nx*Nt,xdim-1))).reshape((Nx,Nt))
 
         ina = np.zeros((winstrat.Ntwint,km.n_clusters),dtype=bool)
         inb = np.zeros((winstrat.Ntwint,km.n_clusters),dtype=bool)
+        # Make centers X-shaped things; feautures can depend on more than what was used for clustering.
         centers = np.concatenate((np.zeros((km.n_clusters,1)),km.cluster_centers_),axis=1)
         for ti in range(winstrat.Ntwint):
             centers[:,0] = winstrat.wtime[ti]
@@ -159,10 +160,26 @@ class WinterStratosphereTPT:
         qpflat = np.concatenate(qp)
         print("qpflat.shape = {}".format(qpflat.shape))
         print("qp: min={}, max={}, frac in (.2,.8) = {}".format(qpflat.min(),qpflat.max(),np.mean((qpflat>.2)*(qpflat<.8))))
-        sys.exit()
         pickle.dump(qp,open(join(savedir,"qp"),"wb"))
+        np.save(join(savedir,"ina"),ina)
+        np.save(join(savedir,"inb"),inb)
+        np.save(join(savedir,"centers"),centers)
         # Do the time-dependent Markov Chain analysis
         result_dga = {"qp": qp, }
+        # Plot 
+        funlib = winstrat.observable_function_library()
+        centers_t = np.array([centers for ti in range(winstrat.Ntwint)])
+        for ti in range(winstrat.Ntwint):
+            centers_t[ti,:,0] = winstrat.wtime[ti]
+        centers_t = centers_t.reshape((winstrat.Ntwint*centers.shape[0],centers.shape[1]))
+        weight = np.ones(Nx*Nt)/(Nx*Nt)
+        keypairs = [['time_d','uref']]
+        for i_kp in range(len(keypairs)):
+            fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
+            theta_x = np.array([funlib[keypairs[i_kp][j]]["fun"](centers_t) for j in range(2)]).T
+            fig,ax = helper.plot_field_2d(qpflat,weight,theta_x,shp=[15,15],fieldname="Committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+            fig.savefig(join(savedir,"qp_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+            plt.close(fig)
         return result_dga
     def compute_rate_direct(self,src_tag,dest_tag):
         # This is meant for full-winter trajectories

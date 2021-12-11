@@ -279,6 +279,32 @@ class WinterStratosphereFeatures:
         np.save(join(savedir,filename),X)
         np.save(join(savedir,"ens_start_idx"),ens_start_idx)
         return X
+    def evaluate_cluster_features(self,feat_filename,feat_def,clust_feat_filename,Npc_per_level=None,Nwaves=None):
+        # Evaluate a subset of the full features to use for clustering.
+        X = np.load(feat_filename)
+        if Npc_per_level is None:
+            Npc_per_level = self.Npc_per_level_max*np.ones(len(feat_def['plev']), dtype=int)
+        if Nwaves is None:
+            Nwaves = self.num_wavenumbers
+        Nx,Nt,xdim = X.shape
+        ydim = 2 + 2*Nwaves + np.sum(Npc_per_level)
+        Y = np.zeros((Nx,Nt,ydim))
+        Y[:,:,:2] = X[:,:,:2]
+        i_feat_x = 2
+        i_feat_y = 2
+        for i_wave in np.arange(self.num_wavenumbers):
+            if i_wave < Nwaves:
+                Y[:,:,i_feat_y:i_feat_y+2] = X[:,:,i_feat_x:i_feat_x+2]
+                i_feat_y += 2
+            i_feat_x += 2
+        for i_lev in range(len(feat_def['plev'])):
+            for i_pc in range(self.Npc_per_level_max):
+                if i_pc < Npc_per_level[i_lev]:
+                    Y[:,:,i_feat_y] = X[:,:,i_feat_x]
+                    i_feat_y += 1
+                i_feat_x += 1
+        np.save(clust_feat_filename,Y)
+        return 
     def evaluate_features(self,ds,feat_def):
         # Given a single ensemble in ds, evaluate the features and return a big matrix
         i_lev_uref,i_lat_uref = self.get_ilev_ilat(ds)

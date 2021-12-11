@@ -52,7 +52,7 @@ for i_fy in range(len(fall_years_e2)):
     file_list_e2 += [join(datadir_e2,"%s-11-01_to_%s-04-30.nc"%(fall_years_e2[i_fy],fall_years_e2[i_fy]+1))]
 file_list_s2s = [join(datadir_s2s,f) for f in os.listdir(datadir_s2s) if f.endswith(".nc")]
 ftidx_e2 = np.random.choice(np.arange(len(file_list_e2)),size=15,replace=False)
-dga_idx_s2s = np.random.choice(np.arange(len(file_list_s2s)),size=100,replace=False) # Subset of filed to use for DGA.
+dga_idx_s2s = np.random.choice(np.arange(len(file_list_s2s)),size=500,replace=False) # Subset of filed to use for DGA.
 print("ftidx_e2 = {}".format(ftidx_e2))
 
 winter_day0 = 0.0
@@ -112,14 +112,19 @@ if tpt_e2_flag:
     plt.close(fig)
 # ------------------- DGA from S2S --------------------------------
 feat_filename = join(expdir_s2s,"X.npy")
+clust_feat_filename = join(expdir_s2s,"Y.npy")
 clust_filename = join(expdir_s2s,"kmeans")
 msm_filename = join(expdir_s2s,"msm")
+Npc_per_level = np.zeros(len(feat_def["plev"]), dtype=int)
+Nwaves = 0
 if evaluate_database_s2s:
+    # Expensive!
     winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,expdir_s2s,"X",winstrat.wtime[0],winstrat.wtime[-1])
 if cluster_flag:
-    tpt.cluster_features(feat_filename,clust_filename,num_clusters=30)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
+    winstrat.evaluate_cluster_features(feat_filename,feat_def,clust_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves)
+    tpt.cluster_features(clust_feat_filename,clust_filename,num_clusters=50)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
 if build_msm_flag:
-    tpt.build_msm(feat_filename,clust_filename,msm_filename,winstrat)
+    tpt.build_msm(clust_feat_filename,clust_filename,msm_filename,winstrat)
 if tpt_s2s_flag:
     rate_list_s2s = np.zeros(len(uthresh_list))
     for i_uth in range(len(uthresh_list)):
@@ -128,7 +133,7 @@ if tpt_s2s_flag:
         if not exists(savedir): mkdir(savedir)
         tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
         tpt.set_boundaries(tpt_bndy)
-        result_dga = tpt.tpt_pipeline_dga(feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat)
+        result_dga = tpt.tpt_pipeline_dga(clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat)
         #rate_list_dga[i_uth] = result_dga["rate"]
 
 
