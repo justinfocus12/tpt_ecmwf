@@ -38,7 +38,7 @@ class WinterStratosphereFeatures:
         self.spring_day0 = spring_day0
         self.wtime = 24.0 * np.arange(self.winter_day0,self.spring_day0) # All times are in hours
         self.Ntwint = len(self.wtime)
-        self.szn_day_window = 5.0 # Number of days around which to average when unseasoning
+        self.szn_hour_window = 5.0*24 # Number of days around which to average when unseasoning
         self.dtwint = self.wtime[1] - self.wtime[0]
         self.Npc_per_level_max = Npc_per_level_max # Determine from SVD if not specified
         self.num_wavenumbers = 2 # How many wavenumbers to look at 
@@ -167,7 +167,7 @@ class WinterStratosphereFeatures:
         field_szn_mean = np.zeros(field_szn_mean_shape)
         field_szn_std = np.zeros(field_szn_mean_shape)
         for i_time in range(self.Ntwint):
-            idx = np.where(np.abs(t_szn - self.wtime[i_time]) < self.szn_day_window)[0]
+            idx = np.where(np.abs(t_szn - self.wtime[i_time]) < self.szn_hour_window)[0]
             field_szn_mean[i_time] = np.mean(field[idx],axis=0)
             field_szn_std[i_time] = np.std(field[idx],axis=0)
         return field_szn_mean,field_szn_std

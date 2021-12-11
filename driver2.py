@@ -22,13 +22,13 @@ codedir = "/home/jf4241/ecmwf/s2s"
 os.chdir(codedir)
 datadir_e2 = "/scratch/jf4241/ecmwf_data/era20c_data/2021-11-03"
 datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-11-01"
-featdir = "/scratch/jf4241/ecmwf_data/features/2021-11-23"
+featdir = "/scratch/jf4241/ecmwf_data/features/2021-12-11"
 if not exists(featdir): mkdir(featdir)
 feat_display_dir = join(featdir,"display2")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2021-12-09")
+daydir = join(resultsdir,"2021-12-11")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -94,7 +94,7 @@ tthresh1 = 145.0 # Last day that SSW could happen
 uthresh_list = np.arange(5,-21,-2.5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 # ------------------ TPT direct estimates from ERA20C ------------------------------
 if evaluate_database_e2:
-    winstrat.evaluate_features_database(file_list_e2,feat_def,expdir_e2,"X",winstrat.wtime[-1])
+    winstrat.evaluate_features_database(file_list_e2,feat_def,expdir_e2,"X",winstrat.wtime[0],winstrat.wtime[-1])
 if tpt_e2_flag: 
     rate_list_dns = np.zeros(len(uthresh_list))
     for i_uth in range(len(uthresh_list)):
@@ -125,7 +125,7 @@ if evaluate_database_s2s:
     winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,expdir_s2s,"X",winstrat.wtime[0],winstrat.wtime[-1])
 if cluster_flag:
     winstrat.evaluate_cluster_features(feat_filename,feat_def,clust_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves)
-    tpt.cluster_features(clust_feat_filename,clust_filename,num_clusters=10)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
+    tpt.cluster_features(clust_feat_filename,clust_filename,winstrat,num_clusters=10)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
 if build_msm_flag:
     tpt.build_msm(clust_feat_filename,clust_filename,msm_filename,winstrat)
 if tpt_s2s_flag:
