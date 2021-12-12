@@ -39,6 +39,12 @@ class WinterStratosphereTPT:
         self.tpt_bndy = tpt_bndy
         return
     # Everything above is just about defining the boundary value problem. Everything below will be analysis with respect to a specific data set. 
+    def compute_rate_direct(self,src_tag,dest_tag):
+        # This is meant for full-winter trajectories
+        ab_tag = (src_tag==0)*(dest_tag==1)
+        absum = 1.0*(np.sum(ab_tag,axis=1) > 0)
+        rate = np.mean(absum)
+        return rate
     def tpt_pipeline_dns(self,expdir,savedir,winstrat,feat_def):
         # Call winstrat and anything else we want. 
         # savedir: where all the results of this particular TPT will be saved.
@@ -50,22 +56,32 @@ class WinterStratosphereTPT:
         # ---- Plot committor in a few different coordinates -----
         src_tag,dest_tag = winstrat.compute_src_dest_tags(X,feat_def,self.tpt_bndy,"src_dest")
         qp = 1.0*(dest_tag == 1).flatten()
-        weight = np.ones(Nx*Nt)/(Nx*Nt)
+        qm = 1.0*(src_tag == 0).flatten()
+        pi = 1.0*np.ones(Nx*Nt)/(Nx*Nt)
         keypairs = [['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','mag1_anomaly'],['time_d','mag2_anomaly']]
         for i_kp in range(len(keypairs)):
             fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
             theta_x = np.array([funlib[keypairs[i_kp][j]]["fun"](X.reshape((Nx*Nt,xdim))) for j in range(2)]).T
-            fig,ax = helper.plot_field_2d(qp,weight,theta_x,shp=[15,15],fieldname="Committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+            # Plot forward committor
+            fig,ax = helper.plot_field_2d(qp,pi,theta_x,shp=[15,15],fieldname="Committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
             fig.savefig(join(savedir,"qp_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+            plt.close(fig)
+            # Plot density
+            fig,ax = helper.plot_field_2d(pi,np.ones(Nx*Nt),theta_x,shp=[15,15],fieldname="Density",fun0name=fun0name,fun1name=fun1name,contourflag=True,logscale=True,avg_flag=False)
+            fig.savefig(join(savedir,"qp_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+            plt.close(fig)
+            # Plot backward committor
+            fig,ax = helper.plot_field_2d(qm,pi,theta_x,shp=[15,15],fieldname="Backward committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+            fig.savefig(join(savedir,"qm_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
             plt.close(fig)
         # Compute density and backward committor
         # Compute rate
         rate = self.compute_rate_direct(src_tag,dest_tag)
         # Compute lead time
         # Compute current (??)
-        result = {"qp": qp, "rate": rate}
-        pickle.dump(result,open(join(savedir,"result"),"wb"))
-        return result
+        summary = {"rate": rate}
+        pickle.dump(summary,open(join(savedir,"summary"),"wb"))
+        return summary 
     def cluster_features(self,clust_feat_filename,clust_filename,winstrat,num_clusters=100):
         # Read in a feature array from feat_filename and build clusters. Save cluster centers. Save them out in clust_filename.
         Y = np.load(clust_feat_filename)
@@ -198,19 +214,22 @@ class WinterStratosphereTPT:
             #print("rowsums: min={}, max={}".format(rowsums.min(),rowsums.max()))
         print("minrowsums = {}, mincolsums = {}".format(minrowsums,mincolsums))
         init_dens = np.array([np.sum(km[0].labels_ == i) for i in range(km[0].n_clusters)], dtype=float)
+        # Density and committors
         init_dens *= 1.0/np.sum(init_dens)
         init_dens = np.maximum(init_dens, np.max(init_dens)*1e-4)
         pi = self.compute_tdep_density(P_list,init_dens,winstrat.wtime)
-        print("pi[0]: min={}, max={}".format(pi[0].min(),pi[0].max()))
         piflat = np.concatenate(pi)
-        print("piflat: min={}, max={}".format(piflat.min(),piflat.max()))
         qm = self.compute_backward_committor(P_list,winstrat.wtime,ina,inb,pi)
         qmflat = np.concatenate(qm)
-        print("qmflat: min={}, max={}".format(qmflat.min(),qmflat.max()))
         qp = self.compute_forward_committor(P_list,winstrat.wtime,ina,inb)
         qpflat = np.concatenate(qp)
-        print("qpflat.shape = {}".format(qpflat.shape))
         print("qp: min={}, max={}, frac in (.2,.8) = {}".format(qpflat.min(),qpflat.max(),np.mean((qpflat>.2)*(qpflat<.8))))
+        # Rate
+        flux = []
+        for ti in range(winstrat.Ntwint-1):
+            flux += [(P_list[ti].T * pi[ti] * qm[ti]).T * qp[ti+1]]
+        ti_froma = np.where(winstrat.wtime > self.tpt_bndy['tthresh'][0])[0][0]
+        rate = np.sum(flux[ti_froma])
         pickle.dump(qp,open(join(savedir,"qp"),"wb"))
         pickle.dump(qm,open(join(savedir,"qm"),"wb"))
         pickle.dump(pi,open(join(savedir,"pi"),"wb"))
@@ -218,7 +237,8 @@ class WinterStratosphereTPT:
         pickle.dump(inb,open(join(savedir,"inb"),"wb"))
         pickle.dump(centers,open(join(savedir,"centers"),"wb"))
         # Do the time-dependent Markov Chain analysis
-        result_dga = {"qp": qp, "pi": pi,}
+        summary = {"rate": rate,}
+        pickle.dump(summary,open(join(savedir,"summary"),"wb"))
         # Plot 
         centers_all = np.concatenate(centers, axis=0)
         uref_call = funlib["uref"]["fun"](centers_all)
@@ -229,22 +249,67 @@ class WinterStratosphereTPT:
         for i_kp in range(len(keypairs)):
             fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
             theta_x = np.array([funlib[keypairs[i_kp][j]]["fun"](centers_all) for j in range(2)]).T
+            Jth = self.project_current(theta_x,winstrat,centers,flux)
+            # Plot density
             fig,ax = helper.plot_field_2d(piflat,np.ones(len(centers_all)),theta_x,shp=[15,15],fieldname="Density",fun0name=fun0name,fun1name=fun1name,contourflag=True,avg_flag=False,logscale=True)
+            self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
             fig.savefig(join(savedir,"pi_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
             plt.close(fig)
+            # Plot committor
             fig,ax = helper.plot_field_2d(qpflat,piflat,theta_x,shp=[15,15],fieldname="Committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+            self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
             fig.savefig(join(savedir,"qp_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
             plt.close(fig)
+            # Plot backward committor
             fig,ax = helper.plot_field_2d(qmflat,piflat,theta_x,shp=[15,15],fieldname="Backward committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+            self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
             fig.savefig(join(savedir,"qm_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
             plt.close(fig)
-        return result_dga
-    def compute_rate_direct(self,src_tag,dest_tag):
-        # This is meant for full-winter trajectories
-        ab_tag = (src_tag==0)*(dest_tag==1)
-        absum = 1.0*(np.sum(ab_tag,axis=1) > 0)
-        rate = np.mean(absum)
-        return rate
+        return summary 
+    def project_current(self,theta_flat,winstrat,centers,flux):
+        # For a given vector-valued observable theta, evaluate the current operator J dot grad(theta)
+        # theta is a list of (Mt x d) arrays, where d is the dimensionality of theta and Mt is the number of clusters at time step t
+        klast = np.where(winstrat.wtime < self.tpt_bndy['tthresh'][1])[0][-1] + 2
+        thdim = theta_flat.shape[1]
+        nclust_list = np.array([centers[ti].shape[0] for ti in range(len(centers))])
+        Jth = np.zeros((np.sum(nclust_list),thdim))
+        Jmag = np.zeros(np.sum(nclust_list))  # Magnitude of the current
+        i1 = 0
+        for k in range(klast):
+            i2 = i1 + nclust_list[k]
+            if k > 0:
+                bwd_weight = 0.5*(k < winstrat.Ntwint-1) + 1.0*(k == winstrat.Ntwint-1)
+                i0 = i1 - nclust_list[k-1]
+                for j in range(thdim):
+                    Jth[i1:i2,j] += bwd_weight*np.sum(flux[k-1]*np.add.outer(-theta_flat[i0:i1,j], theta_flat[i1:i2,j]), axis=0)
+            if k < klast-1:
+                fwd_weight = 0.5*(k > 0) + 1.0*(k == 0)
+                i3 = i2 + nclust_list[k+1]
+                for j in range(thdim):
+                    #print("shapes: Jth[i1:i2,j]: {}, flux[k]: {}, theta_flat[i1:i2,j]: {}, theta_flat[i2:i3,j]: {}".format(Jth[i1:i2,j].shape,flux[k].shape,theta_flat[i1:i2,j].shape, theta_flat[i2:i3,j].shape))
+                    Jth[i1:i2,j] += fwd_weight*np.sum(flux[k]*np.add.outer(-theta_flat[i1:i2,j], theta_flat[i2:i3,j]), axis=1)
+            i1 = i2
+        return Jth
+    def plot_current_overlay(self,theta_x,Jth,weight,fig,ax):
+        # Plot a field on a (time,var1) plane.
+        # field must be a list of arrays in the same shape as the state space
+        Nx = len(theta_x)
+        shp = 20*np.ones(2, dtype=int)
+        _,dth,thaxes,_,J0_proj,_,_,_,bounds = helper.project_field(Jth[:,0],weight,theta_x,shp=shp,avg_flag=False)
+        _,_,_,_,J1_proj,_,_,_,_ = helper.project_field(Jth[:,1],weight,theta_x,shp=shp,bounds=bounds,avg_flag=False)
+        Jmag = np.sqrt(J0_proj**2 + J1_proj**2)
+        minmag,maxmag = np.nanmin(Jmag),np.nanmax(Jmag)
+        coeff1 = 1.0/maxmag
+        dsmin,dsmax = np.max(shp)/200,np.max(shp)/20
+        coeff0 = dsmax / (np.exp(-coeff1 * maxmag) - 1)
+        ds = coeff0 * (np.exp(-coeff1 * Jmag) - 1)
+        #ds = dsmin + (dsmax - dsmin)*(Jmag - minmag)/(maxmag - minmag)
+        normalizer = ds*(Jmag != 0)/(np.sqrt((J0_proj/(dth[0]))**2 + (J1_proj/(dth[1]))**2) + (Jmag == 0))
+        J0_proj *= normalizer*(1 - np.isnan(J0_proj))
+        J1_proj *= normalizer*(1 - np.isnan(J1_proj))
+        th01,th10 = np.meshgrid(thaxes[0],thaxes[1],indexing='ij') 
+        ax.quiver(th01,th10,J0_proj,J1_proj,angles='xy',scale_units='xy',scale=1.0,color='black',width=1.5,headwidth=4.4,units='dots',zorder=4)
+        return
 
 
 

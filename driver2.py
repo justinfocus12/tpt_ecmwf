@@ -71,6 +71,9 @@ evaluate_database_s2s =        0
 cluster_flag =                 0
 build_msm_flag =               0
 tpt_s2s_flag =                 1
+# Summary statistics
+plot_rate_flag =               1
+
 
 feature_file = join(featdir,"feat_def")
 winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring_day0,Npc_per_level_max)
@@ -97,23 +100,13 @@ uthresh_list = np.arange(5,-21,-2.5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 if evaluate_database_e2:
     winstrat.evaluate_features_database(file_list_e2,feat_def,expdir_e2,"X",winstrat.wtime[0],winstrat.wtime[-1])
 if tpt_e2_flag: 
-    rate_list_dns = np.zeros(len(uthresh_list))
     for i_uth in range(len(uthresh_list)):
         uthresh = uthresh_list[i_uth]
         savedir = join(expdir_e2,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
         if not exists(savedir): mkdir(savedir)
         tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
         tpt.set_boundaries(tpt_bndy)
-        result_dns = tpt.tpt_pipeline_dns(expdir_e2,savedir,winstrat,feat_def)
-        rate_list_dns[i_uth] = result_dns["rate"]
-    
-    fig,ax = plt.subplots()
-    hdns, = ax.plot(uthresh_list,rate_list_dns,color='cyan',marker='o',label="ERA20C")
-    ax.set_xlabel("Zonal wind threshold",fontdict=font)
-    ax.set_ylabel("Rate")
-    ax.legend(handles=[hdns])
-    fig.savefig(join(expdir_e2,"rate"))
-    plt.close(fig)
+        summary_dns = tpt.tpt_pipeline_dns(expdir_e2,savedir,winstrat,feat_def)
 # ------------------- DGA from S2S --------------------------------
 feat_filename = join(expdir_s2s,"X.npy")
 clust_feat_filename = join(expdir_s2s,"Y.npy")
@@ -130,16 +123,36 @@ if cluster_flag:
 if build_msm_flag:
     tpt.build_msm(clust_feat_filename,clust_filename,msm_filename,winstrat)
 if tpt_s2s_flag:
-    rate_list_s2s = np.zeros(len(uthresh_list))
     for i_uth in range(len(uthresh_list)):
         uthresh = uthresh_list[i_uth]
         savedir = join(expdir_s2s,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
         if not exists(savedir): mkdir(savedir)
         tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
         tpt.set_boundaries(tpt_bndy)
-        result_dga = tpt.tpt_pipeline_dga(feat_filename,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat)
-        #rate_list_dga[i_uth] = result_dga["rate"]
+        summary_dga = tpt.tpt_pipeline_dga(feat_filename,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat)
 
 
+
+# ------------- Compare rates ---------------------
+if plot_rate_flag:
+    rate_list_dns = np.zeros(len(uthresh_list))
+    rate_list_dga = np.zeros(len(uthresh_list))
+    for i_uth in range(len(uthresh_list)):
+        uthresh = uthresh_list[i_uth]
+        savedir_dns = join(expdir_e2,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+        savedir_dga = join(expdir_s2s,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+        summary_dga = pickle.load(open(join(savedir_dga,"summary"),"rb"))
+        summary_dns = pickle.load(open(join(savedir_dns,"summary"),"rb"))
+        rate_list_dga[i_uth] = summary_dga["rate"]
+        rate_list_dns[i_uth] = summary_dns["rate"]
+    fig,ax = plt.subplots()
+    hdns, = ax.plot(uthresh_list,rate_list_dns,color='cyan',marker='o',label="ERA20C")
+    hdga, = ax.plot(uthresh_list,rate_list_dga,color='red',marker='o',label="S2S")
+    ax.set_yscale('log')
+    ax.set_xlabel("Zonal wind threshold",fontdict=font)
+    ax.set_ylabel("Rate")
+    ax.legend(handles=[hdns,hdga])
+    fig.savefig(join(expdir,"rate_tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh)))
+    plt.close(fig)
 
 # -------------------- DGA from S2S ------------------------------------------------
