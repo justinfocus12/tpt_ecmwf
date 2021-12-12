@@ -58,6 +58,7 @@ print("ftidx_e2 = {}".format(ftidx_e2))
 winter_day0 = 0.0
 spring_day0 = 150.0
 Npc_per_level_max = 6
+num_clusters = 70
 # Parameters to determine what to do
 # Featurization
 create_features_flag =         0
@@ -67,8 +68,8 @@ evaluate_database_e2 =         0
 tpt_e2_flag =                  0
 # s2s
 evaluate_database_s2s =        0
-cluster_flag =                 1
-build_msm_flag =               1
+cluster_flag =                 0
+build_msm_flag =               0
 tpt_s2s_flag =                 1
 
 feature_file = join(featdir,"feat_def")
@@ -90,7 +91,7 @@ feat_def = pickle.load(open(winstrat.feature_file,"rb"))
 tpt = tpt_general.WinterStratosphereTPT()
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = 10.0 # First day that SSW could happen
-tthresh1 = 145.0 # Last day that SSW could happen
+tthresh1 = 120.0 # Last day that SSW could happen
 uthresh_list = np.arange(5,-21,-2.5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 # ------------------ TPT direct estimates from ERA20C ------------------------------
 if evaluate_database_e2:
@@ -118,14 +119,14 @@ feat_filename = join(expdir_s2s,"X.npy")
 clust_feat_filename = join(expdir_s2s,"Y.npy")
 clust_filename = join(expdir_s2s,"kmeans")
 msm_filename = join(expdir_s2s,"msm")
-Npc_per_level = np.zeros(len(feat_def["plev"]), dtype=int)
-Nwaves = 0
+Npc_per_level = 1*np.ones(len(feat_def["plev"]), dtype=int)
+Nwaves = 2
 if evaluate_database_s2s:
     # Expensive!
     winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,expdir_s2s,"X",winstrat.wtime[0],winstrat.wtime[-1])
 if cluster_flag:
     winstrat.evaluate_cluster_features(feat_filename,feat_def,clust_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves)
-    tpt.cluster_features(clust_feat_filename,clust_filename,winstrat,num_clusters=10)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
+    tpt.cluster_features(clust_feat_filename,clust_filename,winstrat,num_clusters=num_clusters)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
 if build_msm_flag:
     tpt.build_msm(clust_feat_filename,clust_filename,msm_filename,winstrat)
 if tpt_s2s_flag:

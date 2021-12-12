@@ -40,12 +40,12 @@ class TimeDependentMarkovChain:
         # F and G are both (Nt-1)-length lists of matrices
         Q = [G[i].copy() for i in range(self.Nt)]
         for i in np.arange(self.Nt-2,-1,-1):
-            Q[i] += np.array((np.array(self.P_list[i].todense())*F[i]) @ (Q[i+1])).flatten()
+            Q[i] += (self.P_list[i]*F[i]) @ Q[i+1]
             if Q[i].max() > 1.0+1e-10:
                 print("Q[i+1] = {}".format(Q[i+1]))
                 print("Q[i] = {}".format(Q[i]))
-                print("P_list[i] = {}".format(self.P_list[i].todense()))
-                print("PF = {}".format((self.P_list[i].todense()*F[i])))
+                print("P_list[i] = {}".format(self.P_list[i]))
+                print("PF = {}".format((self.P_list[i]*F[i])))
                 print("F[i] = {}".format(F[i]))
                 raise Exception("Oops, Q grew beyond 1")
         return Q
