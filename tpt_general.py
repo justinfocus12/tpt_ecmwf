@@ -187,6 +187,7 @@ class WinterStratosphereTPT:
         # G = (1_B) * exp(lam*damfun)
         # F = (1_D) * exp(lam*damfun)
         nclust_list = [len(dam_centers[ti]) for ti in range(len(dam_centers))]
+        int2b = []
         if maxmom >= 1:
             print("dam_centers[0].shape = {}".format(dam_centers[0].shape))
             mc = tdmc_obj.TimeDependentMarkovChain(P_list,winstrat.wtime)
@@ -204,41 +205,107 @@ class WinterStratosphereTPT:
                 else:
                     G += [np.zeros(ncl0)] #mc.Nx[mc.Nt-1])]
                 j += ncl0
-            self.int2b[key] += [mc.dynamical_galerkin_approximation(F,G)]
+            int2b += [mc.dynamical_galerkin_approximation(F,G)]
         if maxmom >= 2:
             G = []
             j = 0
             for i in range(mc.Nt):
-                ncl0 = self.nclust_list[i]
+                ncl0 = nclust_list[i]
                 if i < mc.Nt-1:
-                    ncl1 = self.nclust_list[i+1]
-                    G += [(self.P_list[i] * F[i] * I[i]**2) @ (self.qp[i+1]) + 2*(self.P_list[i] * F[i] * I[i]) @ (self.int2b[key][0][i+1])]
+                    ncl1 = nclust_list[i+1]
+                    G += [(P_list[i] * F[i] * I[i]**2) @ (qp[i+1]) + 2*(P_list[i] * F[i] * I[i]) @ (int2b[0][i+1])]
                 else:
                     G += [np.zeros(ncl0)]
-            self.int2b[key] += [mc.dynamical_galerkin_approximation(F,G)]
+            int2b += [mc.dynamical_galerkin_approximation(F,G)]
         if maxmom >= 3:
             G = []
             j = 0
             for i in range(mc.Nt):
-                ncl0 = self.nclust_list[i]
+                ncl0 = nclust_list[i]
                 if i < mc.Nt-1:
-                    ncl1 = self.nclust_list[i+1]
-                    G += [(self.P_list[i] * F[i] * I[i]**3) @ (self.qp[i+1]) + 3*(self.P_list[i] * F[i] * I[i]**2) @ (self.int2b[key][0][i+1]) + 3*(self.P_list[i] * F[i] * I[i]) @ (self.int2b[key][1][i+1])]
+                    ncl1 = nclust_list[i+1]
+                    G += [(P_list[i] * F[i] * I[i]**3) @ (qp[i+1]) + 3*(P_list[i] * F[i] * I[i]**2) @ (int2b[0][i+1]) + 3*(P_list[i] * F[i] * I[i]) @ (int2b[1][i+1])]
                 else:
                     G += [np.zeros(ncl0)]
-            self.int2b[key] += [mc.dynamical_galerkin_approximation(F,G)]
+            int2b += [mc.dynamical_galerkin_approximation(F,G)]
         if maxmom >= 4:
             G = []
             j = 0
             for i in range(mc.Nt):
-                ncl0 = self.nclust_list[i]
+                ncl0 = nclust_list[i]
                 if i < mc.Nt-1:
-                    ncl1 = self.nclust_list[i+1]
-                    G += [(self.P_list[i] * F[i] * I[i]**4) @ (self.qp[i+1]) + 4*(self.P_list[i] * F[i] * I[i]**3) @ (self.int2b[key][0][i+1]) + 6*(self.P_list[i] * F[i] * I[i]**2) @ (self.int2b[key][1][i+1]) + 4*(self.P_list[i] * F[i] * I[i]) @ (self.int2b[key][2][i+1])]
+                    ncl1 = nclust_list[i+1]
+                    G += [(P_list[i] * F[i] * I[i]**4) @ (qp[i+1]) + 4*(P_list[i] * F[i] * I[i]**3) @ (int2b[0][i+1]) + 6*(P_list[i] * F[i] * I[i]**2) @ (int2b[1][i+1]) + 4*(P_list[i] * F[i] * I[i]) @ (int2b[2][i+1])]
                 else:
                     G += [np.zeros(ncl0)]
-            self.int2b[key] += [mc.dynamical_galerkin_approximation(F,G)]
-        return 
+            int2b += [mc.dynamical_galerkin_approximation(F,G)]
+        return int2b
+    def conditionalize_int2b(self,P_list,winstrat,int2b,qp): #,damkey):
+        # Having already computed an integral, turn it conditional
+        qp = np.concatenate(tuple(qp))
+        int2b_cond = []
+        nclust_list = [len(int2b[ti]) for ti in range(len(int2b))]
+        maxmom = len(int2b)
+        #print("maxmom = {}".format(maxmom))
+        #sys.exit()
+        if maxmom >= 1:
+            m1 = np.concatenate(tuple(int2b[0]))
+            cond_m1 = m1*(qp != 0)/(qp + 1.0*(qp == 0))
+            cond_m1[qp == 0] = np.nan
+            int2b_cond['mean'] = []
+            int2b_cond['m1'] = [] # This is pedantic: it's the same
+            j = 0
+            for k in range(winstrat.Ntwint):
+                nclust = nclust_list[k]
+                int2b_cond['mean'] += [cond_m1[j:j+nclust]]
+                int2b_cond['m1'] += [cond_m1[j:j+nclust]]
+                j += nclust
+        if maxmom >= 2:
+            m2 = np.concatenate(tuple(self.int2b[key][1]))
+            cond_m2 = m2*(qp != 0)/(qp + 1.0*(qp == 0))
+            cond_m2[qp == 0] = np.nan
+            cond = (cond_m2 - cond_m1**2) #*(qp != 0)/(qp + 1.0*(qp == 0))
+            if np.min(cond) < 0: sys.exit("error: we got a negative variance. min = {}, max = {}".format(np.min(m2-m1**2),np.max(m2-m1**2)))
+            cond[qp == 0] = np.nan
+            cond = np.sqrt(cond)
+            int2b_cond['std'] = []
+            int2b_cond['m2'] = []
+            j = 0
+            for k in range(self.Ntcent):
+                nclust = self.nclust_list[k]
+                int2b_cond['std'] += [cond[j:j+nclust]]
+                int2b_cond['m2'] += [cond_m2[j:j+nclust]]
+                j += nclust
+        if maxmom >= 3:
+            m3 = np.concatenate(tuple(self.int2b[key][2]))
+            cond_m3 = m3*(qp != 0)/(qp + 1.0*(qp == 0))
+            cond_m3[qp == 0] = np.nan
+            cond = (cond_m3 - 3*cond_m1*(cond_m2 - cond_m1**2) - cond_m1**3) #*(qp != 0)/(qp + 1.0*(qp == 0))
+            cond[qp == 0] = np.nan
+            #cond = np.sign(cond)*np.abs(cond)**(1.0/3)
+            int2b_cond['skew'] = []
+            int2b_cond['m3'] = []
+            j = 0
+            for k in range(self.Ntcent):
+                nclust = self.nclust_list[k]
+                int2b_cond['skew'] += [cond[j:j+nclust]]
+                int2b_cond['m3'] += [cond_m3[j:j+nclust]]
+                j += nclust
+        if maxmom >= 4:
+            m4 = np.concatenate(tuple(self.int2b[key][3]))
+            cond_m4 = m4*(qp != 0)/(qp + 1.0*(qp == 0))
+            cond_m4[qp == 0] = np.nan
+            cond = (cond_m4 - 4*cond_m3*cond_m1 + 6*cond_m2*cond_m1**2 - 3*cond_m1**4)/(cond_m2 - cond_m1**2)**2
+            cond[qp == 0] = np.nan
+            int2b_cond['kurt'] = []
+            int2b_cond['m4'] = []
+            j = 0
+            for k in range(self.Ntcent):
+                nclust = self.nclust_list[k]
+                int2b_cond['kurt'] += [cond[j:j+nclust]]
+                int2b_cond['m4'] += [cond_m4[j:j+nclust]]
+                j += nclust
+        return int2b_cond 
     def tpt_pipeline_dga(self,feat_filename,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat):
         # Label each cluster as in A or B or elsewhere
         X = np.load(feat_filename)
@@ -281,6 +348,8 @@ class WinterStratosphereTPT:
         qp = self.compute_forward_committor(P_list,winstrat.wtime,ina,inb)
         qpflat = np.concatenate(qp)
         print("qp: min={}, max={}, frac in (.2,.8) = {}".format(qpflat.min(),qpflat.max(),np.mean((qpflat>.2)*(qpflat<.8))))
+        # Integral to B
+        dam_centers = [np.ones(len(km[ti].n_clusters)) for ti in range(winstrat.Ntwint)]
         # Rate
         flux = []
         for ti in range(winstrat.Ntwint-1):
@@ -301,7 +370,7 @@ class WinterStratosphereTPT:
         uref_call = funlib["uref"]["fun"](centers_all)
         print("uref_call: min={}, max={}, mean={}".format(uref_call.min(),uref_call.max(),uref_call.mean()))
         weight = np.ones(len(centers_all))/(len(centers_all))
-        keypairs = [['time_d','uref'],['time_d','mag1'],['time_d','mag1_anomaly'],['time_d','mag2'],['time_d','mag2_anomaly'],['time_d','lev0_pc1']]
+        keypairs = [['time_d','uref'],['time_d','mag1'],['time_d','mag1_anomaly'],['time_d','mag2'],['time_d','mag2_anomaly'],['time_d','lev0_pc1']][:1]
         #keypairs = [['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','mag1_anomaly'],['time_d','mag2_anomaly']]
         for i_kp in range(len(keypairs)):
             fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
