@@ -68,7 +68,7 @@ class WinterStratosphereTPT:
             plt.close(fig)
             # Plot density
             fig,ax = helper.plot_field_2d(pi,np.ones(Nx*Nt),theta_x,shp=[15,15],fieldname="Density",fun0name=fun0name,fun1name=fun1name,contourflag=True,logscale=True,avg_flag=False)
-            fig.savefig(join(savedir,"qp_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+            fig.savefig(join(savedir,"pi_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
             plt.close(fig)
             # Plot backward committor
             fig,ax = helper.plot_field_2d(qm,pi,theta_x,shp=[15,15],fieldname="Backward committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
@@ -182,6 +182,63 @@ class WinterStratosphereTPT:
             if i < mc.Nt-1: F += [1.0*np.outer((ina[i]==0)*(inb[i]==0), np.ones(mc.Nx[i+1]))]
         qp = mc.dynamical_galerkin_approximation(F,G)
         return qp
+    def compute_integral_to_B(self,P_list,winstrat,ina,inb,qp,dam_centers,maxmom=2):
+        # For example, lead time. damfun must be a function of the full state space, but computable on cluster centers. 
+        # G = (1_B) * exp(lam*damfun)
+        # F = (1_D) * exp(lam*damfun)
+        nclust_list = [len(dam_centers[ti]) for ti in range(len(dam_centers))]
+        if maxmom >= 1:
+            print("dam_centers[0].shape = {}".format(dam_centers[0].shape))
+            mc = tdmc_obj.TimeDependentMarkovChain(P_list,winstrat.wtime)
+            G = []
+            F = []
+            I = []
+            j = 0 # counts cluster
+            for i in range(mc.Nt):
+                ncl0 = nclust_list[i]
+                if i < mc.Nt-1: 
+                    ncl1 = nclust_list[i+1]
+                    F += [np.outer(1.0*(ina[i]==0)*(inb[i]==0), np.ones(mc.Nx[i+1]))]
+                    I += [0.5*np.add.outer(dam_centers[i], dam_centers[i+1])]
+                    G += [(P_list[i] * F[i] * I[i]) @ (qp[i+1])]
+                else:
+                    G += [np.zeros(ncl0)] #mc.Nx[mc.Nt-1])]
+                j += ncl0
+            self.int2b[key] += [mc.dynamical_galerkin_approximation(F,G)]
+        if maxmom >= 2:
+            G = []
+            j = 0
+            for i in range(mc.Nt):
+                ncl0 = self.nclust_list[i]
+                if i < mc.Nt-1:
+                    ncl1 = self.nclust_list[i+1]
+                    G += [(self.P_list[i] * F[i] * I[i]**2) @ (self.qp[i+1]) + 2*(self.P_list[i] * F[i] * I[i]) @ (self.int2b[key][0][i+1])]
+                else:
+                    G += [np.zeros(ncl0)]
+            self.int2b[key] += [mc.dynamical_galerkin_approximation(F,G)]
+        if maxmom >= 3:
+            G = []
+            j = 0
+            for i in range(mc.Nt):
+                ncl0 = self.nclust_list[i]
+                if i < mc.Nt-1:
+                    ncl1 = self.nclust_list[i+1]
+                    G += [(self.P_list[i] * F[i] * I[i]**3) @ (self.qp[i+1]) + 3*(self.P_list[i] * F[i] * I[i]**2) @ (self.int2b[key][0][i+1]) + 3*(self.P_list[i] * F[i] * I[i]) @ (self.int2b[key][1][i+1])]
+                else:
+                    G += [np.zeros(ncl0)]
+            self.int2b[key] += [mc.dynamical_galerkin_approximation(F,G)]
+        if maxmom >= 4:
+            G = []
+            j = 0
+            for i in range(mc.Nt):
+                ncl0 = self.nclust_list[i]
+                if i < mc.Nt-1:
+                    ncl1 = self.nclust_list[i+1]
+                    G += [(self.P_list[i] * F[i] * I[i]**4) @ (self.qp[i+1]) + 4*(self.P_list[i] * F[i] * I[i]**3) @ (self.int2b[key][0][i+1]) + 6*(self.P_list[i] * F[i] * I[i]**2) @ (self.int2b[key][1][i+1]) + 4*(self.P_list[i] * F[i] * I[i]) @ (self.int2b[key][2][i+1])]
+                else:
+                    G += [np.zeros(ncl0)]
+            self.int2b[key] += [mc.dynamical_galerkin_approximation(F,G)]
+        return 
     def tpt_pipeline_dga(self,feat_filename,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat):
         # Label each cluster as in A or B or elsewhere
         X = np.load(feat_filename)

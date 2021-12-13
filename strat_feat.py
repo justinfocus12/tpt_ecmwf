@@ -394,15 +394,9 @@ class WinterStratosphereFeatures:
         if wn <= 0:
             raise Exception("Need an integer wavenumber >= 1. You gave wn = {}".format(wn))
         widx = 2 + 2*wn*np.arange(2)
-        print("widx = {}".format(widx))
-        print("x[:,widx].shape = {}".format(x[:,widx].shape))
-        print("waves_szn_std.shape = {}".format(feat_def['waves_szn_std'].shape))
-        print("waves_szn_mean.shape = {}".format(feat_def['waves_szn_mean'].shape))
-        print("wn = {}".format(wn))
         wave = self.reseason(x[:,0],x[:,widx],feat_def['t_szn'],feat_def['waves_szn_mean'][:,2*(wn-1):2*(wn-1)+2],feat_def['waves_szn_std'][:,2*(wn-1):2*(wn-1)+2])
         phase = np.arctan(-wave[:,1]/(wn*wave[:,0]))
         mag = np.sqrt(np.sum(wave**2,axis=1))
-        print("mag.shape = {}".format(mag.shape))
         if unseason_mag:
             mag = self.unseason(x[:,0],mag,feat_def["wave_mag_szn_mean"][:,wn-1],feat_def["wave_mag_szn_std"][:,wn-1])
         return np.array([mag,phase]).T
@@ -450,7 +444,6 @@ class WinterStratosphereFeatures:
         return funlib
     def get_pc(self,x,i_lev,i_eof):
         eof = x[:,2 + 2*self.num_wavenumbers + i_lev*self.Npc_per_level_max + i_eof]
-        print("For i_lev={} and i_eof={}, min={}, max={}".format(i_lev,i_eof,eof.min(),eof.max()))
         return eof
     def show_ugh_onelevel_cartopy(self,gh,u,v,lat,lon): 
         # Display the geopotential height at a single pressure level

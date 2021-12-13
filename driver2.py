@@ -21,6 +21,7 @@ from os.path import join,exists
 codedir = "/home/jf4241/ecmwf/s2s"
 os.chdir(codedir)
 datadir_e2 = "/scratch/jf4241/ecmwf_data/era20c_data/2021-11-03"
+datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2021-12-12"
 datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-11-01"
 featdir = "/scratch/jf4241/ecmwf_data/features/2021-12-11"
 if not exists(featdir): mkdir(featdir)
@@ -34,6 +35,8 @@ expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
 expdir_e2 = join(expdir,"era20c")
 if not exists(expdir_e2): mkdir(expdir_e2)
+expdir_ei = join(expdir,"eraint")
+if not exists(expdir_ei): mkdir(expdir_ei)
 expdir_s2s = join(expdir,"s2s")
 if not exists(expdir_s2s): mkdir(expdir_s2s)
 import helper
@@ -44,16 +47,19 @@ np.random.seed(1)
 
 # Which years to use for each dataset
 fall_years_e2 = np.arange(1900,2007)
+fall_years_ei = np.arange(1979,2018)
 fall_years_s2s = np.arange(1996,2017)
 
 # Specify the data files
 file_list_e2 = []
 for i_fy in range(len(fall_years_e2)):
     file_list_e2 += [join(datadir_e2,"%s-11-01_to_%s-04-30.nc"%(fall_years_e2[i_fy],fall_years_e2[i_fy]+1))]
+file_list_ei = []
+for i_fy in range(len(fall_years_ei)):
+    file_list_ei += [join(datadir_ei,"%s-11-01_to_%s-04-30.nc"%(fall_years_ei[i_fy],fall_years_ei[i_fy]+1))]
 file_list_s2s = [join(datadir_s2s,f) for f in os.listdir(datadir_s2s) if f.endswith(".nc")]
 ftidx_e2 = np.random.choice(np.arange(len(file_list_e2)),size=15,replace=False)
 dga_idx_s2s = np.random.choice(np.arange(len(file_list_s2s)),size=500,replace=False) # Subset of filed to use for DGA.
-print("ftidx_e2 = {}".format(ftidx_e2))
 
 winter_day0 = 0.0
 spring_day0 = 150.0
@@ -65,12 +71,15 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_e2_flag =                  0
+tpt_e2_flag =                  1
+# eraint
+evaluate_database_ei =         0
+tpt_ei_flag =                  1
 # s2s
 evaluate_database_s2s =        0
 cluster_flag =                 0
 build_msm_flag =               0
-tpt_s2s_flag =                 1
+tpt_s2s_flag =                 0
 # Summary statistics
 plot_rate_flag =               1
 
@@ -100,6 +109,7 @@ uthresh_list = np.arange(5,-21,-2.5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 if evaluate_database_e2:
     winstrat.evaluate_features_database(file_list_e2,feat_def,expdir_e2,"X",winstrat.wtime[0],winstrat.wtime[-1])
 if tpt_e2_flag: 
+    print("Starting TPT on era20c")
     for i_uth in range(len(uthresh_list)):
         uthresh = uthresh_list[i_uth]
         savedir = join(expdir_e2,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
@@ -107,6 +117,18 @@ if tpt_e2_flag:
         tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
         tpt.set_boundaries(tpt_bndy)
         summary_dns = tpt.tpt_pipeline_dns(expdir_e2,savedir,winstrat,feat_def)
+# ------------------ TPT direct estimates from ERA-Interim ------------------------------
+if evaluate_database_ei:
+    winstrat.evaluate_features_database(file_list_ei,feat_def,expdir_ei,"X",winstrat.wtime[0],winstrat.wtime[-1])
+if tpt_ei_flag: 
+    print("Starting TPT on eraint")
+    for i_uth in range(len(uthresh_list)):
+        uthresh = uthresh_list[i_uth]
+        savedir = join(expdir_ei,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+        if not exists(savedir): mkdir(savedir)
+        tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
+        tpt.set_boundaries(tpt_bndy)
+        summary_dns = tpt.tpt_pipeline_dns(expdir_ei,savedir,winstrat,feat_def)
 # ------------------- DGA from S2S --------------------------------
 feat_filename = join(expdir_s2s,"X.npy")
 clust_feat_filename = join(expdir_s2s,"Y.npy")
@@ -123,6 +145,7 @@ if cluster_flag:
 if build_msm_flag:
     tpt.build_msm(clust_feat_filename,clust_filename,msm_filename,winstrat)
 if tpt_s2s_flag:
+    print("Starting TPT on S2S")
     for i_uth in range(len(uthresh_list)):
         uthresh = uthresh_list[i_uth]
         savedir = join(expdir_s2s,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
@@ -135,23 +158,28 @@ if tpt_s2s_flag:
 
 # ------------- Compare rates ---------------------
 if plot_rate_flag:
-    rate_list_dns = np.zeros(len(uthresh_list))
+    rate_list_e2 = np.zeros(len(uthresh_list))
+    rate_list_ei = np.zeros(len(uthresh_list))
     rate_list_dga = np.zeros(len(uthresh_list))
     for i_uth in range(len(uthresh_list)):
         uthresh = uthresh_list[i_uth]
-        savedir_dns = join(expdir_e2,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+        savedir_e2 = join(expdir_e2,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+        savedir_ei = join(expdir_ei,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
         savedir_dga = join(expdir_s2s,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+        summary_e2 = pickle.load(open(join(savedir_e2,"summary"),"rb"))
+        summary_ei = pickle.load(open(join(savedir_ei,"summary"),"rb"))
         summary_dga = pickle.load(open(join(savedir_dga,"summary"),"rb"))
-        summary_dns = pickle.load(open(join(savedir_dns,"summary"),"rb"))
+        rate_list_e2[i_uth] = summary_e2["rate"]
+        rate_list_ei[i_uth] = summary_ei["rate"]
         rate_list_dga[i_uth] = summary_dga["rate"]
-        rate_list_dns[i_uth] = summary_dns["rate"]
     fig,ax = plt.subplots()
-    hdns, = ax.plot(uthresh_list,rate_list_dns,color='cyan',marker='o',label="ERA20C")
+    he2, = ax.plot(uthresh_list,rate_list_e2,color='cyan',marker='o',label="ERA20C")
+    hei, = ax.plot(uthresh_list,rate_list_ei,color='black',marker='o',label="ERAI")
     hdga, = ax.plot(uthresh_list,rate_list_dga,color='red',marker='o',label="S2S")
     ax.set_yscale('log')
     ax.set_xlabel("Zonal wind threshold",fontdict=font)
     ax.set_ylabel("Rate")
-    ax.legend(handles=[hdns,hdga])
+    ax.legend(handles=[he2,hei,hdga])
     fig.savefig(join(expdir,"rate_tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh)))
     plt.close(fig)
 
