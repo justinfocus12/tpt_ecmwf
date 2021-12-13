@@ -41,13 +41,13 @@ class TimeDependentMarkovChain:
         Q = [G[i].copy() for i in range(self.Nt)]
         for i in np.arange(self.Nt-2,-1,-1):
             Q[i] += (self.P_list[i]*F[i]) @ Q[i+1]
-            if Q[i].max() > 1.0+1e-10:
-                print("Q[i+1] = {}".format(Q[i+1]))
-                print("Q[i] = {}".format(Q[i]))
-                print("P_list[i] = {}".format(self.P_list[i]))
-                print("PF = {}".format((self.P_list[i]*F[i])))
-                print("F[i] = {}".format(F[i]))
-                raise Exception("Oops, Q grew beyond 1")
+            #if Q[i].max() > 1.0+1e-10:
+            #    print("Q[i+1] = {}".format(Q[i+1]))
+            #    print("Q[i] = {}".format(Q[i]))
+            #    print("P_list[i] = {}".format(self.P_list[i]))
+            #    print("PF = {}".format((self.P_list[i]*F[i])))
+            #    print("F[i] = {}".format(F[i]))
+            #    raise Exception("Oops, Q grew beyond 1")
         return Q
     def propagate_density_forward(self,init_dens):
         Q = [np.zeros(self.Nx[i]) for i in range(self.Nt)]

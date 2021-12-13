@@ -242,9 +242,9 @@ class WinterStratosphereTPT:
         return int2b
     def conditionalize_int2b(self,P_list,winstrat,int2b,qp): #,damkey):
         # Having already computed an integral, turn it conditional
+        int2b_cond = {}
+        nclust_list = [len(qp[ti]) for ti in range(len(qp))]
         qp = np.concatenate(tuple(qp))
-        int2b_cond = []
-        nclust_list = [len(int2b[ti]) for ti in range(len(int2b))]
         maxmom = len(int2b)
         #print("maxmom = {}".format(maxmom))
         #sys.exit()
@@ -261,7 +261,7 @@ class WinterStratosphereTPT:
                 int2b_cond['m1'] += [cond_m1[j:j+nclust]]
                 j += nclust
         if maxmom >= 2:
-            m2 = np.concatenate(tuple(self.int2b[key][1]))
+            m2 = np.concatenate(tuple(int2b[1]))
             cond_m2 = m2*(qp != 0)/(qp + 1.0*(qp == 0))
             cond_m2[qp == 0] = np.nan
             cond = (cond_m2 - cond_m1**2) #*(qp != 0)/(qp + 1.0*(qp == 0))
@@ -271,13 +271,13 @@ class WinterStratosphereTPT:
             int2b_cond['std'] = []
             int2b_cond['m2'] = []
             j = 0
-            for k in range(self.Ntcent):
-                nclust = self.nclust_list[k]
+            for k in range(winstrat.Ntwint):
+                nclust = nclust_list[k]
                 int2b_cond['std'] += [cond[j:j+nclust]]
                 int2b_cond['m2'] += [cond_m2[j:j+nclust]]
                 j += nclust
         if maxmom >= 3:
-            m3 = np.concatenate(tuple(self.int2b[key][2]))
+            m3 = np.concatenate(tuple(int2b[2]))
             cond_m3 = m3*(qp != 0)/(qp + 1.0*(qp == 0))
             cond_m3[qp == 0] = np.nan
             cond = (cond_m3 - 3*cond_m1*(cond_m2 - cond_m1**2) - cond_m1**3) #*(qp != 0)/(qp + 1.0*(qp == 0))
@@ -286,13 +286,13 @@ class WinterStratosphereTPT:
             int2b_cond['skew'] = []
             int2b_cond['m3'] = []
             j = 0
-            for k in range(self.Ntcent):
-                nclust = self.nclust_list[k]
+            for k in range(winstrat.Ntwint):
+                nclust = nclust_list[k]
                 int2b_cond['skew'] += [cond[j:j+nclust]]
                 int2b_cond['m3'] += [cond_m3[j:j+nclust]]
                 j += nclust
         if maxmom >= 4:
-            m4 = np.concatenate(tuple(self.int2b[key][3]))
+            m4 = np.concatenate(tuple(int2b[3]))
             cond_m4 = m4*(qp != 0)/(qp + 1.0*(qp == 0))
             cond_m4[qp == 0] = np.nan
             cond = (cond_m4 - 4*cond_m3*cond_m1 + 6*cond_m2*cond_m1**2 - 3*cond_m1**4)/(cond_m2 - cond_m1**2)**2
@@ -300,8 +300,8 @@ class WinterStratosphereTPT:
             int2b_cond['kurt'] = []
             int2b_cond['m4'] = []
             j = 0
-            for k in range(self.Ntcent):
-                nclust = self.nclust_list[k]
+            for k in range(winstrat.Ntwint):
+                nclust = nclust_list[k]
                 int2b_cond['kurt'] += [cond[j:j+nclust]]
                 int2b_cond['m4'] += [cond_m4[j:j+nclust]]
                 j += nclust
@@ -349,7 +349,11 @@ class WinterStratosphereTPT:
         qpflat = np.concatenate(qp)
         print("qp: min={}, max={}, frac in (.2,.8) = {}".format(qpflat.min(),qpflat.max(),np.mean((qpflat>.2)*(qpflat<.8))))
         # Integral to B
-        dam_centers = [np.ones(len(km[ti].n_clusters)) for ti in range(winstrat.Ntwint)]
+        dam_centers = [np.ones(km[ti].n_clusters) for ti in range(winstrat.Ntwint)]
+        int2b = {}
+        int2b_cond = {}
+        int2b['time'] = self.compute_integral_to_B(P_list,winstrat,ina,inb,qp,dam_centers,maxmom=2)
+        int2b_cond['time'] = self.conditionalize_int2b(P_list,winstrat,int2b['time'],qp)
         # Rate
         flux = []
         for ti in range(winstrat.Ntwint-1):
@@ -359,6 +363,8 @@ class WinterStratosphereTPT:
         pickle.dump(qp,open(join(savedir,"qp"),"wb"))
         pickle.dump(qm,open(join(savedir,"qm"),"wb"))
         pickle.dump(pi,open(join(savedir,"pi"),"wb"))
+        pickle.dump(int2b,open(join(savedir,"int2b"),"wb"))
+        pickle.dump(int2b_cond,open(join(savedir,"int2b_cond"),"wb"))
         pickle.dump(ina,open(join(savedir,"ina"),"wb"))
         pickle.dump(inb,open(join(savedir,"inb"),"wb"))
         pickle.dump(centers,open(join(savedir,"centers"),"wb"))
@@ -390,6 +396,19 @@ class WinterStratosphereTPT:
             fig,ax = helper.plot_field_2d(qmflat,piflat,theta_x,shp=[15,15],fieldname="Backward committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
             self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
             fig.savefig(join(savedir,"qm_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+            plt.close(fig)
+            # Plot integrals to B
+            fig,ax = helper.plot_field_2d(np.concatenate(int2b_cond['time']['mean']),piflat,theta_x,shp=[15,15],fieldname="Lead time",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+            self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
+            fig.savefig(join(savedir,"lt_mean_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+            plt.close(fig)
+            fig,ax = helper.plot_field_2d(np.concatenate(int2b_cond['time']['std']),piflat,theta_x,shp=[15,15],fieldname="Lead time std.",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+            self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
+            fig.savefig(join(savedir,"lt_std_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+            plt.close(fig)
+            fig,ax = helper.plot_field_2d(np.concatenate(int2b_cond['time']['skew']),piflat,theta_x,shp=[15,15],fieldname="Lead time skew",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+            self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
+            fig.savefig(join(savedir,"lt_skew_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
             plt.close(fig)
         return summary 
     def project_current(self,theta_flat,winstrat,centers,flux):

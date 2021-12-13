@@ -49,9 +49,9 @@ winter_day0 = 0.0
 spring_day0 = 150.0
 Npc_per_level_max = 6
 # ------------------ Algorithmic parameters ---------------------
-num_clusters = 120
-Npc_per_level_single = 0
-Nwaves = 0
+num_clusters = 70
+Npc_per_level_single = 1
+Nwaves = 2
 paramdir_s2s = join(expdir_s2s, "nclust{}_nwaves{}_npcperlev{}".format(num_clusters,Nwaves,Npc_per_level_single))
 if not exists(paramdir_s2s):
     mkdir(paramdir_s2s)
@@ -84,8 +84,8 @@ evaluate_database_ei =         0
 tpt_ei_flag =                  0
 # s2s
 evaluate_database_s2s =        0
-cluster_flag =                 1
-build_msm_flag =               1
+cluster_flag =                 0
+build_msm_flag =               0
 tpt_s2s_flag =                 1
 # Summary statistics
 plot_rate_flag =               1
