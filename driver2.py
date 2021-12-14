@@ -65,8 +65,8 @@ winter_day0 = 0.0
 spring_day0 = 150.0
 Npc_per_level_max = 6
 # ------------------ Algorithmic parameters ---------------------
-num_clusters = 120
-Npc_per_level_single = 0
+num_clusters = 150
+Npc_per_level_single = 2
 Nwaves = 0
 paramdir_s2s = join(expdir_s2s, "nclust{}_nwaves{}_npcperlev{}".format(num_clusters,Nwaves,Npc_per_level_single))
 if not exists(paramdir_s2s):
@@ -168,7 +168,7 @@ if evaluate_database_s2s: # Expensive!
     winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,expdir_s2s,"X",winstrat.wtime[0],winstrat.wtime[-1])
 
 print("Starting TPT on S2S")
-for i_seed in [3]: #np.arange(len(seeddir_list_s2s))[::-1]:
+for i_seed in np.arange(len(seeddir_list_s2s)):
     print("\tSeed {} of {}".format(i_seed,num_seeds_s2s))
     seeddir = seeddir_list_s2s[i_seed]
     if not exists(seeddir): mkdir(seeddir)

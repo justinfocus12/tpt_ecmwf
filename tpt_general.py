@@ -172,15 +172,24 @@ class WinterStratosphereTPT:
             P_list_bwd += [(P_list[i] * np.outer(dens[i], 1.0/dens[i+1])).T]
             rowsums = np.sum(P_list_bwd[-1],axis=1)
         mc = tdmc_obj.TimeDependentMarkovChain(P_list_bwd,time)
+        #print("len(mc.Nx) = {}, mc.Nx[0] = {}, mc.Nx[-1] = {}\nlen(mc.P_list) = {}, mc.P_list[0].shape = {}, mc.P_list[-1].shape = {}".format(len(mc.Nx),mc.Nx[0],mc.Nx[-1],len(mc.P_list),mc.P_list[0].shape,mc.P_list[-1].shape))
         G = []
         F = []
         for i in np.arange(mc.Nt-1,-1,-1):
             G += [1.0*ina[i]]
             if i < mc.Nt-1: 
-                Fnew = np.outer(1.0*(ina[i+1]==0)*(inb[i+1]==0), np.ones(mc.Nx[i]))
+                #if len(inb[i+1]) != len(inb[i]):
+                #    print("i = {}, len(inb[i+1]) = {}, len(inb[i]) = {}, mc.Nx[i+1] = {}, mc.Nx[i] = {}".format(i,len(inb[i+1]),len(inb[i]),mc.Nx[i+1],mc.Nx[i]))
+                Fnew = np.outer(1.0*(ina[i+1]==0)*(inb[i+1]==0), np.ones(len(inb[i])))
                 F += [Fnew.copy()]
-                if Fnew.shape[0] != P_list_bwd[i].shape[0] or Fnew.shape[1] != P_list_bwd[i].shape[1]:
-                    raise Exception("At index {}, Fnew.shape = {}, P_list_bwd.shape = {}".format(i,Fnew.shape,P_list_bwd[i].shape))
+                #if Fnew.shape[0] != P_list_bwd[i].shape[0] or Fnew.shape[1] != P_list_bwd[i].shape[1]:
+                #    raise Exception("At index {}, Fnew.shape = {}, P_list_bwd.shape = {}".format(i,Fnew.shape,P_list_bwd[i].shape))
+        #print("len(F) = {}, F shapes {}...{}".format(len(F),F[0].shape,F[-1].shape))
+        #print("len(G) = {}, G shapes {}...{}".format(len(G),G[0].shape,G[-1].shape))
+        #print("len(P_list) = {}, P_list shapes {}...{}".format(len(P_list),P_list[0].shape,P_list[-1].shape))
+        #print("len(P_list_bwd) = {}, P_list_bwd shapes {}...{}".format(len(P_list_bwd),P_list_bwd[0].shape,P_list_bwd[-1].shape))
+        #print("len(ina) = {}, ina shapes {}...{}".format(len(ina),ina[0].shape,ina[-1].shape))
+        #print("len(inb) = {}, inb shapes {}...{}".format(len(inb),inb[0].shape,inb[-1].shape))
         qm = mc.dynamical_galerkin_approximation(F,G)
         qm.reverse()
         return qm
