@@ -29,7 +29,7 @@ feat_display_dir = join(featdir,"display2")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2021-12-12")
+daydir = join(resultsdir,"2021-12-13")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -43,22 +43,9 @@ import helper
 import strat_feat
 import tpt_general
 
-np.random.seed(1)
-# ----------------- Constant parameters ---------------------
-winter_day0 = 0.0
-spring_day0 = 150.0
-Npc_per_level_max = 6
-# ------------------ Algorithmic parameters ---------------------
-num_clusters = 70
-Npc_per_level_single = 1
-Nwaves = 2
-paramdir_s2s = join(expdir_s2s, "nclust{}_nwaves{}_npcperlev{}".format(num_clusters,Nwaves,Npc_per_level_single))
-if not exists(paramdir_s2s):
-    mkdir(paramdir_s2s)
-
 # Which years to use for each dataset
 fall_years_e2 = np.arange(1900,2007)
-fall_years_ei = np.arange(1979,2018)
+fall_years_ei = np.arange(1996,2017)
 fall_years_s2s = np.arange(1996,2017)
 
 # Specify the data files
@@ -69,8 +56,35 @@ file_list_ei = []
 for i_fy in range(len(fall_years_ei)):
     file_list_ei += [join(datadir_ei,"%s-11-01_to_%s-04-30.nc"%(fall_years_ei[i_fy],fall_years_ei[i_fy]+1))]
 file_list_s2s = [join(datadir_s2s,f) for f in os.listdir(datadir_s2s) if f.endswith(".nc")]
+np.random.seed(1)
 ftidx_e2 = np.random.choice(np.arange(len(file_list_e2)),size=15,replace=False)
 dga_idx_s2s = np.random.choice(np.arange(len(file_list_s2s)),size=500,replace=False) # Subset of filed to use for DGA.
+
+# ----------------- Constant parameters ---------------------
+winter_day0 = 0.0
+spring_day0 = 150.0
+Npc_per_level_max = 6
+# ------------------ Algorithmic parameters ---------------------
+num_clusters = 100
+Npc_per_level_single = 6
+Nwaves = 0
+paramdir_s2s = join(expdir_s2s, "nclust{}_nwaves{}_npcperlev{}".format(num_clusters,Nwaves,Npc_per_level_single))
+if not exists(paramdir_s2s):
+    mkdir(paramdir_s2s)
+
+# ------------ Random seeds for bootstrap resampling ------------
+num_seeds_e2 =  5
+num_seeds_ei =  5
+num_seeds_s2s = 5
+seeddir_list_e2 = []
+for i in range(num_seeds_e2):
+    seeddir_list_e2 += [join(expdir_e2,"seed%i"%(i))]
+seeddir_list_ei = []
+for i in range(num_seeds_ei):
+    seeddir_list_ei += [join(expdir_ei,"seed%i"%(i))]
+seeddir_list_s2s = []
+for i in range(num_seeds_s2s):
+    seeddir_list_s2s += [join(paramdir_s2s,"seed%i"%(i))]
 
 # Parameters to determine what to do
 # Featurization
@@ -111,80 +125,106 @@ tpt = tpt_general.WinterStratosphereTPT()
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = 10.0 # First day that SSW could happen
 tthresh1 = 120.0 # Last day that SSW could happen
-uthresh_list = np.arange(5,-21,-2.5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
+uthresh_list = np.arange(5,-20,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 # ------------------ TPT direct estimates from ERA20C ------------------------------
 if evaluate_database_e2:
     winstrat.evaluate_features_database(file_list_e2,feat_def,expdir_e2,"X",winstrat.wtime[0],winstrat.wtime[-1])
 if tpt_e2_flag: 
     print("Starting TPT on era20c")
-    for i_uth in range(len(uthresh_list)):
-        uthresh = uthresh_list[i_uth]
-        savedir = join(expdir_e2,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
-        if not exists(savedir): mkdir(savedir)
-        tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
-        tpt.set_boundaries(tpt_bndy)
-        summary_dns = tpt.tpt_pipeline_dns(expdir_e2,savedir,winstrat,feat_def)
+    for i_seed in range(num_seeds_e2):
+        print("\tSeed {} of {}".format(i_seed,num_seeds_e2))
+        seeddir = seeddir_list_e2[i_seed]
+        if not exists(seeddir): mkdir(seeddir)
+        for i_uth in range(len(uthresh_list)):
+            uthresh = uthresh_list[i_uth]
+            savedir = join(seeddir,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+            if not exists(savedir): mkdir(savedir)
+            tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
+            tpt.set_boundaries(tpt_bndy)
+            summary_dns = tpt.tpt_pipeline_dns(expdir_e2,savedir,winstrat,feat_def,resample_flag=(i_seed>0),seed=i_seed)
 # ------------------ TPT direct estimates from ERA-Interim ------------------------------
 if evaluate_database_ei:
     winstrat.evaluate_features_database(file_list_ei,feat_def,expdir_ei,"X",winstrat.wtime[0],winstrat.wtime[-1])
 if tpt_ei_flag: 
     print("Starting TPT on eraint")
-    for i_uth in range(len(uthresh_list)):
-        uthresh = uthresh_list[i_uth]
-        savedir = join(expdir_ei,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
-        if not exists(savedir): mkdir(savedir)
-        tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
-        tpt.set_boundaries(tpt_bndy)
-        summary_dns = tpt.tpt_pipeline_dns(expdir_ei,savedir,winstrat,feat_def)
+    for i_seed in range(len(seeddir_list_ei)):
+        print("\tSeed {} of {}".format(i_seed,num_seeds_ei))
+        seeddir = seeddir_list_ei[i_seed]
+        if not exists(seeddir): mkdir(seeddir)
+        for i_uth in range(len(uthresh_list)):
+            uthresh = uthresh_list[i_uth]
+            savedir = join(seeddir,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+            if not exists(savedir): mkdir(savedir)
+            tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
+            tpt.set_boundaries(tpt_bndy)
+            summary_dns = tpt.tpt_pipeline_dns(expdir_ei,savedir,winstrat,feat_def,resample_flag=(i_seed>0),seed=i_seed)
 # ------------------- DGA from S2S --------------------------------
-Npc_per_level = Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)   
+Npc_per_level = Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level[1:] = 0 # Only care about the top layer
 feat_filename = join(expdir_s2s,"X.npy")
-clust_feat_filename = join(paramdir_s2s,"Y.npy")
-clust_filename = join(paramdir_s2s,"kmeans")
-msm_filename = join(paramdir_s2s,"msm")
-if evaluate_database_s2s:
-    # Expensive!
+ens_start_filename = join(expdir_s2s,"ens_start_idx.npy")
+fall_year_filename = join(expdir_s2s,"fall_year_list.npy")
+if evaluate_database_s2s: # Expensive!
     winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,expdir_s2s,"X",winstrat.wtime[0],winstrat.wtime[-1])
-if cluster_flag:
-    winstrat.evaluate_cluster_features(feat_filename,feat_def,clust_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves)
-    tpt.cluster_features(clust_feat_filename,clust_filename,winstrat,num_clusters=num_clusters)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
-if build_msm_flag:
-    tpt.build_msm(clust_feat_filename,clust_filename,msm_filename,winstrat)
-if tpt_s2s_flag:
-    print("Starting TPT on S2S")
-    for i_uth in range(len(uthresh_list)):
-        uthresh = uthresh_list[i_uth]
-        savedir = join(paramdir_s2s,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
-        if not exists(savedir): mkdir(savedir)
-        tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
-        tpt.set_boundaries(tpt_bndy)
-        summary_dga = tpt.tpt_pipeline_dga(feat_filename,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat)
+
+print("Starting TPT on S2S")
+for i_seed in np.arange(len(seeddir_list_s2s)):
+    print("\tSeed {} of {}".format(i_seed,num_seeds_s2s))
+    seeddir = seeddir_list_s2s[i_seed]
+    if not exists(seeddir): mkdir(seeddir)
+    clust_feat_filename = join(seeddir,"Y.npy")
+    clust_filename = join(seeddir,"kmeans")
+    msm_filename = join(seeddir,"msm")
+    if cluster_flag:
+        winstrat.evaluate_cluster_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,clust_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
+        tpt.cluster_features(clust_feat_filename,clust_filename,winstrat,num_clusters=num_clusters)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
+    if build_msm_flag:
+        tpt.build_msm(clust_feat_filename,clust_filename,msm_filename,winstrat)
+    if tpt_s2s_flag:
+        for i_uth in range(len(uthresh_list)):
+            uthresh = uthresh_list[i_uth]
+            savedir = join(seeddir,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+            if not exists(savedir): mkdir(savedir)
+            tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh": uthresh,}
+            tpt.set_boundaries(tpt_bndy)
+            summary_dga = tpt.tpt_pipeline_dga(feat_filename,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves)
 
 # ------------- Compare rates ---------------------
 if plot_rate_flag:
-    rate_list_e2 = np.zeros(len(uthresh_list))
-    rate_list_ei = np.zeros(len(uthresh_list))
-    rate_list_dga = np.zeros(len(uthresh_list))
+    rate_list_e2 = np.zeros((num_seeds_e2,len(uthresh_list)))
+    rate_list_ei = np.zeros((num_seeds_ei,len(uthresh_list)))
+    rate_list_s2s = np.zeros((num_seeds_s2s,len(uthresh_list)))
     for i_uth in range(len(uthresh_list)):
         uthresh = uthresh_list[i_uth]
-        savedir_e2 = join(expdir_e2,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
-        savedir_ei = join(expdir_ei,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
-        savedir_dga = join(paramdir_s2s,"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
-        summary_e2 = pickle.load(open(join(savedir_e2,"summary"),"rb"))
-        summary_ei = pickle.load(open(join(savedir_ei,"summary"),"rb"))
-        summary_dga = pickle.load(open(join(savedir_dga,"summary"),"rb"))
-        rate_list_e2[i_uth] = summary_e2["rate"]
-        rate_list_ei[i_uth] = summary_ei["rate"]
-        rate_list_dga[i_uth] = summary_dga["rate"]
+        for i_seed in range(num_seeds_e2):
+            savedir = join(seeddir_list_e2[i_seed],"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+            summary = pickle.load(open(join(savedir,"summary"),"rb"))
+            rate_list_e2[i_seed,i_uth] = summary["rate"]
+        for i_seed in range(num_seeds_ei):
+            savedir = join(seeddir_list_ei[i_seed],"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+            summary = pickle.load(open(join(savedir,"summary"),"rb"))
+            rate_list_ei[i_seed,i_uth] = summary["rate"]
+        for i_seed in range(num_seeds_s2s):
+            savedir = join(seeddir_list_s2s[i_seed],"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+            summary = pickle.load(open(join(savedir,"summary"),"rb"))
+            rate_list_s2s[i_seed,i_uth] = summary["rate"]
     fig,ax = plt.subplots()
-    he2, = ax.plot(uthresh_list,rate_list_e2,color='cyan',marker='o',label="ERA20C")
-    hei, = ax.plot(uthresh_list,rate_list_ei,color='black',marker='o',label="ERAI")
-    hdga, = ax.plot(uthresh_list,rate_list_dga,color='red',marker='o',label="S2S")
+    he2, = ax.plot(uthresh_list,rate_list_e2[0],color='cyan',linewidth=3,marker='o',label="ERA20C")
+    hei, = ax.plot(uthresh_list,rate_list_ei[0],color='black',linewidth=3,marker='o',label="ERAI")
+    hs2s, = ax.plot(uthresh_list,rate_list_s2s[0],color='red',linewidth=3,marker='o',label="S2S")
+    if num_seeds_e2 > 1:
+        ax.plot(uthresh_list,np.min(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
+        ax.plot(uthresh_list,np.max(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
+    if num_seeds_ei > 1:
+        ax.plot(uthresh_list,np.min(rate_list_ei[1:],axis=0),color='black',linestyle='--',alpha=0.5)
+        ax.plot(uthresh_list,np.max(rate_list_ei[1:],axis=0),color='black',linestyle='--',alpha=0.5)
+    if num_seeds_s2s > 1:
+        ax.plot(uthresh_list,np.min(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
+        ax.plot(uthresh_list,np.max(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
     ax.set_yscale('log')
     ax.set_xlabel("Zonal wind threshold",fontdict=font)
-    ax.set_ylabel("Rate")
-    ax.legend(handles=[he2,hei,hdga])
-    fig.savefig(join(paramdir_s2s,"rate_tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh)))
+    ax.set_ylabel("Rate",fontdict=font)
+    ax.legend(handles=[he2,hei,hs2s])
+    fig.savefig(join(paramdir_s2s,"rate_tth%i-%i"%(tthresh0,tthresh1)))
     plt.close(fig)
 
-# -------------------- DGA from S2S ------------------------------------------------

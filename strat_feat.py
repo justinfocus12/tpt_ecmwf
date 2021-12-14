@@ -131,8 +131,8 @@ class WinterStratosphereFeatures:
                 gh[i_mem] = ds['var129'][:]/grav_accel
             else:
                 raise Exception("The dssource you gave me, %s, is not recognized"%(dssource))
-        time = self.time_since_nov1(ds['time'])
-        return gh,time,ds['plev'][:],ds['lat'][:],ds['lon'][:]
+        time,fall_year = self.time_since_nov1(ds['time'])
+        return gh,time,ds['plev'][:],ds['lat'][:],ds['lon'][:],fall_year
     def compute_geostrophic_wind(self,gh,lat,lon):
         # gh shape should be (Nx,Nlev,Nlat,Nlon). 
         Omega = 2*np.pi/(3600*24*365)
@@ -194,7 +194,7 @@ class WinterStratosphereFeatures:
         nov1_date = datetime.datetime(nov1_year, 11, 1)
         nov1_time = nc.date2num(nov1_date,dstime.units,dstime.calendar)
         dstime_adj = nc.date2num(date,dstime.units,dstime.calendar) - nov1_time + dstime
-        return dstime_adj # This is just one-dimensional. 
+        return dstime_adj,nov1_year # This is just one-dimensional. 
     def create_features(self,data_file_list):
         # Use data in data_file_list as training, and dump the results into feature_file. Note this is NOT a DGA basis yet, just a set of features.
         # We will not YET use time-delay information, but might in the future. In which case we will just have somewhat fewer data per file. 
@@ -210,7 +210,7 @@ class WinterStratosphereFeatures:
         for i_file in range(len(data_file_list)):
             print("Creating features: file {} out of {}".format(i_file,len(data_file_list)))
             ds = nc.Dataset(data_file_list[i_file],"r")
-            gh_new,time,_,_,_ = self.get_gh(ds)
+            gh_new,time,_,_,_,_ = self.get_gh(ds)
             Nmem,Nt = gh_new.shape[:2]
             shp_new = np.array(gh_new.shape)
             if np.any(shp_new[2:5] != grid_shp):
@@ -260,13 +260,15 @@ class WinterStratosphereFeatures:
     def evaluate_features_database(self,file_list,feat_def,savedir,filename,tmin,tmax):
         # Stack a bunch of forecasts together. They can start at different times, but must all have same length.
         ens_start_idx = np.zeros(len(file_list), dtype=int)
+        fall_year_list = np.zeros(len(file_list), dtype=int)
         i_ens = 0
         for i in range(len(file_list)):
             if i % 10 == 0:
                 print("file %i ouf ot %i: %s"%(i,len(file_list),file_list[i]))
             ens_start_idx[i] = i_ens
             ds = nc.Dataset(file_list[i],"r")
-            Xnew = self.evaluate_features(ds,feat_def)
+            Xnew,fall_year = self.evaluate_features(ds,feat_def)
+            fall_year_list[i] = fall_year
             ti_initial = np.where(ds['time'][:] >= tmin)[0][0]
             ti_final = np.where(ds['time'][:] <= tmax)[0][-1]
             Xnew = Xnew[:,ti_initial:ti_final+1,:]
@@ -278,10 +280,40 @@ class WinterStratosphereFeatures:
         # Save them in the directory
         np.save(join(savedir,filename),X)
         np.save(join(savedir,"ens_start_idx"),ens_start_idx)
+        np.save(join(savedir,"fall_year_list"),fall_year_list)
         return X
-    def evaluate_cluster_features(self,feat_filename,feat_def,clust_feat_filename,Npc_per_level=None,Nwaves=None):
+    def evaluate_cluster_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,clust_feat_filename,Npc_per_level=None,Nwaves=None,resample_flag=False,seed=0):
         # Evaluate a subset of the full features to use for clustering.
         X = np.load(feat_filename)
+        #print("Before resampling: X.shape = {}".format(X.shape))
+        if resample_flag:
+            ens_start_idx = np.load(ens_start_filename)
+            fall_year_list = np.load(fall_year_filename)
+            fy_unique = np.unique(fall_year_list)
+            #print("fy_unique = {}".format(fy_unique))
+            fall_year_x = np.zeros(len(X), dtype=int)
+            for i in range(len(ens_start_idx)):
+                if i < len(ens_start_idx)-1:
+                    ens_size = ens_start_idx[i+1] - ens_start_idx[i]
+                else:
+                    ens_size = len(X) - ens_start_idx[i]
+                fall_year_x[ens_start_idx[i]:ens_start_idx[i]+ens_size] = fall_year_list[i]
+                #print("ens_start_idx[i] = {}".format(ens_start_idx[i]))
+            #print("fall_year_x: min={}, max={}, shape={}".format(fall_year_x.min(),fall_year_x.max(),fall_year_x.shape))
+            np.random.seed(seed)
+            fy_resamp = np.random.choice(fy_unique,size=len(fy_unique),replace=True)
+            #print("len(fy_resamp) = {}".format(len(fy_resamp)))
+            idx_resamp = np.zeros(0, dtype=int)
+            avg_match = 0
+            for i in range(len(fy_resamp)):
+                matches = np.where(fall_year_x == fy_resamp[i])[0]
+                avg_match += len(matches)
+                idx_resamp = np.concatenate((idx_resamp,matches))
+            avg_match *= 1.0/len(fy_resamp)
+            #print("avg_match = {}, len(fy_resamp) = {}, prod = {}".format(avg_match,len(fy_resamp), avg_match*len(fy_resamp)))
+            X = X[idx_resamp]
+        #print("len(idx_resamp) = {}".format(len(idx_resamp)))
+        #print("After resampling: X.shape = {}".format(X.shape))
         if Npc_per_level is None:
             Npc_per_level = self.Npc_per_level_max*np.ones(len(feat_def['plev']), dtype=int)
         if Nwaves is None:
@@ -303,14 +335,12 @@ class WinterStratosphereFeatures:
                     Y[:,:,i_feat_y] = X[:,:,i_feat_x]
                     i_feat_y += 1
                 i_feat_x += 1
-        print("X[:,:,1]: min={}, max={}, mean={}".format(X[:,:,1].min(),X[:,:,1].max(),X[:,:,1].mean()))
-        print("Y[:,:,1]: min={}, max={}, mean={}".format(Y[:,:,1].min(),Y[:,:,1].max(),Y[:,:,1].mean()))
         np.save(clust_feat_filename,Y)
         return 
     def evaluate_features(self,ds,feat_def):
         # Given a single ensemble in ds, evaluate the features and return a big matrix
         i_lev_uref,i_lat_uref = self.get_ilev_ilat(ds)
-        gh,time,plev,lat,lon = self.get_gh(ds)
+        gh,time,plev,lat,lon,fall_year = self.get_gh(ds)
         Nmem,Nt,Nlev,Nlat,Nlon = gh.shape
         gh = gh.reshape((Nmem*Nt,Nlev,Nlat,Nlon))
         Nfeat = 2 + 2*self.num_wavenumbers + Nlev*self.Npc_per_level_max
@@ -332,7 +362,7 @@ class WinterStratosphereFeatures:
             i_feat += self.Npc_per_level_max
         #print("i_feat = {}; Nfeat = {}".format(i_feat,Nfeat))
         X = X.reshape((Nmem,Nt,Nfeat))
-        return X
+        return X,fall_year
     def plot_vortex_evolution(self,dsfile,savedir,save_suffix,i_mem=0):
         # Plot the holistic information about a single member of a single ensemble. Include some timeseries and some snapshots, perhaps along the region of maximum deceleration in zonal wind. 
         ds = nc.Dataset(dsfile,"r")
@@ -372,7 +402,7 @@ class WinterStratosphereFeatures:
         num_snapshots = 30
         i_lev_ref,i_lat_ref = self.get_ilev_ilat(ds)
         tidx = np.linspace(decel_time_range[0],decel_time_range[1],min(num_snapshots,decel_time_range[1]-decel_time_range[0]+1)).astype(int)
-        gh,_,plev,lat,lon = self.get_gh(ds)
+        gh,_,plev,lat,lon,fall_year = self.get_gh(ds)
         gh = gh[i_mem]
         print("gh.shape = {}".format(gh.shape))
         u,v = self.compute_geostrophic_wind(gh,lat,lon)
@@ -384,16 +414,17 @@ class WinterStratosphereFeatures:
         for k in range(len(tidx)):
             i_time = tidx[k]
             fig,ax = self.show_ugh_onelevel_cartopy(gh[k],u[k],v[k],lat,lon)
-            ax.set_title(r"$\Phi$, $u$ at day {}".format(time[tidx[k]]/24.0))
-            fig.savefig(join(savedir,"vortex_{}_day{}".format(save_suffix,int(time[tidx[k]]/24.0))))
+            ax.set_title(r"$\Phi$, $u$ at day {}, {}".format(time[tidx[k]]/24.0,fall_year))
+            fig.savefig(join(savedir,"vortex_{}_day{}_yr{}".format(save_suffix,int(time[tidx[k]]/24.0),fall_year)))
             plt.close(fig)
         return
-    def wave_mph(self,x,feat_def,wn,unseason_mag=False):
+    def wave_mph(self,x,feat_def,wn,widx=None,unseason_mag=False):
         # wn is wavenumber 
         # mph is magnitude and phase
         if wn <= 0:
             raise Exception("Need an integer wavenumber >= 1. You gave wn = {}".format(wn))
-        widx = 2 + 2*wn*np.arange(2)
+        if widx is None:
+            widx = 2 + 2*wn*np.arange(2)
         wave = self.reseason(x[:,0],x[:,widx],feat_def['t_szn'],feat_def['waves_szn_mean'][:,2*(wn-1):2*(wn-1)+2],feat_def['waves_szn_std'][:,2*(wn-1):2*(wn-1)+2])
         phase = np.arctan(-wave[:,1]/(wn*wave[:,0]))
         mag = np.sqrt(np.sum(wave**2,axis=1))
@@ -405,9 +436,13 @@ class WinterStratosphereFeatures:
         #print("uref = {}".format(uref))
         #print("uref: min={}, max={}, mean={}".format(uref.min(),uref.max(),uref.mean()))
         return uref
-    def observable_function_library(self):
+    def observable_function_library(self,Nwaves=None,Npc_per_level=None):
         # Build the database of observable functions
         feat_def = pickle.load(open(self.feature_file,"rb"))
+        if Nwaves is None:
+            Nwaves = self.num_wavenumbers
+        if Npc_per_level is None:
+            Npc_per_level = self.Npc_per_level_max * np.ones(len(feat_def["plev"]), dtype=int)
         # TODO: build in PC projections and other stuff as observable functions
         funlib = {
                 "time_h": {"fun": lambda x: x[:,0],
@@ -438,12 +473,18 @@ class WinterStratosphereFeatures:
                 key = "lev%i_pc%i"%(i_lev,i_eof)
                 #print("key = {}".format(key))
                 funlib[key] = {
-                        "fun": lambda x,i_lev=i_lev,i_eof=i_eof: self.get_pc(x,i_lev,i_eof),
+                        "fun": lambda x,i_lev=i_lev,i_eof=i_eof: self.get_pc(x,i_lev,i_eof,Nwaves,Npc_per_level),
                         "label": "PC %i at $p=%i$ hPa"%(i_eof+1, feat_def["plev"][i_lev]/100.0),
                         }
         return funlib
-    def get_pc(self,x,i_lev,i_eof):
-        eof = x[:,2 + 2*self.num_wavenumbers + i_lev*self.Npc_per_level_max + i_eof]
+    def get_pc(self,x,i_lev,i_eof,Nwaves=None,Npc_per_level=None):
+        if Nwaves is None:
+            Nwaves = self.num_wavenumbers
+        if Npc_per_level is None:
+            Npc_per_level = self.Npc_per_level_max * np.ones(len(feat_def["plev"]), dtype=int)
+        idx = 2 + 2*Nwaves + np.sum(Npc_per_level[:i_lev]) + i_eof
+        #eof = x[:,2 + 2*self.num_wavenumbers + i_lev*self.Npc_per_level_max + i_eof]
+        eof = x[:,idx]
         return eof
     def show_ugh_onelevel_cartopy(self,gh,u,v,lat,lon): 
         # Display the geopotential height at a single pressure level

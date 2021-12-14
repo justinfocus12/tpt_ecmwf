@@ -45,13 +45,17 @@ class WinterStratosphereTPT:
         absum = 1.0*(np.sum(ab_tag,axis=1) > 0)
         rate = np.mean(absum)
         return rate
-    def tpt_pipeline_dns(self,expdir,savedir,winstrat,feat_def):
+    def tpt_pipeline_dns(self,expdir,savedir,winstrat,feat_def,resample_flag=False,seed=0):
         # Call winstrat and anything else we want. 
         # savedir: where all the results of this particular TPT will be saved.
         # winstrat: the object that was used to create features, and that can go on to evaluate other features.
         # feat_def: the feature definitions that came out of winstrat.
         X = np.load(join(expdir,"X.npy"))
         Nx,Nt,xdim = X.shape
+        if resample_flag:
+            np.random.seed(seed)
+            idx = np.random.choice(np.arange(Nx),size=Nx,replace=True)
+            X = X[idx]
         funlib = winstrat.observable_function_library()
         # ---- Plot committor in a few different coordinates -----
         src_tag,dest_tag = winstrat.compute_src_dest_tags(X,feat_def,self.tpt_bndy,"src_dest")
@@ -82,7 +86,7 @@ class WinterStratosphereTPT:
         summary = {"rate": rate}
         pickle.dump(summary,open(join(savedir,"summary"),"wb"))
         return summary 
-    def cluster_features(self,clust_feat_filename,clust_filename,winstrat,num_clusters=100):
+    def cluster_features(self,clust_feat_filename,clust_filename,winstrat,num_clusters=100,resample_flag=False,seed=0):
         # Read in a feature array from feat_filename and build clusters. Save cluster centers. Save them out in clust_filename.
         Y = np.load(clust_feat_filename)
         Nx,Nt,ydim = Y.shape
@@ -93,7 +97,7 @@ class WinterStratosphereTPT:
             idx = np.where(np.abs(Y[:,0] - winstrat.wtime[ti]) < winstrat.szn_hour_window/2)[0]
             if len(idx) == 0:
                 raise Exception("Problem, we don't have any data in time slot {}. Y time: min={}, max={}. wtime: min={}, max={}.".format(ti,Y[:,0].min(),Y[:,0].max(),winstrat.wtime.min(),winstrat.wtime.max()))
-            km = MiniBatchKMeans(num_clusters).fit(Y[idx,1:])
+            km = MiniBatchKMeans(min(len(idx),num_clusters)).fit(Y[idx,1:])
             kmlist += [km]
         pickle.dump(kmlist,open(clust_filename,"wb"))
         return
@@ -106,6 +110,8 @@ class WinterStratosphereTPT:
 
         #centers = np.concatenate((np.zeros(km.n_clusters,1),km.cluster_centers_), axis=1)
         for ti in range(winstrat.Ntwint-1):
+            if ti % 30 == 0:
+                print("MSM timestep {} out of {}".format(ti,winstrat.Ntwint))
             P += [np.zeros((kmlist[ti].n_clusters,kmlist[ti+1].n_clusters))]
             #centers[:,0] = winstrat.wtime[ti]
             #print("wtime[0] = {}".format(winstrat.wtime[0]))
@@ -117,8 +123,8 @@ class WinterStratosphereTPT:
                 overlap = np.where(np.subtract.outer(idx0[0],idx1[0]) == 0)
                 labels0 = kmlist[ti].predict(Y[idx0[0][overlap[0]],idx0[1][overlap[0]],1:])
                 labels1 = kmlist[ti+1].predict(Y[idx1[0][overlap[1]],idx1[1][overlap[1]],1:])
-                print("labels0.shape = {}".format(labels0.shape))
-                print("labels1.shape = {}".format(labels1.shape))
+                #print("labels0.shape = {}".format(labels0.shape))
+                #print("labels1.shape = {}".format(labels1.shape))
                 #print("len(idx0[0]) = {}, len(idx1[0]) = {}".format(len(idx0[0]),len(idx1[0])))
                 #print("len(overlap[0]) = {}".format(len(overlap[0])))
                 # Overlaps between idx0[0] and idx1[0] give tell us they're on the same trajectory
@@ -189,7 +195,6 @@ class WinterStratosphereTPT:
         nclust_list = [len(dam_centers[ti]) for ti in range(len(dam_centers))]
         int2b = []
         if maxmom >= 1:
-            print("dam_centers[0].shape = {}".format(dam_centers[0].shape))
             mc = tdmc_obj.TimeDependentMarkovChain(P_list,winstrat.wtime)
             G = []
             F = []
@@ -306,16 +311,16 @@ class WinterStratosphereTPT:
                 int2b_cond['m4'] += [cond_m4[j:j+nclust]]
                 j += nclust
         return int2b_cond 
-    def tpt_pipeline_dga(self,feat_filename,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat):
+    def tpt_pipeline_dga(self,feat_filename,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves):
         # Label each cluster as in A or B or elsewhere
         X = np.load(feat_filename)
         Y = np.load(clust_feat_filename)
         Nx,Nt,xdim = X.shape
-        Nx,Nt,ydim = Y.shape
-        funlib = winstrat.observable_function_library()
-        uref_x = funlib["uref"]["fun"](X.reshape((Nx*Nt,xdim)))
-        uref_y = funlib["uref"]["fun"](Y.reshape((Nx*Nt,ydim)))
-        print("uref_x: min={}, max={}, mean={}".format(uref_x.min(),uref_x.max(),uref_x.mean()))
+        Ny,Nt,ydim = Y.shape
+        funlib = winstrat.observable_function_library(Nwaves=Nwaves,Npc_per_level=Npc_per_level)
+        #uref_x = funlib["uref"]["fun"](X.reshape((Nx*Nt,xdim)))
+        uref_y = funlib["uref"]["fun"](Y.reshape((Ny*Nt,ydim)))
+        #print("uref_x: min={}, max={}, mean={}".format(uref_x.min(),uref_x.max(),uref_x.mean()))
         print("uref_y: min={}, max={}, mean={}".format(uref_y.min(),uref_y.max(),uref_y.mean()))
         kmlist = pickle.load(open(clust_filename,"rb"))
         ina = []
@@ -336,7 +341,6 @@ class WinterStratosphereTPT:
             minrowsums = min(minrowsums,np.min(rowsums))
             mincolsums = min(mincolsums,np.min(P_list[i].sum(0)))
             #print("rowsums: min={}, max={}".format(rowsums.min(),rowsums.max()))
-        print("minrowsums = {}, mincolsums = {}".format(minrowsums,mincolsums))
         init_dens = np.array([np.sum(km[0].labels_ == i) for i in range(km[0].n_clusters)], dtype=float)
         # Density and committors
         init_dens *= 1.0/np.sum(init_dens)
@@ -347,12 +351,11 @@ class WinterStratosphereTPT:
         qmflat = np.concatenate(qm)
         qp = self.compute_forward_committor(P_list,winstrat.wtime,ina,inb)
         qpflat = np.concatenate(qp)
-        print("qp: min={}, max={}, frac in (.2,.8) = {}".format(qpflat.min(),qpflat.max(),np.mean((qpflat>.2)*(qpflat<.8))))
         # Integral to B
         dam_centers = [np.ones(km[ti].n_clusters) for ti in range(winstrat.Ntwint)]
         int2b = {}
         int2b_cond = {}
-        int2b['time'] = self.compute_integral_to_B(P_list,winstrat,ina,inb,qp,dam_centers,maxmom=2)
+        int2b['time'] = self.compute_integral_to_B(P_list,winstrat,ina,inb,qp,dam_centers,maxmom=3)
         int2b_cond['time'] = self.conditionalize_int2b(P_list,winstrat,int2b['time'],qp)
         # Rate
         flux = []
@@ -373,10 +376,8 @@ class WinterStratosphereTPT:
         pickle.dump(summary,open(join(savedir,"summary"),"wb"))
         # Plot 
         centers_all = np.concatenate(centers, axis=0)
-        uref_call = funlib["uref"]["fun"](centers_all)
-        print("uref_call: min={}, max={}, mean={}".format(uref_call.min(),uref_call.max(),uref_call.mean()))
         weight = np.ones(len(centers_all))/(len(centers_all))
-        keypairs = [['time_d','uref'],['time_d','mag1'],['time_d','mag1_anomaly'],['time_d','mag2'],['time_d','mag2_anomaly'],['time_d','lev0_pc1']][:1]
+        keypairs = [['time_d','uref'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','lev0_pc5']]
         #keypairs = [['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','mag1_anomaly'],['time_d','mag2_anomaly']]
         for i_kp in range(len(keypairs)):
             fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
@@ -444,8 +445,8 @@ class WinterStratosphereTPT:
         _,_,_,_,J1_proj,_,_,_,_ = helper.project_field(Jth[:,1],weight,theta_x,shp=shp,bounds=bounds,avg_flag=False)
         Jmag = np.sqrt(J0_proj**2 + J1_proj**2)
         minmag,maxmag = np.nanmin(Jmag),np.nanmax(Jmag)
-        coeff1 = 1.0/maxmag
-        dsmin,dsmax = np.max(shp)/200,np.max(shp)/20
+        coeff1 = 3.0/maxmag
+        dsmin,dsmax = np.max(shp)/200,np.max(shp)/15
         coeff0 = dsmax / (np.exp(-coeff1 * maxmag) - 1)
         ds = coeff0 * (np.exp(-coeff1 * Jmag) - 1)
         #ds = dsmin + (dsmax - dsmin)*(Jmag - minmag)/(maxmag - minmag)
