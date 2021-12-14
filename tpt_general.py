@@ -100,6 +100,7 @@ class WinterStratosphereTPT:
             km = MiniBatchKMeans(min(len(idx),num_clusters)).fit(Y[idx,1:])
             kmlist += [km]
         pickle.dump(kmlist,open(clust_filename,"wb"))
+        print("n_clusters: {}".format(np.array([km.n_clusters for km in kmlist])))
         return
     def build_msm(self,clust_feat_filename,clust_filename,msm_filename,winstrat):
         nnk = 4 # Number of nearest neighbors for filling in empty positions
@@ -175,7 +176,11 @@ class WinterStratosphereTPT:
         F = []
         for i in np.arange(mc.Nt-1,-1,-1):
             G += [1.0*ina[i]]
-            if i < mc.Nt-1: F += [np.outer(1.0*(ina[i+1]==0)*(inb[i+1]==0), np.ones(mc.Nx[i]))]
+            if i < mc.Nt-1: 
+                Fnew = np.outer(1.0*(ina[i+1]==0)*(inb[i+1]==0), np.ones(mc.Nx[i]))
+                F += [Fnew.copy()]
+                if Fnew.shape[0] != P_list_bwd[i].shape[0] or Fnew.shape[1] != P_list_bwd[i].shape[1]:
+                    raise Exception("At index {}, Fnew.shape = {}, P_list_bwd.shape = {}".format(i,Fnew.shape,P_list_bwd[i].shape))
         qm = mc.dynamical_galerkin_approximation(F,G)
         qm.reverse()
         return qm
@@ -347,6 +352,7 @@ class WinterStratosphereTPT:
         init_dens = np.maximum(init_dens, np.max(init_dens)*1e-4)
         pi = self.compute_tdep_density(P_list,init_dens,winstrat.wtime)
         piflat = np.concatenate(pi)
+        print("ina[0].shape = {}, inb[0].shape = {}, P_list[0].shape = {}".format(ina[0].shape,inb[0].shape,P_list[0].shape))
         qm = self.compute_backward_committor(P_list,winstrat.wtime,ina,inb,pi)
         qmflat = np.concatenate(qm)
         qp = self.compute_forward_committor(P_list,winstrat.wtime,ina,inb)
@@ -377,7 +383,7 @@ class WinterStratosphereTPT:
         # Plot 
         centers_all = np.concatenate(centers, axis=0)
         weight = np.ones(len(centers_all))/(len(centers_all))
-        keypairs = [['time_d','uref'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','lev0_pc5']]
+        keypairs = [['time_d','uref'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','lev0_pc5'],['lev0_pc1','lev0_pc2'],['lev0_pc1','lev0_pc4'],['lev0_pc4','lev0_pc5']][:1]
         #keypairs = [['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','mag1_anomaly'],['time_d','mag2_anomaly']]
         for i_kp in range(len(keypairs)):
             fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]

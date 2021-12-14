@@ -25,7 +25,7 @@ datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2021-12-12"
 datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-11-01"
 featdir = "/scratch/jf4241/ecmwf_data/features/2021-12-11"
 if not exists(featdir): mkdir(featdir)
-feat_display_dir = join(featdir,"display2")
+feat_display_dir = join(featdir,"display3")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
@@ -65,8 +65,8 @@ winter_day0 = 0.0
 spring_day0 = 150.0
 Npc_per_level_max = 6
 # ------------------ Algorithmic parameters ---------------------
-num_clusters = 100
-Npc_per_level_single = 6
+num_clusters = 120
+Npc_per_level_single = 0
 Nwaves = 0
 paramdir_s2s = join(expdir_s2s, "nclust{}_nwaves{}_npcperlev{}".format(num_clusters,Nwaves,Npc_per_level_single))
 if not exists(paramdir_s2s):
@@ -98,8 +98,8 @@ evaluate_database_ei =         0
 tpt_ei_flag =                  0
 # s2s
 evaluate_database_s2s =        0
-cluster_flag =                 0
-build_msm_flag =               0
+cluster_flag =                 1
+build_msm_flag =               1
 tpt_s2s_flag =                 1
 # Summary statistics
 plot_rate_flag =               1
@@ -168,7 +168,7 @@ if evaluate_database_s2s: # Expensive!
     winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,expdir_s2s,"X",winstrat.wtime[0],winstrat.wtime[-1])
 
 print("Starting TPT on S2S")
-for i_seed in np.arange(len(seeddir_list_s2s)):
+for i_seed in [3]: #np.arange(len(seeddir_list_s2s))[::-1]:
     print("\tSeed {} of {}".format(i_seed,num_seeds_s2s))
     seeddir = seeddir_list_s2s[i_seed]
     if not exists(seeddir): mkdir(seeddir)

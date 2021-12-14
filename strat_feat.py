@@ -366,9 +366,12 @@ class WinterStratosphereFeatures:
     def plot_vortex_evolution(self,dsfile,savedir,save_suffix,i_mem=0):
         # Plot the holistic information about a single member of a single ensemble. Include some timeseries and some snapshots, perhaps along the region of maximum deceleration in zonal wind. 
         ds = nc.Dataset(dsfile,"r")
+        print("self.num_wavenumbers = {}, self.Npc_per_level_max = {}".format(self.num_wavenumbers,self.Npc_per_level_max))
         funlib = self.observable_function_library()
         feat_def = pickle.load(open(self.feature_file,"rb"))
-        X = self.evaluate_features(ds,feat_def)[i_mem]
+        X,fall_year = self.evaluate_features(ds,feat_def)
+        X = X[i_mem]
+        print("X.shape = {}".format(X.shape))
         # Determine the period of maximum deceleration
         time = X[:,0]
         decel_window = int(24*10.0/(time[1]-time[0]))
@@ -388,12 +391,15 @@ class WinterStratosphereFeatures:
         print("max(abs(pc0 - pc1)) = {}".format(np.max(np.abs(pc0-pc1))))
         print("direct vs fun: 0: {}, 1: {}".format(np.max(np.abs(X[:,i_pc0] - pc0)),np.max(np.abs(X[:,i_pc1] - pc1))))
         # ---------------------------------
-        obs_key_list = ["uref","mag1","mag2","mag1_anomaly","mag2_anomaly","ph1","ph2","lev0_pc0","lev0_pc1","lev0_pc2","lev0_pc3"]
+        obs_key_list = ["uref","mag1","mag2","mag1_anomaly","mag2_anomaly","ph1","ph2","lev0_pc0","lev0_pc1","lev0_pc2","lev0_pc3","lev0_pc4","lev0_pc5"]
         for oki in range(len(obs_key_list)):
             obs_key = obs_key_list[oki]
             fig,ax = plt.subplots()
-            ax.plot(funlib["time_h"]["fun"](X),funlib[obs_key]["fun"](X),color='black')
-            ax.set_xlabel(funlib["time_h"]["label"])
+            ydata = funlib[obs_key]["fun"](X)
+            if obs_key_list[oki].endswith("pc0"):
+                ydata *= -1
+            ax.plot(funlib["time_h"]["fun"](X),ydata,color='black')
+            ax.set_xlabel("%s %i"%(funlib["time_h"]["label"],fall_year))
             ax.set_ylabel(funlib[obs_key]["label"])
             ax.axvspan(time[decel_time_range[0]],time[decel_time_range[1]],color='orange',zorder=-1)
             fig.savefig(join(savedir,"timeseries_%s_%s"%(save_suffix,obs_key)))

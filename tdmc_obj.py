@@ -38,6 +38,9 @@ class TimeDependentMarkovChain:
         # The functional is F_{0,1}(x0,x1)*F(x1,x2)*...*F(x(T-1),x(T))*G(x(T))
         # F is a (Nt-1)-length list of matrices, and G is a (Nt)-length list of vectors. 
         # F and G are both (Nt-1)-length lists of matrices
+        ifg = np.where([F[i].shape[0] != self.P_list[i].shape[0] or F[i].shape[1] != self.P_list[i].shape[1] for i in range(len(F))])[0]
+        if len(ifg) > 0:
+            raise Exception("At index {}, F is ({},{}) while P_list is ({},{})".format(ifg[0],F[ifg[0]].shape[0],F[ifg[0]].shape[1],self.P_list[ifg[0]].shape[0],self.P_list[ifg[0]].shape[1]))
         Q = [G[i].copy() for i in range(self.Nt)]
         for i in np.arange(self.Nt-2,-1,-1):
             Q[i] += (self.P_list[i]*F[i]) @ Q[i+1]
