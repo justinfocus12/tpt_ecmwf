@@ -5,5 +5,5 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=10GB 
-#SBATCH --time=15:00:00
+#SBATCH --time=1-12:00:00
 python -u s2s_request.py > s2s_request.txt

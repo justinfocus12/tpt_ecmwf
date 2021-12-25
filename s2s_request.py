@@ -18,7 +18,7 @@ def digstr(n):
 
 #task_id = int(sys.argv[1])
 # Directories
-datadir = "/scratch/jf4241/ecmwf_data/s2s_data/2021-11-01"
+datadir = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
 if not exists(datadir): mkdir(datadir)
 #savedir = "./gridmath"
 #if not exists(savedir): mkdir(savedir)
@@ -26,7 +26,6 @@ if not exists(datadir): mkdir(datadir)
 
 # ----------- Try a normal request -------------
 if False:
-    
     #!/usr/bin/env python
     server.retrieve({
         "class": "s2",
@@ -62,7 +61,7 @@ year_list_hc = np.arange(year_rt-20,year_rt)
 
 # Go from November 1 to (November 1 + 180 days)
 winter_start_date_rt = datetime.datetime(year_rt,winter_start_month,winter_start_day)
-for k in range(55,winter_length):
+for k in range(45,winter_length):
     date_rt = winter_start_date_rt + datetime.timedelta(days = k)
     date_rt_str = "%s-%s-%s"%(digstr(date_rt.year),digstr(date_rt.month),digstr(date_rt.day))
     print("date_rt = {}; date_rt_str = {}".format(date_rt,date_rt_str))
@@ -89,7 +88,7 @@ for k in range(55,winter_length):
                     "model": "glob",
                     "number": "1/2/3/4/5/6/7/8/9/10",
                     "origin": "ecmf",
-                    "param": "156",
+                    "param": "131/156",
                     "step": "0/24/48/72/96/120/144/168/192/216/240/264/288/312/336/360/384/408/432/456/480/504/528/552/576/600/624/648/672/696/720/744/768/792/816/840/864/888/912/936/960/984/1008/1032/1056/1080/1104",
                     "stream": "enfh",
                     "time": "00:00:00",

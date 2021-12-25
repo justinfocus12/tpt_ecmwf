@@ -66,7 +66,7 @@ spring_day0 = 150.0
 Npc_per_level_max = 6
 # ------------------ Algorithmic parameters ---------------------
 num_clusters = 150
-Npc_per_level_single = 2
+Npc_per_level_single = 3
 Nwaves = 0
 paramdir_s2s = join(expdir_s2s, "nclust{}_nwaves{}_npcperlev{}".format(num_clusters,Nwaves,Npc_per_level_single))
 if not exists(paramdir_s2s):
@@ -98,9 +98,9 @@ evaluate_database_ei =         0
 tpt_ei_flag =                  0
 # s2s
 evaluate_database_s2s =        0
-cluster_flag =                 1
-build_msm_flag =               1
-tpt_s2s_flag =                 1
+cluster_flag =                 0
+build_msm_flag =               0
+tpt_s2s_flag =                 0
 # Summary statistics
 plot_rate_flag =               1
 
@@ -160,7 +160,7 @@ if tpt_ei_flag:
             summary_dns = tpt.tpt_pipeline_dns(expdir_ei,savedir,winstrat,feat_def,resample_flag=(i_seed>0),seed=i_seed)
 # ------------------- DGA from S2S --------------------------------
 Npc_per_level = Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
-Npc_per_level[1:] = 0 # Only care about the top layer
+#Npc_per_level[1:] = 0 # Only care about the top layer
 feat_filename = join(expdir_s2s,"X.npy")
 ens_start_filename = join(expdir_s2s,"ens_start_idx.npy")
 fall_year_filename = join(expdir_s2s,"fall_year_list.npy")
@@ -221,10 +221,11 @@ if plot_rate_flag:
     if num_seeds_s2s > 1:
         ax.plot(uthresh_list,np.min(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
         ax.plot(uthresh_list,np.max(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
-    ax.set_yscale('log')
     ax.set_xlabel("Zonal wind threshold",fontdict=font)
     ax.set_ylabel("Rate",fontdict=font)
     ax.legend(handles=[he2,hei,hs2s])
     fig.savefig(join(paramdir_s2s,"rate_tth%i-%i"%(tthresh0,tthresh1)))
+    ax.set_yscale('log')
+    fig.savefig(join(paramdir_s2s,"lograte_tth%i-%i"%(tthresh0,tthresh1)))
     plt.close(fig)
 
