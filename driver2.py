@@ -22,14 +22,14 @@ codedir = "/home/jf4241/ecmwf/s2s"
 os.chdir(codedir)
 datadir_e2 = "/scratch/jf4241/ecmwf_data/era20c_data/2021-11-03"
 datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2021-12-12"
-datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-11-01"
-featdir = "/scratch/jf4241/ecmwf_data/features/2021-12-11"
+datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
+featdir = "/scratch/jf4241/ecmwf_data/features/2021-12-25"
 if not exists(featdir): mkdir(featdir)
-feat_display_dir = join(featdir,"display3")
+feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2021-12-13")
+daydir = join(resultsdir,"2021-12-26")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -65,8 +65,12 @@ winter_day0 = 0.0
 spring_day0 = 150.0
 Npc_per_level_max = 6
 # ------------------ Algorithmic parameters ---------------------
-num_clusters = 150
-Npc_per_level_single = 3
+num_clusters = 100
+#Npc_per_level_single = 4
+Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+pcstr = ""
+for i_lev in range(len(feat_def["plev"])):
+    pcstr += f"{lev{i_lev}pc{Npc_per_level[i_lev]}"
 Nwaves = 0
 paramdir_s2s = join(expdir_s2s, "nclust{}_nwaves{}_npcperlev{}".format(num_clusters,Nwaves,Npc_per_level_single))
 if not exists(paramdir_s2s):
@@ -92,15 +96,15 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_e2_flag =                  0
+tpt_e2_flag =                  1
 # eraint
 evaluate_database_ei =         0
-tpt_ei_flag =                  0
+tpt_ei_flag =                  1
 # s2s
 evaluate_database_s2s =        0
-cluster_flag =                 0
-build_msm_flag =               0
-tpt_s2s_flag =                 0
+cluster_flag =                 1
+build_msm_flag =               1
+tpt_s2s_flag =                 1
 # Summary statistics
 plot_rate_flag =               1
 
@@ -124,10 +128,11 @@ feat_def = pickle.load(open(winstrat.feature_file,"rb"))
 tpt = tpt_general.WinterStratosphereTPT()
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = 10.0 # First day that SSW could happen
-tthresh1 = 120.0 # Last day that SSW could happen
-uthresh_list = np.arange(5,-20,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
+tthresh1 = 145.0 # Last day that SSW could happen
+uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 # ------------------ TPT direct estimates from ERA20C ------------------------------
 if evaluate_database_e2:
+    print("Evaluating ERA20C database")
     winstrat.evaluate_features_database(file_list_e2,feat_def,expdir_e2,"X",winstrat.wtime[0],winstrat.wtime[-1])
 if tpt_e2_flag: 
     print("Starting TPT on era20c")
@@ -144,6 +149,7 @@ if tpt_e2_flag:
             summary_dns = tpt.tpt_pipeline_dns(expdir_e2,savedir,winstrat,feat_def,resample_flag=(i_seed>0),seed=i_seed)
 # ------------------ TPT direct estimates from ERA-Interim ------------------------------
 if evaluate_database_ei:
+    print("Evaluating ERA-Int database")
     winstrat.evaluate_features_database(file_list_ei,feat_def,expdir_ei,"X",winstrat.wtime[0],winstrat.wtime[-1])
 if tpt_ei_flag: 
     print("Starting TPT on eraint")
@@ -165,6 +171,7 @@ feat_filename = join(expdir_s2s,"X.npy")
 ens_start_filename = join(expdir_s2s,"ens_start_idx.npy")
 fall_year_filename = join(expdir_s2s,"fall_year_list.npy")
 if evaluate_database_s2s: # Expensive!
+    print("Evaluating S2S database")
     winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,expdir_s2s,"X",winstrat.wtime[0],winstrat.wtime[-1])
 
 print("Starting TPT on S2S")
@@ -227,5 +234,7 @@ if plot_rate_flag:
     fig.savefig(join(paramdir_s2s,"rate_tth%i-%i"%(tthresh0,tthresh1)))
     ax.set_yscale('log')
     fig.savefig(join(paramdir_s2s,"lograte_tth%i-%i"%(tthresh0,tthresh1)))
+    ax.set_yscale('logit')
+    fig.savefig(join(paramdir_s2s,"logitrate_tth%i-%i"%(tthresh0,tthresh1)))
     plt.close(fig)
 

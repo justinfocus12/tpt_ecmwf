@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "driver2.py", line 43, in <module>
+    np.random.seed(1)
+  File "/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py", line 29, in <module>
+    import cartopy
+ModuleNotFoundError: No module named 'cartopy'

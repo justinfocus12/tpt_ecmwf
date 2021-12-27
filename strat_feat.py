@@ -107,7 +107,7 @@ class WinterStratosphereFeatures:
         return dstime_adj # This is just one-dimensional. 
     def get_ensemble_source_size(self,ds):
         vbls = list(ds.variables.keys())
-        if 'var129' in vbls: # This means it's from era20c
+        if 'var129' in vbls: # This means it's from era20c OR eraint
             dssource = 'era20c'
             Nmem = 1
         elif 'gh' in vbls:
@@ -117,22 +117,26 @@ class WinterStratosphereFeatures:
                 if v[:2] == "gh":
                     Nmem += 1
         return dssource,Nmem
-    def get_gh(self,ds):
+    def get_u_gh(self,ds):
         # All features will follow from this. 
         dssource,Nmem = self.get_ensemble_source_size(ds)
         Nt,Nlev,Nlat,Nlon = [ds[v].size for v in ["time","plev","lat","lon"]]
         grav_accel = 9.80665
         gh = np.zeros((Nmem,Nt,Nlev,Nlat,Nlon))
+        u = np.zeros((Nmem,Nt,Nlev,Nlat,Nlon))
         for i_mem in range(Nmem):
             if dssource == 's2s':
-                memkey = 'gh' if i_mem==0 else 'gh_%i'%(i_mem+1)
-                gh[i_mem] = ds[memkey][:]
-            elif dssource == 'era20c':
+                memkey_gh = 'gh' if i_mem==0 else 'gh_%i'%(i_mem+1)
+                gh[i_mem] = ds[memkey_gh][:]
+                memkey_u = 'u' if i_mem==0 else 'u_%i'%(i_mem+1)
+                u[i_mem] = ds[memkey_u][:]
+            elif dssource in ['era20c','eraint']:
                 gh[i_mem] = ds['var129'][:]/grav_accel
+                u[i_mem] = ds['var131'][:]
             else:
                 raise Exception("The dssource you gave me, %s, is not recognized"%(dssource))
         time,fall_year = self.time_since_nov1(ds['time'])
-        return gh,time,ds['plev'][:],ds['lat'][:],ds['lon'][:],fall_year
+        return gh,u,time,ds['plev'][:],ds['lat'][:],ds['lon'][:],fall_year
     def compute_geostrophic_wind(self,gh,lat,lon):
         # gh shape should be (Nx,Nlev,Nlat,Nlon). 
         Omega = 2*np.pi/(3600*24*365)
@@ -205,21 +209,23 @@ class WinterStratosphereFeatures:
         i_lev_uref,i_lat_uref = self.get_ilev_ilat(ds0)
         ds0.close()
         gh = np.zeros((0,Nlev,Nlat,Nlon)) # First dimension will have both time and ensemble members
+        u = np.zeros((0,Nlev,Nlat,Nlon)) 
         t_szn = np.zeros(0)
         grid_shp = np.array([Nlev,Nlat,Nlon])
         for i_file in range(len(data_file_list)):
             print("Creating features: file {} out of {}".format(i_file,len(data_file_list)))
             ds = nc.Dataset(data_file_list[i_file],"r")
-            gh_new,time,_,_,_,_ = self.get_gh(ds)
+            gh_new,u_new,time,_,_,_,_ = self.get_u_gh(ds)
             Nmem,Nt = gh_new.shape[:2]
             shp_new = np.array(gh_new.shape)
             if np.any(shp_new[2:5] != grid_shp):
                 raise Exception("The file {} has a geopotential height field of shape {}, whereas it was supposed to have a shape {}".format(data_file_list[i_file],shp_new[2:5],grid_shp))
             gh = np.concatenate((gh,gh_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
+            u = np.concatenate((u,u_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
             t_szn = np.concatenate((t_szn,self.hours_since_nov1(ds)))
             ds.close()
         # Zonal wind
-        u,v = self.compute_geostrophic_wind(gh,lat,lon)
+        #u,v = self.compute_geostrophic_wind(gh,lat,lon)
         uref = np.mean(u[:,i_lev_uref,i_lat_uref,:],axis=1)
         uref_szn_mean,uref_szn_std = self.get_seasonal_mean(t_szn,uref)
         uref_mean = np.mean(uref)
@@ -264,7 +270,7 @@ class WinterStratosphereFeatures:
         i_ens = 0
         for i in range(len(file_list)):
             if i % 10 == 0:
-                print("file %i ouf ot %i: %s"%(i,len(file_list),file_list[i]))
+                print("file %i out of %i: %s"%(i,len(file_list),file_list[i]))
             ens_start_idx[i] = i_ens
             ds = nc.Dataset(file_list[i],"r")
             Xnew,fall_year = self.evaluate_features(ds,feat_def)
@@ -340,15 +346,16 @@ class WinterStratosphereFeatures:
     def evaluate_features(self,ds,feat_def):
         # Given a single ensemble in ds, evaluate the features and return a big matrix
         i_lev_uref,i_lat_uref = self.get_ilev_ilat(ds)
-        gh,time,plev,lat,lon,fall_year = self.get_gh(ds)
+        gh,u,time,plev,lat,lon,fall_year = self.get_u_gh(ds)
         Nmem,Nt,Nlev,Nlat,Nlon = gh.shape
         gh = gh.reshape((Nmem*Nt,Nlev,Nlat,Nlon))
+        u = u.reshape((Nmem*Nt,Nlev,Nlat,Nlon))
         Nfeat = 2 + 2*self.num_wavenumbers + Nlev*self.Npc_per_level_max
         X = np.zeros((Nmem*Nt,Nfeat))
         # Time
         X[:,0] = np.outer(np.ones(Nmem),time).flatten()
         # Zonal-mean zonal wind
-        u,v = self.compute_geostrophic_wind(gh,lat,lon)
+        #u,v = self.compute_geostrophic_wind(gh,lat,lon)
         uref = np.mean(u[:,i_lev_uref,i_lat_uref,:],axis=1)
         X[:,1] = self.unseason(X[:,0],uref,feat_def["uref_szn_mean"],feat_def["uref_szn_std"])
         # Wave amplitudes
@@ -408,10 +415,11 @@ class WinterStratosphereFeatures:
         num_snapshots = 30
         i_lev_ref,i_lat_ref = self.get_ilev_ilat(ds)
         tidx = np.linspace(decel_time_range[0],decel_time_range[1],min(num_snapshots,decel_time_range[1]-decel_time_range[0]+1)).astype(int)
-        gh,_,plev,lat,lon,fall_year = self.get_gh(ds)
+        gh,u,_,plev,lat,lon,fall_year = self.get_u_gh(ds)
         gh = gh[i_mem]
+        u = u[i_mem]
         print("gh.shape = {}".format(gh.shape))
-        u,v = self.compute_geostrophic_wind(gh,lat,lon)
+        _,v = self.compute_geostrophic_wind(gh,lat,lon)
         print("u.shape = {}".format(u.shape))
         u = u[tidx,i_lev_ref,:,:]
         v = v[tidx,i_lev_ref,:,:]
