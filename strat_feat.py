@@ -20,6 +20,7 @@ ggiantfont = {'family': 'serif', 'size': 120}
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from scipy.optimize import minimize
+from scipy import interpolate
 import sys
 import os
 from os import mkdir
@@ -149,6 +150,67 @@ class WinterStratosphereFeatures:
         u = -gh_y/fcor
         v = gh_x/fcor
         return u,v
+    def compute_horizontal_laplacian(self,gh,lat,lon):
+        # gh shape should be (Nx, Nlev,Nlat,Nlon)
+        Nx,Nlev,Nlat,Nlon = gh.shape
+        # Compute very crudely the Laplacian of gh (just horizontal) times r^2. At the North pole, just take the average of the neighbors. 
+        Omega = 2*np.pi/(3600*24*365)
+        fcor = np.outer(2*Omega*np.sin(lat*np.pi/180), np.ones(lon.size))
+        earth_radius = 6371e3 
+        dlat = np.pi/180 * (lat[1] - lat[0])
+        dlon = np.pi/180 * (lon[1] - lon[0])
+        gh_lon2 = (np.roll(gh,-1,axis=3) - 2*gh + np.roll(gh,1,axis=3))/dlon**2
+        gh_lat2 = (np.roll(gh,-1,axis=2) - 2*gh + np.roll(gh,1,axis=2))/dlat**2
+        gh_lat2[:,:,0,:] = gh_lat2[:,:,1,:]
+        gh_lat2[:,:,-1,:] = gh_lat2[:,:,-2,:]
+        gh_lat = (np.roll(gh,-1,axis=2) - np.roll(gh,1,axis=2))/(2*dlat)
+        gh_lat[:,:,0,:] = (-3*gh[:,:,0,:] + 4*gh[:,:,1,:] - gh[:,:,2,:])/(2*dlat)
+        gh_lat[:,:,-1,:] = (3*gh[:,:,-1,:] - 4*gh[:,:,-2,:] + gh[:,:,-3,:])/(2*dlat)
+        cos = np.outer(np.cos(lat*np.pi/180), np.ones(len(lon)))
+        sin = np.outer(np.sin(lat*np.pi/180), np.ones(len(lon)))
+        # Make poles nan
+        cos[cos==0] = np.nan
+        gh_laplacian = 1.0/cos**2*gh_lon2 + gh_lat2 - (sin/cos)*gh_lat
+        # Put NaN at the poles.
+        gh_laplacian[:,:,:2,:] = np.nan
+        gh_laplacian[:,:,-2:,:] = np.nan
+        return gh_laplacian
+    def compute_vortex_moments(self,gh,lat,lon,min_lat=20):
+        # Do a stereographic projection onto the plane and compute Laplacian there.
+        Nsamp,Nlev,Nlat,Nlon = gh.shape
+        i_lat_max = np.where(lat > min_lat)[0][0] - 1
+        area_factor = np.cos(lat[1:i_lat_max]*np.pi/180)/(1 - np.sin(lat[1:i_lat_max]*np.pi/180))
+        X = np.outer(area_factor, np.cos(lon*np.pi/180))
+        Y = np.outer(area_factor, np.sin(lon*np.pi/180))
+        x = np.linspace(X.min(), X.max(), 30)
+        y = np.linspace(Y.min(), Y.max(), 30)
+        gh_stereo = np.zeros((Nsamp,Nlev,len(x),len(y)))
+        # May want to build an interpolation matrix to do this efficiently
+        for i_samp in range(nsamp):
+            for i_lev in range(Nlev):
+                gh_interp = interpolate.interp2d(X.flatten(),Y.flatten(),gh[i_samp,i_lev,1:i_lat_max,:], fill_value=np.nan)
+                gh_stereo[i_samp,i_lev,:,:] = gh_interp(x,y)
+        # Take the Laplacian
+        gh_laplacian =  (gh_stereo[:,:,2:,1:-1] - 2*gh_stereo[:,:,1:-1,1:-1] + gh_stereo[:,:,:-2,1:-1])/dx**2
+        gh_laplacian += (gh_stereo[:,:,1:-1,2:] - 2*gh_stereo[:,:,1:-1,1:-1] + gh_stereo[:,:,1:-1,:-2])/dy**2
+        # Now find the vortex edge using the McIntyre and Palmer 1983 approach
+        gh_lap_sorted = np.sort(gh_laplacian.flatten())
+        crit_idx = np.argmin(gh_lap_sorted[2:] - gh_lap_sorted[:-2]) + 2
+        gh_lap_crit = gh_lap_sorted[crit_idx]
+        q = np.maximum(0, gh_laplacian - gh_lap_crit)
+        q *= 1.0/np.sum(q*dx*dy)
+        area = np.sum(dx*dy*(q>0))
+        # Compute some moments
+        # Mean
+        mean = np.array([np.sum(q*x), np.sum(q*y)]
+        # Variance
+        variance = np.zeros((2,2))
+        variance[0,0] = np.sum(q*(x-mean[0])**2)
+        variance[0,1] = np.sum(q*(x-mean[0])*(y-mean[1]))
+        variance[1,0] = variance[0,1]
+        variance[1,1] = np.sum(q*(y-mean[1])**2)
+        # Skewness...
+        return mean,variance 
     def get_wavenumbers(self,gh,i_lev,lat_range,lat,lon):
         # Given a band of latitudes (a whole ensemble thereof), get waves 1 and 2
         i_lat_range = np.where((lat >= lat_range[0])*(lat <= lat_range[1]))[0]
@@ -367,7 +429,7 @@ class WinterStratosphereFeatures:
         for i_lev in range(Nlev):
             X[:,i_feat:i_feat+self.Npc_per_level_max] = (gh[:,i_lev,:,:].reshape((Nmem*Nt,Nlat*Nlon)) @ (feat_def["eofs"][i_lev,:,:self.Npc_per_level_max])) / feat_def["singvals"][i_lev]
             i_feat += self.Npc_per_level_max
-        #print("i_feat = {}; Nfeat = {}".format(i_feat,Nfeat))
+        # Potential vorticity??
         X = X.reshape((Nmem,Nt,Nfeat))
         return X,fall_year
     def plot_vortex_evolution(self,dsfile,savedir,save_suffix,i_mem=0):
@@ -405,8 +467,8 @@ class WinterStratosphereFeatures:
             ydata = funlib[obs_key]["fun"](X)
             if obs_key_list[oki].endswith("pc0"):
                 ydata *= -1
-            ax.plot(funlib["time_h"]["fun"](X),ydata,color='black')
-            ax.set_xlabel("%s %i"%(funlib["time_h"]["label"],fall_year))
+            ax.plot(funlib["time_d"]["fun"](X),ydata,color='black')
+            ax.set_xlabel("%s %i"%(funlib["time_d"]["label"],fall_year))
             ax.set_ylabel(funlib[obs_key]["label"])
             ax.axvspan(time[decel_time_range[0]],time[decel_time_range[1]],color='orange',zorder=-1)
             fig.savefig(join(savedir,"timeseries_%s_%s"%(save_suffix,obs_key)))
@@ -414,22 +476,28 @@ class WinterStratosphereFeatures:
         # Plot polar cap evolution
         num_snapshots = 30
         i_lev_ref,i_lat_ref = self.get_ilev_ilat(ds)
-        tidx = np.linspace(decel_time_range[0],decel_time_range[1],min(num_snapshots,decel_time_range[1]-decel_time_range[0]+1)).astype(int)
+        tidx = np.round(np.linspace(decel_time_range[0],decel_time_range[1],min(num_snapshots,decel_time_range[1]-decel_time_range[0]+2))).astype(int)
         gh,u,_,plev,lat,lon,fall_year = self.get_u_gh(ds)
         gh = gh[i_mem]
         u = u[i_mem]
         print("gh.shape = {}".format(gh.shape))
         _,v = self.compute_geostrophic_wind(gh,lat,lon)
+        gh_lap = self.compute_horizontal_laplacian(gh,lat,lon)
         print("u.shape = {}".format(u.shape))
         u = u[tidx,i_lev_ref,:,:]
         v = v[tidx,i_lev_ref,:,:]
         gh = gh[tidx,i_lev_ref,:,:]
+        gh_lap = gh_lap[tidx,i_lev_ref,:,:]
         ds.close()
         for k in range(len(tidx)):
             i_time = tidx[k]
             fig,ax = self.show_ugh_onelevel_cartopy(gh[k],u[k],v[k],lat,lon)
             ax.set_title(r"$\Phi$, $u$ at day {}, {}".format(time[tidx[k]]/24.0,fall_year))
-            fig.savefig(join(savedir,"vortex_{}_day{}_yr{}".format(save_suffix,int(time[tidx[k]]/24.0),fall_year)))
+            fig.savefig(join(savedir,"vortex_gh_{}_day{}_yr{}".format(save_suffix,int(time[tidx[k]]/24.0),fall_year)))
+            plt.close(fig)
+            fig,ax = self.show_ugh_onelevel_cartopy(gh_lap[k],u[k],v[k],lat,lon)
+            ax.set_title(r"$\Phi$, $u$ at day {}, {}".format(time[tidx[k]]/24.0,fall_year))
+            fig.savefig(join(savedir,"vortex_ghlap_{}_day{}_yr{}".format(save_suffix,int(time[tidx[k]]/24.0),fall_year)))
             plt.close(fig)
         return
     def wave_mph(self,x,feat_def,wn,widx=None,unseason_mag=False):
@@ -505,7 +573,7 @@ class WinterStratosphereFeatures:
         fig,ax,data_crs = self.display_pole_field(gh,lat,lon)
         lon_subset = np.linspace(0,lon.size-1,20).astype(int)
         lat_subset = np.linspace(0,lat.size-2,60).astype(int)
-        ax.quiver(lon[lon_subset],lat[lat_subset],u[lat_subset,:][:,lon_subset],v[lat_subset,:][:,lon_subset],transform=data_crs,color='black',zorder=5)
+        #ax.quiver(lon[lon_subset],lat[lat_subset],u[lat_subset,:][:,lon_subset],v[lat_subset,:][:,lon_subset],transform=data_crs,color='black',zorder=5)
         ax.set_title(r"$\Phi$, $u$")
         return fig,ax
     def show_multiple_eofs(self,savedir):
