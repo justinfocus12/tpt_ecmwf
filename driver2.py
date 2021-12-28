@@ -122,7 +122,7 @@ if display_features_flag:
     print("Showing EOFs")
     winstrat.show_multiple_eofs(feat_display_dir)
     # Show the basis functions evaluated on various samples
-    for display_idx in np.arange(96,98):
+    for display_idx in np.arange(96,106):
         winstrat.plot_vortex_evolution(file_list_e2[display_idx],feat_display_dir,"fy{}".format(fall_years_e2[display_idx]))
 
 # ------------------ Initialize the TPT object -------------------------------------

@@ -175,42 +175,113 @@ class WinterStratosphereFeatures:
         gh_laplacian[:,:,:2,:] = np.nan
         gh_laplacian[:,:,-2:,:] = np.nan
         return gh_laplacian
-    def compute_vortex_moments(self,gh,lat,lon,min_lat=20):
+    def compute_vortex_moments_sphere(self,gh,lat,lon,i_lev_subset=None):
+        # Do the calculation in lat/lon coordinates. Regridding is too expensive
+        Nsamp,Nlev_full,Nlat_full,Nlon = gh.shape
+        if i_lev_subset is None:
+            i_lev_subset = np.arange(Nlev_full)
+        Nlev = len(i_lev_subset)
+        i_lat_max = np.where(lat < 0.0)[0][0]  # All the way to the equator
+        print(f"i_lat_max = {i_lat_max}")
+        Nlat = i_lat_max# - 2
+        stereo_factor = np.cos(lat[:i_lat_max]*np.pi/180)/(1 + np.sin(lat[:i_lat_max]*np.pi/180))
+        X = np.outer(stereo_factor, np.cos(lon*np.pi/180)).flatten()
+        Y = np.outer(stereo_factor, np.sin(lon*np.pi/180)).flatten()
+        ghlap = self.compute_horizontal_laplacian(gh,lat,lon)[:,i_lev_subset,:i_lat_max,:].reshape((Nsamp*Nlev,Nlat*Nlon))
+        print(f"ghlap: nanfrac={np.mean(np.isnan(ghlap))}, min={np.nanmin(ghlap)}, max={np.nanmax(ghlap)}")
+        # Assign an area to each grid cell. 
+        dlat,dlon = np.pi/2*np.array([lat[1]-lat[0],lon[1]-lon[0]])
+        area_factor = np.outer(np.cos(lat[:i_lat_max]*np.pi/180), np.ones(Nlon)).flatten()
+        # Find vortex edge by ranking grid cells and finding the maximum slope of area fraction with respect to PV
+        ghlap_order = np.argsort(ghlap,axis=1)
+        area_fraction = np.cumsum(np.array([area_factor[ghlap_order[i]] for i in range(Nsamp*Nlev)]),axis=1)
+        area_fraction = (area_fraction.T /area_fraction[:,-1]).T
+        ghlap_sorted = np.array([ghlap[i,ghlap_order[i]] for i in np.arange(Nsamp*Nlev)])
+        equiv_lat = np.arcsin(area_fraction)
+        # Verify ghlap_sorted is monotonic with equiv_lat
+        print(f"min diff = {np.nanmin(np.diff(ghlap_sorted, axis=1))}")
+        if np.nanmin(np.diff(ghlap_sorted, axis=1)) < 0:
+            raise Exception("ghlap_sorted must be monotonically increasing")
+        window = 6
+        dq_deqlat = (ghlap_sorted[:,window:] - ghlap_sorted[:,:-window])/(equiv_lat[:,window:] - equiv_lat[:,:-window])
+        #idx_crit = np.nanargmax(dq_deqlat, axis=1) + window//2
+        idx_crit = np.argmin(np.abs(area_fraction - 0.75), axis=1) #int(dA_dq.shape[1]/2) 
+        ghlap_crit = ghlap_sorted[np.arange(Nsamp*Nlev),idx_crit]
+        print(f"ghlap_crit: min={np.nanmin(ghlap_crit)}, max={np.nanmax(ghlap_crit)}")
+        # Threshold and find moments
+        q = (np.maximum(0, ghlap.T - ghlap_crit).T)
+        print(f"q: frac>0 is {np.mean(q>0)},  min={np.nanmin(q)}, max={np.nanmax(q)}")
+        # Zeroth moment: vortex area
+        m00 = np.nansum(q*area_factor, axis=1)
+        print(f"m00: min={np.nanmin(m00)}, max={np.nanmax(m00)}")
+        area = m00 #/ ghlap_crit
+        #area = np.sum((q>0)*area_factor, axis=1)
+        # First moment: mean x and mean y
+        m10 = np.nansum(area_factor*q*X, axis=1)/m00
+        m01 = np.nansum(area_factor*q*Y, axis=1)/m00
+        print(f"m10: min={np.nanmin(m10)}, max={np.nanmax(m10)}")
+        print(f"m01: min={np.nanmin(m01)}, max={np.nanmax(m01)}")
+        center = np.array([m10, m01]).T
+        # Determine latitude and longitude of center
+        center_lat = np.arcsin((1 - (center[:,0]**2 + center[:,1]**2))/(1 + (center[:,0]**2 + center[:,1]**2))) * 180/np.pi
+        center_lon = np.arctan2(center[:,1],center[:,0]) * 180/np.pi
+        # Reshape
+        area = area.reshape((Nsamp,Nlev))
+        center_latlon = np.array([center_lat,center_lon]).T
+        #center = center.reshape((Nsamp,Nlev,2))
+        print(f"area: min={np.nanmin(area)}, max={np.nanmax(area)}, mean={np.nanmean(area)}\ncenter(x): min={np.nanmin(center[:,0])}, max={np.nanmax(center[:,0])}, mean={np.nanmean(center[:,0])}")
+        return area,center_latlon
+    def compute_vortex_moments(self,gh,lat,lon,min_lat=20,i_lev_subset=None):
         # Do a stereographic projection onto the plane and compute Laplacian there.
         Nsamp,Nlev,Nlat,Nlon = gh.shape
+        if i_lev_subset is None:
+            i_lev_subset = np.arange(Nlev)
+        Nlev_subset = len(i_lev_subset)
         i_lat_max = np.where(lat > min_lat)[0][0] - 1
-        area_factor = np.cos(lat[1:i_lat_max]*np.pi/180)/(1 - np.sin(lat[1:i_lat_max]*np.pi/180))
+        area_factor = np.cos(lat[2:i_lat_max]*np.pi/180)/(1 - np.sin(lat[2:i_lat_max]*np.pi/180))
         X = np.outer(area_factor, np.cos(lon*np.pi/180))
         Y = np.outer(area_factor, np.sin(lon*np.pi/180))
-        x = np.linspace(X.min(), X.max(), 30)
-        y = np.linspace(Y.min(), Y.max(), 30)
-        gh_stereo = np.zeros((Nsamp,Nlev,len(x),len(y)))
+        Nx,Ny = 30,30
+        x = np.linspace(X.min(), X.max(), Nx)
+        y = np.linspace(Y.min(), Y.max(), Ny)
+        gh_stereo = np.zeros((Nsamp,Nlev_subset,len(x),len(y)))
         # May want to build an interpolation matrix to do this efficiently
-        for i_samp in range(nsamp):
-            for i_lev in range(Nlev):
-                gh_interp = interpolate.interp2d(X.flatten(),Y.flatten(),gh[i_samp,i_lev,1:i_lat_max,:], fill_value=np.nan)
-                gh_stereo[i_samp,i_lev,:,:] = gh_interp(x,y)
+        for i_samp in range(Nsamp):
+            print(f"i_samp = {i_samp} out of {Nsamp}")
+            for i_lev in range(Nlev_subset):
+                gh_interp = interpolate.interp2d(X.flatten(),Y.flatten(),gh[i_samp,i_lev,2:i_lat_max,:], fill_value=np.nan)
+                gh_stereo[i_samp,i_lev_subset[i_lev],:,:] = gh_interp(x,y)
         # Take the Laplacian
-        gh_laplacian =  (gh_stereo[:,:,2:,1:-1] - 2*gh_stereo[:,:,1:-1,1:-1] + gh_stereo[:,:,:-2,1:-1])/dx**2
-        gh_laplacian += (gh_stereo[:,:,1:-1,2:] - 2*gh_stereo[:,:,1:-1,1:-1] + gh_stereo[:,:,1:-1,:-2])/dy**2
+        gh_laplacian =  (
+                (gh_stereo[:,:,2:,1:-1] - 2*gh_stereo[:,:,1:-1,1:-1] + gh_stereo[:,:,:-2,1:-1])/dx**2 + 
+                (gh_stereo[:,:,1:-1,2:] - 2*gh_stereo[:,:,1:-1,1:-1] + gh_stereo[:,:,1:-1,:-2])/dy**2
+                ).reshape((Nsamp*Nlev_subset,Nx*Ny))
         # Now find the vortex edge using the McIntyre and Palmer 1983 approach
-        gh_lap_sorted = np.sort(gh_laplacian.flatten())
-        crit_idx = np.argmin(gh_lap_sorted[2:] - gh_lap_sorted[:-2]) + 2
-        gh_lap_crit = gh_lap_sorted[crit_idx]
-        q = np.maximum(0, gh_laplacian - gh_lap_crit)
-        q *= 1.0/np.sum(q*dx*dy)
-        area = np.sum(dx*dy*(q>0))
+        gh_lap_sorted = np.sort(gh_laplacian,axis=1)
+        crit_idx = np.argmin(gh_lap_sorted[:,2:] - gh_lap_sorted[:,:-2], axis=1) + 2 # shape (Nsamp,Nlev)
+        gh_lap_crit = gh_lap_sorted[np.arange(Nsamp*Nlev_subset),crit_idx]
+        q = np.maximum(0, (gh_laplacian.T - gh_lap_crit).T)
+        q = (q.T / np.sum(q*dx*dy, axis=1)).T
+        area = np.sum(dx*dy*(q>0), axis=1)
         # Compute some moments
+        xy,yx = np.meshgrid(x,y,indexing='ij')
+        xy = xy.flatten()
+        yx = yx.flatten()
         # Mean
-        mean = np.array([np.sum(q*x), np.sum(q*y)]
+        mean = np.zeros((Nsamp*Nlev_subset,2))
+        mean[:,0] = np.sum(q*xy, axis=1)
+        mean[:,1] = np.sum(q*yx, axis=1)
         # Variance
-        variance = np.zeros((2,2))
-        variance[0,0] = np.sum(q*(x-mean[0])**2)
-        variance[0,1] = np.sum(q*(x-mean[0])*(y-mean[1]))
-        variance[1,0] = variance[0,1]
-        variance[1,1] = np.sum(q*(y-mean[1])**2)
+        variance = np.zeros((Nsamp*Nlev_subset,2,2))
+        variance[:,0,0] = np.sum(q*(xy-mean[:,0])**2,axis=1)
+        variance[:,0,1] = np.sum(q*(xy-mean[:,0])*(yx-mean[:,1]),axis=1)
+        variance[:,1,0] = variance[:,0,1]
+        variance[:,1,1] = np.sum(q*(yx-mean[:,1])**2,axis=1)
         # Skewness...
-        return mean,variance 
+        mean = mean.reshape((Nsamp,Nlev_subset,2))
+        variance = variance.reshape((Nsamp,Nlev_subset,2,2))
+        area = area.reshape((Nsamp,Nlev_subset))
+        return area,mean,variance 
     def get_wavenumbers(self,gh,i_lev,lat_range,lat,lon):
         # Given a band of latitudes (a whole ensemble thereof), get waves 1 and 2
         i_lat_range = np.where((lat >= lat_range[0])*(lat <= lat_range[1]))[0]
@@ -315,14 +386,22 @@ class WinterStratosphereFeatures:
             singvals[i_lev,:] = S[:self.Npc_per_level_max]
             tot_var[i_lev] = np.sum(S**2)
         # TODO: remove EOFs that are highly correlated with uref or wavenumbers
-        feat_def = {"t_szn": t_szn, "plev": plev, "lat": lat, "lon": lon,
+        # Vortex moment diagnostics, only at reference level
+        vtx_area,vtx_center_latlon = self.compute_vortex_moments_sphere(gh,lat,lon,i_lev_subset=[i_lev_uref])
+        vtx_area_szn_mean,vtx_area_szn_std = self.get_seasonal_mean(t_szn,vtx_area[:,0])
+        vtx_centerlat_szn_mean,vtx_centerlat_szn_std = self.get_seasonal_mean(t_szn,vtx_center_latlon[:,0])
+        feat_def = {
+                "t_szn": t_szn, "plev": plev, "lat": lat, "lon": lon,
                 "i_lev_uref": i_lev_uref, "i_lat_uref": i_lat_uref,
                 "uref_mean": uref_mean, "uref_std": uref_std,
                 "uref_szn_mean": uref_szn_mean, "uref_szn_std": uref_szn_std,
                 "waves_szn_mean": waves_szn_mean, "waves_szn_std": waves_szn_std,
                 "wave_mag_szn_mean": wave_mag_szn_mean, "wave_mag_szn_std": wave_mag_szn_std,
                 "gh_szn_mean": gh_szn_mean, "gh_szn_std": gh_szn_std,
-                "eofs": eofs, "singvals": singvals, "tot_var": tot_var,}
+                "eofs": eofs, "singvals": singvals, "tot_var": tot_var,
+                "vtx_area_szn_mean": vtx_area_szn_mean, "vtx_area_szn_std": vtx_area_szn_std,
+                "vtx_centerlat_szn_mean": vtx_centerlat_szn_mean, "vtx_centerlat_szn_std": vtx_centerlat_szn_std,
+                }
         pickle.dump(feat_def,open(self.feature_file,"wb"))
         return
     def evaluate_features_database(self,file_list,feat_def,savedir,filename,tmin,tmax):
@@ -403,6 +482,7 @@ class WinterStratosphereFeatures:
                     Y[:,:,i_feat_y] = X[:,:,i_feat_x]
                     i_feat_y += 1
                 i_feat_x += 1
+        # TODO: read in vortex moment diagnostics
         np.save(clust_feat_filename,Y)
         return 
     def evaluate_features(self,ds,feat_def):
@@ -412,7 +492,7 @@ class WinterStratosphereFeatures:
         Nmem,Nt,Nlev,Nlat,Nlon = gh.shape
         gh = gh.reshape((Nmem*Nt,Nlev,Nlat,Nlon))
         u = u.reshape((Nmem*Nt,Nlev,Nlat,Nlon))
-        Nfeat = 2 + 2*self.num_wavenumbers + Nlev*self.Npc_per_level_max
+        Nfeat = 2 + 2*self.num_wavenumbers + Nlev*self.Npc_per_level_max + 2 # Last two for area and mean polar displacement of the vortex
         X = np.zeros((Nmem*Nt,Nfeat))
         # Time
         X[:,0] = np.outer(np.ones(Nmem),time).flatten()
@@ -429,7 +509,11 @@ class WinterStratosphereFeatures:
         for i_lev in range(Nlev):
             X[:,i_feat:i_feat+self.Npc_per_level_max] = (gh[:,i_lev,:,:].reshape((Nmem*Nt,Nlat*Nlon)) @ (feat_def["eofs"][i_lev,:,:self.Npc_per_level_max])) / feat_def["singvals"][i_lev]
             i_feat += self.Npc_per_level_max
-        # Potential vorticity??
+        # Vortex moments
+        vtx_area,vtx_center_latlon = self.compute_vortex_moments_sphere(gh,feat_def['lat'],feat_def['lon'],min_lat=20,i_lev_subset=[i_lev_uref])
+
+        X[:,i_feat] = self.unseason(X[:,0],vtx_area[:,0],feat_def["vtx_area_szn_mean"],feat_def["vtx_area_szn_std"])  # Vortex area
+        X[:,i_feat+1] = self.unseason(X[:,0],vtx_center_latlon[:,0],feat_def["vtx_centerlat_szn_mean"],feat_def["vtx_centerlat_szn_std"])
         X = X.reshape((Nmem,Nt,Nfeat))
         return X,fall_year
     def plot_vortex_evolution(self,dsfile,savedir,save_suffix,i_mem=0):
@@ -460,15 +544,15 @@ class WinterStratosphereFeatures:
         print("max(abs(pc0 - pc1)) = {}".format(np.max(np.abs(pc0-pc1))))
         print("direct vs fun: 0: {}, 1: {}".format(np.max(np.abs(X[:,i_pc0] - pc0)),np.max(np.abs(X[:,i_pc1] - pc1))))
         # ---------------------------------
-        obs_key_list = ["uref","mag1","mag2","mag1_anomaly","mag2_anomaly","ph1","ph2","lev0_pc0","lev0_pc1","lev0_pc2","lev0_pc3","lev0_pc4","lev0_pc5"]
+        obs_key_list = ["area","displacement","uref","mag1","mag2","mag1_anomaly","mag2_anomaly","ph1","ph2","lev0_pc0","lev0_pc1","lev0_pc2","lev0_pc3","lev0_pc4","lev0_pc5"]
         for oki in range(len(obs_key_list)):
             obs_key = obs_key_list[oki]
             fig,ax = plt.subplots()
             ydata = funlib[obs_key]["fun"](X)
             if obs_key_list[oki].endswith("pc0"):
                 ydata *= -1
-            ax.plot(funlib["time_d"]["fun"](X),ydata,color='black')
-            ax.set_xlabel("%s %i"%(funlib["time_d"]["label"],fall_year))
+            ax.plot(funlib["time_h"]["fun"](X),ydata,color='black')
+            ax.set_xlabel("%s %i"%(funlib["time_h"]["label"],fall_year))
             ax.set_ylabel(funlib[obs_key]["label"])
             ax.axvspan(time[decel_time_range[0]],time[decel_time_range[1]],color='orange',zorder=-1)
             fig.savefig(join(savedir,"timeseries_%s_%s"%(save_suffix,obs_key)))
@@ -545,6 +629,10 @@ class WinterStratosphereFeatures:
                     "label": "Wave 1 phase",},
                 "ph2": {"fun": lambda x: self.wave_mph(x,feat_def,2)[:,1],
                     "label": "Wave 2 phase",},
+                "area": {"fun": lambda x: self.get_vortex_area(x,0,Nwaves,Npc_per_level),
+                    "label": "Vortex area",},
+                "displacement": {"fun": lambda x: self.get_vortex_displacement(x,0,Nwaves,Npc_per_level),
+                    "label": "Vortex displacement",},
                 #"pc1": {"fun": lambda x: x[:,2+2*self.num_wavenumbers],
                 #    "label": "PC 1"},
                 #"pc2": {"fun": lambda x: x[:,2+2*self.num_wavenumbers+1],
@@ -568,6 +656,14 @@ class WinterStratosphereFeatures:
         #eof = x[:,2 + 2*self.num_wavenumbers + i_lev*self.Npc_per_level_max + i_eof]
         eof = x[:,idx]
         return eof
+    def get_vortex_area(self,x,i_lev,Nwaves,Npc_per_level):
+        idx = 2 + 2*Nwaves + np.sum(Npc_per_level)
+        area = x[:,idx]
+        return area
+    def get_vortex_displacement(self,x,i_lev,Nwaves,Npc_per_level):
+        idx = 2 + 2*Nwaves + np.sum(Npc_per_level) + 1
+        displacement = x[:,idx]
+        return displacement 
     def show_ugh_onelevel_cartopy(self,gh,u,v,lat,lon): 
         # Display the geopotential height at a single pressure level
         fig,ax,data_crs = self.display_pole_field(gh,lat,lon)
