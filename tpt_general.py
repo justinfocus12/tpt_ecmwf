@@ -392,7 +392,7 @@ class WinterStratosphereTPT:
         # Plot 
         centers_all = np.concatenate(centers, axis=0)
         weight = np.ones(len(centers_all))/(len(centers_all))
-        keypairs = [['time_d','uref'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','lev0_pc5'],['lev0_pc1','lev0_pc2'],['lev0_pc1','lev0_pc4'],['lev0_pc4','lev0_pc5']][:1]
+        keypairs = [['time_d','area'],['time_d','displacement'],['time_d','uref'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','lev0_pc5'],['lev0_pc1','lev0_pc2'],['lev0_pc1','lev0_pc4'],['lev0_pc4','lev0_pc5']][:3]
         #keypairs = [['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','mag1_anomaly'],['time_d','mag2_anomaly']]
         for i_kp in range(len(keypairs)):
             fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
