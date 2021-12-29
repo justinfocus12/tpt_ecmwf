@@ -25,7 +25,7 @@ datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2021-12-12"
 datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
 featdir = "/scratch/jf4241/ecmwf_data/features/2021-12-28"
 if not exists(featdir): mkdir(featdir)
-feat_display_dir = join(featdir,"display0")
+feat_display_dir = join(featdir,"display2")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
@@ -94,8 +94,8 @@ for i in range(num_seeds_s2s):
 
 # Parameters to determine what to do
 # Featurization
-create_features_flag =         0
-display_features_flag =        0
+create_features_flag =         1
+display_features_flag =        1
 # era20c
 evaluate_database_e2 =         0
 tpt_e2_flag =                  0
@@ -104,11 +104,11 @@ evaluate_database_ei =         0
 tpt_ei_flag =                  0
 # s2s
 evaluate_database_s2s =        0
-cluster_flag =                 1
-build_msm_flag =               1
-tpt_s2s_flag =                 1
+cluster_flag =                 0
+build_msm_flag =               0
+tpt_s2s_flag =                 0
 # Summary statistics
-plot_rate_flag =               1
+plot_rate_flag =               0
 
 
 feature_file = join(featdir,"feat_def")
@@ -122,7 +122,7 @@ if display_features_flag:
     print("Showing EOFs")
     winstrat.show_multiple_eofs(feat_display_dir)
     # Show the basis functions evaluated on various samples
-    for display_idx in np.arange(96,106):
+    for display_idx in np.arange(96,98):
         winstrat.plot_vortex_evolution(file_list_e2[display_idx],feat_display_dir,"fy{}".format(fall_years_e2[display_idx]))
 
 # ------------------ Initialize the TPT object -------------------------------------
