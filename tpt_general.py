@@ -45,22 +45,26 @@ class WinterStratosphereTPT:
         absum = 1.0*(np.sum(ab_tag,axis=1) > 0)
         rate = np.mean(absum)
         return rate
-    def tpt_pipeline_dns(self,tpt_feat_filename,savedir,winstrat,feat_def):
+    def tpt_pipeline_dns(self,tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level):
         # savedir: where all the results of this particular TPT will be saved.
         # winstrat: the object that was used to create features, and that can go on to evaluate other features.
         # feat_def: the feature definitions that came out of winstrat.
         Y = np.load(tpt_feat_filename)
         Ny,Nt,ydim = Y.shape
-        funlib = winstrat.observable_function_library()
+        print(f"in DNS pipeline: ydim = {ydim}")
+        funlib = winstrat.observable_function_library_Y(Nwaves,Npc_per_level)
         # ---- Plot committor in a few different coordinates -----
         src_tag,dest_tag = winstrat.compute_src_dest_tags(Y,feat_def,self.tpt_bndy,"src_dest")
         qp = 1.0*(dest_tag == 1).flatten()
         qm = 1.0*(src_tag == 0).flatten()
         pi = 1.0*np.ones(Ny*Nt)/(Ny*Nt)
-        keypairs = [['time_d','area'],['time_d','displacement'],['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','mag1_anomaly'],['time_d','mag2_anomaly']]
+        #keypairs = [['time_d','area'],['time_d','displacement'],['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4']]
+        keypairs = [['time_d','uref']]
         for i_kp in range(len(keypairs)):
             fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
-            theta_x = np.array([funlib[keypairs[i_kp][j]]["fun"](Y.reshape((Ny*Nt,ydim))) for j in range(2)]).T
+            theta0_x = funlib[keypairs[i_kp][0]]["fun"](Y.reshape((Ny*Nt,ydim)))
+            theta1_x = funlib[keypairs[i_kp][1]]["fun"](Y.reshape((Ny*Nt,ydim)))
+            theta_x = np.array([theta0_x,theta1_x]).T
             # Plot forward committor
             fig,ax = helper.plot_field_2d(qp,pi,theta_x,shp=[15,15],fieldname="Committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
             fig.savefig(join(savedir,"qp_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))

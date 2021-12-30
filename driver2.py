@@ -23,13 +23,13 @@ os.chdir(codedir)
 datadir_e2 = "/scratch/jf4241/ecmwf_data/era20c_data/2021-11-03"
 datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2021-12-12"
 datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
-featdir = "/scratch/jf4241/ecmwf_data/features/2021-12-28"
+featdir = "/scratch/jf4241/ecmwf_data/features/2021-12-30"
 if not exists(featdir): mkdir(featdir)
-feat_display_dir = join(featdir,"display2")
+feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2021-12-28")
+daydir = join(resultsdir,"2021-12-30")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -65,7 +65,7 @@ winter_day0 = 0.0
 spring_day0 = 150.0
 Npc_per_level_max = 6
 # ------------------ Algorithmic parameters ---------------------
-delaytime = 15.0 
+delaytime_days = 15.0 
 num_clusters = 100
 #Npc_per_level_single = 4
 Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
@@ -75,7 +75,7 @@ for i_lev in range(len(Npc_per_level)):
         pcstr += f"lev{i_lev}pc{Npc_per_level[i_lev]}-"
 if len(pcstr) > 1: pcstr = pcstr[:-1]
 Nwaves = 0
-paramdir_s2s = join(expdir_s2s, f"nclust{num_clusters}_nwaves{Nwaves}_delay{int(delaytime)}_{pcstr}")
+paramdir_s2s = join(expdir_s2s, f"nclust{num_clusters}_nwaves{Nwaves}_delay{int(delaytime_days)}_{pcstr}")
 if not exists(paramdir_s2s):
     mkdir(paramdir_s2s)
 
@@ -95,12 +95,12 @@ for i in range(num_seeds_s2s):
 
 # Parameters to determine what to do
 # Featurization
-create_features_flag =         1
-display_features_flag =        1
+create_features_flag =         0
+display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             0
-tpt_e2_flag =                  0
+tpt_featurize_e2 =             1
+tpt_e2_flag =                  1
 # eraint
 evaluate_database_ei =         0
 tpt_featurize_ei =             0
@@ -116,7 +116,7 @@ plot_rate_flag =               0
 
 
 feature_file = join(featdir,"feat_def")
-winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring_day0,delaytime=delaytime,Npc_per_level_max)
+winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring_day0,delaytime_days=delaytime_days,Npc_per_level_max=Npc_per_level_max)
 
 if create_features_flag:
     print("Creating features")
@@ -136,12 +136,12 @@ tpt = tpt_general.WinterStratosphereTPT()
 tthresh0 = 10.0 # First day that SSW could happen
 tthresh1 = 145.0 # Last day that SSW could happen
 sswbuffer = 10.0 # minimum buffer time between one SSW and the next
-uthresh_a = 20.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
+uthresh_a = 2.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
-# ------------------ TPT direct estimates from ERA20C ------------------------------
+# ------------------ TPT direct estimates from ERA20C --------------------------
 feat_filename = join(expdir_e2,"X.npy")
-ens_start_filename = join(expdir_s2s,"ens_start_idx.npy")
-fall_year_filename = join(expdir_s2s,"fall_year_list.npy")
+ens_start_filename = join(expdir_e2,"ens_start_idx.npy")
+fall_year_filename = join(expdir_e2,"fall_year_list.npy")
 if evaluate_database_e2:
     print("Evaluating ERA20C database")
     winstrat.evaluate_features_database(file_list_e2,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
@@ -153,15 +153,16 @@ if tpt_e2_flag:
         if not exists(seeddir): mkdir(seeddir)
         tpt_feat_filename = join(seeddir,"Y.npy")
         if tpt_featurize_e2:
-            winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,delaytime=delaytime,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
+            winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
         for i_uth in range(len(uthresh_list)):
             uthresh_b = uthresh_list[i_uth]
-            savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a))
+            savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,resample_flag=(i_seed>0),seed=i_seed)
-# ------------------ TPT direct estimates from ERA-Interim ------------------------------
+            summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level)
+sys.exit()
+# ------------------ TPT direct estimates from ERA-Interim --------------------------
 feat_filename = join(expdir_ei,"X.npy")
 ens_start_filename = join(expdir_ei,"ens_start_idx.npy")
 fall_year_filename = join(expdir_ei,"fall_year_list.npy")
@@ -176,14 +177,14 @@ if tpt_ei_flag:
         if not exists(seeddir): mkdir(seeddir)
         tpt_feat_filename = join(seeddir,"Y.npy")
         if tpt_featurize_ei:
-            winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,delaytime=delaytime,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
+            winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
         for i_uth in range(len(uthresh_list)):
             uthresh_b = uthresh_list[i_uth]
             savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a))
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            summary_dns = tpt.tpt_pipeline_dns(expdir_ei,savedir,winstrat,feat_def,resample_flag=(i_seed>0),seed=i_seed)
+            summary_dns = tpt.tpt_pipeline_dns(expdir_ei,savedir,winstrat,feat_def)
 # ------------------- DGA from S2S --------------------------------
 #Npc_per_level = Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 #Npc_per_level[1:] = 0 # Only care about the top layer
@@ -203,7 +204,7 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
     clust_filename = join(seeddir,"kmeans")
     msm_filename = join(seeddir,"msm")
     if cluster_flag:
-        winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,delaytime=delaytime,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
+        winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
         tpt.cluster_features(tpt_feat_filename,clust_filename,winstrat,num_clusters=num_clusters)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
     if build_msm_flag:
         tpt.build_msm(tpt_feat_filename,clust_filename,msm_filename,winstrat)

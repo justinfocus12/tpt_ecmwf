@@ -33,7 +33,7 @@ import pickle
 
 class WinterStratosphereFeatures:
     # Create a set of features, including out-of-sample extension. 
-    def __init__(self,feature_file,winter_day0,spring_day0,delaytime=0,Npc_per_level_max=10):
+    def __init__(self,feature_file,winter_day0,spring_day0,delaytime_days=0,Npc_per_level_max=10):
         self.feature_file = feature_file
         self.winter_day0 = winter_day0
         self.spring_day0 = spring_day0
@@ -41,8 +41,8 @@ class WinterStratosphereFeatures:
         self.Ntwint = len(self.wtime)
         self.szn_hour_window = 5.0*24 # Number of days around which to average when unseasoning
         self.dtwint = self.wtime[1] - self.wtime[0]
-        self.delaytime = delaytime
-        self.ndelay = int(delaytime/self.dtwint) + 1
+        self.delaytime = delaytime_days*24.0 
+        self.ndelay = int(self.delaytime/self.dtwint) + 1
         self.Npc_per_level_max = Npc_per_level_max # Determine from SVD if not specified
         self.num_wavenumbers = 2 # How many wavenumbers to look at 
         self.lat_uref = 60 # Degrees North for CP07 definition of SSW
@@ -52,18 +52,20 @@ class WinterStratosphereFeatures:
     def compute_src_dest_tags(self,Y,feat_def,tpt_bndy,save_filename):
         # Compute where each trajectory started (A or B) and where it's going (A or B). Also maybe compute the first-passage times, forward and backward.
         Nmem,Nt,Nfeat = Y.shape
-        ina = self.ina_test(Y.reshape((Nmem*Nt,Nfeat)),feat_def,tpt_bndy).reshape((Nmem,Nt))
-        inb = self.inb_test(Y.reshape((Nmem*Nt,Nfeat)),feat_def,tpt_bndy).reshape((Nmem,Nt))
+        ina = self.ina_test(Y.reshape((Nmem*Nt,Nfeat)),feat_def,tpt_bndy)
+        ina = ina.reshape((Nmem,Nt))
+        inb = self.inb_test(Y.reshape((Nmem*Nt,Nfeat)),feat_def,tpt_bndy)
+        inb = inb.reshape((Nmem,Nt))
         src_tag = 0.5*np.ones((Nmem,Nt))
         dest_tag = 0.5*np.ones((Nmem,Nt))
         # Source: move forward in time
         # Time zero, A is the default src
-        src_tag[:,0] = 0*ina[:,0] + 1*inb[:,0] + 0.5*(ina[:,0]==0)*(inb[:,0]==0)*(x[:,0,0] > tpt_bndy['tthresh'][0]) 
+        src_tag[:,0] = 0*ina[:,0] + 1*inb[:,0] + 0.5*(ina[:,0]==0)*(inb[:,0]==0)*(Y[:,0,0] > tpt_bndy['tthresh'][0]) 
         for k in range(1,Nt):
             src_tag[:,k] = 0*ina[:,k] + 1*inb[:,k] + src_tag[:,k-1]*(ina[:,k]==0)*(inb[:,k]==0)
         # Dest: move backward in time
         # Time end, A is the default dest
-        dest_tag[:,Nt-1] = 0*ina[:,Nt-1] + 1*inb[:,Nt-1] + 0.5*(ina[:,Nt-1]==0)*(inb[:,Nt-1]==0)*(x[:,-1,0] < tpt_bndy['tthresh'][1])
+        dest_tag[:,Nt-1] = 0*ina[:,Nt-1] + 1*inb[:,Nt-1] + 0.5*(ina[:,Nt-1]==0)*(inb[:,Nt-1]==0)*(Y[:,-1,0] < tpt_bndy['tthresh'][1])
         for k in np.arange(Nt-2,-1,-1):
             dest_tag[:,k] = 0*ina[:,k] + 1*inb[:,k] + dest_tag[:,k+1]*(ina[:,k]==0)*(inb[:,k]==0)
         #print("Overall fraction in B = {}".format(np.mean(inb)))
@@ -77,19 +79,20 @@ class WinterStratosphereFeatures:
         nonwinter_flag = ((y[:,0] >= tpt_bndy['tthresh'][0]) * (y[:,0] < tpt_bndy['tthresh'][1]) == 0)
         # Now look for midwinter times with strong wind and significant time since previous SSW
         winter_flag = (y[:,0] >= tpt_bndy['tthresh'][0])*(y[:,0] < tpt_bndy['tthresh'][1])
-        nbuffer = int(round(tpt['sswbuffer']/self.dtwint))
-        uref = self.uref_history(y)
-        weak_wind_flag = (np.min(uref, axis=1) < tpt_bndy['uthresh_b'])  # This has to be defined from the Y construction
+        nbuffer = int(round(tpt_bndy['sswbuffer']/self.dtwint))
+        uref = self.uref_history(y,feat_def)
+        weak_wind_flag = (np.min(uref[:,self.ndelay-nbuffer-1:], axis=1) < tpt_bndy['uthresh_b'])  # This has to be defined from the Y construction
         strong_wind_flag = (uref[:,-1] > tpt_bndy['uthresh_a'])
         ina = nonwinter_flag + winter_flag*(1 - weak_wind_flag)*strong_wind_flag
+        print(f"y.shape = {y.shape}, ina.shape = {ina.shape}")
         return ina
     def inb_test(self,y,feat_def,tpt_bndy):
         # Test whether a reanalysis dataset's components are in B
         Ny,ydim = y.shape
         inb = np.zeros(Ny, dtype=bool)
-        winter_flag = (y[:,0] >= tpt_bndy['tthresh'][0])*(y[:,0] < tpt_bndy['tthresh'][1]))[0]
-        nbuffer = int(round(tpt['sswbuffer']/self.dtwint))
-        uref = self.uref_history(y)
+        winter_flag = (y[:,0] >= tpt_bndy['tthresh'][0])*(y[:,0] < tpt_bndy['tthresh'][1])
+        nbuffer = int(round(tpt_bndy['sswbuffer']/self.dtwint))
+        uref = self.uref_history(y,feat_def)[:,-1]
         weak_wind_flag = (uref < tpt_bndy['uthresh_b'])
         inb = winter_flag*weak_wind_flag
         return inb
@@ -397,7 +400,7 @@ class WinterStratosphereFeatures:
         np.save(ens_start_filename,ens_start_idx)
         np.save(fall_year_filename,fall_year_list)
         return X
-    def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,delaytime=0,Npc_per_level=None,Nwaves=None,resample_flag=False,seed=0):
+    def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=None,Nwaves=None,resample_flag=False,seed=0):
         # Evaluate a subset of the full features to use for clustering TPT.
         # A normalized version of these will be used for clustering.
         # The data set for clustering will have fewer time steps, due to time-delay embedding.
@@ -436,13 +439,16 @@ class WinterStratosphereFeatures:
         if Nwaves is None:
             Nwaves = self.num_wavenumbers
         Nx,Ntx,xdim = X.shape
+        print(f"Nx = {Nx}, Ntx = {Ntx}, xdim = {xdim}")
         # ------------- Define the cluster features Y ------------------
         # Y will have time-delay features built in. 
         # Y dimension: (time, uref, real + imag for each wave, pc for each level, vortex area, centroid latitude) all times the number of time lags
         Nty = Ntx - self.ndelay
+        print(f"self.ndelay = {self.ndelay}")
         ydim = 1 + self.ndelay + 2*Nwaves + np.sum(Npc_per_level) + 2 # self.ndelay for the history of u
+        print(f"ydim = {ydim}")
         Y = np.zeros((Nx,Nty,ydim))
-        Y[:,:,0] = X[:,:,0]
+        Y[:,:,0] = X[:,self.ndelay:,0]
         i_feat_y = 1
         i_feat_x = 1
         # Build time delays of u into Y
@@ -451,13 +457,13 @@ class WinterStratosphereFeatures:
             i_feat_y += 1
         for i_wave in np.arange(self.num_wavenumbers):
             if i_wave < Nwaves:
-                Y[:,:,i_feat_y:i_feat_y+2] = X[:,:,i_feat_x:i_feat_x+2]
+                Y[:,:,i_feat_y:i_feat_y+2] = X[:,self.ndelay:,i_feat_x:i_feat_x+2]
                 i_feat_y += 2
             i_feat_x += 2
         for i_lev in range(len(feat_def['plev'])):
             for i_pc in range(self.Npc_per_level_max):
                 if i_pc < Npc_per_level[i_lev]:
-                    Y[:,:,i_feat_y] = X[:,:,i_feat_x]
+                    Y[:,:,i_feat_y] = X[:,self.ndelay:,i_feat_x]
                     i_feat_y += 1
                 i_feat_x += 1
         # Read in vortex moment diagnostics
@@ -483,10 +489,12 @@ class WinterStratosphereFeatures:
         # Zonal-mean zonal wind
         #u,v = self.compute_geostrophic_wind(gh,lat,lon)
         uref = np.mean(u[:,i_lev_uref,i_lat_uref,:],axis=1)
-        X[:,1] = self.unseason(X[:,0],uref,feat_def["uref_szn_mean"],feat_def["uref_szn_std"])
+        #X[:,1] = self.unseason(X[:,0],uref,feat_def["uref_szn_mean"],feat_def["uref_szn_std"])
+        X[:,1] = uref
         # Wave amplitudes
         waves = self.get_wavenumbers(gh,i_lev_uref,self.lat_range_uref,lat,lon)
-        X[:,2:2+2*self.num_wavenumbers] = self.unseason(X[:,0],waves,feat_def["waves_szn_mean"],feat_def["waves_szn_std"])
+        #X[:,2:2+2*self.num_wavenumbers] = self.unseason(X[:,0],waves,feat_def["waves_szn_mean"],feat_def["waves_szn_std"])
+        X[:,2:2+2*self.num_wavenumbers] = waves
         # EOFs
         gh = self.unseason(X[:,0],gh,feat_def["gh_szn_mean"],feat_def["gh_szn_std"],normalize=False)
         i_feat = 2+2*self.num_wavenumbers
@@ -495,41 +503,34 @@ class WinterStratosphereFeatures:
             i_feat += self.Npc_per_level_max
         # Vortex moments
         vtx_area,vtx_center_latlon = self.compute_vortex_moments_sphere(gh,feat_def['lat'],feat_def['lon'],i_lev_subset=[i_lev_uref])
-        #X[:,i_feat] = vtx_area[:,0] 
-        #X[:,i_feat+1] = vtx_center_latlon[:,0] 
-        X[:,i_feat] = self.unseason(X[:,0],vtx_area[:,0],feat_def["vtx_area_szn_mean"],feat_def["vtx_area_szn_std"])  # Vortex area
-        X[:,i_feat+1] = self.unseason(X[:,0],vtx_center_latlon[:,0],feat_def["vtx_centerlat_szn_mean"],feat_def["vtx_centerlat_szn_std"])
+        X[:,i_feat] = vtx_area[:,0] 
+        X[:,i_feat+1] = vtx_center_latlon[:,0] 
+        #X[:,i_feat] = self.unseason(X[:,0],vtx_area[:,0],feat_def["vtx_area_szn_mean"],feat_def["vtx_area_szn_std"])  # Vortex area
+        #X[:,i_feat+1] = self.unseason(X[:,0],vtx_center_latlon[:,0],feat_def["vtx_centerlat_szn_mean"],feat_def["vtx_centerlat_szn_std"])
         X = X.reshape((Nmem,Nt,Nfeat))
         return X,fall_year
     def plot_vortex_evolution(self,dsfile,savedir,save_suffix,i_mem=0):
         # Plot the holistic information about a single member of a single ensemble. Include some timeseries and some snapshots, perhaps along the region of maximum deceleration in zonal wind. 
         ds = nc.Dataset(dsfile,"r")
         print("self.num_wavenumbers = {}, self.Npc_per_level_max = {}".format(self.num_wavenumbers,self.Npc_per_level_max))
-        funlib = self.observable_function_library()
+        funlib = self.observable_function_library_X()
         feat_def = pickle.load(open(self.feature_file,"rb"))
+        Nlev = len(feat_def["plev"])
         X,fall_year = self.evaluate_features(ds,feat_def)
         X = X[i_mem]
         print("X.shape = {}".format(X.shape))
         # Determine the period of maximum deceleration
         time = X[:,0]
         decel_window = int(24*10.0/(time[1]-time[0]))
-        uref = funlib["uref"]["fun"](X)
+        uref = X[:,1]
         decel10 = uref[decel_window:] - uref[:-decel_window]
         print("uref: min={}, max={}. decel10: min={}, max={}".format(uref.min(),uref.max(),decel10.min(),decel10.max()))
         start = np.argmin(decel10)
         print("start = {}".format(start))
         decel_time_range = [max(0,start-decel_window), min(len(time)-1, start+2*decel_window)]
         full_time_range = self.wtime[[0,-1]]
-        # ----------- debugging -----------
-        pc0 = funlib["lev0_pc0"]["fun"](X)
-        pc1 = funlib["lev0_pc1"]["fun"](X)
-        i_pc0 = 2 + 2*self.num_wavenumbers 
-        i_pc1 = i_pc0 + 1
-        print("max(abs(X[:,i_pc0] - X[:,i_pc1])) = {}".format(np.max(np.abs(X[:,i_pc0] - X[:,i_pc1]))))
-        print("max(abs(pc0 - pc1)) = {}".format(np.max(np.abs(pc0-pc1))))
-        print("direct vs fun: 0: {}, 1: {}".format(np.max(np.abs(X[:,i_pc0] - pc0)),np.max(np.abs(X[:,i_pc1] - pc1))))
-        # ---------------------------------
-        obs_key_list = ["area","displacement","uref","mag1","mag2","mag1_anomaly","mag2_anomaly","ph1","ph2","lev0_pc0","lev0_pc1","lev0_pc2","lev0_pc3","lev0_pc4","lev0_pc5"]
+        # Make a list of things to plot
+        obs_key_list = ["area","displacement","uref","mag1","mag2","lev0_pc0","lev0_pc1","lev0_pc2","lev0_pc3","lev0_pc4","lev0_pc5"]
         for oki in range(len(obs_key_list)):
             obs_key = obs_key_list[oki]
             fig,ax = plt.subplots()
@@ -590,7 +591,35 @@ class WinterStratosphereFeatures:
         wind_idx = np.arange(1,1+self.ndelay)
         uref = y[:,wind_idx]
         return uref
-    def observable_function_library(self,Nwaves=None,Npc_per_level=None):
+    def observable_function_library_X(self):
+        # Build the database of observable functions
+        feat_def = pickle.load(open(self.feature_file,"rb"))
+        funlib = {
+                "time_h": {"fun": lambda X: X[:,0],
+                    "label": r"Hours since Nov. 1",},
+                "time_d": {"fun": lambda X: X[:,0]/24.0,
+                    "label": r"Days since Nov. 1",},
+                "uref": {"fun": lambda X: X[:,1],
+                    "label": r"$\overline{u}$ (10 hPa, 60$^\circ$N) [m/s]",},
+                "mag1": {"fun": lambda X: np.sqrt(np.sum(X[:,2:4]**2, axis=1)),
+                    "label": "Wave 1 magnitude",},
+                "mag2": {"fun": lambda X: np.sqrt(np.sum(X[:,4:6]**2, axis=1)),
+                    "label": "Wave 2 magnitude",},
+                "area": {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])],
+                    "label": "Vortex area",},
+                "displacement": {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+1],
+                    "label": "Vortex displacement",},
+                }
+        for i_lev in range(len(feat_def["plev"])):
+            for i_eof in range(self.Npc_per_level_max):
+                key = "lev%i_pc%i"%(i_lev,i_eof)
+                #print("key = {}".format(key))
+                funlib[key] = {
+                        "fun": lambda X,i_lev=i_lev,i_eof=i_eof: X[:,2+2*self.num_wavenumbers+i_lev*self.Npc_per_level_max+i_eof],
+                        "label": "PC %i at $p=%i$ hPa"%(i_eof+1, feat_def["plev"][i_lev]/100.0),
+                        }
+        return funlib
+    def observable_function_library_Y(self,Nwaves=None,Npc_per_level=None):
         # Build the database of observable functions
         feat_def = pickle.load(open(self.feature_file,"rb"))
         if Nwaves is None:
@@ -598,6 +627,9 @@ class WinterStratosphereFeatures:
         if Npc_per_level is None:
             Npc_per_level = self.Npc_per_level_max * np.ones(len(feat_def["plev"]), dtype=int)
         # TODO: build in PC projections and other stuff as observable functions
+        print(f"Nwaves = {Nwaves}, Npc_per_level = {Npc_per_level}")
+        print(f"Npc_per_level = {Npc_per_level}")
+        print(f"Index for area = {1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)}")
         funlib = {
                 "time_h": {"fun": lambda Y: Y[:,0],
                     "label": r"Hours since Nov. 1",},
