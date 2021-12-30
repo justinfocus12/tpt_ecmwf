@@ -33,7 +33,7 @@ import pickle
 
 class WinterStratosphereFeatures:
     # Create a set of features, including out-of-sample extension. 
-    def __init__(self,feature_file,winter_day0,spring_day0,Npc_per_level_max=10):
+    def __init__(self,feature_file,winter_day0,spring_day0,delaytime=0,Npc_per_level_max=10):
         self.feature_file = feature_file
         self.winter_day0 = winter_day0
         self.spring_day0 = spring_day0
@@ -41,6 +41,8 @@ class WinterStratosphereFeatures:
         self.Ntwint = len(self.wtime)
         self.szn_hour_window = 5.0*24 # Number of days around which to average when unseasoning
         self.dtwint = self.wtime[1] - self.wtime[0]
+        self.delaytime = delaytime
+        self.ndelay = int(delaytime/self.dtwint) + 1
         self.Npc_per_level_max = Npc_per_level_max # Determine from SVD if not specified
         self.num_wavenumbers = 2 # How many wavenumbers to look at 
         self.lat_uref = 60 # Degrees North for CP07 definition of SSW
@@ -69,20 +71,27 @@ class WinterStratosphereFeatures:
         result = {'src_tag': src_tag, 'dest_tag': dest_tag}
         pickle.dump(result,open(save_filename,'wb'))
         return src_tag,dest_tag
-    def ina_test(self,x,feat_def,tpt_bndy):
-        Nx,xdim = x.shape
-        ina = np.zeros(Nx,dtype=bool)
-        nonwinter_idx = np.where((x[:,0] >= tpt_bndy['tthresh'][0]) * (x[:,0] < tpt_bndy['tthresh'][1]) == 0)[0]
-        ina[nonwinter_idx] = True
+    def ina_test(self,y,feat_def,tpt_bndy):
+        Ny,ydim = y.shape
+        ina = np.zeros(Ny,dtype=bool)
+        nonwinter_flag = ((y[:,0] >= tpt_bndy['tthresh'][0]) * (y[:,0] < tpt_bndy['tthresh'][1]) == 0)
+        # Now look for midwinter times with strong wind and significant time since previous SSW
+        winter_flag = (y[:,0] >= tpt_bndy['tthresh'][0])*(y[:,0] < tpt_bndy['tthresh'][1])
+        nbuffer = int(round(tpt['sswbuffer']/self.dtwint))
+        uref = self.uref_history(y)
+        weak_wind_flag = (np.min(uref, axis=1) < tpt_bndy['uthresh_b'])  # This has to be defined from the Y construction
+        strong_wind_flag = (uref[:,-1] > tpt_bndy['uthresh_a'])
+        ina = nonwinter_flag + winter_flag*(1 - weak_wind_flag)*strong_wind_flag
         return ina
-    def inb_test(self,x,feat_def,tpt_bndy):
+    def inb_test(self,y,feat_def,tpt_bndy):
         # Test whether a reanalysis dataset's components are in B
-        Nx,xdim = x.shape
-        inb = np.zeros(Nx, dtype=bool)
-        winter_idx = np.where((x[:,0] >= tpt_bndy['tthresh'][0])*(x[:,0] < tpt_bndy['tthresh'][1]))[0]
-        uref = self.uref_obs(x[winter_idx],feat_def)
-        weak_wind_idx = np.where(uref < tpt_bndy['uthresh'])
-        inb[winter_idx[weak_wind_idx]] = True
+        Ny,ydim = y.shape
+        inb = np.zeros(Ny, dtype=bool)
+        winter_flag = (y[:,0] >= tpt_bndy['tthresh'][0])*(y[:,0] < tpt_bndy['tthresh'][1]))[0]
+        nbuffer = int(round(tpt['sswbuffer']/self.dtwint))
+        uref = self.uref_history(y)
+        weak_wind_flag = (uref < tpt_bndy['uthresh_b'])
+        inb = winter_flag*weak_wind_flag
         return inb
     def get_ilev_ilat(self,ds):
         # Get the latitude and longitude indices
@@ -293,7 +302,7 @@ class WinterStratosphereFeatures:
         return dstime_adj,nov1_year # This is just one-dimensional. 
     def create_features(self,data_file_list):
         # Use data in data_file_list as training, and dump the results into feature_file. Note this is NOT a DGA basis yet, just a set of features.
-        # We will not YET use time-delay information, but might in the future. In which case we will just have somewhat fewer data per file. 
+        # Time-delay embedding happens not at this stage, but possibly at the next stage when creating DGA features.
         # Mark the boundary of ensembles with a list of indices.
         ds0 = nc.Dataset(data_file_list[0],"r")
         Nlev,Nlat,Nlon = [ds0[v].size for v in ["plev","lat","lon"]]
@@ -388,8 +397,10 @@ class WinterStratosphereFeatures:
         np.save(join(savedir,"ens_start_idx"),ens_start_idx)
         np.save(join(savedir,"fall_year_list"),fall_year_list)
         return X
-    def evaluate_cluster_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,clust_feat_filename,Npc_per_level=None,Nwaves=None,resample_flag=False,seed=0):
-        # Evaluate a subset of the full features to use for clustering.
+    def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,delaytime=0,Npc_per_level=None,Nwaves=None,resample_flag=False,seed=0):
+        # Evaluate a subset of the full features to use for clustering TPT.
+        # A normalized version of these will be used for clustering.
+        # The data set for clustering will have fewer time steps, due to time-delay embedding.
         X = np.load(feat_filename)
         #print("Before resampling: X.shape = {}".format(X.shape))
         if resample_flag:
@@ -424,13 +435,20 @@ class WinterStratosphereFeatures:
             Npc_per_level = self.Npc_per_level_max*np.ones(len(feat_def['plev']), dtype=int)
         if Nwaves is None:
             Nwaves = self.num_wavenumbers
-        Nx,Nt,xdim = X.shape
-        ydim = 2 + 2*Nwaves + np.sum(Npc_per_level) + 2
-        Y = np.zeros((Nx,Nt,ydim))
-        Y[:,:,:2] = X[:,:,:2]
-        # TODO: build time-delay information into Y.
-        i_feat_x = 2
-        i_feat_y = 2
+        Nx,Ntx,xdim = X.shape
+        # ------------- Define the cluster features Y ------------------
+        # Y will have time-delay features built in. 
+        # Y dimension: (time, uref, real + imag for each wave, pc for each level, vortex area, centroid latitude) all times the number of time lags
+        Nty = Ntx - self.ndelay
+        ydim = 1 + self.ndelay + 2*Nwaves + np.sum(Npc_per_level) + 2 # self.ndelay for the history of u
+        Y = np.zeros((Nx,Nty,ydim))
+        Y[:,:,0] = X[:,:,0]
+        i_feat_y = 1
+        i_feat_x = 1
+        # Build time delays of u into Y
+        for i_dl in range(self.ndelay):
+            Y[:,:,i_feat_y] = X[:,i_dl:i_dl+Nty,i_feat_x]
+            i_feat_y += 1
         for i_wave in np.arange(self.num_wavenumbers):
             if i_wave < Nwaves:
                 Y[:,:,i_feat_y:i_feat_y+2] = X[:,:,i_feat_x:i_feat_x+2]
@@ -443,14 +461,13 @@ class WinterStratosphereFeatures:
                     i_feat_y += 1
                 i_feat_x += 1
         # Read in vortex moment diagnostics
-        window = 6
-        for i in range(window):
-            Y[:,window:,i_feat_y:i_feat_y+2] += X[:,window-i:Nt-i,i_feat_x:i_feat_x+2]/window
-        Y[:,:window,i_feat_y:i_feat_y+2] = X[:,:window,i_feat_x:i_feat_x+2]
+        # Average them over the past 
+        for i_dl in range(self.ndelay):
+            Y[:,:,i_feat_y:i_feat_y+2] += X[:,i_dl:i_dl+Nty,i_feat_x:i_feat_x+2]/self.ndelay
         #Y[:,:,i_feat_y:i_feat_y+2] = X[:,:,i_feat_x:i_feat_x+2]
         i_feat_y += 2
         i_feat_x += 2
-        np.save(clust_feat_filename,Y)
+        np.save(tpt_feat_filename,Y)
         return 
     def evaluate_features(self,ds,feat_def):
         # Given a single ensemble in ds, evaluate the features and return a big matrix
@@ -568,10 +585,9 @@ class WinterStratosphereFeatures:
         if unseason_mag:
             mag = self.unseason(x[:,0],mag,feat_def["wave_mag_szn_mean"][:,wn-1],feat_def["wave_mag_szn_std"][:,wn-1])
         return np.array([mag,phase]).T
-    def uref_obs(self,x,feat_def):
-        uref = self.reseason(x[:,0],x[:,1],feat_def["t_szn"],feat_def["uref_szn_mean"],feat_def["uref_szn_std"])
-        #print("uref = {}".format(uref))
-        #print("uref: min={}, max={}, mean={}".format(uref.min(),uref.max(),uref.mean()))
+    def uref_history(self,y,feat_def): # Return wind history
+        wind_idx = np.arange(1,1+self.ndelay)
+        uref = y[:,wind_idx]
         return uref
     def observable_function_library(self,Nwaves=None,Npc_per_level=None):
         # Build the database of observable functions
