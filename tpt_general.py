@@ -45,33 +45,28 @@ class WinterStratosphereTPT:
         absum = 1.0*(np.sum(ab_tag,axis=1) > 0)
         rate = np.mean(absum)
         return rate
-    def tpt_pipeline_dns(self,expdir,savedir,winstrat,feat_def,resample_flag=False,seed=0):
-        # Call winstrat and anything else we want. 
+    def tpt_pipeline_dns(self,tpt_feat_filename,savedir,winstrat,feat_def):
         # savedir: where all the results of this particular TPT will be saved.
         # winstrat: the object that was used to create features, and that can go on to evaluate other features.
         # feat_def: the feature definitions that came out of winstrat.
-        X = np.load(join(expdir,"X.npy"))
-        Nx,Nt,xdim = X.shape
-        if resample_flag:
-            np.random.seed(seed)
-            idx = np.random.choice(np.arange(Nx),size=Nx,replace=True)
-            X = X[idx]
+        Y = np.load(tpt_feat_filename)
+        Ny,Nt,ydim = Y.shape
         funlib = winstrat.observable_function_library()
         # ---- Plot committor in a few different coordinates -----
-        src_tag,dest_tag = winstrat.compute_src_dest_tags(X,feat_def,self.tpt_bndy,"src_dest")
+        src_tag,dest_tag = winstrat.compute_src_dest_tags(Y,feat_def,self.tpt_bndy,"src_dest")
         qp = 1.0*(dest_tag == 1).flatten()
         qm = 1.0*(src_tag == 0).flatten()
-        pi = 1.0*np.ones(Nx*Nt)/(Nx*Nt)
-        keypairs = [['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','mag1_anomaly'],['time_d','mag2_anomaly']]
+        pi = 1.0*np.ones(Ny*Nt)/(Ny*Nt)
+        keypairs = [['time_d','area'],['time_d','displacement'],['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','mag1_anomaly'],['time_d','mag2_anomaly']]
         for i_kp in range(len(keypairs)):
             fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
-            theta_x = np.array([funlib[keypairs[i_kp][j]]["fun"](X.reshape((Nx*Nt,xdim))) for j in range(2)]).T
+            theta_x = np.array([funlib[keypairs[i_kp][j]]["fun"](Y.reshape((Ny*Nt,ydim))) for j in range(2)]).T
             # Plot forward committor
             fig,ax = helper.plot_field_2d(qp,pi,theta_x,shp=[15,15],fieldname="Committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
             fig.savefig(join(savedir,"qp_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
             plt.close(fig)
             # Plot density
-            fig,ax = helper.plot_field_2d(pi,np.ones(Nx*Nt),theta_x,shp=[15,15],fieldname="Density",fun0name=fun0name,fun1name=fun1name,contourflag=True,logscale=True,avg_flag=False)
+            fig,ax = helper.plot_field_2d(pi,np.ones(Ny*Nt),theta_x,shp=[15,15],fieldname="Density",fun0name=fun0name,fun1name=fun1name,contourflag=True,logscale=True,avg_flag=False)
             fig.savefig(join(savedir,"pi_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
             plt.close(fig)
             # Plot backward committor
@@ -325,16 +320,12 @@ class WinterStratosphereTPT:
                 int2b_cond['m4'] += [cond_m4[j:j+nclust]]
                 j += nclust
         return int2b_cond 
-    def tpt_pipeline_dga(self,feat_filename,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves):
+    def tpt_pipeline_dga(self,tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves):
         # Label each cluster as in A or B or elsewhere
-        X = np.load(feat_filename)
-        Y = np.load(clust_feat_filename)
-        Nx,Nt,xdim = X.shape
+        Y = np.load(tpt_feat_filename)
         Ny,Nt,ydim = Y.shape
         funlib = winstrat.observable_function_library(Nwaves=Nwaves,Npc_per_level=Npc_per_level)
-        #uref_x = funlib["uref"]["fun"](X.reshape((Nx*Nt,xdim)))
         uref_y = funlib["uref"]["fun"](Y.reshape((Ny*Nt,ydim)))
-        #print("uref_x: min={}, max={}, mean={}".format(uref_x.min(),uref_x.max(),uref_x.mean()))
         print("uref_y: min={}, max={}, mean={}".format(uref_y.min(),uref_y.max(),uref_y.mean()))
         kmlist = pickle.load(open(clust_filename,"rb"))
         ina = []

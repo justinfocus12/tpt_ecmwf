@@ -49,11 +49,11 @@ class WinterStratosphereFeatures:
         self.lat_range_uref = self.lat_uref + 5.0*np.array([-1,1])
         self.pres_uref = 10 # hPa for CP07 definition of SSW
         return
-    def compute_src_dest_tags(self,x,feat_def,tpt_bndy,save_filename):
+    def compute_src_dest_tags(self,Y,feat_def,tpt_bndy,save_filename):
         # Compute where each trajectory started (A or B) and where it's going (A or B). Also maybe compute the first-passage times, forward and backward.
-        Nmem,Nt,Nfeat = x.shape
-        ina = self.ina_test(x.reshape((Nmem*Nt,Nfeat)),feat_def,tpt_bndy).reshape((Nmem,Nt))
-        inb = self.inb_test(x.reshape((Nmem*Nt,Nfeat)),feat_def,tpt_bndy).reshape((Nmem,Nt))
+        Nmem,Nt,Nfeat = Y.shape
+        ina = self.ina_test(Y.reshape((Nmem*Nt,Nfeat)),feat_def,tpt_bndy).reshape((Nmem,Nt))
+        inb = self.inb_test(Y.reshape((Nmem*Nt,Nfeat)),feat_def,tpt_bndy).reshape((Nmem,Nt))
         src_tag = 0.5*np.ones((Nmem,Nt))
         dest_tag = 0.5*np.ones((Nmem,Nt))
         # Source: move forward in time
@@ -372,7 +372,7 @@ class WinterStratosphereFeatures:
                 }
         pickle.dump(feat_def,open(self.feature_file,"wb"))
         return
-    def evaluate_features_database(self,file_list,feat_def,savedir,filename,tmin,tmax):
+    def evaluate_features_database(self,file_list,feat_def,feat_filename,ens_start_filename,fall_year_filename,tmin,tmax):
         # Stack a bunch of forecasts together. They can start at different times, but must all have same length.
         ens_start_idx = np.zeros(len(file_list), dtype=int)
         fall_year_list = np.zeros(len(file_list), dtype=int)
@@ -393,9 +393,9 @@ class WinterStratosphereFeatures:
                 X = np.concatenate((X,Xnew),axis=0)
             i_ens += Xnew.shape[0]
         # Save them in the directory
-        np.save(join(savedir,filename),X)
-        np.save(join(savedir,"ens_start_idx"),ens_start_idx)
-        np.save(join(savedir,"fall_year_list"),fall_year_list)
+        np.save(feat_filename,X)
+        np.save(ens_start_filename,ens_start_idx)
+        np.save(fall_year_filename,fall_year_list)
         return X
     def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,delaytime=0,Npc_per_level=None,Nwaves=None,resample_flag=False,seed=0):
         # Evaluate a subset of the full features to use for clustering TPT.
@@ -572,18 +572,19 @@ class WinterStratosphereFeatures:
             fig.savefig(join(savedir,"vortex_qgpv_{}_day{}_yr{}".format(save_suffix,int(time[tidx[k]]/24.0),fall_year)))
             plt.close(fig)
         return
-    def wave_mph(self,x,feat_def,wn,widx=None,unseason_mag=False):
+    def wave_mph(self,Y,feat_def,wn,widx=None,unseason_mag=False):
         # wn is wavenumber 
         # mph is magnitude and phase
         if wn <= 0:
             raise Exception("Need an integer wavenumber >= 1. You gave wn = {}".format(wn))
         if widx is None:
-            widx = 2 + 2*wn*np.arange(2)
-        wave = self.reseason(x[:,0],x[:,widx],feat_def['t_szn'],feat_def['waves_szn_mean'][:,2*(wn-1):2*(wn-1)+2],feat_def['waves_szn_std'][:,2*(wn-1):2*(wn-1)+2])
+            widx = 1 + self.ndelay + 2*wn*np.arange(2)
+        wave = Y[:,widx]
+        #wave = self.reseason(x[:,0],x[:,widx],feat_def['t_szn'],feat_def['waves_szn_mean'][:,2*(wn-1):2*(wn-1)+2],feat_def['waves_szn_std'][:,2*(wn-1):2*(wn-1)+2])
         phase = np.arctan(-wave[:,1]/(wn*wave[:,0]))
         mag = np.sqrt(np.sum(wave**2,axis=1))
-        if unseason_mag:
-            mag = self.unseason(x[:,0],mag,feat_def["wave_mag_szn_mean"][:,wn-1],feat_def["wave_mag_szn_std"][:,wn-1])
+        #if unseason_mag:
+        #    mag = self.unseason(x[:,0],mag,feat_def["wave_mag_szn_mean"][:,wn-1],feat_def["wave_mag_szn_std"][:,wn-1])
         return np.array([mag,phase]).T
     def uref_history(self,y,feat_def): # Return wind history
         wind_idx = np.arange(1,1+self.ndelay)
@@ -598,27 +599,27 @@ class WinterStratosphereFeatures:
             Npc_per_level = self.Npc_per_level_max * np.ones(len(feat_def["plev"]), dtype=int)
         # TODO: build in PC projections and other stuff as observable functions
         funlib = {
-                "time_h": {"fun": lambda x: x[:,0],
+                "time_h": {"fun": lambda Y: Y[:,0],
                     "label": r"Hours since Nov. 1",},
-                "time_d": {"fun": lambda x: x[:,0]/24.0,
+                "time_d": {"fun": lambda Y: Y[:,0]/24.0,
                     "label": r"Days since Nov. 1",},
-                "uref": {"fun": lambda x: self.uref_obs(x,feat_def),
+                "uref": {"fun": lambda Y: self.uref_history(Y,feat_def)[:,-1],
                     "label": r"$\overline{u}$ (10 hPa, 60$^\circ$N) [m/s]",},
-                "mag1": {"fun": lambda x: self.wave_mph(x,feat_def,1)[:,0],
+                "mag1": {"fun": lambda Y: self.wave_mph(Y,feat_def,1)[:,0],
                     "label": "Wave 1 magnitude",},
-                "mag2": {"fun": lambda x: self.wave_mph(x,feat_def,2)[:,0],
+                "mag2": {"fun": lambda Y: self.wave_mph(Y,feat_def,2)[:,0],
                     "label": "Wave 2 magnitude",},
-                "mag1_anomaly": {"fun": lambda x: self.wave_mph(x,feat_def,1,unseason_mag=True)[:,0],
-                    "label": "Wave 1 magnitude anomaly",},
-                "mag2_anomaly": {"fun": lambda x: self.wave_mph(x,feat_def,2,unseason_mag=True)[:,0],
-                    "label": "Wave 2 magnitude anomaly",},
+                #"mag1_anomaly": {"fun": lambda x: self.wave_mph(x,feat_def,1,unseason_mag=True)[:,0],
+                #    "label": "Wave 1 magnitude anomaly",},
+                #"mag2_anomaly": {"fun": lambda x: self.wave_mph(x,feat_def,2,unseason_mag=True)[:,0],
+                #    "label": "Wave 2 magnitude anomaly",},
                 "ph1": {"fun": lambda x: self.wave_mph(x,feat_def,1)[:,1],
                     "label": "Wave 1 phase",},
                 "ph2": {"fun": lambda x: self.wave_mph(x,feat_def,2)[:,1],
                     "label": "Wave 2 phase",},
-                "area": {"fun": lambda x: self.get_vortex_area(x,0,Nwaves,Npc_per_level),
+                "area": {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)],
                     "label": "Vortex area",},
-                "displacement": {"fun": lambda x: self.get_vortex_displacement(x,0,Nwaves,Npc_per_level),
+                "displacement": {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+1],
                     "label": "Vortex displacement",},
                 #"pc1": {"fun": lambda x: x[:,2+2*self.num_wavenumbers],
                 #    "label": "PC 1"},
@@ -630,18 +631,17 @@ class WinterStratosphereFeatures:
                 key = "lev%i_pc%i"%(i_lev,i_eof)
                 #print("key = {}".format(key))
                 funlib[key] = {
-                        "fun": lambda x,i_lev=i_lev,i_eof=i_eof: self.get_pc(x,i_lev,i_eof,Nwaves,Npc_per_level),
+                        "fun": lambda Y,i_lev=i_lev,i_eof=i_eof: self.get_pc(Y,i_lev,i_eof,Nwaves,Npc_per_level),
                         "label": "PC %i at $p=%i$ hPa"%(i_eof+1, feat_def["plev"][i_lev]/100.0),
                         }
         return funlib
-    def get_pc(self,x,i_lev,i_eof,Nwaves=None,Npc_per_level=None):
+    def get_pc(self,Y,i_lev,i_eof,Nwaves=None,Npc_per_level=None):
         if Nwaves is None:
             Nwaves = self.num_wavenumbers
         if Npc_per_level is None:
             Npc_per_level = self.Npc_per_level_max * np.ones(len(feat_def["plev"]), dtype=int)
-        idx = 2 + 2*Nwaves + np.sum(Npc_per_level[:i_lev]) + i_eof
-        #eof = x[:,2 + 2*self.num_wavenumbers + i_lev*self.Npc_per_level_max + i_eof]
-        eof = x[:,idx]
+        idx = 1 + self.ndelay + 2*Nwaves + np.sum(Npc_per_level[:i_lev]) + i_eof
+        eof = Y[:,idx]
         return eof
     def get_vortex_area(self,x,i_lev,Nwaves,Npc_per_level):
         idx = 2 + 2*Nwaves + np.sum(Npc_per_level)

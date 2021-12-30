@@ -99,12 +99,15 @@ create_features_flag =         1
 display_features_flag =        1
 # era20c
 evaluate_database_e2 =         0
+tpt_featurize_e2 =             0
 tpt_e2_flag =                  0
 # eraint
 evaluate_database_ei =         0
+tpt_featurize_ei =             0
 tpt_ei_flag =                  0
 # s2s
 evaluate_database_s2s =        0
+tpt_featurize_s2s =            0
 cluster_flag =                 0
 build_msm_flag =               0
 tpt_s2s_flag =                 0
@@ -136,32 +139,44 @@ sswbuffer = 10.0 # minimum buffer time between one SSW and the next
 uthresh_a = 20.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 # ------------------ TPT direct estimates from ERA20C ------------------------------
+feat_filename = join(expdir_e2,"X.npy")
+ens_start_filename = join(expdir_s2s,"ens_start_idx.npy")
+fall_year_filename = join(expdir_s2s,"fall_year_list.npy")
 if evaluate_database_e2:
     print("Evaluating ERA20C database")
-    winstrat.evaluate_features_database(file_list_e2,feat_def,expdir_e2,"X",winstrat.wtime[0],winstrat.wtime[-1])
+    winstrat.evaluate_features_database(file_list_e2,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
 if tpt_e2_flag: 
     print("Starting TPT on era20c")
     for i_seed in range(num_seeds_e2):
         print("\tSeed {} of {}".format(i_seed,num_seeds_e2))
         seeddir = seeddir_list_e2[i_seed]
         if not exists(seeddir): mkdir(seeddir)
+        tpt_feat_filename = join(seeddir,"Y.npy")
+        if tpt_featurize_e2:
+            winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,delaytime=delaytime,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
         for i_uth in range(len(uthresh_list)):
             uthresh_b = uthresh_list[i_uth]
             savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a))
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            summary_dns = tpt.tpt_pipeline_dns(expdir_e2,savedir,winstrat,feat_def,resample_flag=(i_seed>0),seed=i_seed)
+            summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,resample_flag=(i_seed>0),seed=i_seed)
 # ------------------ TPT direct estimates from ERA-Interim ------------------------------
+feat_filename = join(expdir_ei,"X.npy")
+ens_start_filename = join(expdir_ei,"ens_start_idx.npy")
+fall_year_filename = join(expdir_ei,"fall_year_list.npy")
 if evaluate_database_ei:
     print("Evaluating ERA-Int database")
-    winstrat.evaluate_features_database(file_list_ei,feat_def,expdir_ei,"X",winstrat.wtime[0],winstrat.wtime[-1])
+    winstrat.evaluate_features_database(file_list_ei,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
 if tpt_ei_flag: 
     print("Starting TPT on eraint")
     for i_seed in range(len(seeddir_list_ei)):
         print("\tSeed {} of {}".format(i_seed,num_seeds_ei))
         seeddir = seeddir_list_ei[i_seed]
         if not exists(seeddir): mkdir(seeddir)
+        tpt_feat_filename = join(seeddir,"Y.npy")
+        if tpt_featurize_ei:
+            winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,delaytime=delaytime,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
         for i_uth in range(len(uthresh_list)):
             uthresh_b = uthresh_list[i_uth]
             savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a))
@@ -177,21 +192,21 @@ ens_start_filename = join(expdir_s2s,"ens_start_idx.npy")
 fall_year_filename = join(expdir_s2s,"fall_year_list.npy")
 if evaluate_database_s2s: # Expensive!
     print("Evaluating S2S database")
-    winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,expdir_s2s,"X",winstrat.wtime[0],winstrat.wtime[-1])
+    winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
 
 print("Starting TPT on S2S")
 for i_seed in np.arange(len(seeddir_list_s2s)):
     print("\tSeed {} of {}".format(i_seed,num_seeds_s2s))
     seeddir = seeddir_list_s2s[i_seed]
     if not exists(seeddir): mkdir(seeddir)
-    clust_feat_filename = join(seeddir,"Y.npy")
+    tpt_feat_filename = join(seeddir,"Y.npy")
     clust_filename = join(seeddir,"kmeans")
     msm_filename = join(seeddir,"msm")
     if cluster_flag:
-        winstrat.evaluate_cluster_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,clust_feat_filename,delaytime=delaytime,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
-        tpt.cluster_features(clust_feat_filename,clust_filename,winstrat,num_clusters=num_clusters)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
+        winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,delaytime=delaytime,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
+        tpt.cluster_features(tpt_feat_filename,clust_filename,winstrat,num_clusters=num_clusters)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
     if build_msm_flag:
-        tpt.build_msm(clust_feat_filename,clust_filename,msm_filename,winstrat)
+        tpt.build_msm(tpt_feat_filename,clust_filename,msm_filename,winstrat)
     if tpt_s2s_flag:
         for i_uth in range(len(uthresh_list)):
             uthresh_a = uthresh_list[i_uth]
@@ -199,7 +214,7 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            summary_dga = tpt.tpt_pipeline_dga(feat_filename,clust_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves)
+            summary_dga = tpt.tpt_pipeline_dga(feat_filename,tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves)
 
 # ------------- Compare rates ---------------------
 if plot_rate_flag:
