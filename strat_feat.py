@@ -453,29 +453,48 @@ class WinterStratosphereFeatures:
         print(f"Y[0,0,0] = {Y[0,0,0]}")
         i_feat_y = 1
         i_feat_x = 1
+        # Store information to unseason Y, simply as a set of seasonal means, one per column.
+        szn_mean_Y = np.zeros((self.Ntwint,ydim-1))
+        szn_std_Y = np.zeros((self.Ntwint,ydim-1))
         # Build time delays of u into Y
         for i_dl in range(self.ndelay):
             Y[:,:,i_feat_y] = X[:,i_dl:i_dl+Nty,i_feat_x]
+            print(f"t_szn.shape = {feat_def['t_szn'].shape}, uref_szn_mean.shape = {feat_def['uref_szn_mean'].shape}")
+            szn_mean_Y[:,i_feat_y-1] = feat_def["uref_szn_mean"] # TODO: employ time shifts as necessary
+            szn_std_Y[:,i_feat_y-1] = feat_def["uref_szn_std"]
+            #offset_Y[i_feat_y-1] = feat_def["uref_mean"]
+            #scale_Y[i_feat_y-1] = feat_def["uref_std"]
             i_feat_y += 1
         for i_wave in np.arange(self.num_wavenumbers):
             if i_wave < Nwaves:
                 Y[:,:,i_feat_y:i_feat_y+2] = X[:,self.ndelay:,i_feat_x:i_feat_x+2]
+                szn_mean_Y[:,i_feat_y:i_feat_y+2] = feat_def["waves_szn_mean"][:,2*i_wave:2*i_wave+2]
+                szn_std_Y[:,i_feat_y:i_feat_y+2] = feat_def["waves_szn_std"][:,2*i_wave:2*i_wave+2]
+                #offset_Y[i_feat_y-1:i_feat_y+1] = np.mean(feat_def["waves_szn_mean"][:,2*i_wave:2*i_wave+2], axis=0)
+                #scale_Y[i_feat_y-1:i_feat_y+1] = np.std(feat_def["waves_szn_mean"][:,2*i_wave:2*i_wave+2], axis=0)
                 i_feat_y += 2
             i_feat_x += 2
         for i_lev in range(len(feat_def['plev'])):
             for i_pc in range(self.Npc_per_level_max):
                 if i_pc < Npc_per_level[i_lev]:
                     Y[:,:,i_feat_y] = X[:,self.ndelay:,i_feat_x]
+                    szn_mean_Y[:,i_feat_y-1] = 0.0
+                    szn_std_Y[:,i_feat_y-1] = 1.0
                     i_feat_y += 1
                 i_feat_x += 1
         # Read in vortex moment diagnostics
         # Average them over the past 
         for i_dl in range(self.ndelay):
             Y[:,:,i_feat_y:i_feat_y+2] += X[:,i_dl:i_dl+Nty,i_feat_x:i_feat_x+2]/self.ndelay
+        szn_mean_Y[:,i_feat_y-1] = 0*feat_def["vtx_area_szn_mean"]
+        szn_std_Y[:,i_feat_y-1] = np.inf*feat_def["vtx_area_szn_std"]
+        szn_mean_Y[:,i_feat_y] = 0*feat_def["vtx_centerlat_szn_mean"]
+        szn_std_Y[:,i_feat_y] = np.inf*feat_def["vtx_centerlat_szn_std"]
         #Y[:,:,i_feat_y:i_feat_y+2] = X[:,:,i_feat_x:i_feat_x+2]
         i_feat_y += 2
         i_feat_x += 2
-        np.save(tpt_feat_filename,Y)
+        tpt_feat = {"Y": Y, "szn_mean_Y": szn_mean_Y, "szn_std_Y": szn_std_Y}
+        pickle.dump(tpt_feat, open(tpt_feat_filename,"wb"))
         return 
     def evaluate_features(self,ds,feat_def):
         # Given a single ensemble in ds, evaluate the features and return a big matrix

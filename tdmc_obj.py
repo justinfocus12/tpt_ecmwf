@@ -12,7 +12,7 @@ class TimeDependentMarkovChain:
         self.t = t
         self.Nt = len(t)
         if self.Nt != len(self.Nx):
-            sys.exit("ERROR: need Nx and t to have the same length. len(Nx) = {}, len(t) = {}".format(len(self.Nx),len(self.t)))
+            raise Exception("I need Nx and t to have the same length. len(Nx) = {}, len(t) = {}".format(len(self.Nx),len(self.t)))
         return
     def direct_numerical_simulation(self,path_fun,init_dist,Nsim=1000):
         # Starting from a given initial distribution, estimate ensemble average of path_fun

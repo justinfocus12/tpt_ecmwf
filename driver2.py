@@ -29,7 +29,7 @@ feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2021-12-30")
+daydir = join(resultsdir,"2021-12-31")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -65,7 +65,7 @@ winter_day0 = 0.0
 spring_day0 = 150.0
 Npc_per_level_max = 6
 # ------------------ Algorithmic parameters ---------------------
-delaytime_days = 15.0 
+delaytime_days = 0.0 
 num_clusters = 100
 #Npc_per_level_single = 4
 Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
@@ -106,13 +106,13 @@ evaluate_database_ei =         0
 tpt_featurize_ei =             1
 tpt_ei_flag =                  1
 # s2s
-evaluate_database_s2s =        1
+evaluate_database_s2s =        0
 tpt_featurize_s2s =            1
 cluster_flag =                 1
 build_msm_flag =               1
 tpt_s2s_flag =                 1
 # Summary statistics
-plot_rate_flag =               0
+plot_rate_flag =               1
 
 
 feature_file = join(featdir,"feat_def")
@@ -151,7 +151,7 @@ if tpt_e2_flag:
         print("\tSeed {} of {}".format(i_seed,num_seeds_e2))
         seeddir = seeddir_list_e2[i_seed]
         if not exists(seeddir): mkdir(seeddir)
-        tpt_feat_filename = join(seeddir,"Y.npy")
+        tpt_feat_filename = join(seeddir,"Y")
         if tpt_featurize_e2:
             winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
         rates_e2 = np.zeros(len(uthresh_list))
@@ -176,7 +176,7 @@ if tpt_ei_flag:
         print("\tSeed {} of {}".format(i_seed,num_seeds_ei))
         seeddir = seeddir_list_ei[i_seed]
         if not exists(seeddir): mkdir(seeddir)
-        tpt_feat_filename = join(seeddir,"Y.npy")
+        tpt_feat_filename = join(seeddir,"Y")
         if tpt_featurize_ei:
             winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
         rates_ei = np.zeros(len(uthresh_list))
@@ -188,8 +188,7 @@ if tpt_ei_flag:
             tpt.set_boundaries(tpt_bndy)
             summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level)
             rates_ei[i_uth] = summary_dns["rate"]
-print(f"rates_e2 = {rates_e2}\nrates_ei = {rates_ei}")
-sys.exit()
+#print(f"rates_e2 = {rates_e2}\nrates_ei = {rates_ei}")
 # ------------------- DGA from S2S --------------------------------
 #Npc_per_level = Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 #Npc_per_level[1:] = 0 # Only care about the top layer
@@ -205,7 +204,7 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
     print("\tSeed {} of {}".format(i_seed,num_seeds_s2s))
     seeddir = seeddir_list_s2s[i_seed]
     if not exists(seeddir): mkdir(seeddir)
-    tpt_feat_filename = join(seeddir,"Y.npy")
+    tpt_feat_filename = join(seeddir,"Y")
     clust_filename = join(seeddir,"kmeans")
     msm_filename = join(seeddir,"msm")
     if tpt_featurize_s2s:
@@ -218,11 +217,11 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
     if tpt_s2s_flag:
         for i_uth in range(len(uthresh_list)):
             uthresh_b = uthresh_list[i_uth]
-            savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a))
+            savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            summary_dga = tpt.tpt_pipeline_dga(feat_filename,tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves)
+            summary_dga = tpt.tpt_pipeline_dga(tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves)
 
 # ------------- Compare rates ---------------------
 if plot_rate_flag:
@@ -230,19 +229,19 @@ if plot_rate_flag:
     rate_list_ei = np.zeros((num_seeds_ei,len(uthresh_list)))
     rate_list_s2s = np.zeros((num_seeds_s2s,len(uthresh_list)))
     for i_uth in range(len(uthresh_list)):
-        uthresh = uthresh_list[i_uth]
+        uthresh_b = uthresh_list[i_uth]
         for i_seed in range(num_seeds_e2):
-            savedir = join(seeddir_list_e2[i_seed],"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+            savedir = join(seeddir_list_e2[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
             summary = pickle.load(open(join(savedir,"summary"),"rb"))
             rate_list_e2[i_seed,i_uth] = summary["rate"]
         for i_seed in range(num_seeds_ei):
-            savedir = join(seeddir_list_ei[i_seed],"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+            savedir = join(seeddir_list_ei[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
             summary = pickle.load(open(join(savedir,"summary"),"rb"))
             rate_list_ei[i_seed,i_uth] = summary["rate"]
         for i_seed in range(num_seeds_s2s):
-            savedir = join(seeddir_list_s2s[i_seed],"tth%i-%i_uth%i"%(tthresh0,tthresh1,uthresh))
+            savedir = join(seeddir_list_s2s[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
             summary = pickle.load(open(join(savedir,"summary"),"rb"))
-            rate_list_s2s[i_seed,i_uth] = summary["rate"]
+            rate_list_s2s[i_seed,i_uth] = summary["rate_tob"]
     fig,ax = plt.subplots()
     he2, = ax.plot(uthresh_list,rate_list_e2[0],color='cyan',linewidth=3,marker='o',label="ERA20C")
     hei, = ax.plot(uthresh_list,rate_list_ei[0],color='black',linewidth=3,marker='o',label="ERAI")

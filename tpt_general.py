@@ -51,7 +51,8 @@ class WinterStratosphereTPT:
         # savedir: where all the results of this particular TPT will be saved.
         # winstrat: the object that was used to create features, and that can go on to evaluate other features.
         # feat_def: the feature definitions that came out of winstrat.
-        Y = np.load(tpt_feat_filename)
+        tpt_feat = pickle.load(open(tpt_feat_filename, "rb"))
+        Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
         Ny,Nt,ydim = Y.shape
         #print(f"in DNS pipeline: ydim = {ydim}")
         funlib = winstrat.observable_function_library_Y(Nwaves,Npc_per_level)
@@ -90,31 +91,40 @@ class WinterStratosphereTPT:
         summary = {"rate": rate}
         pickle.dump(summary,open(join(savedir,"summary"),"wb"))
         return summary 
-    def cluster_features(self,clust_feat_filename,clust_filename,winstrat,num_clusters=100,resample_flag=False,seed=0):
+    def cluster_features(self,tpt_feat_filename,clust_filename,winstrat,num_clusters=100,resample_flag=False,seed=0):
         # Read in a feature array from feat_filename and build clusters. Save cluster centers. Save them out in clust_filename.
-        Y = np.load(clust_feat_filename)
+        tpt_feat = pickle.load(open(tpt_feat_filename,"rb"))
+        Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
         Nx,Nt,ydim = Y.shape
         Y = Y.reshape((Nx*Nt,ydim))
         # cluster based on the non-time features. 
+        Y_unseasoned = winstrat.unseason(Y[:,0],Y[:,1:],szn_mean_Y,szn_std_Y,normalize=True)
+        kmtime = []
         kmlist = []
         for ti in range(winstrat.Ntwint):
             idx = np.where(np.abs(Y[:,0] - winstrat.wtime[ti]) < winstrat.szn_hour_window/2)[0]
             if len(idx) == 0:
-                raise Exception("Problem, we don't have any data in time slot {}. Y time: min={}, max={}. wtime: min={}, max={}.".format(ti,Y[:,0].min(),Y[:,0].max(),winstrat.wtime.min(),winstrat.wtime.max()))
-            km = MiniBatchKMeans(min(len(idx),num_clusters)).fit(Y[idx,1:])
-            kmlist += [km]
-        pickle.dump(kmlist,open(clust_filename,"wb"))
+                print("WARNING, we don't have any data in time slot {}. Y time: min={}, max={}. wtime: min={}, max={}.".format(ti,Y[:,0].min(),Y[:,0].max(),winstrat.wtime.min(),winstrat.wtime.max()))
+            else:
+                kmtime += [winstrat.wtime[ti]]
+                #km = MiniBatchKMeans(min(len(idx),num_clusters)).fit((Y[idx,1:] - offset_Y)/scale_Y)
+                km = MiniBatchKMeans(min(len(idx),num_clusters)).fit(Y_unseasoned[idx])
+                kmlist += [km]
+        kmdict = {"kmlist": kmlist, "kmtime": kmtime}
+        pickle.dump(kmdict,open(clust_filename,"wb"))
         print("n_clusters: {}".format(np.array([km.n_clusters for km in kmlist])))
         return
-    def build_msm(self,clust_feat_filename,clust_filename,msm_filename,winstrat):
+    def build_msm(self,tpt_feat_filename,clust_filename,msm_filename,winstrat):
         nnk = 4 # Number of nearest neighbors for filling in empty positions
-        Y = np.load(clust_feat_filename)
+        tpt_feat = pickle.load(open(tpt_feat_filename,"rb"))
+        Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
+        Y_unseasoned = winstrat.unseason(Y[:,0],Y[:,1:],szn_mean_Y,szn_std_Y,normalize=True)
         Nx,Nt,ydim = Y.shape
-        kmlist = pickle.load(open(clust_filename,"rb"))
+        kmdict = pickle.load(open(clust_filename,"rb"))
+        kmlist,kmtime = kmdict["kmlist"],kmdict["kmtime"]
         P = []
-
         #centers = np.concatenate((np.zeros(km.n_clusters,1),km.cluster_centers_), axis=1)
-        for ti in range(winstrat.Ntwint-1):
+        for ti in range(len(kmtime)-1): #winstrat.Ntwint-1):
             if ti % 30 == 0:
                 print("MSM timestep {} out of {}".format(ti,winstrat.Ntwint))
             P += [np.zeros((kmlist[ti].n_clusters,kmlist[ti+1].n_clusters))]
@@ -122,12 +132,12 @@ class WinterStratosphereTPT:
             #print("wtime[0] = {}".format(winstrat.wtime[0]))
             #print("X[0,:3,0] = {}".format(X[0,:3,0]))
             #print("X[:,:,0] range = {},{}".format(X[:,:,0].min(),X[:,:,0].max()))
-            idx0 = np.where(np.abs(Y[:,:-1,0] - winstrat.wtime[ti]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
-            idx1 = np.where(np.abs(Y[:,1:,0] - winstrat.wtime[ti+1]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
+            idx0 = np.where(np.abs(Y[:,:-1,0] - kmtime[ti]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
+            idx1 = np.where(np.abs(Y[:,1:,0] - kmtime[ti+1]) < winstrat.dtwint/2) # (idx1_x,idx1_t) where idx1_x < Nx and idx1_t < Nt-1
             if len(idx0[0]) > 0 and len(idx1[0]) > 0:
                 overlap = np.where(np.subtract.outer(idx0[0],idx1[0]) == 0)
-                labels0 = kmlist[ti].predict(Y[idx0[0][overlap[0]],idx0[1][overlap[0]],1:])
-                labels1 = kmlist[ti+1].predict(Y[idx1[0][overlap[1]],idx1[1][overlap[1]],1:])
+                labels0 = kmlist[ti].predict(Y_unseasoned[idx0[0][overlap[0]],idx0[1][overlap[0]]])
+                labels1 = kmlist[ti+1].predict(Y_unseasoned[idx1[0][overlap[1]],idx1[1][overlap[1]]])
                 #print("labels0.shape = {}".format(labels0.shape))
                 #print("labels1.shape = {}".format(labels1.shape))
                 #print("len(idx0[0]) = {}, len(idx1[0]) = {}".format(len(idx0[0]),len(idx1[0])))
@@ -206,14 +216,14 @@ class WinterStratosphereTPT:
             if i < mc.Nt-1: F += [1.0*np.outer((ina[i]==0)*(inb[i]==0), np.ones(mc.Nx[i+1]))]
         qp = mc.dynamical_galerkin_approximation(F,G)
         return qp
-    def compute_integral_to_B(self,P_list,winstrat,ina,inb,qp,dam_centers,maxmom=2):
+    def compute_integral_to_B(self,P_list,time,ina,inb,qp,dam_centers,maxmom=2):
         # For example, lead time. damfun must be a function of the full state space, but computable on cluster centers. 
         # G = (1_B) * exp(lam*damfun)
         # F = (1_D) * exp(lam*damfun)
         nclust_list = [len(dam_centers[ti]) for ti in range(len(dam_centers))]
         int2b = []
         if maxmom >= 1:
-            mc = tdmc_obj.TimeDependentMarkovChain(P_list,winstrat.wtime)
+            mc = tdmc_obj.TimeDependentMarkovChain(P_list,time)
             G = []
             F = []
             I = []
@@ -263,7 +273,7 @@ class WinterStratosphereTPT:
                     G += [np.zeros(ncl0)]
             int2b += [mc.dynamical_galerkin_approximation(F,G)]
         return int2b
-    def conditionalize_int2b(self,P_list,winstrat,int2b,qp): #,damkey):
+    def conditionalize_int2b(self,P_list,time,int2b,qp): #,damkey):
         # Having already computed an integral, turn it conditional
         int2b_cond = {}
         nclust_list = [len(qp[ti]) for ti in range(len(qp))]
@@ -278,7 +288,7 @@ class WinterStratosphereTPT:
             int2b_cond['mean'] = []
             int2b_cond['m1'] = [] # This is pedantic: it's the same
             j = 0
-            for k in range(winstrat.Ntwint):
+            for k in range(len(time)):
                 nclust = nclust_list[k]
                 int2b_cond['mean'] += [cond_m1[j:j+nclust]]
                 int2b_cond['m1'] += [cond_m1[j:j+nclust]]
@@ -294,7 +304,7 @@ class WinterStratosphereTPT:
             int2b_cond['std'] = []
             int2b_cond['m2'] = []
             j = 0
-            for k in range(winstrat.Ntwint):
+            for k in range(len(time)):
                 nclust = nclust_list[k]
                 int2b_cond['std'] += [cond[j:j+nclust]]
                 int2b_cond['m2'] += [cond_m2[j:j+nclust]]
@@ -309,7 +319,7 @@ class WinterStratosphereTPT:
             int2b_cond['skew'] = []
             int2b_cond['m3'] = []
             j = 0
-            for k in range(winstrat.Ntwint):
+            for k in range(len(time)):
                 nclust = nclust_list[k]
                 int2b_cond['skew'] += [cond[j:j+nclust]]
                 int2b_cond['m3'] += [cond_m3[j:j+nclust]]
@@ -323,7 +333,7 @@ class WinterStratosphereTPT:
             int2b_cond['kurt'] = []
             int2b_cond['m4'] = []
             j = 0
-            for k in range(winstrat.Ntwint):
+            for k in range(len(time)):
                 nclust = nclust_list[k]
                 int2b_cond['kurt'] += [cond[j:j+nclust]]
                 int2b_cond['m4'] += [cond_m4[j:j+nclust]]
@@ -331,21 +341,28 @@ class WinterStratosphereTPT:
         return int2b_cond 
     def tpt_pipeline_dga(self,tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves):
         # Label each cluster as in A or B or elsewhere
-        Y = np.load(tpt_feat_filename)
+        tpt_feat = pickle.load(open(tpt_feat_filename,"rb"))
+        Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
         Ny,Nt,ydim = Y.shape
-        funlib = winstrat.observable_function_library(Nwaves=Nwaves,Npc_per_level=Npc_per_level)
-        uref_y = funlib["uref"]["fun"](Y.reshape((Ny*Nt,ydim)))
-        print("uref_y: min={}, max={}, mean={}".format(uref_y.min(),uref_y.max(),uref_y.mean()))
-        kmlist = pickle.load(open(clust_filename,"rb"))
+        funlib = winstrat.observable_function_library_Y(Nwaves=Nwaves,Npc_per_level=Npc_per_level)
+        #uref_y = funlib["uref"]["fun"](Y.reshape((Ny*Nt,ydim)))
+        #print("uref_y: min={}, max={}, mean={}".format(uref_y.min(),uref_y.max(),uref_y.mean()))
+        kmdict = pickle.load(open(clust_filename,"rb"))
+        kmlist,kmtime = kmdict["kmlist"],kmdict["kmtime"]
         ina = []
         inb = []
         centers = []
-        for ti in range(winstrat.Ntwint):
-            centers_t = np.concatenate((winstrat.wtime[ti]*np.ones((kmlist[ti].n_clusters,1)),kmlist[ti].cluster_centers_), axis=1)
-            centers += [centers_t]
-            ina += [winstrat.ina_test(centers_t,feat_def,self.tpt_bndy)]
-            inb += [winstrat.inb_test(centers_t,feat_def,self.tpt_bndy)]
-        km = pickle.load(open(clust_filename,"rb"))
+        for ti in range(len(kmtime)):
+            #centers_t = np.concatenate((kmtime[ti]*np.ones((kmlist[ti].n_clusters,1)), offset_Y+scale_Y*kmlist[ti].cluster_centers_), axis=1)
+            #centers_t = np.concatenate((kmtime[ti]*np.ones((kmlist[ti].n_clusters,1)), kmlist[ti].cluster_centers_), axis=1)
+            # Re-season the centers
+            centers_t = winstrat.reseason(kmtime[ti]*np.ones(kmlist[ti].n_clusters),kmlist[ti].cluster_centers_,None,szn_mean_Y,szn_std_Y)
+            centers += [np.zeros((centers_t.shape[0],centers_t.shape[1]+1))]
+            centers[-1][:,0] = kmtime[ti]
+            centers[-1][:,1:] = centers_t
+            ina += [winstrat.ina_test(centers[-1],feat_def,self.tpt_bndy)]
+            inb += [winstrat.inb_test(centers[-1],feat_def,self.tpt_bndy)]
+        #km = pickle.load(open(clust_filename,"rb"))
         P_list = pickle.load(open(msm_filename,"rb"))
         # Check rowsums
         minrowsums = np.inf
@@ -355,35 +372,41 @@ class WinterStratosphereTPT:
             minrowsums = min(minrowsums,np.min(rowsums))
             mincolsums = min(mincolsums,np.min(P_list[i].sum(0)))
             #print("rowsums: min={}, max={}".format(rowsums.min(),rowsums.max()))
-        init_dens = np.array([np.sum(km[0].labels_ == i) for i in range(km[0].n_clusters)], dtype=float)
+        init_dens = np.array([np.sum(kmlist[0].labels_ == i) for i in range(kmlist[0].n_clusters)], dtype=float)
         # Density and committors
         init_dens *= 1.0/np.sum(init_dens)
         init_dens = np.maximum(init_dens, np.max(init_dens)*1e-4)
-        pi = self.compute_tdep_density(P_list,init_dens,winstrat.wtime)
+        pi = self.compute_tdep_density(P_list,init_dens,kmtime)
         piflat = np.concatenate(pi)
         print("ina[0].shape = {}, inb[0].shape = {}, P_list[0].shape = {}".format(ina[0].shape,inb[0].shape,P_list[0].shape))
-        qm = self.compute_backward_committor(P_list,winstrat.wtime,ina,inb,pi)
+        qm = self.compute_backward_committor(P_list,kmtime,ina,inb,pi)
         qmflat = np.concatenate(qm)
-        qp = self.compute_forward_committor(P_list,winstrat.wtime,ina,inb)
+        qp = self.compute_forward_committor(P_list,kmtime,ina,inb)
         qpflat = np.concatenate(qp)
         # Integral to B
-        dam_centers = [np.ones(km[ti].n_clusters) for ti in range(winstrat.Ntwint)]
+        dam_centers = [np.zeros(kmlist[ti].n_clusters) for ti in range(len(kmtime))]
+        dam_centers[0][:] = (kmtime[1] - kmtime[0])/2
+        dam_centers[-1][:] = (kmtime[-1] - kmtime[-2])/2
+        for ti in range(1,len(kmtime)-1):
+            dam_centers[ti][:] = (kmtime[ti+1] - kmtime[ti-1])/2
         int2b = {}
         int2b_cond = {}
-        int2b['time'] = self.compute_integral_to_B(P_list,winstrat,ina,inb,qp,dam_centers,maxmom=3)
-        int2b_cond['time'] = self.conditionalize_int2b(P_list,winstrat,int2b['time'],qp)
+        int2b['time'] = self.compute_integral_to_B(P_list,kmtime,ina,inb,qp,dam_centers,maxmom=3)
+        int2b_cond['time'] = self.conditionalize_int2b(P_list,kmtime,int2b['time'],qp)
         # Rate
         # To compute the rate, must sum over all fluxes going into B.
         flux = []
         rate_froma = 0
         rate_tob = 0
-        for ti in range(winstrat.Ntwint-1):
+        for ti in range(len(kmtime)-1):
             flux += [(P_list[ti].T * pi[ti] * qm[ti]).T * qp[ti+1]]
-            rate_froma += (P_list[ti].T * pi[ti] * ina[ti]).T * qp[ti+1]
-            rate_tob += (P_list[ti].T * pi[ti] * qm[ti]).T * inb[ti+1]
+            #print(f"ti = {ti}, P_list[ti].shape = {P_list[ti].shape}, pi[ti].shape = {pi[ti].shape}, ina[ti].shape = {ina[ti].shape}, qp[ti].shape = {qp[ti].shape}")
+            rate_froma += np.sum((P_list[ti].T * pi[ti] * ina[ti]).T * qp[ti+1])
+            rate_tob += np.sum((P_list[ti].T * pi[ti] * qm[ti]).T * inb[ti+1])
         #ti_froma = np.where(winstrat.wtime > self.tpt_bndy['tthresh'][0])[0][0]
         if np.abs(rate_froma - rate_tob) > 0.1*max(rate_froma, rate_tob):
             raise Exception(f"Rate discrepancy: froma is {rate_froma}, tob is {rate_tob}")
+        print(f"Rate: froma={rate_froma}, tob={rate_tob}")
         #rate = np.sum(flux[ti_froma])
         pickle.dump(qp,open(join(savedir,"qp"),"wb"))
         pickle.dump(qm,open(join(savedir,"qm"),"wb"))
@@ -394,17 +417,17 @@ class WinterStratosphereTPT:
         pickle.dump(inb,open(join(savedir,"inb"),"wb"))
         pickle.dump(centers,open(join(savedir,"centers"),"wb"))
         # Do the time-dependent Markov Chain analysis
-        summary = {"rate": rate,}
+        summary = {"rate_froma": rate_froma, "rate_tob": rate_tob,}
         pickle.dump(summary,open(join(savedir,"summary"),"wb"))
         # Plot 
         centers_all = np.concatenate(centers, axis=0)
         weight = np.ones(len(centers_all))/(len(centers_all))
-        keypairs = [['time_d','area'],['time_d','displacement'],['time_d','uref'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','lev0_pc5'],['lev0_pc1','lev0_pc2'],['lev0_pc1','lev0_pc4'],['lev0_pc4','lev0_pc5']][:3]
+        keypairs = [['time_d','area'],['time_d','displacement'],['time_d','uref'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','lev0_pc5'],['lev0_pc1','lev0_pc2'],['lev0_pc1','lev0_pc4'],['lev0_pc4','lev0_pc5']][2:3]
         #keypairs = [['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','mag1_anomaly'],['time_d','mag2_anomaly']]
         for i_kp in range(len(keypairs)):
             fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
             theta_x = np.array([funlib[keypairs[i_kp][j]]["fun"](centers_all) for j in range(2)]).T
-            Jth = self.project_current(theta_x,winstrat,centers,flux)
+            Jth = self.project_current(theta_x,kmtime,centers,flux)
             # Plot density
             fig,ax = helper.plot_field_2d(piflat,np.ones(len(centers_all)),theta_x,shp=[15,15],fieldname="Density",fun0name=fun0name,fun1name=fun1name,contourflag=True,avg_flag=False,logscale=True)
             self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
@@ -434,10 +457,10 @@ class WinterStratosphereTPT:
             fig.savefig(join(savedir,"lt_skew_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
             plt.close(fig)
         return summary 
-    def project_current(self,theta_flat,winstrat,centers,flux):
+    def project_current(self,theta_flat,time,centers,flux):
         # For a given vector-valued observable theta, evaluate the current operator J dot grad(theta)
         # theta is a list of (Mt x d) arrays, where d is the dimensionality of theta and Mt is the number of clusters at time step t
-        klast = np.where(winstrat.wtime < self.tpt_bndy['tthresh'][1])[0][-1] + 2
+        klast = np.where(time < self.tpt_bndy['tthresh'][1])[0][-1] + 2
         thdim = theta_flat.shape[1]
         nclust_list = np.array([centers[ti].shape[0] for ti in range(len(centers))])
         Jth = np.zeros((np.sum(nclust_list),thdim))
@@ -446,7 +469,7 @@ class WinterStratosphereTPT:
         for k in range(klast):
             i2 = i1 + nclust_list[k]
             if k > 0:
-                bwd_weight = 0.5*(k < winstrat.Ntwint-1) + 1.0*(k == winstrat.Ntwint-1)
+                bwd_weight = 0.5*(k < len(time)-1) + 1.0*(k == len(time)-1)
                 i0 = i1 - nclust_list[k-1]
                 for j in range(thdim):
                     Jth[i1:i2,j] += bwd_weight*np.sum(flux[k-1]*np.add.outer(-theta_flat[i0:i1,j], theta_flat[i1:i2,j]), axis=0)
