@@ -133,11 +133,11 @@ if display_features_flag:
 feat_def = pickle.load(open(winstrat.feature_file,"rb"))
 tpt = tpt_general.WinterStratosphereTPT()
 # ----------------- Determine list of SSW definitions to consider --------------
-tthresh0 = 10.0 # First day that SSW could happen
+tthresh0 = delaytime_days + 10 # First day that SSW could happen
 tthresh1 = 145.0 # Last day that SSW could happen
-sswbuffer = 10.0 # minimum buffer time between one SSW and the next
-uthresh_a = 2.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
-uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
+sswbuffer = 0.0 # minimum buffer time between one SSW and the next
+uthresh_a = 10.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
+uthresh_list = np.arange(5,-26,-15) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 # ------------------ TPT direct estimates from ERA20C --------------------------
 feat_filename = join(expdir_e2,"X.npy")
 ens_start_filename = join(expdir_e2,"ens_start_idx.npy")
@@ -154,6 +154,7 @@ if tpt_e2_flag:
         tpt_feat_filename = join(seeddir,"Y.npy")
         if tpt_featurize_e2:
             winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
+        rate_list = np.zeros(len(uthresh_list))
         for i_uth in range(len(uthresh_list)):
             uthresh_b = uthresh_list[i_uth]
             savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
@@ -161,6 +162,8 @@ if tpt_e2_flag:
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
             summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level)
+            rate_list[i_uth] = summary_dns['rate']
+print(f"era20c rates: {rate_list}")
 sys.exit()
 # ------------------ TPT direct estimates from ERA-Interim --------------------------
 feat_filename = join(expdir_ei,"X.npy")
@@ -210,7 +213,7 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
         tpt.build_msm(tpt_feat_filename,clust_filename,msm_filename,winstrat)
     if tpt_s2s_flag:
         for i_uth in range(len(uthresh_list)):
-            uthresh_a = uthresh_list[i_uth]
+            uthresh_b = uthresh_list[i_uth]
             savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a))
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}

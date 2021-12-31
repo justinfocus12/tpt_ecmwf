@@ -76,15 +76,16 @@ class WinterStratosphereFeatures:
     def ina_test(self,y,feat_def,tpt_bndy):
         Ny,ydim = y.shape
         ina = np.zeros(Ny,dtype=bool)
-        nonwinter_flag = ((y[:,0] >= tpt_bndy['tthresh'][0]) * (y[:,0] < tpt_bndy['tthresh'][1]) == 0)
         # Now look for midwinter times with strong wind and significant time since previous SSW
         winter_flag = (y[:,0] >= tpt_bndy['tthresh'][0])*(y[:,0] < tpt_bndy['tthresh'][1])
+        #print(f"winter_flag = {winter_flag}")
+        nonwinter_flag = (winter_flag == 0)
+        #print(f"nonwinter_flag = {nonwinter_flag}")
         nbuffer = int(round(tpt_bndy['sswbuffer']/self.dtwint))
         uref = self.uref_history(y,feat_def)
         weak_wind_flag = (np.min(uref[:,self.ndelay-nbuffer-1:], axis=1) < tpt_bndy['uthresh_b'])  # This has to be defined from the Y construction
         strong_wind_flag = (uref[:,-1] > tpt_bndy['uthresh_a'])
         ina = nonwinter_flag + winter_flag*(1 - weak_wind_flag)*strong_wind_flag
-        print(f"y.shape = {y.shape}, ina.shape = {ina.shape}")
         return ina
     def inb_test(self,y,feat_def,tpt_bndy):
         # Test whether a reanalysis dataset's components are in B
@@ -449,6 +450,7 @@ class WinterStratosphereFeatures:
         print(f"ydim = {ydim}")
         Y = np.zeros((Nx,Nty,ydim))
         Y[:,:,0] = X[:,self.ndelay:,0]
+        print(f"Y[0,0,0] = {Y[0,0,0]}")
         i_feat_y = 1
         i_feat_x = 1
         # Build time delays of u into Y

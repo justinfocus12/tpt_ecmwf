@@ -42,7 +42,9 @@ class WinterStratosphereTPT:
     def compute_rate_direct(self,src_tag,dest_tag):
         # This is meant for full-winter trajectories
         ab_tag = (src_tag==0)*(dest_tag==1)
-        absum = 1.0*(np.sum(ab_tag,axis=1) > 0)
+        print(f"ab_tag.shape = {ab_tag.shape}")
+        #absum = 1.0*(np.sum(ab_tag,axis=1) > 0)
+        absum = 1.0*(np.sum(np.diff(1.0*ab_tag,axis=1)==1, axis=1))
         rate = np.mean(absum)
         return rate
     def tpt_pipeline_dns(self,tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level):
@@ -51,10 +53,13 @@ class WinterStratosphereTPT:
         # feat_def: the feature definitions that came out of winstrat.
         Y = np.load(tpt_feat_filename)
         Ny,Nt,ydim = Y.shape
-        print(f"in DNS pipeline: ydim = {ydim}")
+        #print(f"in DNS pipeline: ydim = {ydim}")
         funlib = winstrat.observable_function_library_Y(Nwaves,Npc_per_level)
         # ---- Plot committor in a few different coordinates -----
         src_tag,dest_tag = winstrat.compute_src_dest_tags(Y,feat_def,self.tpt_bndy,"src_dest")
+        #print(f"src_tag[:,0] = {src_tag[:,0]}")
+        ina_Y = winstrat.ina_test(Y[:,0,:],feat_def,self.tpt_bndy)
+        #print(f"ina_Y = {ina_Y}")
         qp = 1.0*(dest_tag == 1).flatten()
         qm = 1.0*(src_tag == 0).flatten()
         pi = 1.0*np.ones(Ny*Nt)/(Ny*Nt)
@@ -368,11 +373,18 @@ class WinterStratosphereTPT:
         int2b['time'] = self.compute_integral_to_B(P_list,winstrat,ina,inb,qp,dam_centers,maxmom=3)
         int2b_cond['time'] = self.conditionalize_int2b(P_list,winstrat,int2b['time'],qp)
         # Rate
+        # To compute the rate, must sum over all fluxes going into B.
         flux = []
+        rate_froma = 0
+        rate_tob = 0
         for ti in range(winstrat.Ntwint-1):
             flux += [(P_list[ti].T * pi[ti] * qm[ti]).T * qp[ti+1]]
-        ti_froma = np.where(winstrat.wtime > self.tpt_bndy['tthresh'][0])[0][0]
-        rate = np.sum(flux[ti_froma])
+            rate_froma += (P_list[ti].T * pi[ti] * ina[ti]).T * qp[ti+1]
+            rate_tob += (P_list[ti].T * pi[ti] * qm[ti]).T * inb[ti+1]
+        #ti_froma = np.where(winstrat.wtime > self.tpt_bndy['tthresh'][0])[0][0]
+        if np.abs(rate_froma - rate_tob) > 0.1*max(rate_froma, rate_tob):
+            raise Exception(f"Rate discrepancy: froma is {rate_froma}, tob is {rate_tob}")
+        #rate = np.sum(flux[ti_froma])
         pickle.dump(qp,open(join(savedir,"qp"),"wb"))
         pickle.dump(qm,open(join(savedir,"qm"),"wb"))
         pickle.dump(pi,open(join(savedir,"pi"),"wb"))
