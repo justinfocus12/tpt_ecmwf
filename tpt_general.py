@@ -118,8 +118,8 @@ class WinterStratosphereTPT:
         nnk = 4 # Number of nearest neighbors for filling in empty positions
         tpt_feat = pickle.load(open(tpt_feat_filename,"rb"))
         Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
-        Y_unseasoned = winstrat.unseason(Y[:,0],Y[:,1:],szn_mean_Y,szn_std_Y,normalize=True)
-        Nx,Nt,ydim = Y.shape
+        Ny,Nt,ydim = Y.shape
+        Y_unseasoned = winstrat.unseason(Y[:,:,0].reshape(Ny*Nt),Y[:,:,1:].reshape((Ny*Nt,ydim-1)),szn_mean_Y,szn_std_Y,normalize=True).reshape((Ny,Nt,ydim-1))
         kmdict = pickle.load(open(clust_filename,"rb"))
         kmlist,kmtime = kmdict["kmlist"],kmdict["kmtime"]
         P = []

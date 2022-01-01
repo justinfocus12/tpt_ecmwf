@@ -444,12 +444,13 @@ class WinterStratosphereFeatures:
         # ------------- Define the cluster features Y ------------------
         # Y will have time-delay features built in. 
         # Y dimension: (time, uref, real + imag for each wave, pc for each level, vortex area, centroid latitude) all times the number of time lags
-        Nty = Ntx - self.ndelay
+        Nty = Ntx - self.ndelay + 1
         print(f"self.ndelay = {self.ndelay}")
         ydim = 1 + self.ndelay + 2*Nwaves + np.sum(Npc_per_level) + 2 # self.ndelay for the history of u
         print(f"ydim = {ydim}")
         Y = np.zeros((Nx,Nty,ydim))
-        Y[:,:,0] = X[:,self.ndelay:,0]
+        # TODO: figure out wth to do with ndelay vs ndelay+1
+        Y[:,:,0] = X[:,self.ndelay-1:,0]
         print(f"Y[0,0,0] = {Y[0,0,0]}")
         i_feat_y = 1
         i_feat_x = 1
@@ -465,9 +466,10 @@ class WinterStratosphereFeatures:
             #offset_Y[i_feat_y-1] = feat_def["uref_mean"]
             #scale_Y[i_feat_y-1] = feat_def["uref_std"]
             i_feat_y += 1
+        i_feat_x += 1
         for i_wave in np.arange(self.num_wavenumbers):
             if i_wave < Nwaves:
-                Y[:,:,i_feat_y:i_feat_y+2] = X[:,self.ndelay:,i_feat_x:i_feat_x+2]
+                Y[:,:,i_feat_y:i_feat_y+2] = X[:,self.ndelay-1:,i_feat_x:i_feat_x+2]
                 szn_mean_Y[:,i_feat_y:i_feat_y+2] = feat_def["waves_szn_mean"][:,2*i_wave:2*i_wave+2]
                 szn_std_Y[:,i_feat_y:i_feat_y+2] = feat_def["waves_szn_std"][:,2*i_wave:2*i_wave+2]
                 #offset_Y[i_feat_y-1:i_feat_y+1] = np.mean(feat_def["waves_szn_mean"][:,2*i_wave:2*i_wave+2], axis=0)
@@ -477,7 +479,8 @@ class WinterStratosphereFeatures:
         for i_lev in range(len(feat_def['plev'])):
             for i_pc in range(self.Npc_per_level_max):
                 if i_pc < Npc_per_level[i_lev]:
-                    Y[:,:,i_feat_y] = X[:,self.ndelay:,i_feat_x]
+                    Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
+                    print(f"pc: min={Y[:,:,i_feat_y].min()}, max={Y[:,:,i_feat_y].max()}")
                     szn_mean_Y[:,i_feat_y-1] = 0.0
                     szn_std_Y[:,i_feat_y-1] = 1.0
                     i_feat_y += 1
@@ -486,10 +489,10 @@ class WinterStratosphereFeatures:
         # Average them over the past 
         for i_dl in range(self.ndelay):
             Y[:,:,i_feat_y:i_feat_y+2] += X[:,i_dl:i_dl+Nty,i_feat_x:i_feat_x+2]/self.ndelay
-        szn_mean_Y[:,i_feat_y-1] = 0*feat_def["vtx_area_szn_mean"]
-        szn_std_Y[:,i_feat_y-1] = np.inf*feat_def["vtx_area_szn_std"]
-        szn_mean_Y[:,i_feat_y] = 0*feat_def["vtx_centerlat_szn_mean"]
-        szn_std_Y[:,i_feat_y] = np.inf*feat_def["vtx_centerlat_szn_std"]
+        szn_mean_Y[:,i_feat_y-1] = feat_def["vtx_area_szn_mean"]
+        szn_std_Y[:,i_feat_y-1] = feat_def["vtx_area_szn_std"]
+        szn_mean_Y[:,i_feat_y] = feat_def["vtx_centerlat_szn_mean"]
+        szn_std_Y[:,i_feat_y] = feat_def["vtx_centerlat_szn_std"]
         #Y[:,:,i_feat_y:i_feat_y+2] = X[:,:,i_feat_x:i_feat_x+2]
         i_feat_y += 2
         i_feat_x += 2

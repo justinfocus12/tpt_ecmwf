@@ -31,7 +31,7 @@ resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
 daydir = join(resultsdir,"2021-12-31")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"0")
+expdir = join(daydir,"1")
 if not exists(expdir): mkdir(expdir)
 expdir_e2 = join(expdir,"era20c")
 if not exists(expdir_e2): mkdir(expdir_e2)
@@ -58,7 +58,7 @@ for i_fy in range(len(fall_years_ei)):
 file_list_s2s = [join(datadir_s2s,f) for f in os.listdir(datadir_s2s) if f.endswith(".nc")]
 np.random.seed(1)
 ftidx_e2 = np.random.choice(np.arange(len(file_list_e2)),size=15,replace=False)
-dga_idx_s2s = np.random.choice(np.arange(len(file_list_s2s)),size=200,replace=False) # Subset of filed to use for DGA.
+dga_idx_s2s = np.random.choice(np.arange(len(file_list_s2s)),size=500,replace=False) # Subset of filed to use for DGA.
 
 # ----------------- Constant parameters ---------------------
 winter_day0 = 0.0
@@ -99,12 +99,12 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             1
-tpt_e2_flag =                  1
+tpt_featurize_e2 =             0
+tpt_e2_flag =                  0
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             1
-tpt_ei_flag =                  1
+tpt_featurize_ei =             0
+tpt_ei_flag =                  0
 # s2s
 evaluate_database_s2s =        0
 tpt_featurize_s2s =            1
