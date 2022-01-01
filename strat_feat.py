@@ -33,7 +33,7 @@ import pickle
 
 class WinterStratosphereFeatures:
     # Create a set of features, including out-of-sample extension. 
-    def __init__(self,feature_file,winter_day0,spring_day0,delaytime_days=0,Npc_per_level_max=10):
+    def __init__(self,feature_file,winter_day0,spring_day0,delaytime_days=0,Npc_per_level_max=10,vortex_moments_order_max=4):
         self.feature_file = feature_file
         self.winter_day0 = winter_day0
         self.spring_day0 = spring_day0
@@ -44,6 +44,7 @@ class WinterStratosphereFeatures:
         self.delaytime = delaytime_days*24.0 
         self.ndelay = int(self.delaytime/self.dtwint) + 1
         self.Npc_per_level_max = Npc_per_level_max # Determine from SVD if not specified
+        self.vortex_moments_order_max = vortex_moments_order_max
         self.num_wavenumbers = 2 # How many wavenumbers to look at 
         self.lat_uref = 60 # Degrees North for CP07 definition of SSW
         self.lat_range_uref = self.lat_uref + 5.0*np.array([-1,1])
@@ -186,19 +187,22 @@ class WinterStratosphereFeatures:
         cos = np.outer(np.cos(lat*np.pi/180), np.ones(len(lon)))
         sin = np.outer(np.sin(lat*np.pi/180), np.ones(len(lon)))
         # Make poles nan
-        cos[cos==0] = np.nan
-        qgpv = 1.0/earth_radius**2 * (
-                1.0/cos**2*gh_lon2 + gh_lat2 - (sin/cos)*gh_lat  # Laplacian
-                )
+        cos[np.abs(cos)<1e-3] = np.nan
+        sin[np.abs(sin)<1e-3] = np.nan
+        qgpv = earth_radius**2*fcor + grav_accel/fcor * (
+                1.0/cos**2*gh_lon2 - (sin/cos + cos/sin)*gh_lat + gh_lat2)
+        #qgpv = 1.0/earth_radius**2 * (
+        #        1.0/cos**2*gh_lon2 + gh_lat2 - (sin/cos)*gh_lat  # Laplacian
+        #        )
         #qgpv = fcor + 1.0/earth_radius**2 * (grav_accel/fcor)*(
         #        1.0/cos**2*gh_lon2 + gh_lat2 - (sin/cos)*gh_lat  # Laplacian
         #        - (cos/sin)*gh_lat # beta effect 
         #        )
-        # Put NaN at the poles.
-        qgpv[:,:,:2,:] = np.nan
-        qgpv[:,:,-2:,:] = np.nan
+        # Put NaN at the poles and the equator.
+        #qgpv[:,:,:2,:] = np.nan
+        #qgpv[:,:,-2:,:] = np.nan
         return qgpv
-    def compute_vortex_moments_sphere(self,gh,lat,lon,i_lev_subset=None):
+    def compute_vortex_moments_sphere(self,gh,lat,lon,i_lev_subset=None,order=4):
         # Do the calculation in lat/lon coordinates. Regridding is too expensive
         Nsamp,Nlev_full,Nlat_full,Nlon = gh.shape
         if i_lev_subset is None:
@@ -226,7 +230,7 @@ class WinterStratosphereFeatures:
         if np.nanmin(np.diff(qgpv_sorted, axis=1)) < 0:
             raise Exception("qgpv_sorted must be monotonically increasing")
         window = 6
-        dq_deqlat = (qgpv_sorted[:,window:] - qgpv_sorted[:,:-window])/(equiv_lat[:,window:] - equiv_lat[:,:-window])
+        #dq_deqlat = (qgpv_sorted[:,window:] - qgpv_sorted[:,:-window])/(equiv_lat[:,window:] - equiv_lat[:,:-window])
         #idx_crit = np.nanargmax(dq_deqlat, axis=1) + window//2
         idx_crit = np.argmin(np.abs(area_fraction - 0.75), axis=1) #int(dA_dq.shape[1]/2) 
         qgpv_crit = qgpv_sorted[np.arange(Nsamp*Nlev),idx_crit]
@@ -234,26 +238,55 @@ class WinterStratosphereFeatures:
         # Threshold and find moments
         q = (np.maximum(0, qgpv.T - qgpv_crit).T)
         print(f"q: frac>0 is {np.mean(q>0)},  min={np.nanmin(q)}, max={np.nanmax(q)}")
-        # Zeroth moment: vortex area
-        m00 = np.nansum(q*area_factor, axis=1)
-        print(f"m00: min={np.nanmin(m00)}, max={np.nanmax(m00)}")
-        area = m00 #/ qgpv_crit
-        #area = np.sum((q>0)*area_factor, axis=1)
-        # First moment: mean x and mean y
-        m10 = np.nansum(area_factor*q*X, axis=1)/m00
-        m01 = np.nansum(area_factor*q*Y, axis=1)/m00
-        print(f"m10: min={np.nanmin(m10)}, max={np.nanmax(m10)}")
-        print(f"m01: min={np.nanmin(m01)}, max={np.nanmax(m01)}")
-        center = np.array([m10, m01]).T
-        # Determine latitude and longitude of center
-        center_lat = np.arcsin((1 - (center[:,0]**2 + center[:,1]**2))/(1 + (center[:,0]**2 + center[:,1]**2))) * 180/np.pi
-        center_lon = np.arctan2(center[:,1],center[:,0]) * 180/np.pi
-        # Reshape
-        area = area.reshape((Nsamp,Nlev))
-        center_latlon = np.array([center_lat,center_lon]).T
-        #center = center.reshape((Nsamp,Nlev,2))
-        print(f"area: min={np.nanmin(area)}, max={np.nanmax(area)}, mean={np.nanmean(area)}\ncenter(x): min={np.nanmin(center[:,0])}, max={np.nanmax(center[:,0])}, mean={np.nanmean(center[:,0])}")
-        return area,center_latlon
+        moments = {}
+        for i_mom in range(order+1):
+            key = f"m{i_mom}" # Normalized moments
+            moments[key] = np.zeros((Nsamp*Nlev,i_mom+1))
+            for j in range(i_mom+1):
+                moments[key][:,j] = np.nansum(area_factor*q*(X**j)*Y**(i_mom-j), axis=1) 
+            if i_mom == 1:
+                Ybar = moments['m1'][:,0]/moments['m0'][:,0]
+                Xbar = moments['m1'][:,1]/moments['m0'][:,0]
+                Xcent = np.add.outer(-Xbar, X)
+                Ycent = np.add.outer(-Ybar, Y)
+                print(f"Xcent.shape = {Xcent.shape}, q.shape = {q.shape}")
+            if i_mom >= 2:
+                key = f"J{i_mom}" # Centralized moments
+                moments[key] = np.zeros((Nsamp*Nlev,i_mom+1))
+                for j in range(i_mom+1):
+                    moments[key][:,j] = np.nansum(area_factor*q*Xcent**j*Ycent**(i_mom-j), axis=1)
+        # Normalize the moments
+        moments['area'] = moments['m0'][:,0]
+        if order >= 1:
+            moments['centerlat'] = np.arcsin((1 - (Xbar**2+Ybar**2))/(1 + (Xbar**2+Ybar**2))) * 180/np.pi
+            moments['centerlon'] = np.arctan2(Ybar,Xbar) * 180/np.pi
+        if order >= 2:
+            J02,J11,J20 = moments['J2'].T
+            term0 = J20 + J02
+            term1 = np.sqrt(4*J11**2 + (J20-J02)**2)
+            moments['aspect_ratio'] = np.sqrt((term0 + term1)/(term0 - term1))
+        if order >= 4:
+            J04,J13,J22,J31,J40 = moments['J4'].T
+            r = moments['aspect_ratio']
+            moments['excess_kurtosis'] = (J40+J02+2*J22)/(J20+J02)**2 - 2/(3*moments['m0'][0])*(3*r**4+2*r**2+3)/(r**4+2*r**2+1)
+        #print(f"m00: min={np.nanmin(m00)}, max={np.nanmax(m00)}")
+        #area = m00 #/ qgpv_crit
+        ##area = np.sum((q>0)*area_factor, axis=1)
+        ## First moment: mean x and mean y
+        #m10 = np.nansum(area_factor*q*X, axis=1)/m00
+        #m01 = np.nansum(area_factor*q*Y, axis=1)/m00
+        #print(f"m10: min={np.nanmin(m10)}, max={np.nanmax(m10)}")
+        #print(f"m01: min={np.nanmin(m01)}, max={np.nanmax(m01)}")
+        #center = np.array([m10, m01]).T
+        ## Determine latitude and longitude of center
+        #center_lat = np.arcsin((1 - (center[:,0]**2 + center[:,1]**2))/(1 + (center[:,0]**2 + center[:,1]**2))) * 180/np.pi
+        #center_lon = np.arctan2(center[:,1],center[:,0]) * 180/np.pi
+        ## Reshape
+        #area = area.reshape((Nsamp,Nlev))
+        #center_latlon = np.array([center_lat,center_lon]).T
+        ##center = center.reshape((Nsamp,Nlev,2))
+        #print(f"area: min={np.nanmin(area)}, max={np.nanmax(area)}, mean={np.nanmean(area)}\ncenter(x): min={np.nanmin(center[:,0])}, max={np.nanmax(center[:,0])}, mean={np.nanmean(center[:,0])}")
+        return moments
     def get_wavenumbers(self,gh,i_lev,lat_range,lat,lon):
         # Given a band of latitudes (a whole ensemble thereof), get waves 1 and 2
         i_lat_range = np.where((lat >= lat_range[0])*(lat <= lat_range[1]))[0]
@@ -329,6 +362,10 @@ class WinterStratosphereFeatures:
             u = np.concatenate((u,u_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
             t_szn = np.concatenate((t_szn,self.hours_since_nov1(ds)))
             ds.close()
+        # Vortex moment diagnostics, only at reference level
+        vtx_moments = self.compute_vortex_moments_sphere(gh,lat,lon,i_lev_subset=[i_lev_uref])
+        vtx_diags = np.array([vtx_moments[v] for v in ['area','centerlat','aspect_ratio','excess_kurtosis']]).T
+        vtx_diags_szn_mean,vtx_diags_szn_std = self.get_seasonal_mean(t_szn,vtx_diags)
         # Zonal wind
         #u,v = self.compute_geostrophic_wind(gh,lat,lon)
         uref = np.mean(u[:,i_lev_uref,i_lat_uref,:],axis=1)
@@ -358,10 +395,6 @@ class WinterStratosphereFeatures:
             singvals[i_lev,:] = S[:self.Npc_per_level_max]
             tot_var[i_lev] = np.sum(S**2)
         # TODO: remove EOFs that are highly correlated with uref or wavenumbers
-        # Vortex moment diagnostics, only at reference level
-        vtx_area,vtx_center_latlon = self.compute_vortex_moments_sphere(gh,lat,lon,i_lev_subset=[i_lev_uref])
-        vtx_area_szn_mean,vtx_area_szn_std = self.get_seasonal_mean(t_szn,vtx_area[:,0])
-        vtx_centerlat_szn_mean,vtx_centerlat_szn_std = self.get_seasonal_mean(t_szn,vtx_center_latlon[:,0])
         feat_def = {
                 "t_szn": t_szn, "plev": plev, "lat": lat, "lon": lon,
                 "i_lev_uref": i_lev_uref, "i_lat_uref": i_lat_uref,
@@ -371,8 +404,7 @@ class WinterStratosphereFeatures:
                 "wave_mag_szn_mean": wave_mag_szn_mean, "wave_mag_szn_std": wave_mag_szn_std,
                 "gh_szn_mean": gh_szn_mean, "gh_szn_std": gh_szn_std,
                 "eofs": eofs, "singvals": singvals, "tot_var": tot_var,
-                "vtx_area_szn_mean": vtx_area_szn_mean, "vtx_area_szn_std": vtx_area_szn_std,
-                "vtx_centerlat_szn_mean": vtx_centerlat_szn_mean, "vtx_centerlat_szn_std": vtx_centerlat_szn_std,
+                "vtx_diags_szn_mean": vtx_diags_szn_mean, "vtx_diags_szn_std": vtx_diags_szn_std,
                 }
         pickle.dump(feat_def,open(self.feature_file,"wb"))
         return
@@ -506,7 +538,7 @@ class WinterStratosphereFeatures:
         Nmem,Nt,Nlev,Nlat,Nlon = gh.shape
         gh = gh.reshape((Nmem*Nt,Nlev,Nlat,Nlon))
         u = u.reshape((Nmem*Nt,Nlev,Nlat,Nlon))
-        Nfeat = 2 + 2*self.num_wavenumbers + Nlev*self.Npc_per_level_max + 2 # Last two for area and mean polar displacement of the vortex
+        Nfeat = 2 + 2*self.num_wavenumbers + Nlev*self.Npc_per_level_max + 4 # Last four for area, center latitude, aspect ratio, and excess kurtosis of the vortex
         X = np.zeros((Nmem*Nt,Nfeat))
         # Time
         X[:,0] = np.outer(np.ones(Nmem),time).flatten()
@@ -526,11 +558,8 @@ class WinterStratosphereFeatures:
             X[:,i_feat:i_feat+self.Npc_per_level_max] = (gh[:,i_lev,:,:].reshape((Nmem*Nt,Nlat*Nlon)) @ (feat_def["eofs"][i_lev,:,:self.Npc_per_level_max])) / feat_def["singvals"][i_lev]
             i_feat += self.Npc_per_level_max
         # Vortex moments
-        vtx_area,vtx_center_latlon = self.compute_vortex_moments_sphere(gh,feat_def['lat'],feat_def['lon'],i_lev_subset=[i_lev_uref])
-        X[:,i_feat] = vtx_area[:,0] 
-        X[:,i_feat+1] = vtx_center_latlon[:,0] 
-        #X[:,i_feat] = self.unseason(X[:,0],vtx_area[:,0],feat_def["vtx_area_szn_mean"],feat_def["vtx_area_szn_std"])  # Vortex area
-        #X[:,i_feat+1] = self.unseason(X[:,0],vtx_center_latlon[:,0],feat_def["vtx_centerlat_szn_mean"],feat_def["vtx_centerlat_szn_std"])
+        vtx_moments = self.compute_vortex_moments_sphere(gh,feat_def['lat'],feat_def['lon'],i_lev_subset=[i_lev_uref],order=self.vortex_moments_order_max)
+        X[:,i_feat:i_feat+4] = np.array([vtx_moments[v] for v in ['area','centerlat','aspect_ratio','excess_kurtosis']]).T
         X = X.reshape((Nmem,Nt,Nfeat))
         return X,fall_year
     def plot_vortex_evolution(self,dsfile,savedir,save_suffix,i_mem=0):
@@ -554,7 +583,7 @@ class WinterStratosphereFeatures:
         decel_time_range = [max(0,start-decel_window), min(len(time)-1, start+2*decel_window)]
         full_time_range = self.wtime[[0,-1]]
         # Make a list of things to plot
-        obs_key_list = ["area","displacement","uref","mag1","mag2","lev0_pc0","lev0_pc1","lev0_pc2","lev0_pc3","lev0_pc4","lev0_pc5"]
+        obs_key_list = ["area","centerlat","asprat","kurt","uref","mag1","mag2","lev0_pc0","lev0_pc1","lev0_pc2","lev0_pc3","lev0_pc4","lev0_pc5"]
         for oki in range(len(obs_key_list)):
             obs_key = obs_key_list[oki]
             fig,ax = plt.subplots()
@@ -631,8 +660,12 @@ class WinterStratosphereFeatures:
                     "label": "Wave 2 magnitude",},
                 "area": {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])],
                     "label": "Vortex area",},
-                "displacement": {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+1],
-                    "label": "Vortex displacement",},
+                "centerlat": {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+1],
+                    "label": "Vortex center latitude",},
+                "asprat": {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+2],
+                    "label": "Vortex aspect ratio",},
+                "kurt": {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+3],
+                    "label": "Vortex excess kurtosis",},
                 }
         for i_lev in range(len(feat_def["plev"])):
             for i_eof in range(self.Npc_per_level_max):

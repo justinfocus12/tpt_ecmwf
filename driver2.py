@@ -23,15 +23,15 @@ os.chdir(codedir)
 datadir_e2 = "/scratch/jf4241/ecmwf_data/era20c_data/2021-11-03"
 datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2021-12-12"
 datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
-featdir = "/scratch/jf4241/ecmwf_data/features/2021-12-30"
+featdir = "/scratch/jf4241/ecmwf_data/features/2022-01-01"
 if not exists(featdir): mkdir(featdir)
 feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2021-12-31")
+daydir = join(resultsdir,"2022-01-01")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"1")
+expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
 expdir_e2 = join(expdir,"era20c")
 if not exists(expdir_e2): mkdir(expdir_e2)
@@ -64,18 +64,20 @@ dga_idx_s2s = np.random.choice(np.arange(len(file_list_s2s)),size=500,replace=Fa
 winter_day0 = 0.0
 spring_day0 = 150.0
 Npc_per_level_max = 6
+vortex_moments_order_max = 4 # Area, mean, variance, skewness, kurtosis
 # ------------------ Algorithmic parameters ---------------------
 delaytime_days = 0.0 
 num_clusters = 100
 #Npc_per_level_single = 4
 Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+vortex_moments_order = 4
 pcstr = ""
 for i_lev in range(len(Npc_per_level)):
     if Npc_per_level[i_lev] != 0:
         pcstr += f"lev{i_lev}pc{Npc_per_level[i_lev]}-"
 if len(pcstr) > 1: pcstr = pcstr[:-1]
 Nwaves = 0
-paramdir_s2s = join(expdir_s2s, f"nclust{num_clusters}_nwaves{Nwaves}_delay{int(delaytime_days)}_{pcstr}")
+paramdir_s2s = join(expdir_s2s, f"nclust{num_clusters}_nwaves{Nwaves}_vxm{vortex_moments_order_max}_delay{int(delaytime_days)}_{pcstr}")
 if not exists(paramdir_s2s):
     mkdir(paramdir_s2s)
 
@@ -95,8 +97,8 @@ for i in range(num_seeds_s2s):
 
 # Parameters to determine what to do
 # Featurization
-create_features_flag =         0
-display_features_flag =        0
+create_features_flag =         1
+display_features_flag =        1
 # era20c
 evaluate_database_e2 =         0
 tpt_featurize_e2 =             0
@@ -107,16 +109,16 @@ tpt_featurize_ei =             0
 tpt_ei_flag =                  0
 # s2s
 evaluate_database_s2s =        0
-tpt_featurize_s2s =            1
-cluster_flag =                 1
-build_msm_flag =               1
-tpt_s2s_flag =                 1
+tpt_featurize_s2s =            0
+cluster_flag =                 0
+build_msm_flag =               0
+tpt_s2s_flag =                 0
 # Summary statistics
-plot_rate_flag =               1
+plot_rate_flag =               0
 
 
 feature_file = join(featdir,"feat_def")
-winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring_day0,delaytime_days=delaytime_days,Npc_per_level_max=Npc_per_level_max)
+winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring_day0,delaytime_days=delaytime_days,Npc_per_level_max=Npc_per_level_max,vortex_moments_order_max=vortex_moments_order_max)
 
 if create_features_flag:
     print("Creating features")
