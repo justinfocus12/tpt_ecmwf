@@ -1,0 +1,28 @@
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:192: RuntimeWarning: divide by zero encountered in true_divide
+  qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:165: RuntimeWarning: divide by zero encountered in true_divide
+  u = -gh_y/fcor * grav_accel
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:165: RuntimeWarning: invalid value encountered in true_divide
+  u = -gh_y/fcor * grav_accel
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:166: RuntimeWarning: divide by zero encountered in true_divide
+  v = gh_x/fcor * grav_accel
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:166: RuntimeWarning: invalid value encountered in true_divide
+  v = gh_x/fcor * grav_accel
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:192: RuntimeWarning: divide by zero encountered in true_divide
+  qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:165: RuntimeWarning: divide by zero encountered in true_divide
+  u = -gh_y/fcor * grav_accel
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:165: RuntimeWarning: invalid value encountered in true_divide
+  u = -gh_y/fcor * grav_accel
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:166: RuntimeWarning: divide by zero encountered in true_divide
+  v = gh_x/fcor * grav_accel
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:166: RuntimeWarning: invalid value encountered in true_divide
+  v = gh_x/fcor * grav_accel
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:192: RuntimeWarning: divide by zero encountered in true_divide
+  qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(
+Traceback (most recent call last):
+  File "/home/jf4241/ecmwf/tpt_ecmwf/driver2.py", line 158, in <module>
+    winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
+  File "/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py", line 533, in evaluate_tpt_features
+    szn_mean_Y[:,i_feat_y-1] = feat_def["vtx_area_szn_mean"]
+KeyError: 'vtx_area_szn_mean'

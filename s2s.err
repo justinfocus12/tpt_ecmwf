@@ -1,6 +1,24 @@
-Traceback (most recent call last):
-  File "driver2.py", line 43, in <module>
-    np.random.seed(1)
-  File "/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py", line 29, in <module>
-    import cartopy
-ModuleNotFoundError: No module named 'cartopy'
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:305: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+posx and posy should be finite values
+posx and posy should be finite values
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:305: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+posx and posy should be finite values
+posx and posy should be finite values
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:305: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:305: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+posx and posy should be finite values
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:305: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:305: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+posx and posy should be finite values
+posx and posy should be finite values
+posx and posy should be finite values
+posx and posy should be finite values
+posx and posy should be finite values
+posx and posy should be finite values
+posx and posy should be finite values

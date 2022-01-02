@@ -487,7 +487,7 @@ class WinterStratosphereFeatures:
         # Y dimension: (time, uref, real + imag for each wave, pc for each level, vortex area, centroid latitude) all times the number of time lags
         Nty = Ntx - self.ndelay + 1
         print(f"self.ndelay = {self.ndelay}")
-        ydim = 1 + self.ndelay + 2*Nwaves + np.sum(Npc_per_level) + 2 # self.ndelay for the history of u
+        ydim = 1 + self.ndelay + 2*Nwaves + np.sum(Npc_per_level) + 4 # self.ndelay for the history of u
         print(f"ydim = {ydim}")
         Y = np.zeros((Nx,Nty,ydim))
         # TODO: figure out wth to do with ndelay vs ndelay+1
@@ -530,13 +530,10 @@ class WinterStratosphereFeatures:
         # Average them over the past 
         for i_dl in range(self.ndelay):
             Y[:,:,i_feat_y:i_feat_y+2] += X[:,i_dl:i_dl+Nty,i_feat_x:i_feat_x+2]/self.ndelay
-        szn_mean_Y[:,i_feat_y-1] = feat_def["vtx_area_szn_mean"]
-        szn_std_Y[:,i_feat_y-1] = feat_def["vtx_area_szn_std"]
-        szn_mean_Y[:,i_feat_y] = feat_def["vtx_centerlat_szn_mean"]
-        szn_std_Y[:,i_feat_y] = feat_def["vtx_centerlat_szn_std"]
-        #Y[:,:,i_feat_y:i_feat_y+2] = X[:,:,i_feat_x:i_feat_x+2]
-        i_feat_y += 2
-        i_feat_x += 2
+        szn_mean_Y[:,i_feat_y-1:i_feat_y+3] = feat_def["vtx_diags_szn_mean"]
+        szn_std_Y[:,i_feat_y-1:i_feat_y+3] = feat_def["vtx_diags_szn_std"]
+        i_feat_y += 4
+        i_feat_x += 4
         tpt_feat = {"Y": Y, "szn_mean_Y": szn_mean_Y, "szn_std_Y": szn_std_Y}
         pickle.dump(tpt_feat, open(tpt_feat_filename,"wb"))
         return 
@@ -707,18 +704,18 @@ class WinterStratosphereFeatures:
                     "label": "Wave 1 magnitude",},
                 "mag2": {"fun": lambda Y: self.wave_mph(Y,feat_def,2)[:,0],
                     "label": "Wave 2 magnitude",},
-                #"mag1_anomaly": {"fun": lambda x: self.wave_mph(x,feat_def,1,unseason_mag=True)[:,0],
-                #    "label": "Wave 1 magnitude anomaly",},
-                #"mag2_anomaly": {"fun": lambda x: self.wave_mph(x,feat_def,2,unseason_mag=True)[:,0],
-                #    "label": "Wave 2 magnitude anomaly",},
                 "ph1": {"fun": lambda x: self.wave_mph(x,feat_def,1)[:,1],
                     "label": "Wave 1 phase",},
                 "ph2": {"fun": lambda x: self.wave_mph(x,feat_def,2)[:,1],
                     "label": "Wave 2 phase",},
                 "area": {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)],
                     "label": "Vortex area",},
-                "displacement": {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+1],
-                    "label": "Vortex displacement",},
+                "centerlat": {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+1],
+                    "label": "Vortex center latitude",},
+                "asprat": {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+2],
+                    "label": "Vortex aspect ratio",},
+                "kurt": {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+3],
+                    "label": "Vortex excess kurtosis",},
                 #"pc1": {"fun": lambda x: x[:,2+2*self.num_wavenumbers],
                 #    "label": "PC 1"},
                 #"pc2": {"fun": lambda x: x[:,2+2*self.num_wavenumbers+1],

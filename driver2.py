@@ -66,8 +66,8 @@ spring_day0 = 150.0
 Npc_per_level_max = 6
 vortex_moments_order_max = 4 # Area, mean, variance, skewness, kurtosis
 # ------------------ Algorithmic parameters ---------------------
-delaytime_days = 0.0 
-num_clusters = 100
+delaytime_days = 25.0 
+num_clusters = 120
 #Npc_per_level_single = 4
 Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 vortex_moments_order = 4
@@ -97,18 +97,18 @@ for i in range(num_seeds_s2s):
 
 # Parameters to determine what to do
 # Featurization
-create_features_flag =         1
-display_features_flag =        1
+create_features_flag =         0
+display_features_flag =        0
 # era20c
-evaluate_database_e2 =         1
+evaluate_database_e2 =         0
 tpt_featurize_e2 =             1
 tpt_e2_flag =                  1
 # eraint
-evaluate_database_ei =         1
+evaluate_database_ei =         0
 tpt_featurize_ei =             1
 tpt_ei_flag =                  1
 # s2s
-evaluate_database_s2s =        1
+evaluate_database_s2s =        0
 tpt_featurize_s2s =            1
 cluster_flag =                 1
 build_msm_flag =               1
@@ -137,9 +137,9 @@ tpt = tpt_general.WinterStratosphereTPT()
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = delaytime_days + 10 # First day that SSW could happen
 tthresh1 = 145.0 # Last day that SSW could happen
-sswbuffer = 0.0 # minimum buffer time between one SSW and the next
-uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
-uthresh_list = np.arange(5,-26,-15) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
+sswbuffer = 20.0 # minimum buffer time between one SSW and the next
+uthresh_a = 10.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
+uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 # ------------------ TPT direct estimates from ERA20C --------------------------
 feat_filename = join(expdir_e2,"X.npy")
 ens_start_filename = join(expdir_e2,"ens_start_idx.npy")
@@ -260,10 +260,11 @@ if plot_rate_flag:
     ax.set_xlabel("Zonal wind threshold",fontdict=font)
     ax.set_ylabel("Rate",fontdict=font)
     ax.legend(handles=[he2,hei,hs2s])
-    fig.savefig(join(paramdir_s2s,"rate_tth%i-%i"%(tthresh0,tthresh1)))
+    suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
+    fig.savefig(join(paramdir_s2s,"rate_%s"%(suffix)))
     ax.set_yscale('log')
-    fig.savefig(join(paramdir_s2s,"lograte_tth%i-%i"%(tthresh0,tthresh1)))
+    fig.savefig(join(paramdir_s2s,"lograte_%s"%(suffix)))
     ax.set_yscale('logit')
-    fig.savefig(join(paramdir_s2s,"logitrate_tth%i-%i"%(tthresh0,tthresh1)))
+    fig.savefig(join(paramdir_s2s,"logitrate_%s"%(suffix)))
     plt.close(fig)
 

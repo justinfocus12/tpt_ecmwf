@@ -45,7 +45,9 @@ class WinterStratosphereTPT:
         print(f"ab_tag.shape = {ab_tag.shape}")
         #absum = 1.0*(np.sum(ab_tag,axis=1) > 0)
         absum = 1.0*(np.sum(np.diff(1.0*ab_tag,axis=1)==1, axis=1))
+        print(f"absum = {absum}")
         rate = np.mean(absum)
+        print(f"rate = {rate}")
         return rate
     def tpt_pipeline_dns(self,tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level):
         # savedir: where all the results of this particular TPT will be saved.
@@ -422,7 +424,7 @@ class WinterStratosphereTPT:
         # Plot 
         centers_all = np.concatenate(centers, axis=0)
         weight = np.ones(len(centers_all))/(len(centers_all))
-        keypairs = [['time_d','area'],['time_d','displacement'],['time_d','uref'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','lev0_pc5'],['lev0_pc1','lev0_pc2'],['lev0_pc1','lev0_pc4'],['lev0_pc4','lev0_pc5']][2:3]
+        keypairs = [['time_d','area'],['time_d','centerlat'],['time_d','uref'],['time_d','asprat'],['time_d','kurt'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','lev0_pc5'],['lev0_pc1','lev0_pc2'],['lev0_pc1','lev0_pc4'],['lev0_pc4','lev0_pc5']][:7]
         #keypairs = [['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','mag1_anomaly'],['time_d','mag2_anomaly']]
         for i_kp in range(len(keypairs)):
             fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]

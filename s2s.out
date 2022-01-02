@@ -1,0 +1,3648 @@
+Starting TPT on era20c
+	Seed 0 of 1
+Nx = 107, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-5.3446768970096965, max=6.353445119062793
+pc: min=-7.500677608311909, max=5.158636971348645
+pc: min=-5.334234343789689, max=5.829498419117507
+pc: min=-7.280395596900764, max=4.767212282644473
+pc: min=-5.269258752206229, max=5.235773126977667
+pc: min=-6.063394199781148, max=6.80257155893657
+pc: min=-6.640076563906561, max=7.71304433789542
+pc: min=-6.1190192791366425, max=7.1341583066974
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [1. 1. 1. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 1. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1.
+ 1. 1. 1. 1. 1. 1. 0. 1. 1. 1. 1.]
+rate = 0.7102803738317757
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 0. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 1. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0. 1. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1.]
+rate = 0.6355140186915887
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 1. 1. 1. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0.
+ 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0. 0. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 0. 1. 1. 0. 0. 1. 0. 1.]
+rate = 0.514018691588785
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 1. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 1. 0. 0. 0. 0.
+ 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 1.]
+rate = 0.34579439252336447
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.18691588785046728
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.04672897196261682
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.0
+Starting TPT on eraint
+	Seed 0 of 1
+Nx = 21, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.17750770885597, max=6.76640775438712
+pc: min=-4.875439880186059, max=4.490199107194926
+pc: min=-5.223333563222911, max=3.508048370907778
+pc: min=-5.119795178005914, max=4.614635625942498
+pc: min=-5.992388123166365, max=2.9686897830892174
+pc: min=-5.502862383028778, max=5.545557367279593
+pc: min=-4.854249209852481, max=5.013843094142473
+pc: min=-5.3615572128156295, max=5.650456757099027
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 1. 1. 1.]
+rate = 0.8571428571428571
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.6666666666666666
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.5238095238095238
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 1. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.42857142857142855
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.09523809523809523
+Starting TPT on S2S
+	Seed 0 of 1
+Nx = 5000, Ntx = 47, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 4440.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.6819178707646327, max=7.752033246346227
+pc: min=-6.113157913376385, max=5.0652212681697
+pc: min=-7.620631873916264, max=5.570749203828776
+pc: min=-5.664820722520181, max=8.471581755034821
+pc: min=-10.476382318572348, max=3.454455028088618
+pc: min=-6.47363512593015, max=5.417889773707689
+pc: min=-5.739151943749124, max=6.293152411420739
+pc: min=-6.12991161885209, max=8.18706279584585
+WARNING, we don't have any data in time slot 0. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 1. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 2. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 3. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 4. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 5. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 6. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 7. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 8. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 9. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 10. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 11. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 12. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 13. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 14. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 15. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 16. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 17. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 18. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 19. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 20. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 21. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 22. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 23. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 24. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+n_clusters: [120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120]
+MSM timestep 0 out of 150
+MSM timestep 30 out of 150
+MSM timestep 60 out of 150
+MSM timestep 90 out of 150
+MSM timestep 120 out of 150
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.8318165252329248, tob=0.8318165252329247
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.699273785815513, tob=0.699273785815513
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.5436281190556064, tob=0.5436281190556064
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.34853264020636254, tob=0.3485326402063625
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.18044806998235613, tob=0.1804480699823561
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.0645903052957456, tob=0.06459030529574557
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.01530661548064368, tob=0.015306615480643675
+Starting TPT on era20c
+	Seed 0 of 1
+Nx = 107, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-5.3446768970096965, max=6.353445119062793
+pc: min=-7.500677608311909, max=5.158636971348645
+pc: min=-5.334234343789689, max=5.829498419117507
+pc: min=-7.280395596900764, max=4.767212282644473
+pc: min=-5.269258752206229, max=5.235773126977667
+pc: min=-6.063394199781148, max=6.80257155893657
+pc: min=-6.640076563906561, max=7.71304433789542
+pc: min=-6.1190192791366425, max=7.1341583066974
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [1. 1. 1. 1. 0. 0. 0. 2. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 2. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1. 1. 2. 1. 1. 1. 1. 0. 0. 1. 1.
+ 1. 1. 2. 1. 1. 1. 0. 1. 1. 1. 1.]
+rate = 0.7570093457943925
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 0. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 1. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1.]
+rate = 0.6542056074766355
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 1. 1. 1. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0.
+ 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 0. 1. 1. 0. 0. 1. 0. 1.]
+rate = 0.5233644859813084
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 1. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 0. 0.
+ 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 1.]
+rate = 0.35514018691588783
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.18691588785046728
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.04672897196261682
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.0
+Starting TPT on eraint
+	Seed 0 of 1
+Nx = 21, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.17750770885597, max=6.76640775438712
+pc: min=-4.875439880186059, max=4.490199107194926
+pc: min=-5.223333563222911, max=3.508048370907778
+pc: min=-5.119795178005914, max=4.614635625942498
+pc: min=-5.992388123166365, max=2.9686897830892174
+pc: min=-5.502862383028778, max=5.545557367279593
+pc: min=-4.854249209852481, max=5.013843094142473
+pc: min=-5.3615572128156295, max=5.650456757099027
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 1. 2. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 1. 1. 1.]
+rate = 0.9047619047619048
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.7142857142857143
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.5714285714285714
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.47619047619047616
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.23809523809523808
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.09523809523809523
+Starting TPT on S2S
+	Seed 0 of 1
+Nx = 5000, Ntx = 47, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 4440.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.6819178707646327, max=7.752033246346227
+pc: min=-6.113157913376385, max=5.0652212681697
+pc: min=-7.620631873916264, max=5.570749203828776
+pc: min=-5.664820722520181, max=8.471581755034821
+pc: min=-10.476382318572348, max=3.454455028088618
+pc: min=-6.47363512593015, max=5.417889773707689
+pc: min=-5.739151943749124, max=6.293152411420739
+pc: min=-6.12991161885209, max=8.18706279584585
+WARNING, we don't have any data in time slot 0. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 1. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 2. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 3. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 4. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 5. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 6. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 7. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 8. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 9. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 10. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 11. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 12. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 13. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 14. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 15. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 16. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 17. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 18. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 19. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 20. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 21. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 22. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 23. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 24. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+n_clusters: [120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120]
+MSM timestep 0 out of 150
+MSM timestep 30 out of 150
+MSM timestep 60 out of 150
+MSM timestep 90 out of 150
+MSM timestep 120 out of 150
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.9565115386162301, tob=0.9565115386162301
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.7655048551793614, tob=0.7655048551793617
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.5745886986438535, tob=0.5745886986438539
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.35836295579636085, tob=0.35836295579636096
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.18314453784100648, tob=0.18314453784100626
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.06492636635597313, tob=0.06492636635597314
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.015314910220710704, tob=0.0153149102207107
+Starting TPT on era20c
+	Seed 0 of 1
+Nx = 107, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-5.3446768970096965, max=6.353445119062793
+pc: min=-7.500677608311909, max=5.158636971348645
+pc: min=-5.334234343789689, max=5.829498419117507
+pc: min=-7.280395596900764, max=4.767212282644473
+pc: min=-5.269258752206229, max=5.235773126977667
+pc: min=-6.063394199781148, max=6.80257155893657
+pc: min=-6.640076563906561, max=7.71304433789542
+pc: min=-6.1190192791366425, max=7.1341583066974
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [1. 2. 1. 1. 0. 0. 0. 2. 1. 1. 1. 2. 1. 1. 1. 0. 0. 1. 3. 0. 1. 1. 1. 0.
+ 2. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 2. 0. 0. 1. 1. 2. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 2. 1. 0. 0. 1. 0. 2. 1. 0. 1. 1. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1. 1. 2. 1. 1. 4. 2. 0. 0. 2. 1.
+ 1. 3. 2. 1. 1. 2. 0. 1. 1. 1. 2.]
+rate = 0.9252336448598131
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 2. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 2. 0. 1. 1. 0. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 2. 1. 0. 1. 1. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 1. 2. 2. 0. 0. 1. 0.
+ 1. 2. 1. 1. 1. 2. 0. 1. 1. 0. 1.]
+rate = 0.7289719626168224
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 1. 1. 1. 0. 0. 0. 1. 2. 0. 0. 1. 0. 0.
+ 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 0. 1. 1. 0. 0. 1. 0. 1.]
+rate = 0.5420560747663551
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 2. 0.
+ 1. 1. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 0. 0.
+ 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 1.]
+rate = 0.3644859813084112
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 2. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.19626168224299065
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.04672897196261682
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.0
+Starting TPT on eraint
+	Seed 0 of 1
+Nx = 21, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.17750770885597, max=6.76640775438712
+pc: min=-4.875439880186059, max=4.490199107194926
+pc: min=-5.223333563222911, max=3.508048370907778
+pc: min=-5.119795178005914, max=4.614635625942498
+pc: min=-5.992388123166365, max=2.9686897830892174
+pc: min=-5.502862383028778, max=5.545557367279593
+pc: min=-4.854249209852481, max=5.013843094142473
+pc: min=-5.3615572128156295, max=5.650456757099027
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 1. 2. 1. 1. 2. 2. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 1. 1. 2.]
+rate = 1.0476190476190477
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 1. 1. 2. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.7619047619047619
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.5714285714285714
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.47619047619047616
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.23809523809523808
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.09523809523809523
+Starting TPT on S2S
+	Seed 0 of 1
+Nx = 5000, Ntx = 47, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 4440.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.6819178707646327, max=7.752033246346227
+pc: min=-6.113157913376385, max=5.0652212681697
+pc: min=-7.620631873916264, max=5.570749203828776
+pc: min=-5.664820722520181, max=8.471581755034821
+pc: min=-10.476382318572348, max=3.454455028088618
+pc: min=-6.47363512593015, max=5.417889773707689
+pc: min=-5.739151943749124, max=6.293152411420739
+pc: min=-6.12991161885209, max=8.18706279584585
+WARNING, we don't have any data in time slot 0. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 1. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 2. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 3. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 4. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 5. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 6. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 7. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 8. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 9. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 10. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 11. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 12. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 13. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 14. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 15. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 16. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 17. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 18. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 19. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 20. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 21. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 22. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 23. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 24. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+n_clusters: [120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120]
+MSM timestep 0 out of 150
+MSM timestep 30 out of 150
+MSM timestep 60 out of 150
+MSM timestep 90 out of 150
+MSM timestep 120 out of 150
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=1.3705009691873298, tob=1.3705009691873296
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.9775132127483164, tob=0.9775132127483162
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.6726025587941614, tob=0.6726025587941613
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.38872285291754, tob=0.3887228529175398
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.18980498022090111, tob=0.18980498022090128
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.06564897583288679, tob=0.06564897583288679
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.015342667037663592, tob=0.015342667037663587
+Starting TPT on era20c
+	Seed 0 of 1
+Nx = 107, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-5.3446768970096965, max=6.353445119062793
+pc: min=-7.500677608311909, max=5.158636971348645
+pc: min=-5.334234343789689, max=5.829498419117507
+pc: min=-7.280395596900764, max=4.767212282644473
+pc: min=-5.269258752206229, max=5.235773126977667
+pc: min=-6.063394199781148, max=6.80257155893657
+pc: min=-6.640076563906561, max=7.71304433789542
+pc: min=-6.1190192791366425, max=7.1341583066974
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [1. 3. 1. 2. 0. 0. 0. 0. 1. 2. 2. 1. 2. 1. 1. 0. 0. 1. 3. 0. 2. 1. 1. 0.
+ 3. 2. 1. 0. 1. 1. 1. 0. 0. 0. 0. 2. 0. 0. 1. 2. 2. 0. 1. 1. 2. 0. 0. 0.
+ 1. 0. 0. 2. 1. 2. 0. 0. 1. 2. 1. 3. 1. 0. 0. 1. 0. 2. 1. 0. 0. 0. 2. 0.
+ 0. 1. 1. 0. 1. 0. 0. 3. 3. 0. 1. 1. 0. 1. 1. 2. 1. 1. 2. 2. 0. 0. 2. 1.
+ 1. 3. 2. 1. 1. 3. 0. 1. 0. 1. 2.]
+rate = 0.9719626168224299
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 2. 1. 1. 0. 0. 0. 0. 1. 1. 2. 2. 1. 1. 1. 0. 0. 1. 2. 0. 1. 1. 0. 0.
+ 1. 2. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 2. 1. 0. 0. 1. 0. 2. 1. 0. 1. 0. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 1. 2. 2. 0. 0. 1. 0.
+ 1. 2. 1. 1. 1. 2. 0. 1. 1. 0. 1.]
+rate = 0.7570093457943925
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 2. 2. 1. 1. 0. 0. 0. 1. 2. 0. 0. 1. 0. 0.
+ 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 1. 2. 1. 0. 0. 1. 0. 1. 0. 0. 0. 0. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 0. 1. 1. 0. 0. 1. 0. 1.]
+rate = 0.5607476635514018
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 0. 2. 0.
+ 1. 1. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 0. 0.
+ 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 1.]
+rate = 0.35514018691588783
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 2. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.18691588785046728
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.04672897196261682
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.0
+Starting TPT on eraint
+	Seed 0 of 1
+Nx = 21, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.17750770885597, max=6.76640775438712
+pc: min=-4.875439880186059, max=4.490199107194926
+pc: min=-5.223333563222911, max=3.508048370907778
+pc: min=-5.119795178005914, max=4.614635625942498
+pc: min=-5.992388123166365, max=2.9686897830892174
+pc: min=-5.502862383028778, max=5.545557367279593
+pc: min=-4.854249209852481, max=5.013843094142473
+pc: min=-5.3615572128156295, max=5.650456757099027
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 1. 1. 1. 0. 2. 2. 2. 1. 1. 1. 2. 1. 2. 0. 0. 0. 1. 1. 0. 2.]
+rate = 1.0
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 1. 1. 2. 1. 2. 1. 1. 1. 2. 1. 2. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.9047619047619048
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 1. 2. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.6190476190476191
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.47619047619047616
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.23809523809523808
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.09523809523809523
+Starting TPT on S2S
+	Seed 0 of 1
+Nx = 5000, Ntx = 47, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 4440.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.6819178707646327, max=7.752033246346227
+pc: min=-6.113157913376385, max=5.0652212681697
+pc: min=-7.620631873916264, max=5.570749203828776
+pc: min=-5.664820722520181, max=8.471581755034821
+pc: min=-10.476382318572348, max=3.454455028088618
+pc: min=-6.47363512593015, max=5.417889773707689
+pc: min=-5.739151943749124, max=6.293152411420739
+pc: min=-6.12991161885209, max=8.18706279584585
+WARNING, we don't have any data in time slot 0. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 1. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 2. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 3. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 4. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 5. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 6. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 7. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 8. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 9. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 10. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 11. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 12. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 13. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 14. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 15. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 16. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 17. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 18. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 19. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 20. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 21. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 22. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 23. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 24. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+n_clusters: [120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120]
+MSM timestep 0 out of 150
+MSM timestep 30 out of 150
+MSM timestep 60 out of 150
+MSM timestep 90 out of 150
+MSM timestep 120 out of 150
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=2.0778558776970804, tob=2.0778558776970804
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=1.2388564929701036, tob=1.2388564929701034
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.7718195266401866, tob=0.7718195266401867
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.4148914990392575, tob=0.4148914990392575
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.1942480308899282, tob=0.19424803088992812
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.06607620481255652, tob=0.06607620481255652
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.01535821434514128, tob=0.015358214345141279
+Starting TPT on era20c
+	Seed 0 of 1
+Nx = 107, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-5.3446768970096965, max=6.353445119062793
+pc: min=-7.500677608311909, max=5.158636971348645
+pc: min=-5.334234343789689, max=5.829498419117507
+pc: min=-7.280395596900764, max=4.767212282644473
+pc: min=-5.269258752206229, max=5.235773126977667
+pc: min=-6.063394199781148, max=6.80257155893657
+pc: min=-6.640076563906561, max=7.71304433789542
+pc: min=-6.1190192791366425, max=7.1341583066974
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [1. 1. 1. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 1. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1.
+ 1. 1. 1. 1. 1. 1. 0. 1. 1. 1. 1.]
+rate = 0.7102803738317757
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 0. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 1. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0. 1. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1.]
+rate = 0.6355140186915887
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 1. 1. 1. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0.
+ 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0. 0. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 0. 1. 1. 0. 0. 1. 0. 1.]
+rate = 0.514018691588785
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 1. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 1. 0. 0. 0. 0.
+ 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 1.]
+rate = 0.34579439252336447
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.18691588785046728
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.04672897196261682
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.0
+Starting TPT on eraint
+	Seed 0 of 1
+Nx = 21, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.17750770885597, max=6.76640775438712
+pc: min=-4.875439880186059, max=4.490199107194926
+pc: min=-5.223333563222911, max=3.508048370907778
+pc: min=-5.119795178005914, max=4.614635625942498
+pc: min=-5.992388123166365, max=2.9686897830892174
+pc: min=-5.502862383028778, max=5.545557367279593
+pc: min=-4.854249209852481, max=5.013843094142473
+pc: min=-5.3615572128156295, max=5.650456757099027
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 1. 1. 1.]
+rate = 0.8571428571428571
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.6666666666666666
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.5238095238095238
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 1. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.42857142857142855
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.09523809523809523
+Starting TPT on S2S
+	Seed 0 of 1
+Nx = 5000, Ntx = 47, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 4440.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.6819178707646327, max=7.752033246346227
+pc: min=-6.113157913376385, max=5.0652212681697
+pc: min=-7.620631873916264, max=5.570749203828776
+pc: min=-5.664820722520181, max=8.471581755034821
+pc: min=-10.476382318572348, max=3.454455028088618
+pc: min=-6.47363512593015, max=5.417889773707689
+pc: min=-5.739151943749124, max=6.293152411420739
+pc: min=-6.12991161885209, max=8.18706279584585
+WARNING, we don't have any data in time slot 0. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 1. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 2. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 3. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 4. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 5. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 6. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 7. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 8. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 9. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 10. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 11. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 12. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 13. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 14. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 15. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 16. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 17. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 18. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 19. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 20. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 21. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 22. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 23. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 24. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+n_clusters: [120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120]
+MSM timestep 0 out of 150
+MSM timestep 30 out of 150
+MSM timestep 60 out of 150
+MSM timestep 90 out of 150
+MSM timestep 120 out of 150
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.8318165252329248, tob=0.8318165252329247
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.699273785815513, tob=0.699273785815513
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.5436281190556064, tob=0.5436281190556064
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.34853264020636254, tob=0.3485326402063625
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.18044806998235613, tob=0.1804480699823561
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.0645903052957456, tob=0.06459030529574557
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.01530661548064368, tob=0.015306615480643675
+Starting TPT on era20c
+	Seed 0 of 1
+Nx = 107, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-5.3446768970096965, max=6.353445119062793
+pc: min=-7.500677608311909, max=5.158636971348645
+pc: min=-5.334234343789689, max=5.829498419117507
+pc: min=-7.280395596900764, max=4.767212282644473
+pc: min=-5.269258752206229, max=5.235773126977667
+pc: min=-6.063394199781148, max=6.80257155893657
+pc: min=-6.640076563906561, max=7.71304433789542
+pc: min=-6.1190192791366425, max=7.1341583066974
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [1. 1. 1. 1. 0. 0. 0. 2. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 2. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1. 1. 2. 1. 1. 1. 1. 0. 0. 1. 1.
+ 1. 1. 2. 1. 1. 1. 0. 1. 1. 1. 1.]
+rate = 0.7570093457943925
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 0. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 1. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1.]
+rate = 0.6542056074766355
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 1. 1. 1. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0.
+ 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 0. 1. 1. 0. 0. 1. 0. 1.]
+rate = 0.5233644859813084
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 1. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 0. 0.
+ 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 1.]
+rate = 0.35514018691588783
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.18691588785046728
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.04672897196261682
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.0
+Starting TPT on eraint
+	Seed 0 of 1
+Nx = 21, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.17750770885597, max=6.76640775438712
+pc: min=-4.875439880186059, max=4.490199107194926
+pc: min=-5.223333563222911, max=3.508048370907778
+pc: min=-5.119795178005914, max=4.614635625942498
+pc: min=-5.992388123166365, max=2.9686897830892174
+pc: min=-5.502862383028778, max=5.545557367279593
+pc: min=-4.854249209852481, max=5.013843094142473
+pc: min=-5.3615572128156295, max=5.650456757099027
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 1. 2. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 1. 1. 1.]
+rate = 0.9047619047619048
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.7142857142857143
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.5714285714285714
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.47619047619047616
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.23809523809523808
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.09523809523809523
+Starting TPT on S2S
+	Seed 0 of 1
+Nx = 5000, Ntx = 47, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 4440.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.6819178707646327, max=7.752033246346227
+pc: min=-6.113157913376385, max=5.0652212681697
+pc: min=-7.620631873916264, max=5.570749203828776
+pc: min=-5.664820722520181, max=8.471581755034821
+pc: min=-10.476382318572348, max=3.454455028088618
+pc: min=-6.47363512593015, max=5.417889773707689
+pc: min=-5.739151943749124, max=6.293152411420739
+pc: min=-6.12991161885209, max=8.18706279584585
+WARNING, we don't have any data in time slot 0. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 1. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 2. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 3. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 4. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 5. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 6. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 7. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 8. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 9. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 10. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 11. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 12. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 13. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 14. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 15. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 16. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 17. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 18. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 19. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 20. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 21. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 22. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 23. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 24. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+n_clusters: [120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120]
+MSM timestep 0 out of 150
+MSM timestep 30 out of 150
+MSM timestep 60 out of 150
+MSM timestep 90 out of 150
+MSM timestep 120 out of 150
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.9565115386162301, tob=0.9565115386162301
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.7655048551793614, tob=0.7655048551793617
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.5745886986438535, tob=0.5745886986438539
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.35836295579636085, tob=0.35836295579636096
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.18314453784100648, tob=0.18314453784100626
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.06492636635597313, tob=0.06492636635597314
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.015314910220710704, tob=0.0153149102207107
+Starting TPT on era20c
+	Seed 0 of 1
+Nx = 107, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-5.3446768970096965, max=6.353445119062793
+pc: min=-7.500677608311909, max=5.158636971348645
+pc: min=-5.334234343789689, max=5.829498419117507
+pc: min=-7.280395596900764, max=4.767212282644473
+pc: min=-5.269258752206229, max=5.235773126977667
+pc: min=-6.063394199781148, max=6.80257155893657
+pc: min=-6.640076563906561, max=7.71304433789542
+pc: min=-6.1190192791366425, max=7.1341583066974
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [1. 1. 1. 1. 0. 0. 0. 2. 1. 1. 1. 2. 1. 1. 1. 0. 0. 1. 2. 0. 1. 1. 1. 0.
+ 2. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 2. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 2. 1. 0. 0. 1. 0. 2. 1. 0. 1. 1. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1. 1. 2. 1. 1. 3. 2. 0. 0. 2. 1.
+ 1. 2. 2. 1. 1. 2. 0. 1. 1. 1. 2.]
+rate = 0.8785046728971962
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 2. 0. 1. 1. 0. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 2. 1. 0. 1. 1. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 1. 2. 2. 0. 0. 1. 0.
+ 1. 2. 1. 1. 1. 2. 0. 1. 1. 0. 1.]
+rate = 0.719626168224299
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 1. 1. 1. 0. 0. 0. 1. 2. 0. 0. 1. 0. 0.
+ 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 0. 1. 1. 0. 0. 1. 0. 1.]
+rate = 0.5420560747663551
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 2. 0.
+ 1. 1. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 0. 0.
+ 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 1.]
+rate = 0.3644859813084112
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 2. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.19626168224299065
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.04672897196261682
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.0
+Starting TPT on eraint
+	Seed 0 of 1
+Nx = 21, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.17750770885597, max=6.76640775438712
+pc: min=-4.875439880186059, max=4.490199107194926
+pc: min=-5.223333563222911, max=3.508048370907778
+pc: min=-5.119795178005914, max=4.614635625942498
+pc: min=-5.992388123166365, max=2.9686897830892174
+pc: min=-5.502862383028778, max=5.545557367279593
+pc: min=-4.854249209852481, max=5.013843094142473
+pc: min=-5.3615572128156295, max=5.650456757099027
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 1. 2. 1. 1. 2. 2. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 1. 1. 2.]
+rate = 1.0476190476190477
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 1. 1. 2. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.7619047619047619
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.5714285714285714
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.47619047619047616
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.23809523809523808
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.09523809523809523
+Starting TPT on S2S
+	Seed 0 of 1
+Nx = 5000, Ntx = 47, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 4440.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.6819178707646327, max=7.752033246346227
+pc: min=-6.113157913376385, max=5.0652212681697
+pc: min=-7.620631873916264, max=5.570749203828776
+pc: min=-5.664820722520181, max=8.471581755034821
+pc: min=-10.476382318572348, max=3.454455028088618
+pc: min=-6.47363512593015, max=5.417889773707689
+pc: min=-5.739151943749124, max=6.293152411420739
+pc: min=-6.12991161885209, max=8.18706279584585
+WARNING, we don't have any data in time slot 0. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 1. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 2. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 3. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 4. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 5. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 6. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 7. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 8. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 9. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 10. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 11. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 12. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 13. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 14. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 15. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 16. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 17. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 18. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 19. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 20. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 21. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 22. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 23. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 24. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+n_clusters: [120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120]
+MSM timestep 0 out of 150
+MSM timestep 30 out of 150
+MSM timestep 60 out of 150
+MSM timestep 90 out of 150
+MSM timestep 120 out of 150
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=1.362411461539888, tob=1.3624114615398875
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.9749926911667299, tob=0.9749926911667297
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.6705542958283885, tob=0.6705542958283883
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.3886286176466395, tob=0.38862861764663925
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.18978580472479836, tob=0.18978580472479842
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.06564609932010652, tob=0.06564609932010651
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.015342497495072483, tob=0.01534249749507248
+Starting TPT on era20c
+	Seed 0 of 1
+Nx = 107, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-5.3446768970096965, max=6.353445119062793
+pc: min=-7.500677608311909, max=5.158636971348645
+pc: min=-5.334234343789689, max=5.829498419117507
+pc: min=-7.280395596900764, max=4.767212282644473
+pc: min=-5.269258752206229, max=5.235773126977667
+pc: min=-6.063394199781148, max=6.80257155893657
+pc: min=-6.640076563906561, max=7.71304433789542
+pc: min=-6.1190192791366425, max=7.1341583066974
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [1. 2. 1. 1. 0. 0. 0. 0. 1. 1. 2. 0. 1. 1. 1. 0. 0. 1. 3. 0. 1. 1. 1. 0.
+ 2. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 2. 0. 0. 1. 1. 1. 0. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 2. 1. 0. 0. 1. 0. 2. 1. 0. 0. 0. 2. 0.
+ 0. 1. 1. 0. 1. 0. 0. 1. 2. 0. 1. 1. 0. 1. 1. 2. 1. 1. 2. 2. 0. 0. 2. 1.
+ 1. 2. 2. 1. 1. 3. 0. 1. 0. 1. 2.]
+rate = 0.8037383177570093
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 2. 1. 1. 0. 0. 0. 0. 1. 1. 2. 1. 1. 1. 1. 0. 0. 1. 2. 0. 1. 1. 0. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 2. 1. 0. 1. 0. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 1. 2. 2. 0. 0. 1. 0.
+ 1. 2. 1. 1. 1. 2. 0. 1. 1. 0. 1.]
+rate = 0.7289719626168224
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 2. 1. 1. 1. 0. 0. 0. 1. 2. 0. 0. 1. 0. 0.
+ 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 0. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 0. 1. 1. 0. 0. 1. 0. 1.]
+rate = 0.5420560747663551
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 0. 2. 0.
+ 1. 1. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 0. 0.
+ 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 1.]
+rate = 0.35514018691588783
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 2. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.18691588785046728
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.04672897196261682
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.0
+Starting TPT on eraint
+	Seed 0 of 1
+Nx = 21, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.17750770885597, max=6.76640775438712
+pc: min=-4.875439880186059, max=4.490199107194926
+pc: min=-5.223333563222911, max=3.508048370907778
+pc: min=-5.119795178005914, max=4.614635625942498
+pc: min=-5.992388123166365, max=2.9686897830892174
+pc: min=-5.502862383028778, max=5.545557367279593
+pc: min=-4.854249209852481, max=5.013843094142473
+pc: min=-5.3615572128156295, max=5.650456757099027
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 1. 1. 1. 0. 2. 2. 1. 1. 1. 1. 1. 1. 2. 0. 0. 0. 1. 1. 0. 1.]
+rate = 0.8571428571428571
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 1. 1. 2. 1. 1. 1. 1. 1. 1. 1. 2. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.8095238095238095
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.5714285714285714
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.47619047619047616
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.23809523809523808
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.09523809523809523
+Starting TPT on S2S
+	Seed 0 of 1
+Nx = 5000, Ntx = 47, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 4440.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.6819178707646327, max=7.752033246346227
+pc: min=-6.113157913376385, max=5.0652212681697
+pc: min=-7.620631873916264, max=5.570749203828776
+pc: min=-5.664820722520181, max=8.471581755034821
+pc: min=-10.476382318572348, max=3.454455028088618
+pc: min=-6.47363512593015, max=5.417889773707689
+pc: min=-5.739151943749124, max=6.293152411420739
+pc: min=-6.12991161885209, max=8.18706279584585
+WARNING, we don't have any data in time slot 0. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 1. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 2. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 3. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 4. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 5. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 6. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 7. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 8. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 9. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 10. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 11. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 12. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 13. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 14. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 15. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 16. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 17. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 18. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 19. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 20. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 21. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 22. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 23. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 24. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+n_clusters: [120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120]
+MSM timestep 0 out of 150
+MSM timestep 30 out of 150
+MSM timestep 60 out of 150
+MSM timestep 90 out of 150
+MSM timestep 120 out of 150
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=1.8877779811631161, tob=1.887777981163116
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=1.1830508301641494, tob=1.183050830164149
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.7600646547391852, tob=0.7600646547391854
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.41183740003517455, tob=0.41183740003517433
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.19416031469443595, tob=0.19416031469443598
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.06605830508194674, tob=0.06605830508194675
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.01535813267091929, tob=0.01535813267091929
+Starting TPT on era20c
+	Seed 0 of 1
+Nx = 107, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-5.3446768970096965, max=6.353445119062793
+pc: min=-7.500677608311909, max=5.158636971348645
+pc: min=-5.334234343789689, max=5.829498419117507
+pc: min=-7.280395596900764, max=4.767212282644473
+pc: min=-5.269258752206229, max=5.235773126977667
+pc: min=-6.063394199781148, max=6.80257155893657
+pc: min=-6.640076563906561, max=7.71304433789542
+pc: min=-6.1190192791366425, max=7.1341583066974
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [1. 1. 1. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 1. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1.
+ 1. 1. 1. 1. 1. 1. 0. 1. 1. 1. 1.]
+rate = 0.7102803738317757
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 0. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 1. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0. 1. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1.]
+rate = 0.6355140186915887
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 1. 1. 1. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0.
+ 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0. 0. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 0. 1. 1. 0. 0. 1. 0. 1.]
+rate = 0.514018691588785
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 1. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 1. 0. 0. 0. 0.
+ 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 1.]
+rate = 0.34579439252336447
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.18691588785046728
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.04672897196261682
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.0
+Starting TPT on eraint
+	Seed 0 of 1
+Nx = 21, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.17750770885597, max=6.76640775438712
+pc: min=-4.875439880186059, max=4.490199107194926
+pc: min=-5.223333563222911, max=3.508048370907778
+pc: min=-5.119795178005914, max=4.614635625942498
+pc: min=-5.992388123166365, max=2.9686897830892174
+pc: min=-5.502862383028778, max=5.545557367279593
+pc: min=-4.854249209852481, max=5.013843094142473
+pc: min=-5.3615572128156295, max=5.650456757099027
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 1. 1. 1.]
+rate = 0.8571428571428571
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.6666666666666666
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.5238095238095238
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 1. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.42857142857142855
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.09523809523809523
+Starting TPT on S2S
+	Seed 0 of 1
+Nx = 5000, Ntx = 47, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 4440.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.6819178707646327, max=7.752033246346227
+pc: min=-6.113157913376385, max=5.0652212681697
+pc: min=-7.620631873916264, max=5.570749203828776
+pc: min=-5.664820722520181, max=8.471581755034821
+pc: min=-10.476382318572348, max=3.454455028088618
+pc: min=-6.47363512593015, max=5.417889773707689
+pc: min=-5.739151943749124, max=6.293152411420739
+pc: min=-6.12991161885209, max=8.18706279584585
+WARNING, we don't have any data in time slot 0. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 1. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 2. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 3. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 4. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 5. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 6. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 7. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 8. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 9. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 10. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 11. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 12. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 13. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 14. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 15. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 16. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 17. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 18. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 19. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 20. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 21. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 22. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 23. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 24. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+n_clusters: [120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120]
+MSM timestep 0 out of 150
+MSM timestep 30 out of 150
+MSM timestep 60 out of 150
+MSM timestep 90 out of 150
+MSM timestep 120 out of 150
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.8318165252329248, tob=0.8318165252329247
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.699273785815513, tob=0.699273785815513
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.5436281190556064, tob=0.5436281190556064
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.34853264020636254, tob=0.3485326402063625
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.18044806998235613, tob=0.1804480699823561
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.0645903052957456, tob=0.06459030529574557
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.01530661548064368, tob=0.015306615480643675
+Starting TPT on era20c
+	Seed 0 of 1
+Nx = 107, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-5.3446768970096965, max=6.353445119062793
+pc: min=-7.500677608311909, max=5.158636971348645
+pc: min=-5.334234343789689, max=5.829498419117507
+pc: min=-7.280395596900764, max=4.767212282644473
+pc: min=-5.269258752206229, max=5.235773126977667
+pc: min=-6.063394199781148, max=6.80257155893657
+pc: min=-6.640076563906561, max=7.71304433789542
+pc: min=-6.1190192791366425, max=7.1341583066974
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [1. 1. 1. 1. 0. 0. 0. 0. 1. 1. 1. 0. 1. 1. 1. 0. 0. 1. 2. 0. 1. 1. 1. 0.
+ 2. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 2. 0. 0. 1. 1. 0. 0. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 2. 1. 0. 0. 1. 0. 1. 1. 0. 0. 0. 2. 0.
+ 0. 1. 1. 0. 1. 0. 0. 1. 2. 0. 1. 1. 0. 1. 1. 2. 1. 1. 2. 2. 0. 0. 2. 1.
+ 1. 2. 2. 1. 1. 2. 0. 1. 0. 1. 1.]
+rate = 0.7383177570093458
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 1. 1. 2. 1. 1. 1. 1. 0. 0. 1. 2. 0. 1. 1. 0. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 1. 1. 0. 1. 0. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 1. 2. 2. 0. 0. 1. 0.
+ 1. 2. 1. 1. 1. 2. 0. 1. 1. 0. 1.]
+rate = 0.7102803738317757
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 2. 1. 1. 1. 0. 0. 0. 1. 2. 0. 0. 1. 0. 0.
+ 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 0. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 0. 1. 1. 0. 0. 1. 0. 1.]
+rate = 0.5420560747663551
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 0. 2. 0.
+ 1. 1. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 0. 0.
+ 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 1.]
+rate = 0.35514018691588783
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 2. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.18691588785046728
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.04672897196261682
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.0
+Starting TPT on eraint
+	Seed 0 of 1
+Nx = 21, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.17750770885597, max=6.76640775438712
+pc: min=-4.875439880186059, max=4.490199107194926
+pc: min=-5.223333563222911, max=3.508048370907778
+pc: min=-5.119795178005914, max=4.614635625942498
+pc: min=-5.992388123166365, max=2.9686897830892174
+pc: min=-5.502862383028778, max=5.545557367279593
+pc: min=-4.854249209852481, max=5.013843094142473
+pc: min=-5.3615572128156295, max=5.650456757099027
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 1. 1. 1. 0. 2. 2. 1. 1. 1. 1. 1. 1. 1. 0. 0. 0. 1. 1. 0. 0.]
+rate = 0.7619047619047619
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 1. 1. 2. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.7619047619047619
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.5714285714285714
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.47619047619047616
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.23809523809523808
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.09523809523809523
+Starting TPT on S2S
+	Seed 0 of 1
+Nx = 5000, Ntx = 47, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 4440.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.6819178707646327, max=7.752033246346227
+pc: min=-6.113157913376385, max=5.0652212681697
+pc: min=-7.620631873916264, max=5.570749203828776
+pc: min=-5.664820722520181, max=8.471581755034821
+pc: min=-10.476382318572348, max=3.454455028088618
+pc: min=-6.47363512593015, max=5.417889773707689
+pc: min=-5.739151943749124, max=6.293152411420739
+pc: min=-6.12991161885209, max=8.18706279584585
+WARNING, we don't have any data in time slot 0. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 1. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 2. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 3. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 4. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 5. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 6. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 7. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 8. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 9. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 10. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 11. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 12. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 13. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 14. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 15. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 16. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 17. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 18. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 19. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 20. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 21. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 22. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 23. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 24. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+n_clusters: [120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120]
+MSM timestep 0 out of 150
+MSM timestep 30 out of 150
+MSM timestep 60 out of 150
+MSM timestep 90 out of 150
+MSM timestep 120 out of 150
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=1.7445831110110706, tob=1.744583111011071
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=1.158573090807823, tob=1.1585730908078224
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.757648912274703, tob=0.7576489122747025
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.4114089715916156, tob=0.4114089715916155
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.19409830826090663, tob=0.19409830826090663
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.06605459936913659, tob=0.06605459936913662
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.01535813267091929, tob=0.01535813267091929
+Starting TPT on era20c
+	Seed 0 of 1
+Nx = 107, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-5.3446768970096965, max=6.353445119062793
+pc: min=-7.500677608311909, max=5.158636971348645
+pc: min=-5.334234343789689, max=5.829498419117507
+pc: min=-7.280395596900764, max=4.767212282644473
+pc: min=-5.269258752206229, max=5.235773126977667
+pc: min=-6.063394199781148, max=6.80257155893657
+pc: min=-6.640076563906561, max=7.71304433789542
+pc: min=-6.1190192791366425, max=7.1341583066974
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [1. 1. 1. 1. 0. 0. 0. 2. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1. 1. 2. 1. 1. 1. 1. 0. 0. 1. 1.
+ 1. 1. 2. 1. 1. 1. 0. 1. 1. 1. 1.]
+rate = 0.7476635514018691
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 0. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 1. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1.]
+rate = 0.6542056074766355
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 1. 1. 1. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0.
+ 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 0. 1. 1. 0. 0. 1. 0. 1.]
+rate = 0.5233644859813084
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 1. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 0. 0.
+ 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 1.]
+rate = 0.35514018691588783
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.18691588785046728
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.04672897196261682
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.0
+Starting TPT on eraint
+	Seed 0 of 1
+Nx = 21, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.17750770885597, max=6.76640775438712
+pc: min=-4.875439880186059, max=4.490199107194926
+pc: min=-5.223333563222911, max=3.508048370907778
+pc: min=-5.119795178005914, max=4.614635625942498
+pc: min=-5.992388123166365, max=2.9686897830892174
+pc: min=-5.502862383028778, max=5.545557367279593
+pc: min=-4.854249209852481, max=5.013843094142473
+pc: min=-5.3615572128156295, max=5.650456757099027
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 1. 2. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 1. 1. 1.]
+rate = 0.9047619047619048
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.7142857142857143
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.5714285714285714
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.47619047619047616
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.23809523809523808
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.09523809523809523
+Starting TPT on S2S
+	Seed 0 of 1
+Nx = 5000, Ntx = 47, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 4440.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.6819178707646327, max=7.752033246346227
+pc: min=-6.113157913376385, max=5.0652212681697
+pc: min=-7.620631873916264, max=5.570749203828776
+pc: min=-5.664820722520181, max=8.471581755034821
+pc: min=-10.476382318572348, max=3.454455028088618
+pc: min=-6.47363512593015, max=5.417889773707689
+pc: min=-5.739151943749124, max=6.293152411420739
+pc: min=-6.12991161885209, max=8.18706279584585
+WARNING, we don't have any data in time slot 0. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 1. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 2. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 3. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 4. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 5. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 6. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 7. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 8. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 9. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 10. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 11. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 12. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 13. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 14. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 15. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 16. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 17. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 18. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 19. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 20. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 21. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 22. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 23. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 24. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+n_clusters: [120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120]
+MSM timestep 0 out of 150
+MSM timestep 30 out of 150
+MSM timestep 60 out of 150
+MSM timestep 90 out of 150
+MSM timestep 120 out of 150
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.9565115386162301, tob=0.9565115386162301
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.7655048551793614, tob=0.7655048551793617
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.5745886986438535, tob=0.5745886986438539
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.35836295579636085, tob=0.35836295579636096
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.18314453784100648, tob=0.18314453784100626
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.06492636635597313, tob=0.06492636635597314
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.015314910220710704, tob=0.0153149102207107
+Starting TPT on era20c
+	Seed 0 of 1
+Nx = 107, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-5.3446768970096965, max=6.353445119062793
+pc: min=-7.500677608311909, max=5.158636971348645
+pc: min=-5.334234343789689, max=5.829498419117507
+pc: min=-7.280395596900764, max=4.767212282644473
+pc: min=-5.269258752206229, max=5.235773126977667
+pc: min=-6.063394199781148, max=6.80257155893657
+pc: min=-6.640076563906561, max=7.71304433789542
+pc: min=-6.1190192791366425, max=7.1341583066974
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [1. 1. 1. 1. 0. 0. 0. 2. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0.
+ 2. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 2. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 2. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 1. 0. 1. 1. 0. 1. 1. 2. 1. 1. 1. 2. 0. 0. 2. 1.
+ 1. 2. 2. 1. 1. 1. 0. 1. 1. 1. 1.]
+rate = 0.8130841121495327
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 2. 0. 1. 1. 0. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 2. 0. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 1. 1. 0. 1. 1. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 1. 2. 2. 0. 0. 1. 0.
+ 1. 2. 1. 1. 1. 2. 0. 1. 1. 0. 1.]
+rate = 0.7102803738317757
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 1. 1. 1. 0. 0. 0. 1. 2. 0. 0. 1. 0. 0.
+ 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0.
+ 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 2. 0.
+ 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 0. 1. 1. 0. 0. 1. 0. 1.]
+rate = 0.5420560747663551
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 1. 2. 0.
+ 1. 1. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 1. 2. 0. 0. 1. 1. 0. 0. 0. 0.
+ 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 1.]
+rate = 0.3644859813084112
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 2. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.19626168224299065
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.04672897196261682
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (107, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.0
+Starting TPT on eraint
+	Seed 0 of 1
+Nx = 21, Ntx = 150, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 600.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.17750770885597, max=6.76640775438712
+pc: min=-4.875439880186059, max=4.490199107194926
+pc: min=-5.223333563222911, max=3.508048370907778
+pc: min=-5.119795178005914, max=4.614635625942498
+pc: min=-5.992388123166365, max=2.9686897830892174
+pc: min=-5.502862383028778, max=5.545557367279593
+pc: min=-4.854249209852481, max=5.013843094142473
+pc: min=-5.3615572128156295, max=5.650456757099027
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 1. 2. 1. 1. 2. 2. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 1. 1. 1. 1.]
+rate = 1.0
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 1. 1. 2. 1. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.7619047619047619
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.5714285714285714
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 1. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 1. 0.]
+rate = 0.47619047619047616
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 2. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.23809523809523808
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.19047619047619047
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ab_tag.shape = (21, 125)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.09523809523809523
+Starting TPT on S2S
+	Seed 0 of 1
+Nx = 5000, Ntx = 47, xdim = 70
+self.ndelay = 26
+ydim = 39
+Y[0,0,0] = 4440.0
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+t_szn.shape = (2720,), uref_szn_mean.shape = (150,)
+pc: min=-3.6819178707646327, max=7.752033246346227
+pc: min=-6.113157913376385, max=5.0652212681697
+pc: min=-7.620631873916264, max=5.570749203828776
+pc: min=-5.664820722520181, max=8.471581755034821
+pc: min=-10.476382318572348, max=3.454455028088618
+pc: min=-6.47363512593015, max=5.417889773707689
+pc: min=-5.739151943749124, max=6.293152411420739
+pc: min=-6.12991161885209, max=8.18706279584585
+WARNING, we don't have any data in time slot 0. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 1. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 2. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 3. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 4. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 5. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 6. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 7. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 8. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 9. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 10. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 11. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 12. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 13. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 14. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 15. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 16. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 17. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 18. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 19. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 20. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 21. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 22. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 23. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+WARNING, we don't have any data in time slot 24. Y time: min=648.0, max=5376.0. wtime: min=0.0, max=3576.0.
+n_clusters: [120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120
+ 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120 120]
+MSM timestep 0 out of 150
+MSM timestep 30 out of 150
+MSM timestep 60 out of 150
+MSM timestep 90 out of 150
+MSM timestep 120 out of 150
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=1.3380654629846545, tob=1.3380654629846551
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.970034618401636, tob=0.9700346184016359
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.669481241493323, tob=0.669481241493323
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.3884716835261457, tob=0.3884716835261457
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.18978523713508144, tob=0.1897852371350815
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.06564608596705206, tob=0.06564608596705204
+Nwaves = 0, Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Npc_per_level = [4 4 0 0 0 0 0 0 0 0]
+Index for area = 35
+ina[0].shape = (120,), inb[0].shape = (120,), P_list[0].shape = (120, 120)
+Rate: froma=0.015342497495072483, tob=0.01534249749507248
