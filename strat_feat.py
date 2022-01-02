@@ -189,7 +189,7 @@ class WinterStratosphereFeatures:
         # Make poles nan
         cos[np.abs(cos)<1e-3] = np.nan
         sin[np.abs(sin)<1e-3] = np.nan
-        qgpv = earth_radius**2*fcor + grav_accel/fcor * (
+        qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(
                 1.0/cos**2*gh_lon2 - (sin/cos + cos/sin)*gh_lat + gh_lat2)
         #qgpv = 1.0/earth_radius**2 * (
         #        1.0/cos**2*gh_lon2 + gh_lat2 - (sin/cos)*gh_lat  # Laplacian
@@ -205,35 +205,44 @@ class WinterStratosphereFeatures:
     def compute_vortex_moments_sphere(self,gh,lat,lon,i_lev_subset=None,order=4):
         # Do the calculation in lat/lon coordinates. Regridding is too expensive
         Nsamp,Nlev_full,Nlat_full,Nlon = gh.shape
+        dlat,dlon = np.pi/2*np.array([lat[1]-lat[0],lon[1]-lon[0]])
         if i_lev_subset is None:
             i_lev_subset = np.arange(Nlev_full)
         Nlev = len(i_lev_subset)
-        i_lat_max = np.where(lat < 0.0)[0][0]  # All the way to the equator
+        i_lat_max = np.where(lat < 30.0)[0][0]  # All the way to the equator
         print(f"i_lat_max = {i_lat_max}")
         Nlat = i_lat_max # - 2
         stereo_factor = np.cos(lat[:i_lat_max]*np.pi/180)/(1 + np.sin(lat[:i_lat_max]*np.pi/180))
         X = np.outer(stereo_factor, np.cos(lon*np.pi/180)).flatten()
         Y = np.outer(stereo_factor, np.sin(lon*np.pi/180)).flatten()
-        qgpv = self.compute_qgpv(gh,lat,lon)[:,i_lev_subset,:i_lat_max,:].reshape((Nsamp*Nlev,Nlat*Nlon))
+        qgpv = self.compute_qgpv(gh,lat,lon)[:,i_lev_subset,:i_lat_max,:] #.reshape((Nsamp*Nlev,Nlat*Nlon))
         print(f"qgpv: nanfrac={np.mean(np.isnan(qgpv))}, min={np.nanmin(qgpv)}, max={np.nanmax(qgpv)}")
+        # Smooth the qgpv field before finding vortex edge
+        qgpv_filter_degrees = 20.0 # degrees
+        qgpv_filter_pixels = int(qgpv_filter_degrees / dlon)
+        qgpv_smoothed = np.zeros(qgpv.shape)
+        for j in range(-qgpv_filter_pixels//2,qgpv_filter_pixels//2):
+            qgpv_smoothed += np.roll(qgpv,j,axis=3)/qgpv_filter_pixels
+        qgpv = qgpv.reshape((Nsamp*Nlev,Nlat*Nlon))
+        qgpv_smoothed = qgpv_smoothed.reshape((Nsamp*Nlev,Nlat*Nlon))
         # Assign an area to each grid cell. 
-        dlat,dlon = np.pi/2*np.array([lat[1]-lat[0],lon[1]-lon[0]])
         area_factor = np.outer(np.cos(lat[:i_lat_max]*np.pi/180), np.ones(Nlon)).flatten()
         # Find vortex edge by ranking grid cells and finding the maximum slope of area fraction with respect to PV
-        qgpv_order = np.argsort(qgpv,axis=1)
+        qgpv_order = np.argsort(qgpv_smoothed,axis=1)
         area_fraction = np.cumsum(np.array([area_factor[qgpv_order[i]] for i in range(Nsamp*Nlev)]),axis=1)
         area_fraction = (area_fraction.T /area_fraction[:,-1]).T
-        qgpv_sorted = np.array([qgpv[i,qgpv_order[i]] for i in np.arange(Nsamp*Nlev)])
+        qgpv_sorted = np.array([qgpv_smoothed[i,qgpv_order[i]] for i in np.arange(Nsamp*Nlev)])
         equiv_lat = np.arcsin(area_fraction)
         # Verify qgpv_sorted is monotonic with equiv_lat
         print(f"min diff = {np.nanmin(np.diff(qgpv_sorted, axis=1))}")
         if np.nanmin(np.diff(qgpv_sorted, axis=1)) < 0:
             raise Exception("qgpv_sorted must be monotonically increasing")
-        window = 6
-        #dq_deqlat = (qgpv_sorted[:,window:] - qgpv_sorted[:,:-window])/(equiv_lat[:,window:] - equiv_lat[:,:-window])
+        window = 30
+        dq_deqlat = (qgpv_sorted[:,window:] - qgpv_sorted[:,:-window])/(equiv_lat[:,window:] - equiv_lat[:,:-window])
         #idx_crit = np.nanargmax(dq_deqlat, axis=1) + window//2
-        idx_crit = np.argmin(np.abs(area_fraction - 0.75), axis=1) #int(dA_dq.shape[1]/2) 
-        qgpv_crit = qgpv_sorted[np.arange(Nsamp*Nlev),idx_crit]
+        idx_crit = np.argmin(np.abs(area_fraction - 0.8), axis=1) #int(dA_dq.shape[1]/2) 
+        #qgpv_crit = qgpv_sorted[np.arange(Nsamp*Nlev),idx_crit]
+        qgpv_crit = np.zeros(Nsamp*Nlev) # Only count positive QGPV
         print(f"qgpv_crit: min={np.nanmin(qgpv_crit)}, max={np.nanmax(qgpv_crit)}")
         # Threshold and find moments
         q = (np.maximum(0, qgpv.T - qgpv_crit).T)
@@ -256,7 +265,7 @@ class WinterStratosphereFeatures:
                 for j in range(i_mom+1):
                     moments[key][:,j] = np.nansum(area_factor*q*Xcent**j*Ycent**(i_mom-j), axis=1)
         # Normalize the moments
-        moments['area'] = moments['m0'][:,0]
+        moments['area'] = np.nansum(area_factor*q, axis=1) #moments['m0'][:,0]
         if order >= 1:
             moments['centerlat'] = np.arcsin((1 - (Xbar**2+Ybar**2))/(1 + (Xbar**2+Ybar**2))) * 180/np.pi
             moments['centerlon'] = np.arctan2(Ybar,Xbar) * 180/np.pi
@@ -612,16 +621,16 @@ class WinterStratosphereFeatures:
         gh = gh[tidx,i_lev_ref,:,:]
         qgpv = qgpv[tidx,i_lev_ref,:,:]
         ds.close()
-        i_lat_max = np.where(lat < 45)[0][0]
+        i_lat_max = np.where(lat < 5)[0][0]
         gh[:,i_lat_max:,:] = np.nan
         qgpv[:,i_lat_max:,:] = np.nan
         for k in range(len(tidx)):
             i_time = tidx[k]
-            fig,ax = self.show_ugh_onelevel_cartopy(gh[k],u[k],v[k],lat,lon)
+            fig,ax = self.show_ugh_onelevel_cartopy(gh[k],u[k],v[k],lat,lon,vmin=None,vmax=None)
             ax.set_title(r"$\Phi$, $u$ at day {}, {}".format(time[tidx[k]]/24.0,fall_year))
             fig.savefig(join(savedir,"vortex_gh_{}_day{}_yr{}".format(save_suffix,int(time[tidx[k]]/24.0),fall_year)))
             plt.close(fig)
-            fig,ax = self.show_ugh_onelevel_cartopy(qgpv[k],u[k],v[k],lat,lon)
+            fig,ax = self.show_ugh_onelevel_cartopy(qgpv[k],u[k],v[k],lat,lon,vmin=np.nanmin(qgpv),vmax=np.nanmax(qgpv))
             ax.set_title(r"$\Phi$, $u$ at day {}, {}".format(time[tidx[k]]/24.0,fall_year))
             fig.savefig(join(savedir,"vortex_qgpv_{}_day{}_yr{}".format(save_suffix,int(time[tidx[k]]/24.0),fall_year)))
             plt.close(fig)
@@ -740,9 +749,9 @@ class WinterStratosphereFeatures:
         idx = 2 + 2*Nwaves + np.sum(Npc_per_level) + 1
         centerlat = self.reseason(x[:,0],x[:,idx],feat_def['t_szn'],feat_def['vtx_centerlat_szn_mean'],feat_def['vtx_centerlat_szn_std'])
         return centerlat 
-    def show_ugh_onelevel_cartopy(self,gh,u,v,lat,lon): 
+    def show_ugh_onelevel_cartopy(self,gh,u,v,lat,lon,vmin=None,vmax=None): 
         # Display the geopotential height at a single pressure level
-        fig,ax,data_crs = self.display_pole_field(gh,lat,lon)
+        fig,ax,data_crs = self.display_pole_field(gh,lat,lon,vmin=vmin,vmax=vmax)
         lon_subset = np.linspace(0,lon.size-1,20).astype(int)
         lat_subset = np.linspace(0,lat.size-2,60).astype(int)
         #ax.quiver(lon[lon_subset],lat[lat_subset],u[lat_subset,:][:,lon_subset],v[lat_subset,:][:,lon_subset],transform=data_crs,color='black',zorder=5)
@@ -764,12 +773,12 @@ class WinterStratosphereFeatures:
         fig.savefig(join(savedir,"eof_ilev%i_ieof%i"%(i_lev,i_eof)))
         plt.close(fig)
         return
-    def display_pole_field(self,field,lat,lon):
+    def display_pole_field(self,field,lat,lon,vmin=None,vmax=None):
         data_crs = ccrs.PlateCarree() 
         ax_crs = ccrs.Orthographic(-10,90)
         fig = plt.figure()
         ax = fig.add_subplot(1,1,1,projection=ax_crs)
-        im = ax.pcolormesh(lon,lat,field,shading='nearest',cmap='coolwarm',transform=data_crs)
+        im = ax.pcolormesh(lon,lat,field,shading='nearest',cmap='coolwarm',transform=data_crs,vmin=vmin,vmax=vmax)
         ax.add_feature(cartopy.feature.COASTLINE, zorder=3, edgecolor='black')
         fig.colorbar(im,ax=ax)
         return fig,ax,data_crs

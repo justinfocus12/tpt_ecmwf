@@ -1,2 +1,0 @@
-/bin/bash: line 1: 3075977 Killed                  python driver2.py
-slurmstepd: error: Detected 1 oom-kill event(s) in StepId=13406902.batch cgroup. Some of your processes may have been killed by the cgroup out-of-memory handler.
