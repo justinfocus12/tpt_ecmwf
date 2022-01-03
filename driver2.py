@@ -31,14 +31,8 @@ resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
 daydir = join(resultsdir,"2022-01-02")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"0")
+expdir = join(daydir,"2")
 if not exists(expdir): mkdir(expdir)
-expdir_e2 = join(expdir,"era20c")
-if not exists(expdir_e2): mkdir(expdir_e2)
-expdir_ei = join(expdir,"eraint")
-if not exists(expdir_ei): mkdir(expdir_ei)
-expdir_s2s = join(expdir,"s2s")
-if not exists(expdir_s2s): mkdir(expdir_s2s)
 import helper
 import strat_feat
 import tpt_general
@@ -65,8 +59,16 @@ winter_day0 = 0.0
 spring_day0 = 150.0
 Npc_per_level_max = 6
 vortex_moments_order_max = 4 # Area, mean, variance, skewness, kurtosis
+# ----------------- Phase space definition parameters -------
+delaytime_days = 20.0
+# ----------------- Directories for this experiment --------
+expdir_e2 = join(expdir,"era20c")
+if not exists(expdir_e2): mkdir(expdir_e2)
+expdir_ei = join(expdir,"eraint")
+if not exists(expdir_ei): mkdir(expdir_ei)
+expdir_s2s = join(expdir,"s2s")
+if not exists(expdir_s2s): mkdir(expdir_s2s)
 # ------------------ Algorithmic parameters ---------------------
-delaytime_days = 25.0 
 num_clusters = 120
 #Npc_per_level_single = 4
 Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
@@ -77,20 +79,23 @@ for i_lev in range(len(Npc_per_level)):
         pcstr += f"lev{i_lev}pc{Npc_per_level[i_lev]}-"
 if len(pcstr) > 1: pcstr = pcstr[:-1]
 Nwaves = 0
-paramdir_s2s = join(expdir_s2s, f"nclust{num_clusters}_nwaves{Nwaves}_vxm{vortex_moments_order_max}_delay{int(delaytime_days)}_{pcstr}")
-if not exists(paramdir_s2s):
-    mkdir(paramdir_s2s)
+paramdir_s2s = join(expdir_s2s, f"delay{int(delaytime_days)}_nclust{num_clusters}_nwaves{Nwaves}_vxm{vortex_moments_order_max}_{pcstr}")
+if not exists(paramdir_s2s): mkdir(paramdir_s2s)
+paramdir_e2 = join(expdir_e2, f"delay{int(delaytime_days)}")
+if not exists(paramdir_e2): mkdir(paramdir_e2)
+paramdir_ei = join(expdir_ei, f"delay{int(delaytime_days)}")
+if not exists(paramdir_ei): mkdir(paramdir_ei)
 
 # ------------ Random seeds for bootstrap resampling ------------
-num_seeds_e2 =  1
-num_seeds_ei =  1
-num_seeds_s2s = 1
+num_seeds_e2 =  5
+num_seeds_ei =  5
+num_seeds_s2s = 5
 seeddir_list_e2 = []
 for i in range(num_seeds_e2):
-    seeddir_list_e2 += [join(expdir_e2,"seed%i"%(i))]
+    seeddir_list_e2 += [join(paramdir_e2,"seed%i"%(i))]
 seeddir_list_ei = []
 for i in range(num_seeds_ei):
-    seeddir_list_ei += [join(expdir_ei,"seed%i"%(i))]
+    seeddir_list_ei += [join(paramdir_ei,"seed%i"%(i))]
 seeddir_list_s2s = []
 for i in range(num_seeds_s2s):
     seeddir_list_s2s += [join(paramdir_s2s,"seed%i"%(i))]
@@ -135,10 +140,10 @@ if display_features_flag:
 feat_def = pickle.load(open(winstrat.feature_file,"rb"))
 tpt = tpt_general.WinterStratosphereTPT()
 # ----------------- Determine list of SSW definitions to consider --------------
-tthresh0 = delaytime_days + 10 # First day that SSW could happen
+tthresh0 = 30 # First day that SSW could happen
 tthresh1 = 145.0 # Last day that SSW could happen
-sswbuffer = 20.0 # minimum buffer time between one SSW and the next
-uthresh_a = 10.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
+sswbuffer = 0.0 # minimum buffer time between one SSW and the next
+uthresh_a = 30.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 # ------------------ TPT direct estimates from ERA20C --------------------------
 feat_filename = join(expdir_e2,"X.npy")
@@ -163,7 +168,7 @@ if tpt_e2_flag:
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level)
+            summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level,plot_field_flag=(i_seed==0))
             rates_e2[i_uth] = summary_dns["rate"]
 # ------------------ TPT direct estimates from ERA-Interim --------------------------
 feat_filename = join(expdir_ei,"X.npy")
@@ -188,7 +193,7 @@ if tpt_ei_flag:
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level)
+            summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level,plot_field_flag=(i_seed==0))
             rates_ei[i_uth] = summary_dns["rate"]
 #print(f"rates_e2 = {rates_e2}\nrates_ei = {rates_ei}")
 # ------------------- DGA from S2S --------------------------------
@@ -223,7 +228,7 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            summary_dga = tpt.tpt_pipeline_dga(tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves)
+            summary_dga = tpt.tpt_pipeline_dga(tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves,plot_field_flag=(i_seed==0))
 
 # ------------- Compare rates ---------------------
 if plot_rate_flag:
@@ -259,6 +264,7 @@ if plot_rate_flag:
         ax.plot(uthresh_list,np.max(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
     ax.set_xlabel("Zonal wind threshold",fontdict=font)
     ax.set_ylabel("Rate",fontdict=font)
+    ax.set_ylim([5e-3,1.2])
     ax.legend(handles=[he2,hei,hs2s])
     suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
     fig.savefig(join(paramdir_s2s,"rate_%s"%(suffix)))

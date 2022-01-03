@@ -1,24 +1,6 @@
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:305: RuntimeWarning: invalid value encountered in sqrt
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
   cond = np.sqrt(cond)
-posx and posy should be finite values
-posx and posy should be finite values
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:305: RuntimeWarning: invalid value encountered in sqrt
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
   cond = np.sqrt(cond)
-posx and posy should be finite values
-posx and posy should be finite values
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:305: RuntimeWarning: invalid value encountered in sqrt
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
   cond = np.sqrt(cond)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:305: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
-posx and posy should be finite values
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:305: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:305: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
-posx and posy should be finite values
-posx and posy should be finite values
-posx and posy should be finite values
-posx and posy should be finite values
-posx and posy should be finite values
-posx and posy should be finite values
-posx and posy should be finite values

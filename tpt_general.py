@@ -49,7 +49,7 @@ class WinterStratosphereTPT:
         rate = np.mean(absum)
         print(f"rate = {rate}")
         return rate
-    def tpt_pipeline_dns(self,tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level):
+    def tpt_pipeline_dns(self,tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level,plot_field_flag=True):
         # savedir: where all the results of this particular TPT will be saved.
         # winstrat: the object that was used to create features, and that can go on to evaluate other features.
         # feat_def: the feature definitions that came out of winstrat.
@@ -67,24 +67,25 @@ class WinterStratosphereTPT:
         qm = 1.0*(src_tag == 0).flatten()
         pi = 1.0*np.ones(Ny*Nt)/(Ny*Nt)
         #keypairs = [['time_d','area'],['time_d','displacement'],['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4']]
-        keypairs = [['time_d','uref']]
-        for i_kp in range(len(keypairs)):
-            fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
-            theta0_x = funlib[keypairs[i_kp][0]]["fun"](Y.reshape((Ny*Nt,ydim)))
-            theta1_x = funlib[keypairs[i_kp][1]]["fun"](Y.reshape((Ny*Nt,ydim)))
-            theta_x = np.array([theta0_x,theta1_x]).T
-            # Plot forward committor
-            fig,ax = helper.plot_field_2d(qp,pi,theta_x,shp=[15,15],fieldname="Committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
-            fig.savefig(join(savedir,"qp_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
-            plt.close(fig)
-            # Plot density
-            fig,ax = helper.plot_field_2d(pi,np.ones(Ny*Nt),theta_x,shp=[15,15],fieldname="Density",fun0name=fun0name,fun1name=fun1name,contourflag=True,logscale=True,avg_flag=False)
-            fig.savefig(join(savedir,"pi_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
-            plt.close(fig)
-            # Plot backward committor
-            fig,ax = helper.plot_field_2d(qm,pi,theta_x,shp=[15,15],fieldname="Backward committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
-            fig.savefig(join(savedir,"qm_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
-            plt.close(fig)
+        if plot_field_flag:
+            keypairs = [['time_d','uref']]
+            for i_kp in range(len(keypairs)):
+                fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
+                theta0_x = funlib[keypairs[i_kp][0]]["fun"](Y.reshape((Ny*Nt,ydim)))
+                theta1_x = funlib[keypairs[i_kp][1]]["fun"](Y.reshape((Ny*Nt,ydim)))
+                theta_x = np.array([theta0_x,theta1_x]).T
+                # Plot forward committor
+                fig,ax = helper.plot_field_2d(qp,pi,theta_x,shp=[15,15],fieldname="Committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+                fig.savefig(join(savedir,"qp_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+                plt.close(fig)
+                # Plot density
+                fig,ax = helper.plot_field_2d(pi,np.ones(Ny*Nt),theta_x,shp=[15,15],fieldname="Density",fun0name=fun0name,fun1name=fun1name,contourflag=True,logscale=True,avg_flag=False)
+                fig.savefig(join(savedir,"pi_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+                plt.close(fig)
+                # Plot backward committor
+                fig,ax = helper.plot_field_2d(qm,pi,theta_x,shp=[15,15],fieldname="Backward committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+                fig.savefig(join(savedir,"qm_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+                plt.close(fig)
         # Compute density and backward committor
         # Compute rate
         rate = self.compute_rate_direct(src_tag,dest_tag)
@@ -341,7 +342,7 @@ class WinterStratosphereTPT:
                 int2b_cond['m4'] += [cond_m4[j:j+nclust]]
                 j += nclust
         return int2b_cond 
-    def tpt_pipeline_dga(self,tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves):
+    def tpt_pipeline_dga(self,tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves,plot_field_flag=True):
         # Label each cluster as in A or B or elsewhere
         tpt_feat = pickle.load(open(tpt_feat_filename,"rb"))
         Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
@@ -351,6 +352,7 @@ class WinterStratosphereTPT:
         #print("uref_y: min={}, max={}, mean={}".format(uref_y.min(),uref_y.max(),uref_y.mean()))
         kmdict = pickle.load(open(clust_filename,"rb"))
         kmlist,kmtime = kmdict["kmlist"],kmdict["kmtime"]
+        kmtime_d = np.array(kmtime)/24.0
         ina = []
         inb = []
         centers = []
@@ -386,25 +388,35 @@ class WinterStratosphereTPT:
         qp = self.compute_forward_committor(P_list,kmtime,ina,inb)
         qpflat = np.concatenate(qp)
         # Integral to B
-        dam_centers = [np.zeros(kmlist[ti].n_clusters) for ti in range(len(kmtime))]
-        dam_centers[0][:] = (kmtime[1] - kmtime[0])/2
-        dam_centers[-1][:] = (kmtime[-1] - kmtime[-2])/2
-        for ti in range(1,len(kmtime)-1):
-            dam_centers[ti][:] = (kmtime[ti+1] - kmtime[ti-1])/2
+        dam_centers = [np.ones(kmlist[ti].n_clusters) for ti in range(len(kmtime))]
+        #dam_centers[0][:] = (kmtime[1] - kmtime[0])/2
+        #dam_centers[-1][:] = (kmtime[-1] - kmtime[-2])/2
+        #for ti in range(1,len(kmtime)-1):
+        #    dam_centers[ti][:] = (kmtime[ti+1] - kmtime[ti-1])/2
         int2b = {}
         int2b_cond = {}
-        int2b['time'] = self.compute_integral_to_B(P_list,kmtime,ina,inb,qp,dam_centers,maxmom=3)
-        int2b_cond['time'] = self.conditionalize_int2b(P_list,kmtime,int2b['time'],qp)
+        int2b['time'] = self.compute_integral_to_B(P_list,kmtime_d,ina,inb,qp,dam_centers,maxmom=3)
+        int2b_cond['time'] = self.conditionalize_int2b(P_list,kmtime_d,int2b['time'],qp)
         # Rate
         # To compute the rate, must sum over all fluxes going into B.
         flux = []
         rate_froma = 0
         rate_tob = 0
+        flux_froma = []
+        flux_tob = []
+        flux_dens_tob = np.zeros(len(kmtime))
         for ti in range(len(kmtime)-1):
             flux += [(P_list[ti].T * pi[ti] * qm[ti]).T * qp[ti+1]]
             #print(f"ti = {ti}, P_list[ti].shape = {P_list[ti].shape}, pi[ti].shape = {pi[ti].shape}, ina[ti].shape = {ina[ti].shape}, qp[ti].shape = {qp[ti].shape}")
-            rate_froma += np.sum((P_list[ti].T * pi[ti] * ina[ti]).T * qp[ti+1])
-            rate_tob += np.sum((P_list[ti].T * pi[ti] * qm[ti]).T * inb[ti+1])
+            flux_froma += [(P_list[ti].T * pi[ti] * ina[ti]).T * qp[ti+1]]
+            flux_tob += [(P_list[ti].T * pi[ti] * qm[ti]).T * inb[ti+1]]
+            rate_froma += np.sum(flux_froma[-1])
+            rate_tob += np.sum(flux_tob[-1])
+            flux_dens_tob[ti] = np.sum(flux_tob[-1])
+        print(f"flux_dens_tob: min={flux_dens_tob.min()},max={flux_dens_tob.max()}")
+        # Smooth out flux_dens_tob
+        hist,t_hist = np.histogram(kmtime_d, weights=flux_dens_tob, bins=15)
+        t_hist = (t_hist[1:] + t_hist[:-1])/2
         #ti_froma = np.where(winstrat.wtime > self.tpt_bndy['tthresh'][0])[0][0]
         if np.abs(rate_froma - rate_tob) > 0.1*max(rate_froma, rate_tob):
             raise Exception(f"Rate discrepancy: froma is {rate_froma}, tob is {rate_tob}")
@@ -422,42 +434,67 @@ class WinterStratosphereTPT:
         summary = {"rate_froma": rate_froma, "rate_tob": rate_tob,}
         pickle.dump(summary,open(join(savedir,"summary"),"wb"))
         # Plot 
-        centers_all = np.concatenate(centers, axis=0)
-        weight = np.ones(len(centers_all))/(len(centers_all))
-        keypairs = [['time_d','area'],['time_d','centerlat'],['time_d','uref'],['time_d','asprat'],['time_d','kurt'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','lev0_pc5'],['lev0_pc1','lev0_pc2'],['lev0_pc1','lev0_pc4'],['lev0_pc4','lev0_pc5']][:7]
-        #keypairs = [['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4'],['time_d','mag1_anomaly'],['time_d','mag2_anomaly']]
-        for i_kp in range(len(keypairs)):
-            fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
-            theta_x = np.array([funlib[keypairs[i_kp][j]]["fun"](centers_all) for j in range(2)]).T
-            Jth = self.project_current(theta_x,kmtime,centers,flux)
-            # Plot density
-            fig,ax = helper.plot_field_2d(piflat,np.ones(len(centers_all)),theta_x,shp=[15,15],fieldname="Density",fun0name=fun0name,fun1name=fun1name,contourflag=True,avg_flag=False,logscale=True)
-            self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
-            fig.savefig(join(savedir,"pi_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
-            plt.close(fig)
-            # Plot committor
-            fig,ax = helper.plot_field_2d(qpflat,piflat,theta_x,shp=[15,15],fieldname="Committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
-            self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
-            fig.savefig(join(savedir,"qp_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
-            plt.close(fig)
-            # Plot backward committor
-            fig,ax = helper.plot_field_2d(qmflat,piflat,theta_x,shp=[15,15],fieldname="Backward committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
-            self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
-            fig.savefig(join(savedir,"qm_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
-            plt.close(fig)
-            # Plot integrals to B
-            fig,ax = helper.plot_field_2d(np.concatenate(int2b_cond['time']['mean']),piflat,theta_x,shp=[15,15],fieldname="Lead time",fun0name=fun0name,fun1name=fun1name,contourflag=True)
-            self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
-            fig.savefig(join(savedir,"lt_mean_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
-            plt.close(fig)
-            fig,ax = helper.plot_field_2d(np.concatenate(int2b_cond['time']['std']),piflat,theta_x,shp=[15,15],fieldname="Lead time std.",fun0name=fun0name,fun1name=fun1name,contourflag=True)
-            self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
-            fig.savefig(join(savedir,"lt_std_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
-            plt.close(fig)
-            fig,ax = helper.plot_field_2d(np.concatenate(int2b_cond['time']['skew']),piflat,theta_x,shp=[15,15],fieldname="Lead time skew",fun0name=fun0name,fun1name=fun1name,contourflag=True)
-            self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
-            fig.savefig(join(savedir,"lt_skew_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
-            plt.close(fig)
+        if plot_field_flag:
+            centers_all = np.concatenate(centers, axis=0)
+            keypairs = [['time_d','area'],['time_d','centerlat'],['time_d','uref'],['time_d','asprat'],['time_d','kurt'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4']][2:3]
+            for i_kp in range(len(keypairs)):
+                fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
+                theta_x = np.array([funlib[keypairs[i_kp][j]]["fun"](centers_all) for j in range(2)]).T
+                Jth = self.project_current(theta_x,kmtime,centers,flux)
+
+                # Plot density
+                fig,ax = helper.plot_field_2d(piflat,np.ones(len(centers_all)),theta_x,shp=[15,15],fieldname="Density",fun0name=fun0name,fun1name=fun1name,contourflag=True,avg_flag=False,logscale=True)
+                self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
+                if keypairs[i_kp][0] == 'time_d' and keypairs[i_kp][1] == 'uref':
+                    print(f"flux_dens_tob: min={flux_dens_tob.min()}, max={flux_dens_tob.max()}")
+                    ax.plot(t_hist,self.tpt_bndy['uthresh_b']+hist/np.max(hist)*10,color='black',zorder=5)
+                    ax.axhline(y=self.tpt_bndy['uthresh_b'],color='black',linestyle='--',zorder=5)
+                    ax.axhline(y=self.tpt_bndy['uthresh_a'],color='black',linestyle='--',zorder=5)
+                fig.savefig(join(savedir,"pi_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+                plt.close(fig)
+                # Plot committor
+                fig,ax = helper.plot_field_2d(qpflat,piflat,theta_x,shp=[15,15],fieldname="Committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+                self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
+                if keypairs[i_kp][0] == 'time_d' and keypairs[i_kp][1] == 'uref':
+                    ax.plot(t_hist,self.tpt_bndy['uthresh_b']+hist/np.max(hist)*10,color='black',zorder=5)
+                    ax.axhline(y=self.tpt_bndy['uthresh_b'],color='black',linestyle='--',zorder=5)
+                    ax.axhline(y=self.tpt_bndy['uthresh_a'],color='black',linestyle='--',zorder=5)
+                fig.savefig(join(savedir,"qp_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+                plt.close(fig)
+                # Plot backward committor
+                fig,ax = helper.plot_field_2d(qmflat,piflat,theta_x,shp=[15,15],fieldname="Backward committor",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+                self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
+                if keypairs[i_kp][0] == 'time_d' and keypairs[i_kp][1] == 'uref':
+                    ax.plot(t_hist,self.tpt_bndy['uthresh_b']+hist/np.max(hist)*10,color='black',zorder=5)
+                    ax.axhline(y=self.tpt_bndy['uthresh_b'],color='black',linestyle='--',zorder=5)
+                    ax.axhline(y=self.tpt_bndy['uthresh_a'],color='black',linestyle='--',zorder=5)
+                fig.savefig(join(savedir,"qm_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+                plt.close(fig)
+                # Plot integrals to B
+                fig,ax = helper.plot_field_2d(np.concatenate(int2b_cond['time']['mean']),piflat,theta_x,shp=[15,15],fieldname="Lead time",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+                self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
+                if keypairs[i_kp][0] == 'time_d' and keypairs[i_kp][1] == 'uref':
+                    ax.plot(t_hist,self.tpt_bndy['uthresh_b']+hist/np.max(hist)*10,color='black',zorder=5)
+                    ax.axhline(y=self.tpt_bndy['uthresh_b'],color='black',linestyle='--',zorder=5)
+                    ax.axhline(y=self.tpt_bndy['uthresh_a'],color='black',linestyle='--',zorder=5)
+                fig.savefig(join(savedir,"lt_mean_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+                plt.close(fig)
+                fig,ax = helper.plot_field_2d(np.concatenate(int2b_cond['time']['std']),piflat,theta_x,shp=[15,15],fieldname="Lead time std.",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+                self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
+                if keypairs[i_kp][0] == 'time_d' and keypairs[i_kp][1] == 'uref':
+                    ax.plot(t_hist,self.tpt_bndy['uthresh_b']+hist/np.max(hist)*10,color='black',zorder=5)
+                    ax.axhline(y=self.tpt_bndy['uthresh_b'],color='black',linestyle='--',zorder=5)
+                    ax.axhline(y=self.tpt_bndy['uthresh_a'],color='black',linestyle='--',zorder=5)
+                fig.savefig(join(savedir,"lt_std_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+                plt.close(fig)
+                fig,ax = helper.plot_field_2d(np.concatenate(int2b_cond['time']['skew']),piflat,theta_x,shp=[15,15],fieldname="Lead time skew",fun0name=fun0name,fun1name=fun1name,contourflag=True)
+                self.plot_current_overlay(theta_x,Jth,np.ones(len(centers_all)),fig,ax)
+                if keypairs[i_kp][0] == 'time_d' and keypairs[i_kp][1] == 'uref':
+                    ax.plot(t_hist,self.tpt_bndy['uthresh_b']+hist/np.max(hist)*10,color='black',zorder=5)
+                    ax.axhline(y=self.tpt_bndy['uthresh_b'],color='black',linestyle='--',zorder=5)
+                    ax.axhline(y=self.tpt_bndy['uthresh_a'],color='black',linestyle='--',zorder=5)
+                fig.savefig(join(savedir,"lt_skew_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
+                plt.close(fig)
         return summary 
     def project_current(self,theta_flat,time,centers,flux):
         # For a given vector-valued observable theta, evaluate the current operator J dot grad(theta)
@@ -502,7 +539,8 @@ class WinterStratosphereTPT:
         J1_proj *= normalizer*(1 - np.isnan(J1_proj))
         th01,th10 = np.meshgrid(thaxes[0],thaxes[1],indexing='ij') 
         ax.quiver(th01,th10,J0_proj,J1_proj,angles='xy',scale_units='xy',scale=1.0,color='black',width=1.5,headwidth=4.4,units='dots',zorder=4)
-        return
+        # Maybe plot a flux distribution across a surface
+        return th01,th10,J0_proj,J1_proj
 
 
 
