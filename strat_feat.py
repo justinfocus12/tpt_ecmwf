@@ -443,11 +443,14 @@ class WinterStratosphereFeatures:
         np.save(fall_year_filename,fall_year_list)
         return X
     def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=None,Nwaves=None,resample_flag=False,seed=0):
+        print(f" -------------- Inside evaluate_tpt_features: tpt_feat_filename = {tpt_feat_filename}, resample_flag = {resample_flag}, seed = {seed} --------------")
         # Evaluate a subset of the full features to use for clustering TPT.
         # A normalized version of these will be used for clustering.
         # The data set for clustering will have fewer time steps, due to time-delay embedding.
         X = np.load(feat_filename)
-        #print("Before resampling: X.shape = {}".format(X.shape))
+        print("Before resampling: X.shape = {}".format(X.shape))
+        # TODO: figure out whether this seed should go inside or outside the resample_flag, and why it makes a difference. 
+        prng = np.random.RandomState(seed)
         if resample_flag:
             ens_start_idx = np.load(ens_start_filename)
             fall_year_list = np.load(fall_year_filename)
@@ -462,8 +465,7 @@ class WinterStratosphereFeatures:
                 fall_year_x[ens_start_idx[i]:ens_start_idx[i]+ens_size] = fall_year_list[i]
                 #print("ens_start_idx[i] = {}".format(ens_start_idx[i]))
             #print("fall_year_x: min={}, max={}, shape={}".format(fall_year_x.min(),fall_year_x.max(),fall_year_x.shape))
-            np.random.seed(seed)
-            fy_resamp = np.random.choice(fy_unique,size=len(fy_unique),replace=True)
+            fy_resamp = prng.choice(fy_unique,size=len(fy_unique),replace=True)
             #print("len(fy_resamp) = {}".format(len(fy_resamp)))
             idx_resamp = np.zeros(0, dtype=int)
             avg_match = 0
@@ -475,7 +477,7 @@ class WinterStratosphereFeatures:
             #print("avg_match = {}, len(fy_resamp) = {}, prod = {}".format(avg_match,len(fy_resamp), avg_match*len(fy_resamp)))
             X = X[idx_resamp]
         #print("len(idx_resamp) = {}".format(len(idx_resamp)))
-        #print("After resampling: X.shape = {}".format(X.shape))
+        print("After resampling: X.shape = {}".format(X.shape))
         if Npc_per_level is None:
             Npc_per_level = self.Npc_per_level_max*np.ones(len(feat_def['plev']), dtype=int)
         if Nwaves is None:

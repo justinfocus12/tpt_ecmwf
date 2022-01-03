@@ -60,7 +60,7 @@ spring_day0 = 150.0
 Npc_per_level_max = 6
 vortex_moments_order_max = 4 # Area, mean, variance, skewness, kurtosis
 # ----------------- Phase space definition parameters -------
-delaytime_days = 20.0
+delaytime_days = 0.0
 # ----------------- Directories for this experiment --------
 expdir_e2 = join(expdir,"era20c")
 if not exists(expdir_e2): mkdir(expdir_e2)
@@ -87,9 +87,15 @@ paramdir_ei = join(expdir_ei, f"delay{int(delaytime_days)}")
 if not exists(paramdir_ei): mkdir(paramdir_ei)
 
 # ------------ Random seeds for bootstrap resampling ------------
-num_seeds_e2 =  5
-num_seeds_ei =  5
+num_seeds_e2 =  5   # Era20c seeds DO mess up S2S
+num_seeds_ei =  5   # Era-Interim seeds DO mess up S2S
 num_seeds_s2s = 5
+
+# Debugging: turn off each reanalysis individually
+e2_flag = True
+ei_flag = True
+
+
 seeddir_list_e2 = []
 for i in range(num_seeds_e2):
     seeddir_list_e2 += [join(paramdir_e2,"seed%i"%(i))]
@@ -140,62 +146,80 @@ if display_features_flag:
 feat_def = pickle.load(open(winstrat.feature_file,"rb"))
 tpt = tpt_general.WinterStratosphereTPT()
 # ----------------- Determine list of SSW definitions to consider --------------
-tthresh0 = 30 # First day that SSW could happen
+tthresh0 = 10 # First day that SSW could happen
 tthresh1 = 145.0 # Last day that SSW could happen
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 30.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
-# ------------------ TPT direct estimates from ERA20C --------------------------
-feat_filename = join(expdir_e2,"X.npy")
-ens_start_filename = join(expdir_e2,"ens_start_idx.npy")
-fall_year_filename = join(expdir_e2,"fall_year_list.npy")
-if evaluate_database_e2:
-    print("Evaluating ERA20C database")
-    winstrat.evaluate_features_database(file_list_e2,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
-if tpt_e2_flag: 
-    print("Starting TPT on era20c")
-    for i_seed in range(num_seeds_e2):
-        print("\tSeed {} of {}".format(i_seed,num_seeds_e2))
-        seeddir = seeddir_list_e2[i_seed]
-        if not exists(seeddir): mkdir(seeddir)
-        tpt_feat_filename = join(seeddir,"Y")
-        if tpt_featurize_e2:
-            winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
-        rates_e2 = np.zeros(len(uthresh_list))
-        for i_uth in range(len(uthresh_list)):
-            uthresh_b = uthresh_list[i_uth]
-            savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
-            if not exists(savedir): mkdir(savedir)
-            tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
-            tpt.set_boundaries(tpt_bndy)
-            summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level,plot_field_flag=(i_seed==0))
-            rates_e2[i_uth] = summary_dns["rate"]
-# ------------------ TPT direct estimates from ERA-Interim --------------------------
-feat_filename = join(expdir_ei,"X.npy")
-ens_start_filename = join(expdir_ei,"ens_start_idx.npy")
-fall_year_filename = join(expdir_ei,"fall_year_list.npy")
-if evaluate_database_ei:
-    print("Evaluating ERA-Int database")
-    winstrat.evaluate_features_database(file_list_ei,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
-if tpt_ei_flag: 
-    print("Starting TPT on eraint")
-    for i_seed in range(len(seeddir_list_ei)):
-        print("\tSeed {} of {}".format(i_seed,num_seeds_ei))
-        seeddir = seeddir_list_ei[i_seed]
-        if not exists(seeddir): mkdir(seeddir)
-        tpt_feat_filename = join(seeddir,"Y")
-        if tpt_featurize_ei:
-            winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
-        rates_ei = np.zeros(len(uthresh_list))
-        for i_uth in range(len(uthresh_list)):
-            uthresh_b = uthresh_list[i_uth]
-            savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
-            if not exists(savedir): mkdir(savedir)
-            tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
-            tpt.set_boundaries(tpt_bndy)
-            summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level,plot_field_flag=(i_seed==0))
-            rates_ei[i_uth] = summary_dns["rate"]
-#print(f"rates_e2 = {rates_e2}\nrates_ei = {rates_ei}")
+
+
+
+
+# =============================================================================
+if e2_flag:
+    # ------------------ TPT direct estimates from ERA20C --------------------------
+    feat_filename = join(expdir_e2,"X.npy")
+    ens_start_filename = join(expdir_e2,"ens_start_idx.npy")
+    fall_year_filename = join(expdir_e2,"fall_year_list.npy")
+    if evaluate_database_e2:
+        print("Evaluating ERA20C database")
+        winstrat.evaluate_features_database(file_list_e2,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+    if tpt_e2_flag: 
+        print("Starting TPT on era20c")
+        for i_seed in range(num_seeds_e2):
+            print("\tSeed {} of {}".format(i_seed,num_seeds_e2))
+            seeddir = seeddir_list_e2[i_seed]
+            if not exists(seeddir): mkdir(seeddir)
+            tpt_feat_filename = join(seeddir,"Y")
+            if tpt_featurize_e2:
+                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
+            rates_e2 = np.zeros(len(uthresh_list))
+            for i_uth in range(len(uthresh_list)):
+                uthresh_b = uthresh_list[i_uth]
+                savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
+                if not exists(savedir): mkdir(savedir)
+                tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
+                tpt.set_boundaries(tpt_bndy)
+                summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level,plot_field_flag=(i_seed==0))
+                rates_e2[i_uth] = summary_dns["rate"]
+# ================================================================================
+
+
+
+
+
+
+# =============================================================
+if ei_flag:
+    # ------------------ TPT direct estimates from ERA-Interim --------------------------
+    feat_filename = join(expdir_ei,"X.npy")
+    ens_start_filename = join(expdir_ei,"ens_start_idx.npy")
+    fall_year_filename = join(expdir_ei,"fall_year_list.npy")
+    if evaluate_database_ei:
+        print("Evaluating ERA-Int database")
+        winstrat.evaluate_features_database(file_list_ei,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+    if tpt_ei_flag: 
+        print("Starting TPT on eraint")
+        for i_seed in range(len(seeddir_list_ei)):
+            print("\tSeed {} of {}".format(i_seed,num_seeds_ei))
+            seeddir = seeddir_list_ei[i_seed]
+            if not exists(seeddir): mkdir(seeddir)
+            tpt_feat_filename = join(seeddir,"Y")
+            if tpt_featurize_ei:
+                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
+            rates_ei = np.zeros(len(uthresh_list))
+            for i_uth in range(len(uthresh_list)):
+                uthresh_b = uthresh_list[i_uth]
+                savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
+                if not exists(savedir): mkdir(savedir)
+                tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
+                tpt.set_boundaries(tpt_bndy)
+                summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level,plot_field_flag=(i_seed==0))
+                rates_ei[i_uth] = summary_dns["rate"]
+    #print(f"rates_e2 = {rates_e2}\nrates_ei = {rates_ei}")
+# =============================================================================
+
+# =======================================================================
 # ------------------- DGA from S2S --------------------------------
 #Npc_per_level = Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 #Npc_per_level[1:] = 0 # Only care about the top layer
@@ -205,7 +229,6 @@ fall_year_filename = join(expdir_s2s,"fall_year_list.npy")
 if evaluate_database_s2s: # Expensive!
     print("Evaluating S2S database")
     winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
-
 print("Starting TPT on S2S")
 for i_seed in np.arange(len(seeddir_list_s2s)):
     print("\tSeed {} of {}".format(i_seed,num_seeds_s2s))
@@ -215,9 +238,8 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
     clust_filename = join(seeddir,"kmeans")
     msm_filename = join(seeddir,"msm")
     if tpt_featurize_s2s:
-        winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
+        winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>=1),seed=i_seed)
     if cluster_flag:
-        # TODO: work out cluster pre-transformation
         tpt.cluster_features(tpt_feat_filename,clust_filename,winstrat,num_clusters=num_clusters)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
     if build_msm_flag:
         tpt.build_msm(tpt_feat_filename,clust_filename,msm_filename,winstrat)
@@ -229,7 +251,7 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
             summary_dga = tpt.tpt_pipeline_dga(tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves,plot_field_flag=(i_seed==0))
-
+# =============================================================================
 # ------------- Compare rates ---------------------
 if plot_rate_flag:
     rate_list_e2 = np.zeros((num_seeds_e2,len(uthresh_list)))
@@ -237,26 +259,28 @@ if plot_rate_flag:
     rate_list_s2s = np.zeros((num_seeds_s2s,len(uthresh_list)))
     for i_uth in range(len(uthresh_list)):
         uthresh_b = uthresh_list[i_uth]
-        for i_seed in range(num_seeds_e2):
-            savedir = join(seeddir_list_e2[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
-            summary = pickle.load(open(join(savedir,"summary"),"rb"))
-            rate_list_e2[i_seed,i_uth] = summary["rate"]
-        for i_seed in range(num_seeds_ei):
-            savedir = join(seeddir_list_ei[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
-            summary = pickle.load(open(join(savedir,"summary"),"rb"))
-            rate_list_ei[i_seed,i_uth] = summary["rate"]
+        if e2_flag:
+            for i_seed in range(num_seeds_e2):
+                savedir = join(seeddir_list_e2[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
+                summary = pickle.load(open(join(savedir,"summary"),"rb"))
+                rate_list_e2[i_seed,i_uth] = summary["rate"]
+        if ei_flag:
+            for i_seed in range(num_seeds_ei):
+                savedir = join(seeddir_list_ei[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
+                summary = pickle.load(open(join(savedir,"summary"),"rb"))
+                rate_list_ei[i_seed,i_uth] = summary["rate"]
         for i_seed in range(num_seeds_s2s):
             savedir = join(seeddir_list_s2s[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
             summary = pickle.load(open(join(savedir,"summary"),"rb"))
             rate_list_s2s[i_seed,i_uth] = summary["rate_tob"]
     fig,ax = plt.subplots()
-    he2, = ax.plot(uthresh_list,rate_list_e2[0],color='cyan',linewidth=3,marker='o',label="ERA20C")
-    hei, = ax.plot(uthresh_list,rate_list_ei[0],color='black',linewidth=3,marker='o',label="ERAI")
+    if e2_flag: he2, = ax.plot(uthresh_list,rate_list_e2[0],color='cyan',linewidth=3,marker='o',label="ERA20C")
+    if ei_flag: hei, = ax.plot(uthresh_list,rate_list_ei[0],color='black',linewidth=3,marker='o',label="ERAI")
     hs2s, = ax.plot(uthresh_list,rate_list_s2s[0],color='red',linewidth=3,marker='o',label="S2S")
-    if num_seeds_e2 > 1:
+    if e2_flag and (num_seeds_e2 > 1):
         ax.plot(uthresh_list,np.min(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
         ax.plot(uthresh_list,np.max(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
-    if num_seeds_ei > 1:
+    if ei_flag and (num_seeds_ei > 1):
         ax.plot(uthresh_list,np.min(rate_list_ei[1:],axis=0),color='black',linestyle='--',alpha=0.5)
         ax.plot(uthresh_list,np.max(rate_list_ei[1:],axis=0),color='black',linestyle='--',alpha=0.5)
     if num_seeds_s2s > 1:
@@ -265,7 +289,7 @@ if plot_rate_flag:
     ax.set_xlabel("Zonal wind threshold",fontdict=font)
     ax.set_ylabel("Rate",fontdict=font)
     ax.set_ylim([5e-3,1.2])
-    ax.legend(handles=[he2,hei,hs2s])
+    if e2_flag and ei_flag: ax.legend(handles=[he2,hei,hs2s])
     suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
     fig.savefig(join(paramdir_s2s,"rate_%s"%(suffix)))
     ax.set_yscale('log')
@@ -274,3 +298,5 @@ if plot_rate_flag:
     fig.savefig(join(paramdir_s2s,"logitrate_%s"%(suffix)))
     plt.close(fig)
 
+# Print the rate lists
+if e2_flag and ei_flag: print(f"rate_lists:\nera20c:\n{rate_list_e2[0]}\neraint:\n{rate_list_ei[0]}\ns2s:\n{rate_list_s2s[0]}")
