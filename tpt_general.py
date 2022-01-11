@@ -436,7 +436,10 @@ class WinterStratosphereTPT:
         # Plot 
         if plot_field_flag:
             centers_all = np.concatenate(centers, axis=0)
-            keypairs = [['time_d','area'],['time_d','centerlat'],['time_d','uref'],['time_d','asprat'],['time_d','kurt'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4']][2:3]
+            #keypairs = [['time_d','area'],['time_d','centerlat'],['time_d','uref'],['time_d','asprat'],['time_d','kurt'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4']][:5]
+            keypairs = [['time_d',v] for v in ['uref','area','asprat','kurt']]
+            keypairs += [['area','uref'],['kurt','uref']]
+            keypairs += [['lev0_pc1','lev0_pc4']]
             for i_kp in range(len(keypairs)):
                 fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
                 theta_x = np.array([funlib[keypairs[i_kp][j]]["fun"](centers_all) for j in range(2)]).T

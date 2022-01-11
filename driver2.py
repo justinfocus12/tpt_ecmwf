@@ -31,7 +31,7 @@ resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
 daydir = join(resultsdir,"2022-01-02")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"2")
+expdir = join(daydir,"3")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -60,7 +60,7 @@ spring_day0 = 150.0
 Npc_per_level_max = 6
 vortex_moments_order_max = 4 # Area, mean, variance, skewness, kurtosis
 # ----------------- Phase space definition parameters -------
-delaytime_days = 0.0
+delaytime_days = 20.0
 # ----------------- Directories for this experiment --------
 expdir_e2 = join(expdir,"era20c")
 if not exists(expdir_e2): mkdir(expdir_e2)
@@ -112,17 +112,17 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             1
-tpt_e2_flag =                  1
+tpt_featurize_e2 =             0
+tpt_e2_flag =                  0
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             1
-tpt_ei_flag =                  1
+tpt_featurize_ei =             0
+tpt_ei_flag =                  0
 # s2s
 evaluate_database_s2s =        0
-tpt_featurize_s2s =            1
-cluster_flag =                 1
-build_msm_flag =               1
+tpt_featurize_s2s =            0
+cluster_flag =                 0
+build_msm_flag =               0
 tpt_s2s_flag =                 1
 # Summary statistics
 plot_rate_flag =               1
@@ -146,10 +146,10 @@ if display_features_flag:
 feat_def = pickle.load(open(winstrat.feature_file,"rb"))
 tpt = tpt_general.WinterStratosphereTPT()
 # ----------------- Determine list of SSW definitions to consider --------------
-tthresh0 = 10 # First day that SSW could happen
+tthresh0 = 30 # First day that SSW could happen
 tthresh1 = 145.0 # Last day that SSW could happen
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
-uthresh_a = 30.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
+uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 
 
@@ -274,18 +274,31 @@ if plot_rate_flag:
             summary = pickle.load(open(join(savedir,"summary"),"rb"))
             rate_list_s2s[i_seed,i_uth] = summary["rate_tob"]
     fig,ax = plt.subplots()
-    if e2_flag: he2, = ax.plot(uthresh_list,rate_list_e2[0],color='cyan',linewidth=3,marker='o',label="ERA20C")
-    if ei_flag: hei, = ax.plot(uthresh_list,rate_list_ei[0],color='black',linewidth=3,marker='o',label="ERAI")
-    hs2s, = ax.plot(uthresh_list,rate_list_s2s[0],color='red',linewidth=3,marker='o',label="S2S")
-    if e2_flag and (num_seeds_e2 > 1):
-        ax.plot(uthresh_list,np.min(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
-        ax.plot(uthresh_list,np.max(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
-    if ei_flag and (num_seeds_ei > 1):
-        ax.plot(uthresh_list,np.min(rate_list_ei[1:],axis=0),color='black',linestyle='--',alpha=0.5)
-        ax.plot(uthresh_list,np.max(rate_list_ei[1:],axis=0),color='black',linestyle='--',alpha=0.5)
-    if num_seeds_s2s > 1:
-        ax.plot(uthresh_list,np.min(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
-        ax.plot(uthresh_list,np.max(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
+    du = np.abs(uthresh_list[1] - uthresh_list[0])/6.0 # How far to offset the x axis positions for the three timeseries
+    if e2_flag: 
+        he2, = ax.plot(uthresh_list,rate_list_e2[0],color='cyan',linewidth=3,marker='o',label="ERA20C")
+        if num_seeds_e2 > 1:
+            for i_uth in range(len(uthresh_list)):
+                ax.plot((uthresh_list[i_uth]-du)*np.ones(2), [np.min(rate_list_e2[1:,i_uth]), np.max(rate_list_e2[1:,i_uth])], color='cyan',linewidth=2)
+    if ei_flag: 
+        hei, = ax.plot(uthresh_list,rate_list_ei[0],color='black',linewidth=3,marker='o',label="ERAI")
+        if num_seeds_ei > 1:
+            for i_uth in range(len(uthresh_list)):
+                ax.plot(uthresh_list[i_uth]*np.ones(2), [np.min(rate_list_ei[1:,i_uth]), np.max(rate_list_ei[1:,i_uth])], color='black',linewidth=2)
+    if True: # s2s flag is always true
+        hs2s, = ax.plot(uthresh_list,rate_list_s2s[0],color='red',linewidth=3,marker='o',label="S2S")
+        if num_seeds_s2s > 1:
+            for i_uth in range(len(uthresh_list)):
+                ax.plot((uthresh_list[i_uth]+du)*np.ones(2), [np.min(rate_list_s2s[1:,i_uth], axis=0), np.max(rate_list_s2s[1:,i_uth])], color='red',linewidth=2)
+    #if e2_flag and (num_seeds_e2 > 1):
+    #    ax.plot(uthresh_list,np.min(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
+    #    ax.plot(uthresh_list,np.max(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
+    #if ei_flag and (num_seeds_ei > 1):
+    #    ax.plot(uthresh_list,np.min(rate_list_ei[1:],axis=0),color='black',linestyle='--',alpha=0.5)
+    #    ax.plot(uthresh_list,np.max(rate_list_ei[1:],axis=0),color='black',linestyle='--',alpha=0.5)
+    #if num_seeds_s2s > 1:
+    #    ax.plot(uthresh_list,np.min(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
+    #    ax.plot(uthresh_list,np.max(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
     ax.set_xlabel("Zonal wind threshold",fontdict=font)
     ax.set_ylabel("Rate",fontdict=font)
     ax.set_ylim([5e-3,1.2])
