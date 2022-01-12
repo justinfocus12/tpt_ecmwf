@@ -23,15 +23,15 @@ os.chdir(codedir)
 datadir_e2 = "/scratch/jf4241/ecmwf_data/era20c_data/2021-11-03"
 datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2021-12-12"
 datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
-featdir = "/scratch/jf4241/ecmwf_data/features/2022-01-02"
+featdir = "/scratch/jf4241/ecmwf_data/features/2022-01-12"
 if not exists(featdir): mkdir(featdir)
 feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-01-02")
+daydir = join(resultsdir,"2022-01-12")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"3")
+expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -51,7 +51,7 @@ for i_fy in range(len(fall_years_ei)):
     file_list_ei += [join(datadir_ei,"%s-11-01_to_%s-04-30.nc"%(fall_years_ei[i_fy],fall_years_ei[i_fy]+1))]
 file_list_s2s = [join(datadir_s2s,f) for f in os.listdir(datadir_s2s) if f.endswith(".nc")]
 np.random.seed(1)
-ftidx_e2 = np.random.choice(np.arange(len(file_list_e2)),size=15,replace=False)
+ftidx_e2 = np.random.choice(np.arange(len(file_list_e2)),size=5,replace=False)
 dga_idx_s2s = np.random.choice(np.arange(len(file_list_s2s)),size=500,replace=False) # Subset of filed to use for DGA.
 
 # ----------------- Constant parameters ---------------------
@@ -72,14 +72,19 @@ if not exists(expdir_s2s): mkdir(expdir_s2s)
 num_clusters = 120
 #Npc_per_level_single = 4
 Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+captemp_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
+heatflux_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
 vortex_moments_order = 4
 pcstr = ""
+hfstr = ""
 for i_lev in range(len(Npc_per_level)):
     if Npc_per_level[i_lev] != 0:
         pcstr += f"lev{i_lev}pc{Npc_per_level[i_lev]}-"
+    if heatflux_flag[i_lev]:
+        hfstr += f"{i_lev}-"
 if len(pcstr) > 1: pcstr = pcstr[:-1]
 Nwaves = 0
-paramdir_s2s = join(expdir_s2s, f"delay{int(delaytime_days)}_nclust{num_clusters}_nwaves{Nwaves}_vxm{vortex_moments_order_max}_{pcstr}")
+paramdir_s2s = join(expdir_s2s, f"delay{int(delaytime_days)}_nclust{num_clusters}_nwaves{Nwaves}_vxm{vortex_moments_order_max}_pc-{pcstr}_hf-{hfstr}")
 if not exists(paramdir_s2s): mkdir(paramdir_s2s)
 paramdir_e2 = join(expdir_e2, f"delay{int(delaytime_days)}")
 if not exists(paramdir_e2): mkdir(paramdir_e2)
@@ -108,8 +113,8 @@ for i in range(num_seeds_s2s):
 
 # Parameters to determine what to do
 # Featurization
-create_features_flag =         0
-display_features_flag =        0
+create_features_flag =         1
+display_features_flag =        1
 # era20c
 evaluate_database_e2 =         0
 tpt_featurize_e2 =             0
@@ -125,7 +130,7 @@ cluster_flag =                 0
 build_msm_flag =               0
 tpt_s2s_flag =                 0
 # Summary statistics
-plot_rate_flag =               1
+plot_rate_flag =               0
 
 
 feature_file = join(featdir,"feat_def")
