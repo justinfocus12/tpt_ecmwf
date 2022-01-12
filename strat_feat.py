@@ -165,6 +165,16 @@ class WinterStratosphereFeatures:
         u = -gh_y/fcor * grav_accel
         v = gh_x/fcor * grav_accel
         return u,v
+    def compute_temperature(self,gh,plev,lat,lon):
+        # Use the hypsometric law: d(gz)/dp = -RT/p
+        grav_accel = 9.80665
+        ideal_gas_const = 287.0 # J / (kg.K)
+        dgh_dlnp = np.zeros(gh.shape)
+        dgh_dlnp[1:-1] = (gh[2:] - gh[:-2])/np.log(plev[2:]/plev[:-2])
+        dgh_dlnp[0] = (gh[1] - gh[0])/np.log(plev[1]/plev[0])
+        dgh_dlnp[-1] = (gh[-1] - gh[-2])/np.log(plev[-1]/plev[-2])
+        T = -dgh_dlnp*grav_accel / ideal_gas_const
+        return T
     def compute_qgpv(self,gh,lat,lon):
         # gh shape should be (Nx, Nlev,Nlat,Nlon)
         # Quasigeostrophic potential vorticity: just do horizontal component for now

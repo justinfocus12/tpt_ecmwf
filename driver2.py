@@ -123,7 +123,7 @@ evaluate_database_s2s =        0
 tpt_featurize_s2s =            0
 cluster_flag =                 0
 build_msm_flag =               0
-tpt_s2s_flag =                 1
+tpt_s2s_flag =                 0
 # Summary statistics
 plot_rate_flag =               1
 
@@ -274,22 +274,46 @@ if plot_rate_flag:
             summary = pickle.load(open(join(savedir,"summary"),"rb"))
             rate_list_s2s[i_seed,i_uth] = summary["rate_tob"]
     fig,ax = plt.subplots()
-    du = np.abs(uthresh_list[1] - uthresh_list[0])/6.0 # How far to offset the x axis positions for the three timeseries
-    if e2_flag: 
-        he2, = ax.plot(uthresh_list,rate_list_e2[0],color='cyan',linewidth=3,marker='o',label="ERA20C")
-        if num_seeds_e2 > 1:
-            for i_uth in range(len(uthresh_list)):
-                ax.plot((uthresh_list[i_uth]-du)*np.ones(2), [np.min(rate_list_e2[1:,i_uth]), np.max(rate_list_e2[1:,i_uth])], color='cyan',linewidth=2)
+    ax.set_xlabel("Zonal wind threshold",fontdict=font)
+    ax.set_ylabel("Rate",fontdict=font)
+    ax.set_ylim([5e-3,1.2])
+    suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
+    handles = []
+    # Build this up one curve at a time
+    du = np.abs(uthresh_list[1] - uthresh_list[0])/15.0 # How far to offset the x axis positions for the three timeseries
     if ei_flag: 
         hei, = ax.plot(uthresh_list,rate_list_ei[0],color='black',linewidth=3,marker='o',label="ERAI")
+        handles += [hei]
         if num_seeds_ei > 1:
             for i_uth in range(len(uthresh_list)):
-                ax.plot(uthresh_list[i_uth]*np.ones(2), [np.min(rate_list_ei[1:,i_uth]), np.max(rate_list_ei[1:,i_uth])], color='black',linewidth=2)
+                ax.plot(uthresh_list[i_uth]*np.ones(2), [np.min(rate_list_ei[1:,i_uth]), np.max(rate_list_ei[1:,i_uth])], color='black',linewidth=3)
+    ax.legend(handles=handles,loc='upper left')
+    ax.set_yscale('linear')
+    fig.savefig(join(paramdir_s2s,"rate_%s_ei"%(suffix)))
+    ax.set_yscale('log')
+    fig.savefig(join(paramdir_s2s,"lograte_%s_ei"%(suffix)))
+    if e2_flag: 
+        he2, = ax.plot(uthresh_list,rate_list_e2[0],color='cyan',linewidth=3,marker='o',label="ERA20C")
+        handles += [he2]
+        if num_seeds_e2 > 1:
+            for i_uth in range(len(uthresh_list)):
+                ax.plot((uthresh_list[i_uth]-du)*np.ones(2), [np.min(rate_list_e2[1:,i_uth]), np.max(rate_list_e2[1:,i_uth])], color='cyan',linewidth=3)
+    ax.legend(handles=handles,loc='upper left')
+    ax.set_yscale('linear')
+    fig.savefig(join(paramdir_s2s,"rate_%s_eie2"%(suffix)))
+    ax.set_yscale('log')
+    fig.savefig(join(paramdir_s2s,"lograte_%s_eie2"%(suffix)))
     if True: # s2s flag is always true
         hs2s, = ax.plot(uthresh_list,rate_list_s2s[0],color='red',linewidth=3,marker='o',label="S2S")
+        handles += [hs2s]
         if num_seeds_s2s > 1:
             for i_uth in range(len(uthresh_list)):
-                ax.plot((uthresh_list[i_uth]+du)*np.ones(2), [np.min(rate_list_s2s[1:,i_uth], axis=0), np.max(rate_list_s2s[1:,i_uth])], color='red',linewidth=2)
+                ax.plot((uthresh_list[i_uth]+du)*np.ones(2), [np.min(rate_list_s2s[1:,i_uth], axis=0), np.max(rate_list_s2s[1:,i_uth])], color='red',linewidth=3)
+    ax.legend(handles=handles,loc='upper left')
+    ax.set_yscale('linear')
+    fig.savefig(join(paramdir_s2s,"rate_%s_eie2s2s"%(suffix)))
+    ax.set_yscale('log')
+    fig.savefig(join(paramdir_s2s,"lograte_%s_eie2s2s"%(suffix)))
     #if e2_flag and (num_seeds_e2 > 1):
     #    ax.plot(uthresh_list,np.min(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
     #    ax.plot(uthresh_list,np.max(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
@@ -299,16 +323,11 @@ if plot_rate_flag:
     #if num_seeds_s2s > 1:
     #    ax.plot(uthresh_list,np.min(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
     #    ax.plot(uthresh_list,np.max(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
-    ax.set_xlabel("Zonal wind threshold",fontdict=font)
-    ax.set_ylabel("Rate",fontdict=font)
-    ax.set_ylim([5e-3,1.2])
-    if e2_flag and ei_flag: ax.legend(handles=[he2,hei,hs2s])
-    suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
-    fig.savefig(join(paramdir_s2s,"rate_%s"%(suffix)))
-    ax.set_yscale('log')
-    fig.savefig(join(paramdir_s2s,"lograte_%s"%(suffix)))
-    ax.set_yscale('logit')
-    fig.savefig(join(paramdir_s2s,"logitrate_%s"%(suffix)))
+    #fig.savefig(join(paramdir_s2s,"rate_%s"%(suffix)))
+    #ax.set_yscale('log')
+    #fig.savefig(join(paramdir_s2s,"lograte_%s"%(suffix)))
+    #ax.set_yscale('logit')
+    #fig.savefig(join(paramdir_s2s,"logitrate_%s"%(suffix)))
     plt.close(fig)
 
 # Print the rate lists
