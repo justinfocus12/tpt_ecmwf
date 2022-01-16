@@ -415,7 +415,7 @@ class WinterStratosphereFeatures:
             eofs[i_lev,:,:] = U[:,:self.Npc_per_level_max]
             singvals[i_lev,:] = S[:self.Npc_per_level_max]
             tot_var[i_lev] = np.sum(S**2)
-        # TODO: remove EOFs that are highly correlated with uref or wavenumbers
+        # TODO: deseasonalize temperature and heat flux, and lump that in with the tpt_features too. 
         feat_def = {
                 "t_szn": t_szn, "plev": plev, "lat": lat, "lon": lon,
                 "i_lev_uref": i_lev_uref, "i_lat_uref": i_lat_uref,
@@ -461,7 +461,6 @@ class WinterStratosphereFeatures:
         # The data set for clustering will have fewer time steps, due to time-delay embedding.
         X = np.load(feat_filename)
         print("Before resampling: X.shape = {}".format(X.shape))
-        # TODO: figure out whether this seed should go inside or outside the resample_flag, and why it makes a difference. 
         prng = np.random.RandomState(seed)
         if resample_flag:
             ens_start_idx = np.load(ens_start_filename)
@@ -490,10 +489,15 @@ class WinterStratosphereFeatures:
             X = X[idx_resamp]
         #print("len(idx_resamp) = {}".format(len(idx_resamp)))
         print("After resampling: X.shape = {}".format(X.shape))
+        Nlev = len(feat_def['plev'])
         if Npc_per_level is None:
             Npc_per_level = self.Npc_per_level_max*np.ones(len(feat_def['plev']), dtype=int)
         if Nwaves is None:
             Nwaves = self.num_wavenumbers
+        if temp_flag is None:
+            temp_flag = np.zeros(Nlev, dtype=bool)
+        if heatflux_flag is None:
+            heatflux_flag = np.zeros(Nlev, dtype=bool)
         Nx,Ntx,xdim = X.shape
         print(f"Nx = {Nx}, Ntx = {Ntx}, xdim = {xdim}")
         # ------------- Define the cluster features Y ------------------
@@ -501,10 +505,16 @@ class WinterStratosphereFeatures:
         # Y dimension: (time, uref, real + imag for each wave, pc for each level, vortex area, centroid latitude) all times the number of time lags
         Nty = Ntx - self.ndelay + 1
         print(f"self.ndelay = {self.ndelay}")
-        ydim = 1 + self.ndelay + 2*Nwaves + np.sum(Npc_per_level) + 4 # self.ndelay for the history of u
+        ydim = 1 # Time
+        ydim += self.ndelay # Zonal wind for some history
+        ydim += 2*Nwaves # real and imaginary parts of each 
+        ydim += np.sum(Npc_per_level) 
+        ydim += 4 # Vortex moments
+        ydim += Nlev # Polar cap averaged temperature
+        ydim += Nlev*self.ndelay # Heat flux at each level and lag time
+        #ydim = 1 + self.ndelay + 2*Nwaves + np.sum(Npc_per_level) + 4 # self.ndelay for the history of u
         print(f"ydim = {ydim}")
         Y = np.zeros((Nx,Nty,ydim))
-        # TODO: figure out wth to do with ndelay vs ndelay+1
         Y[:,:,0] = X[:,self.ndelay-1:,0]
         print(f"Y[0,0,0] = {Y[0,0,0]}")
         i_feat_y = 1
@@ -516,7 +526,7 @@ class WinterStratosphereFeatures:
         for i_dl in range(self.ndelay):
             Y[:,:,i_feat_y] = X[:,i_dl:i_dl+Nty,i_feat_x]
             print(f"t_szn.shape = {feat_def['t_szn'].shape}, uref_szn_mean.shape = {feat_def['uref_szn_mean'].shape}")
-            szn_mean_Y[:,i_feat_y-1] = feat_def["uref_szn_mean"] # TODO: employ time shifts as necessary
+            szn_mean_Y[:,i_feat_y-1] = feat_def["uref_szn_mean"] 
             szn_std_Y[:,i_feat_y-1] = feat_def["uref_szn_std"]
             #offset_Y[i_feat_y-1] = feat_def["uref_mean"]
             #scale_Y[i_feat_y-1] = feat_def["uref_std"]
@@ -548,6 +558,12 @@ class WinterStratosphereFeatures:
         szn_std_Y[:,i_feat_y-1:i_feat_y+3] = feat_def["vtx_diags_szn_std"]
         i_feat_y += 4
         i_feat_x += 4
+        # Read in the temperature
+        for i_lev in range(Nlev):
+            if captemp_flag[i_lev]:
+                Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
+                i_feat_y += 1
+            i_feat_x += 1
         tpt_feat = {"Y": Y, "szn_mean_Y": szn_mean_Y, "szn_std_Y": szn_std_Y}
         pickle.dump(tpt_feat, open(tpt_feat_filename,"wb"))
         return 
@@ -736,7 +752,6 @@ class WinterStratosphereFeatures:
             Nwaves = self.num_wavenumbers
         if Npc_per_level is None:
             Npc_per_level = self.Npc_per_level_max * np.ones(len(feat_def["plev"]), dtype=int)
-        # TODO: build in PC projections and other stuff as observable functions
         print(f"Nwaves = {Nwaves}, Npc_per_level = {Npc_per_level}")
         print(f"Npc_per_level = {Npc_per_level}")
         print(f"Index for area = {1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)}")

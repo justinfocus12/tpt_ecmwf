@@ -60,7 +60,7 @@ spring_day0 = 150.0
 Npc_per_level_max = 6
 vortex_moments_order_max = 4 # Area, mean, variance, skewness, kurtosis
 # ----------------- Phase space definition parameters -------
-delaytime_days = 20.0
+delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay
 # ----------------- Directories for this experiment --------
 expdir_e2 = join(expdir,"era20c")
 if not exists(expdir_e2): mkdir(expdir_e2)
