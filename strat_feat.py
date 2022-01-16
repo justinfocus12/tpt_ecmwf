@@ -177,6 +177,15 @@ class WinterStratosphereFeatures:
             dgh_dlnp[:,i_lev] = (gh[:,i_lev+1] - gh[:,i_lev-1])/np.log(plev[i_lev+1]/plev[i_lev-1])
         T = -dgh_dlnp*grav_accel / ideal_gas_const
         return T
+    def get_meridional_heat_flux(self,gh,T,plev,lat,lon): # Returns average between 45N and 75N 
+        Nx,Nlev,Nlat,Nlon = gh.shape
+        _,vmer = self.compute_geostrophic_wind(gh,lat,lon)
+        vbar = np.outer(np.mean(vmer,axis=3).flatten(),np.ones(Nlon)).reshape((Nx,Nlev,Nlat,Nlon))
+        Tbar = np.outer(np.mean(temperature,axis=3).flatten(),np.ones(Nlon)).reshape((Nx,Nlev,Nlat,Nlon))
+        vT = np.mean((vmer - vbar)*(temperature - Tbar), axis=3)
+        imin,imax = np.argmin(np.abs(lat-75)),np.argmin(np.abs(lat-45))
+        vT = np.sum(vT[:,:,imin:imax]*np.cos(lat[imin:imax]*np.pi/180), axis=2)/(Nlon*np.sum(np.cos(lat[imin:imax]*np.pi/180)))
+        return vT
     def compute_qgpv(self,gh,lat,lon):
         # gh shape should be (Nx, Nlev,Nlat,Nlon)
         # Quasigeostrophic potential vorticity: just do horizontal component for now
@@ -369,18 +378,24 @@ class WinterStratosphereFeatures:
         ds0.close()
         gh = np.zeros((0,Nlev,Nlat,Nlon)) # First dimension will have both time and ensemble members
         u = np.zeros((0,Nlev,Nlat,Nlon)) 
+        temperature = np.zeros((0,Nlev,Nlat,Nlon))
+        vT = np.zeros((0,Nlev))
         t_szn = np.zeros(0)
         grid_shp = np.array([Nlev,Nlat,Nlon])
         for i_file in range(len(data_file_list)):
             print("Creating features: file {} out of {}".format(i_file,len(data_file_list)))
             ds = nc.Dataset(data_file_list[i_file],"r")
             gh_new,u_new,time,_,_,_,_ = self.get_u_gh(ds)
+            temperature_new = self.get_temperature(gh_new,plev,lat,lon)
+            vT_new = self.get_meridional_heat_flux(gh_new,temperature_new,plev,lat,lon) 
             Nmem,Nt = gh_new.shape[:2]
             shp_new = np.array(gh_new.shape)
             if np.any(shp_new[2:5] != grid_shp):
                 raise Exception("The file {} has a geopotential height field of shape {}, whereas it was supposed to have a shape {}".format(data_file_list[i_file],shp_new[2:5],grid_shp))
             gh = np.concatenate((gh,gh_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
             u = np.concatenate((u,u_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
+            temperature = np.concatenate((temperature,temperature_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
+            vT = np.concatenate((vT,vT_new.reshape((Nmem*Nt,Nlev))),axis=0)
             t_szn = np.concatenate((t_szn,self.hours_since_nov1(ds)))
             ds.close()
         # Vortex moment diagnostics, only at reference level
@@ -416,6 +431,12 @@ class WinterStratosphereFeatures:
             singvals[i_lev,:] = S[:self.Npc_per_level_max]
             tot_var[i_lev] = np.sum(S**2)
         # TODO: deseasonalize temperature and heat flux, and lump that in with the tpt_features too. 
+        # Temperature: first compute cap average, then deseasonalize
+        i_lat_cap = np.argmin(np.abs(lat - 60))
+        area_factor = np.outer(np.cos(lat*np.pi/180), np.ones(Nlon))
+        temp_capavg = np.sum((temperature*area_factor)[:,:,:i_lat_cap,:], axis=(2,3))/np.sum(area_factor[:i_lat_cap,:])
+        temp_capavg_szn_mean,temp_capavg_szn_std = self.get_seasonal_mean(t_szn,temp_capavg)
+        vT_szn_mean,vT_szn_std = self.get_seasonal_mean(t_szn,vT)
         feat_def = {
                 "t_szn": t_szn, "plev": plev, "lat": lat, "lon": lon,
                 "i_lev_uref": i_lev_uref, "i_lat_uref": i_lat_uref,
@@ -426,6 +447,8 @@ class WinterStratosphereFeatures:
                 "gh_szn_mean": gh_szn_mean, "gh_szn_std": gh_szn_std,
                 "eofs": eofs, "singvals": singvals, "tot_var": tot_var,
                 "vtx_diags_szn_mean": vtx_diags_szn_mean, "vtx_diags_szn_std": vtx_diags_szn_std,
+                "temp_capavg_szn_mean": temp_capavg_szn_mean, "temp_capavg_szn_std": temp_capavg_szn_std,
+                "vT_szn_mean": vT_szn_mean, "vT_szn_std": vT_szn_std,
                 }
         pickle.dump(feat_def,open(self.feature_file,"wb"))
         return
@@ -562,7 +585,18 @@ class WinterStratosphereFeatures:
         for i_lev in range(Nlev):
             if captemp_flag[i_lev]:
                 Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
+                szn_mean_Y[:,i_feat_y-1] = feat_def["temp_capavg_szn_mean"][i_lev]
+                szn_std_Y[:,i_feat_y-1] = feat_def["temp_capavg_szn_std"][i_lev]
                 i_feat_y += 1
+            i_feat_x += 1
+        # Read in the heat flux 
+        for i_lev in range(Nlev):
+            if captemp_flag[i_lev]:
+                for i_dl in range(self.ndelay):
+                    Y[:,:,i_feat_y] = X[:,i_dl:i_dl+Nty,i_feat_x]
+                    szn_mean_Y[:,i_feat_y-1] = feat_def["vT_szn_mean"][i_lev]
+                    szn_std_Y[:,i_feat_y-1] = feat_def["vT_szn_std"][i_lev]
+                    i_feat_y += 1
             i_feat_x += 1
         tpt_feat = {"Y": Y, "szn_mean_Y": szn_mean_Y, "szn_std_Y": szn_std_Y}
         pickle.dump(tpt_feat, open(tpt_feat_filename,"wb"))
@@ -612,12 +646,8 @@ class WinterStratosphereFeatures:
         temp_capavg = np.sum((temperature*area_factor)[:,:,:i_lat_cap,:], axis=(2,3))/np.sum(area_factor[:i_lat_cap,:])
         X[:,i_feat:i_feat+Nlev] = temp_capavg
         i_feat += Nlev
-        # Now meridional heat flux
-        vbar = np.outer(np.mean(vmer,axis=3).flatten(),np.ones(Nlon)).reshape((Nmem*Nt,Nlev,Nlat,Nlon))
-        Tbar = np.outer(np.mean(temperature,axis=3).flatten(),np.ones(Nlon)).reshape((Nmem*Nt,Nlev,Nlat,Nlon))
-        vT = np.mean((vmer - vbar)*(temperature - Tbar), axis=3)
-        imin,imax = np.argmin(np.abs(lat-75)),np.argmin(np.abs(lat-45))
-        vT = np.sum(vT[:,:,imin:imax]*np.cos(lat[imin:imax]*np.pi/180), axis=2)/(Nlon*np.sum(np.cos(lat[imin:imax]*np.pi/180)))
+        # Now meridional heat flux averaged between 45 and 75 degrees
+        vT = self.get_meridional_heat_flux(gh,temperature,plev,lat,lon)
         X[:,i_feat:i_feat+Nlev] = vT
         X = X.reshape((Nmem,Nt,Nfeat))
         return X,fall_year
@@ -730,19 +760,19 @@ class WinterStratosphereFeatures:
             key = "lev%i_temp"%(i_lev)
             funlib[key] = {
                     "fun": lambda X,i_lev=i_lev: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+4+i_lev],
-                    "label": "Cap temp. at $p=%i$ hPa"%(feat_def["plev"][i_lev]/100.0),
+                    "label": "Cap temp. at %i hPa [K]"%(feat_def["plev"][i_lev]/100.0),
                     }
             key = "lev%i_vT"%(i_lev)
             funlib[key] = {
                     "fun": lambda X,i_lev=i_lev: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+4+len(feat_def['plev'])+i_lev],
-                    "label": "$\overline{v'T'}$ at 45-75$^\circ$N, $p=%i$ hPa"%(feat_def["plev"][i_lev]/100.0),
+                    "label": "$\overline{v'T'}$ at 45-75$^\circ$N, %i hPa [Km/s]"%(feat_def["plev"][i_lev]/100.0),
                     }
             for i_eof in range(self.Npc_per_level_max):
                 key = "lev%i_pc%i"%(i_lev,i_eof)
                 #print("key = {}".format(key))
                 funlib[key] = {
                         "fun": lambda X,i_lev=i_lev,i_eof=i_eof: X[:,2+2*self.num_wavenumbers+i_lev*self.Npc_per_level_max+i_eof],
-                        "label": "PC %i at $p=%i$ hPa"%(i_eof+1, feat_def["plev"][i_lev]/100.0),
+                        "label": "PC %i at %i hPa"%(i_eof+1, feat_def["plev"][i_lev]/100.0),
                         }
         return funlib
     def observable_function_library_Y(self,Nwaves=None,Npc_per_level=None):
@@ -782,14 +812,25 @@ class WinterStratosphereFeatures:
                 #    "label": "PC 1"},
                 #"pc2": {"fun": lambda x: x[:,2+2*self.num_wavenumbers+1],
                 #    "label": "PC 2"},
+                # TODO: add names for temperature and heat flux.
                 }
         for i_lev in range(len(feat_def["plev"])):
+            key = "lev%i_temp"%(i_lev)
+            funlib[key] = {
+                    "fun": lambda Y,i_lev=i_lev: Y[:,2+2*self.num_wavenumbers+np.sum(Npc_per_level)+4+i_lev],
+                    "label": "Cap temp. at %i hPa [K]"%(feat_def["plev"][i_lev]/100.0),
+                    }
+            key = "lev%i_vT"%(i_lev)
+            funlib[key] = {
+                    "fun": lambda Y,i_lev=i_lev: Y[:,2+2*self.num_wavenumbers+np.sum(Npc_per_level)+4+len(feat_def['plev'])+i_lev],
+                    "label": "$\overline{v'T'}$ at 45-75$^\circ$N, %i hPa [Km/s]"%(feat_def["plev"][i_lev]/100.0),
+                    }
             for i_eof in range(self.Npc_per_level_max):
                 key = "lev%i_pc%i"%(i_lev,i_eof)
                 #print("key = {}".format(key))
                 funlib[key] = {
                         "fun": lambda Y,i_lev=i_lev,i_eof=i_eof: self.get_pc(Y,i_lev,i_eof,Nwaves,Npc_per_level),
-                        "label": "PC %i at $p=%i$ hPa"%(i_eof+1, feat_def["plev"][i_lev]/100.0),
+                        "label": "PC %i at %i hPa"%(i_eof+1, feat_def["plev"][i_lev]/100.0),
                         }
         return funlib
     def get_pc(self,Y,i_lev,i_eof,Nwaves=None,Npc_per_level=None):
