@@ -177,7 +177,7 @@ class WinterStratosphereFeatures:
             dgh_dlnp[:,i_lev] = (gh[:,i_lev+1] - gh[:,i_lev-1])/np.log(plev[i_lev+1]/plev[i_lev-1])
         T = -dgh_dlnp*grav_accel / ideal_gas_const
         return T
-    def get_meridional_heat_flux(self,gh,T,plev,lat,lon): # Returns average between 45N and 75N 
+    def get_meridional_heat_flux(self,gh,temperature,plev,lat,lon): # Returns average between 45N and 75N 
         Nx,Nlev,Nlat,Nlon = gh.shape
         _,vmer = self.compute_geostrophic_wind(gh,lat,lon)
         vbar = np.outer(np.mean(vmer,axis=3).flatten(),np.ones(Nlon)).reshape((Nx,Nlev,Nlat,Nlon))
@@ -378,24 +378,18 @@ class WinterStratosphereFeatures:
         ds0.close()
         gh = np.zeros((0,Nlev,Nlat,Nlon)) # First dimension will have both time and ensemble members
         u = np.zeros((0,Nlev,Nlat,Nlon)) 
-        temperature = np.zeros((0,Nlev,Nlat,Nlon))
-        vT = np.zeros((0,Nlev))
         t_szn = np.zeros(0)
         grid_shp = np.array([Nlev,Nlat,Nlon])
         for i_file in range(len(data_file_list)):
             print("Creating features: file {} out of {}".format(i_file,len(data_file_list)))
             ds = nc.Dataset(data_file_list[i_file],"r")
             gh_new,u_new,time,_,_,_,_ = self.get_u_gh(ds)
-            temperature_new = self.get_temperature(gh_new,plev,lat,lon)
-            vT_new = self.get_meridional_heat_flux(gh_new,temperature_new,plev,lat,lon) 
             Nmem,Nt = gh_new.shape[:2]
             shp_new = np.array(gh_new.shape)
             if np.any(shp_new[2:5] != grid_shp):
                 raise Exception("The file {} has a geopotential height field of shape {}, whereas it was supposed to have a shape {}".format(data_file_list[i_file],shp_new[2:5],grid_shp))
             gh = np.concatenate((gh,gh_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
             u = np.concatenate((u,u_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
-            temperature = np.concatenate((temperature,temperature_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
-            vT = np.concatenate((vT,vT_new.reshape((Nmem*Nt,Nlev))),axis=0)
             t_szn = np.concatenate((t_szn,self.hours_since_nov1(ds)))
             ds.close()
         # Vortex moment diagnostics, only at reference level
@@ -432,6 +426,8 @@ class WinterStratosphereFeatures:
             tot_var[i_lev] = np.sum(S**2)
         # TODO: deseasonalize temperature and heat flux, and lump that in with the tpt_features too. 
         # Temperature: first compute cap average, then deseasonalize
+        temperature = self.get_temperature(gh,plev,lat,lon)
+        vT = self.get_meridional_heat_flux(gh,temperature,plev,lat,lon) 
         i_lat_cap = np.argmin(np.abs(lat - 60))
         area_factor = np.outer(np.cos(lat*np.pi/180), np.ones(Nlon))
         temp_capavg = np.sum((temperature*area_factor)[:,:,:i_lat_cap,:], axis=(2,3))/np.sum(area_factor[:i_lat_cap,:])
@@ -477,7 +473,7 @@ class WinterStratosphereFeatures:
         np.save(ens_start_filename,ens_start_idx)
         np.save(fall_year_filename,fall_year_list)
         return X
-    def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=None,Nwaves=None,temp_flag=None,heatflux_flag=None,resample_flag=False,seed=0):
+    def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=None,Nwaves=None,captemp_flag=None,heatflux_flag=None,resample_flag=False,seed=0):
         print(f" -------------- Inside evaluate_tpt_features: tpt_feat_filename = {tpt_feat_filename}, resample_flag = {resample_flag}, seed = {seed} --------------")
         # Evaluate a subset of the full features to use for clustering TPT.
         # A normalized version of these will be used for clustering.
@@ -517,8 +513,8 @@ class WinterStratosphereFeatures:
             Npc_per_level = self.Npc_per_level_max*np.ones(len(feat_def['plev']), dtype=int)
         if Nwaves is None:
             Nwaves = self.num_wavenumbers
-        if temp_flag is None:
-            temp_flag = np.zeros(Nlev, dtype=bool)
+        if captemp_flag is None:
+            captemp_flag = np.zeros(Nlev, dtype=bool)
         if heatflux_flag is None:
             heatflux_flag = np.zeros(Nlev, dtype=bool)
         Nx,Ntx,xdim = X.shape
@@ -533,8 +529,8 @@ class WinterStratosphereFeatures:
         ydim += 2*Nwaves # real and imaginary parts of each 
         ydim += np.sum(Npc_per_level) 
         ydim += 4 # Vortex moments
-        ydim += Nlev # Polar cap averaged temperature
-        ydim += Nlev*self.ndelay # Heat flux at each level and lag time
+        ydim += np.sum(captemp_flag) # Polar cap averaged temperature
+        ydim += np.sum(heatflux_flag)*self.ndelay # Heat flux at each level and lag time
         #ydim = 1 + self.ndelay + 2*Nwaves + np.sum(Npc_per_level) + 4 # self.ndelay for the history of u
         print(f"ydim = {ydim}")
         Y = np.zeros((Nx,Nty,ydim))
@@ -591,7 +587,7 @@ class WinterStratosphereFeatures:
             i_feat_x += 1
         # Read in the heat flux 
         for i_lev in range(Nlev):
-            if captemp_flag[i_lev]:
+            if heatflux_flag[i_lev]:
                 for i_dl in range(self.ndelay):
                     Y[:,:,i_feat_y] = X[:,i_dl:i_dl+Nty,i_feat_x]
                     szn_mean_Y[:,i_feat_y-1] = feat_def["vT_szn_mean"][i_lev]
