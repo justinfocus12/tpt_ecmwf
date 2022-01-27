@@ -5,6 +5,7 @@
 import numpy as np
 import netCDF4 as nc
 import datetime
+import time as timelib
 import matplotlib
 matplotlib.use('AGG')
 import matplotlib.colors as colors
@@ -33,7 +34,7 @@ import pickle
 
 class WinterStratosphereFeatures:
     # Create a set of features, including out-of-sample extension. 
-    def __init__(self,feature_file,winter_day0,spring_day0,delaytime_days=0,Npc_per_level_max=10,vortex_moments_order_max=4):
+    def __init__(self,feature_file,winter_day0,spring_day0,delaytime_days=0,Npc_per_level_max=10,num_vortex_moments_max=4):
         self.feature_file = feature_file
         self.winter_day0 = winter_day0
         self.spring_day0 = spring_day0
@@ -44,7 +45,7 @@ class WinterStratosphereFeatures:
         self.delaytime = delaytime_days*24.0 
         self.ndelay = int(self.delaytime/self.dtwint) + 1
         self.Npc_per_level_max = Npc_per_level_max # Determine from SVD if not specified
-        self.vortex_moments_order_max = vortex_moments_order_max
+        self.num_vortex_moments_max = num_vortex_moments_max
         self.num_wavenumbers = 2 # How many wavenumbers to look at 
         self.lat_uref = 60 # Degrees North for CP07 definition of SSW
         self.lat_range_uref = self.lat_uref + 5.0*np.array([-1,1])
@@ -223,7 +224,7 @@ class WinterStratosphereFeatures:
         #qgpv[:,:,:2,:] = np.nan
         #qgpv[:,:,-2:,:] = np.nan
         return qgpv
-    def compute_vortex_moments_sphere(self,gh,lat,lon,i_lev_subset=None,order=4):
+    def compute_vortex_moments_sphere(self,gh,lat,lon,i_lev_subset=None,num_vortex_moments=4):
         # Do the calculation in lat/lon coordinates. Regridding is too expensive
         Nsamp,Nlev_full,Nlat_full,Nlon = gh.shape
         dlat,dlon = np.pi/2*np.array([lat[1]-lat[0],lon[1]-lon[0]])
@@ -269,7 +270,7 @@ class WinterStratosphereFeatures:
         q = (np.maximum(0, qgpv.T - qgpv_crit).T)
         print(f"q: frac>0 is {np.mean(q>0)},  min={np.nanmin(q)}, max={np.nanmax(q)}")
         moments = {}
-        for i_mom in range(order+1):
+        for i_mom in range(num_vortex_moments+1):
             key = f"m{i_mom}" # Normalized moments
             moments[key] = np.zeros((Nsamp*Nlev,i_mom+1))
             for j in range(i_mom+1):
@@ -287,15 +288,15 @@ class WinterStratosphereFeatures:
                     moments[key][:,j] = np.nansum(area_factor*q*Xcent**j*Ycent**(i_mom-j), axis=1)
         # Normalize the moments
         moments['area'] = np.nansum(area_factor*q, axis=1) #moments['m0'][:,0]
-        if order >= 1:
+        if num_vortex_moments >= 1:
             moments['centerlat'] = np.arcsin((1 - (Xbar**2+Ybar**2))/(1 + (Xbar**2+Ybar**2))) * 180/np.pi
             moments['centerlon'] = np.arctan2(Ybar,Xbar) * 180/np.pi
-        if order >= 2:
+        if num_vortex_moments >= 2:
             J02,J11,J20 = moments['J2'].T
             term0 = J20 + J02
             term1 = np.sqrt(4*J11**2 + (J20-J02)**2)
             moments['aspect_ratio'] = np.sqrt((term0 + term1)/(term0 - term1))
-        if order >= 4:
+        if num_vortex_moments >= 4:
             J04,J13,J22,J31,J40 = moments['J4'].T
             r = moments['aspect_ratio']
             moments['excess_kurtosis'] = (J40+J02+2*J22)/(J20+J02)**2 - 2/(3*moments['m0'][0])*(3*r**4+2*r**2+3)/(r**4+2*r**2+1)
@@ -448,6 +449,34 @@ class WinterStratosphereFeatures:
                 }
         pickle.dump(feat_def,open(self.feature_file,"wb"))
         return
+    def evaluate_features_database_parallel(self,file_list,feat_def,feat_filename,ens_start_filename,fall_year_filename,tmin,tmax,Nmem):
+        # Stack a bunch of forecasts together. They can start at different times, but must all have same length.
+        pool = Pool(2)
+        X_fallyear_list = pool.map(self.evaluate_features,
+        ens_start_idx = np.zeros(len(file_list), dtype=int)
+        fall_year_list = np.zeros(len(file_list), dtype=int)
+        i_ens = 0
+        # Now start up a pool of workers to read in all the files. 
+        for i in range(len(file_list)):
+            if i % 10 == 0:
+                print("file %i out of %i: %s"%(i,len(file_list),file_list[i]))
+            ens_start_idx[i] = i_ens
+            ds = nc.Dataset(file_list[i],"r")
+            Xnew,fall_year = self.evaluate_features(ds,feat_def)
+            fall_year_list[i] = fall_year
+            ti_initial = np.where(ds['time'][:] >= tmin)[0][0]
+            ti_final = np.where(ds['time'][:] <= tmax)[0][-1]
+            Xnew = Xnew[:,ti_initial:ti_final+1,:]
+            if i == 0:
+                X = Xnew.copy()
+            else:
+                X = np.concatenate((X,Xnew),axis=0)
+            i_ens += Xnew.shape[0]
+        # Save them in the directory
+        np.save(feat_filename,X)
+        np.save(ens_start_filename,ens_start_idx)
+        np.save(fall_year_filename,fall_year_list)
+        return X
     def evaluate_features_database(self,file_list,feat_def,feat_filename,ens_start_filename,fall_year_filename,tmin,tmax):
         # Stack a bunch of forecasts together. They can start at different times, but must all have same length.
         ens_start_idx = np.zeros(len(file_list), dtype=int)
@@ -473,7 +502,7 @@ class WinterStratosphereFeatures:
         np.save(ens_start_filename,ens_start_idx)
         np.save(fall_year_filename,fall_year_list)
         return X
-    def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=None,Nwaves=None,captemp_flag=None,heatflux_flag=None,resample_flag=False,seed=0):
+    def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=None,num_vortex_moments=None,Nwaves=None,captemp_flag=None,heatflux_flag=None,resample_flag=False,seed=0):
         print(f" -------------- Inside evaluate_tpt_features: tpt_feat_filename = {tpt_feat_filename}, resample_flag = {resample_flag}, seed = {seed} --------------")
         # Evaluate a subset of the full features to use for clustering TPT.
         # A normalized version of these will be used for clustering.
@@ -517,6 +546,8 @@ class WinterStratosphereFeatures:
             captemp_flag = np.zeros(Nlev, dtype=bool)
         if heatflux_flag is None:
             heatflux_flag = np.zeros(Nlev, dtype=bool)
+        if num_vortex_moments is None:
+            num_vortex_moments = self.num_vortex_moments_max
         Nx,Ntx,xdim = X.shape
         print(f"Nx = {Nx}, Ntx = {Ntx}, xdim = {xdim}")
         # ------------- Define the cluster features Y ------------------
@@ -528,7 +559,7 @@ class WinterStratosphereFeatures:
         ydim += self.ndelay # Zonal wind for some history
         ydim += 2*Nwaves # real and imaginary parts of each 
         ydim += np.sum(Npc_per_level) 
-        ydim += 4 # Vortex moments
+        ydim += num_vortex_moments # Vortex moments
         ydim += np.sum(captemp_flag) # Polar cap averaged temperature
         ydim += np.sum(heatflux_flag)*self.ndelay # Heat flux at each level and lag time
         #ydim = 1 + self.ndelay + 2*Nwaves + np.sum(Npc_per_level) + 4 # self.ndelay for the history of u
@@ -570,13 +601,14 @@ class WinterStratosphereFeatures:
                     i_feat_y += 1
                 i_feat_x += 1
         # Read in vortex moment diagnostics
-        # Average them over the past 
-        for i_dl in range(self.ndelay):
-            Y[:,:,i_feat_y:i_feat_y+2] += X[:,i_dl:i_dl+Nty,i_feat_x:i_feat_x+2]/self.ndelay
-        szn_mean_Y[:,i_feat_y-1:i_feat_y+3] = feat_def["vtx_diags_szn_mean"]
-        szn_std_Y[:,i_feat_y-1:i_feat_y+3] = feat_def["vtx_diags_szn_std"]
-        i_feat_y += 4
-        i_feat_x += 4
+        if num_vortex_moments >= 1:
+            # Average them over the past 
+            for i_dl in range(self.ndelay):
+                Y[:,:,i_feat_y:i_feat_y+num_vortex_moments] += X[:,i_dl:i_dl+Nty,i_feat_x:i_feat_x+num_vortex_moments]/self.ndelay
+            szn_mean_Y[:,i_feat_y-1:i_feat_y+num_vortex_moments] = feat_def["vtx_diags_szn_mean"]
+            szn_std_Y[:,i_feat_y-1:i_feat_y+num_vortex_moments] = feat_def["vtx_diags_szn_std"]
+            i_feat_y += num_vortex_moments
+            i_feat_x += num_vortex_moments
         # Read in the temperature
         for i_lev in range(Nlev):
             if captemp_flag[i_lev]:
@@ -600,17 +632,21 @@ class WinterStratosphereFeatures:
     def evaluate_features(self,ds,feat_def):
         # Given a single ensemble in ds, evaluate the features and return a big matrix
         i_lev_uref,i_lat_uref = self.get_ilev_ilat(ds)
+        trun = timelib.time()
         gh,u,time,plev,lat,lon,fall_year = self.get_u_gh(ds)
+        time_ugh = timelib.time() - trun
         Nmem,Nt,Nlev,Nlat,Nlon = gh.shape
         area_factor = np.outer(np.cos(lat*np.pi/180), np.ones(Nlon))
         gh = gh.reshape((Nmem*Nt,Nlev,Nlat,Nlon))
         u = u.reshape((Nmem*Nt,Nlev,Nlat,Nlon))
+        trun = timelib.time()
         _,vmer = self.compute_geostrophic_wind(gh,lat,lon) # for meridional wind
+        time_vmer = timelib.time() - trun
         Nfeat = 1 # Time
         Nfeat += 1 # zonal-mean zonal wind
         Nfeat += 2*self.num_wavenumbers # Real and imaginary part of each 
         Nfeat += Nlev*self.Npc_per_level_max # PCs at each level
-        Nfeat += 4 # vortex moments
+        Nfeat += self.num_vortex_moments_max # vortex moments
         Nfeat += 2*Nlev # polar cap-averaged temperature and meridional heat flux
         #Nfeat = 2 + 2*self.num_wavenumbers + Nlev*self.Npc_per_level_max + 4 + 2*Nlev # Last four for area, center latitude, aspect ratio, and excess kurtosis of the vortex
         X = np.zeros((Nmem*Nt,Nfeat))
@@ -622,9 +658,13 @@ class WinterStratosphereFeatures:
         #X[:,1] = self.unseason(X[:,0],uref,feat_def["uref_szn_mean"],feat_def["uref_szn_std"])
         X[:,1] = uref
         # Wave amplitudes
+        trun = timelib.time()
         waves = self.get_wavenumbers(gh,i_lev_uref,self.lat_range_uref,lat,lon)
+        time_waves = timelib.time() - trun
         # Temperature 
+        trun = timelib.time()
         temperature = self.get_temperature(gh,plev,lat,lon)
+        time_temperature = timelib.time() - trun
         #X[:,2:2+2*self.num_wavenumbers] = self.unseason(X[:,0],waves,feat_def["waves_szn_mean"],feat_def["waves_szn_std"])
         X[:,2:2+2*self.num_wavenumbers] = waves
         # EOFs
@@ -634,18 +674,24 @@ class WinterStratosphereFeatures:
             X[:,i_feat:i_feat+self.Npc_per_level_max] = (gh[:,i_lev,:,:].reshape((Nmem*Nt,Nlat*Nlon)) @ (feat_def["eofs"][i_lev,:,:self.Npc_per_level_max])) / feat_def["singvals"][i_lev]
             i_feat += self.Npc_per_level_max
         # Vortex moments
-        vtx_moments = self.compute_vortex_moments_sphere(gh,feat_def['lat'],feat_def['lon'],i_lev_subset=[i_lev_uref],order=self.vortex_moments_order_max)
-        X[:,i_feat:i_feat+4] = np.array([vtx_moments[v] for v in ['area','centerlat','aspect_ratio','excess_kurtosis']]).T
-        i_feat += 4
+        trun = time.time()
+        if self.num_vortex_moments_max >= 1: # 0 means no moments at all
+            vtx_moments = self.compute_vortex_moments_sphere(gh,feat_def['lat'],feat_def['lon'],i_lev_subset=[i_lev_uref],num_vortex_moments=self.num_vortex_moments_max)
+            X[:,i_feat:i_feat+self.num_vortex_moments_max+1] = np.array([vtx_moments[v] for v in ['area','centerlat','aspect_ratio','excess_kurtosis']]).T
+            i_feat += self.num_vortex_moments_max+1
+        time_moments = time.time() - trun
         # Temperature: polar cap average, and meridional heat flux
         i_lat_cap = np.argmin(np.abs(lat - 60))
         temp_capavg = np.sum((temperature*area_factor)[:,:,:i_lat_cap,:], axis=(2,3))/np.sum(area_factor[:i_lat_cap,:])
         X[:,i_feat:i_feat+Nlev] = temp_capavg
         i_feat += Nlev
         # Now meridional heat flux averaged between 45 and 75 degrees
+        trun = timelib.time()
         vT = self.get_meridional_heat_flux(gh,temperature,plev,lat,lon)
+        time_vT = timelib.time() - trun
         X[:,i_feat:i_feat+Nlev] = vT
         X = X.reshape((Nmem,Nt,Nfeat))
+        print(f"read times: ugh = {time_ugh}, vmer = {time_vmer}, waves = {time_waves}, vT = {time_vT}, temperature = {time_temperature}, moments = {time_moments}")
         return X,fall_year
     def plot_vortex_evolution(self,dsfile,savedir,save_suffix,i_mem=0):
         # Plot the holistic information about a single member of a single ensemble. Include some timeseries and some snapshots, perhaps along the region of maximum deceleration in zonal wind. 
@@ -668,7 +714,7 @@ class WinterStratosphereFeatures:
         decel_time_range = [max(0,start-decel_window), min(len(time)-1, start+2*decel_window)]
         full_time_range = self.wtime[[0,-1]]
         # Make a list of things to plot
-        obs_key_list = ["lev0_temp","lev0_vT","lev1_vT","lev2_vT","area","centerlat","asprat","kurt","uref","mag1","mag2","lev0_pc0","lev0_pc1","lev0_pc2","lev0_pc3","lev0_pc4","lev0_pc5"]
+        obs_key_list = ["lev0_temp","lev0_vT","lev1_vT","lev2_vT","uref","mag1","mag2","lev0_pc0","lev0_pc1","lev0_pc2","lev0_pc3","lev0_pc4","lev0_pc5"]
         for oki in range(len(obs_key_list)):
             obs_key = obs_key_list[oki]
             fig,ax = plt.subplots()
@@ -743,24 +789,28 @@ class WinterStratosphereFeatures:
                     "label": "Wave 1 magnitude",},
                 "mag2": {"fun": lambda X: np.sqrt(np.sum(X[:,4:6]**2, axis=1)),
                     "label": "Wave 2 magnitude",},
-                "area": {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])],
-                    "label": "Vortex area",},
-                "centerlat": {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+1],
-                    "label": "Vortex center latitude",},
-                "asprat": {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+2],
-                    "label": "Vortex aspect ratio",},
-                "kurt": {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+3],
-                    "label": "Vortex excess kurtosis",},
                 }
+        if self.num_vortex_moments_max >= 1:
+            funlib["area"] = {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])],
+                    "label": "Vortex area",}
+        if self.num_vortex_moments_max >= 2:
+            funlib["centerlat"] = {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+1],
+                    "label": "Vortex center latitude",}
+        if self.num_vortex_moments_max >= 3:
+            funlib["asprat"] = {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+2],
+                    "label": "Vortex aspect ratio",}
+        if self.num_vortex_moments_max >= 4:
+            funlib["kurt"] = {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+3],
+                    "label": "Vortex excess kurtosis",}
         for i_lev in range(len(feat_def["plev"])):
             key = "lev%i_temp"%(i_lev)
             funlib[key] = {
-                    "fun": lambda X,i_lev=i_lev: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+4+i_lev],
+                    "fun": lambda X,i_lev=i_lev: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+self.num_vortex_moments_max+i_lev],
                     "label": "Cap temp. at %i hPa [K]"%(feat_def["plev"][i_lev]/100.0),
                     }
             key = "lev%i_vT"%(i_lev)
             funlib[key] = {
-                    "fun": lambda X,i_lev=i_lev: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+4+len(feat_def['plev'])+i_lev],
+                    "fun": lambda X,i_lev=i_lev: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+self.num_vortex_moments_max+len(feat_def['plev'])+i_lev],
                     "label": "$\overline{v'T'}$ at 45-75$^\circ$N, %i hPa [Km/s]"%(feat_def["plev"][i_lev]/100.0),
                     }
             for i_eof in range(self.Npc_per_level_max):
@@ -771,13 +821,15 @@ class WinterStratosphereFeatures:
                         "label": "PC %i at %i hPa"%(i_eof+1, feat_def["plev"][i_lev]/100.0),
                         }
         return funlib
-    def observable_function_library_Y(self,Nwaves=None,Npc_per_level=None):
+    def observable_function_library_Y(self,Nwaves=None,Npc_per_level=None,num_vortex_moments=None):
         # Build the database of observable functions
         feat_def = pickle.load(open(self.feature_file,"rb"))
         if Nwaves is None:
             Nwaves = self.num_wavenumbers
         if Npc_per_level is None:
             Npc_per_level = self.Npc_per_level_max * np.ones(len(feat_def["plev"]), dtype=int)
+        if num_vortex_moments is None:
+            num_vortex_moments = self.num_vortex_moments_max
         print(f"Nwaves = {Nwaves}, Npc_per_level = {Npc_per_level}")
         print(f"Npc_per_level = {Npc_per_level}")
         print(f"Index for area = {1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)}")
@@ -796,29 +848,34 @@ class WinterStratosphereFeatures:
                     "label": "Wave 1 phase",},
                 "ph2": {"fun": lambda x: self.wave_mph(x,feat_def,2)[:,1],
                     "label": "Wave 2 phase",},
-                "area": {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)],
-                    "label": "Vortex area",},
-                "centerlat": {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+1],
-                    "label": "Vortex center latitude",},
-                "asprat": {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+2],
-                    "label": "Vortex aspect ratio",},
-                "kurt": {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+3],
-                    "label": "Vortex excess kurtosis",},
-                #"pc1": {"fun": lambda x: x[:,2+2*self.num_wavenumbers],
-                #    "label": "PC 1"},
-                #"pc2": {"fun": lambda x: x[:,2+2*self.num_wavenumbers+1],
-                #    "label": "PC 2"},
-                # TODO: add names for temperature and heat flux.
                 }
+        if num_vortex_moments >= 1:
+            funlib["area"] = {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)],
+                "label": "Vortex area",}
+        if num_vortex_moments >= 2:
+            funlib["centerlat"] = {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+1],
+                "label": "Vortex center latitude",}
+        if num_vortex_moments >= 3:
+            funlib["asprat"] = {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+2],
+                "label": "Vortex aspect ratio",}
+        if num_vortex_moments >= 4:
+            funlib["kurt"] = {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+3],
+                "label": "Vortex excess kurtosis",}
+        for i_dl in range(self.ndelay):
+            key = "dl%i_ubar"%(self.ndelay-i_dl)
+            funlib[key] = {
+                    "fun": lambda Y: self.uref_history(Y,feat_def)[:,self.ndelay-1-i_dl],
+                    "label": "$\overline{u}(60^\circ$N, 10 hPa), $t-$ %i days"%(i_dl),
+                    }
         for i_lev in range(len(feat_def["plev"])):
             key = "lev%i_temp"%(i_lev)
             funlib[key] = {
-                    "fun": lambda Y,i_lev=i_lev: Y[:,2+2*self.num_wavenumbers+np.sum(Npc_per_level)+4+i_lev],
+                    "fun": lambda Y,i_lev=i_lev: Y[:,2+2*self.num_wavenumbers+np.sum(Npc_per_level)+num_vortex_moments+i_lev],
                     "label": "Cap temp. at %i hPa [K]"%(feat_def["plev"][i_lev]/100.0),
                     }
             key = "lev%i_vT"%(i_lev)
             funlib[key] = {
-                    "fun": lambda Y,i_lev=i_lev: Y[:,2+2*self.num_wavenumbers+np.sum(Npc_per_level)+4+len(feat_def['plev'])+i_lev],
+                    "fun": lambda Y,i_lev=i_lev: Y[:,2+2*self.num_wavenumbers+np.sum(Npc_per_level)+num_vortex_moments+len(feat_def['plev'])+i_lev],
                     "label": "$\overline{v'T'}$ at 45-75$^\circ$N, %i hPa [Km/s]"%(feat_def["plev"][i_lev]/100.0),
                     }
             for i_eof in range(self.Npc_per_level_max):
