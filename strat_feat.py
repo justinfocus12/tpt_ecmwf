@@ -32,6 +32,7 @@ import cartopy
 from cartopy import crs as ccrs
 import pickle
 
+
 class WinterStratosphereFeatures:
     # Create a set of features, including out-of-sample extension. 
     def __init__(self,feature_file,winter_day0,spring_day0,delaytime_days=0,Npc_per_level_max=10,num_vortex_moments_max=4):
@@ -452,7 +453,7 @@ class WinterStratosphereFeatures:
     def evaluate_features_database_parallel(self,file_list,feat_def,feat_filename,ens_start_filename,fall_year_filename,tmin,tmax,Nmem):
         # Stack a bunch of forecasts together. They can start at different times, but must all have same length.
         pool = Pool(2)
-        X_fallyear_list = pool.map(self.evaluate_features,
+        #X_fallyear_list = pool.map(self.evaluate_features,
         ens_start_idx = np.zeros(len(file_list), dtype=int)
         fall_year_list = np.zeros(len(file_list), dtype=int)
         i_ens = 0

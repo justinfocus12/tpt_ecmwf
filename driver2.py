@@ -25,11 +25,11 @@ datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2021-12-12"
 datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
 featdir = "/scratch/jf4241/ecmwf_data/features/2022-01-24"
 if not exists(featdir): mkdir(featdir)
-feat_display_dir = join(featdir,"display1")
+feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-01-24")
+daydir = join(resultsdir,"2022-01-26")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -50,8 +50,8 @@ file_list_ei = []
 for i_fy in range(len(fall_years_ei)):
     file_list_ei += [join(datadir_ei,"%s-11-01_to_%s-04-30.nc"%(fall_years_ei[i_fy],fall_years_ei[i_fy]+1))]
 file_list_s2s = [join(datadir_s2s,f) for f in os.listdir(datadir_s2s) if f.endswith(".nc")]
-np.random.seed(1)
-ftidx_e2 = np.random.choice(np.arange(len(file_list_e2)),size=5,replace=False)
+prng = np.random.RandomState(0)
+ftidx_e2 = prng.choice(np.arange(len(file_list_e2)),size=15,replace=False)
 dga_idx_s2s = np.random.choice(np.arange(len(file_list_s2s)),size=500,replace=False) # Subset of filed to use for DGA.
 
 # ----------------- Constant parameters ---------------------
@@ -113,16 +113,16 @@ for i in range(num_seeds_s2s):
 
 # Parameters to determine what to do
 # Featurization
-create_features_flag =         0
-display_features_flag =        0
+create_features_flag =         1
+display_features_flag =        1
 # era20c
-evaluate_database_e2 =         0
-tpt_featurize_e2 =             0
-tpt_e2_flag =                  0
+evaluate_database_e2 =         1
+tpt_featurize_e2 =             1
+tpt_e2_flag =                  1
 # eraint
-evaluate_database_ei =         0
-tpt_featurize_ei =             0
-tpt_ei_flag =                  0
+evaluate_database_ei =         1
+tpt_featurize_ei =             1
+tpt_ei_flag =                  1
 # s2s
 evaluate_database_s2s =        1
 tpt_featurize_s2s =            1
