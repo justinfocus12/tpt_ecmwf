@@ -3,6 +3,7 @@
 # the DGA_SSW object will have no knowledge of what year anything is; that will be implmented at a higher level. 
 # Maybe even have variable lag time?
 import numpy as np
+import multiprocessing as MP
 import netCDF4 as nc
 import datetime
 import time as timelib
@@ -31,7 +32,30 @@ import helper
 import cartopy
 from cartopy import crs as ccrs
 import pickle
+import itertools
 
+# Functions from stack-overflow for using starmap with keyword arguments
+def starmap_with_kwargs(pool, fn, args_iter, kwargs_iter):
+    args_for_starmap = zip(repeat(fn), args_iter, kwargs_iter)
+    return pool.starmap(apply_args_and_kwargs, args_for_starmap)
+
+def apply_args_and_kwargs(fn, args, kwargs):
+    return fn(*args, **kwargs)
+
+def reduced_svd(A):
+    print(f"Process {os.getpid()} is about to compute a reduced SVD")
+    return np.linalg.svd(A, full_matrices=False)
+
+def pca_several_levels(gh,Nsamp,Nlat,Nlon,Npc,arr_eof,arr_singvals,arr_totvar,lev_subset):
+    # Perform PCA on one level of geopotential height and fill in the results 
+    # gh is a numpy array ith only the relevant levels, while level_subset tells us where to fill in the entries of the output Arrays
+    Nlev = len(lev_subset)
+    for i_lev in lev_subset:
+        U,S,Vh = np.linalg.svd(ghilev.reshape((Nsamp,Nlat*Nlon)),full_matrices=False)
+    arr_eof[idx_eof:idx_eof+Nsamp*Npc] = U[:,:Npc].flatten()
+    arr_sv[idx_sv:idx_sv+Npc] = S[:Npc]
+    arr_tv[idx_tv] = np.sum(S**2)
+    return
 
 class WinterStratosphereFeatures:
     # Create a set of features, including out-of-sample extension. 
@@ -134,6 +158,12 @@ class WinterStratosphereFeatures:
                 if v[:2] == "gh":
                     Nmem += 1
         return dssource,Nmem
+    def get_u_gh_from_filename(self,ds_filename):
+        # All features will follow from this. 
+        ds = nc.Dataset(ds_filename,"r")
+        gh,u,time,_,_,_,_ = self.get_u_gh(ds)
+        ds.close()
+        return gh,u,time
     def get_u_gh(self,ds):
         # All features will follow from this. 
         dssource,Nmem = self.get_ensemble_source_size(ds)
@@ -369,7 +399,7 @@ class WinterStratosphereFeatures:
         nov1_time = nc.date2num(nov1_date,dstime.units,dstime.calendar)
         dstime_adj = nc.date2num(date,dstime.units,dstime.calendar) - nov1_time + dstime
         return dstime_adj,nov1_year # This is just one-dimensional. 
-    def create_features(self,data_file_list):
+    def create_features(self,data_file_list,multiprocessing_flag=False):
         # Use data in data_file_list as training, and dump the results into feature_file. Note this is NOT a DGA basis yet, just a set of features.
         # Time-delay embedding happens not at this stage, but possibly at the next stage when creating DGA features.
         # Mark the boundary of ensembles with a list of indices.
@@ -378,22 +408,36 @@ class WinterStratosphereFeatures:
         plev,lat,lon = [ds0[v][:] for v in ["plev","lat","lon"]]
         i_lev_uref,i_lat_uref = self.get_ilev_ilat(ds0)
         ds0.close()
-        gh = np.zeros((0,Nlev,Nlat,Nlon)) # First dimension will have both time and ensemble members
-        u = np.zeros((0,Nlev,Nlat,Nlon)) 
-        t_szn = np.zeros(0)
-        grid_shp = np.array([Nlev,Nlat,Nlon])
-        for i_file in range(len(data_file_list)):
-            print("Creating features: file {} out of {}".format(i_file,len(data_file_list)))
-            ds = nc.Dataset(data_file_list[i_file],"r")
-            gh_new,u_new,time,_,_,_,_ = self.get_u_gh(ds)
-            Nmem,Nt = gh_new.shape[:2]
-            shp_new = np.array(gh_new.shape)
-            if np.any(shp_new[2:5] != grid_shp):
-                raise Exception("The file {} has a geopotential height field of shape {}, whereas it was supposed to have a shape {}".format(data_file_list[i_file],shp_new[2:5],grid_shp))
-            gh = np.concatenate((gh,gh_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
-            u = np.concatenate((u,u_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
-            t_szn = np.concatenate((t_szn,self.hours_since_nov1(ds)))
-            ds.close()
+        # ---------------- Build up big arrays of gh, u, and t_szn ---------------------
+        reading_start = timelib.time()
+        if multiprocessing_flag:
+            num_workers = min(4,MP.cpu_count())
+            with MP.Pool(num_workers) as pool:
+                result = pool.map(self.get_u_gh_from_filename,data_file_list)
+            reading_mid = timelib.time() - reading_start
+            print(f"Reading mid = {reading_mid}")
+            gh = np.concatenate([res[0].reshape((res[0].shape[0]*res[0].shape[1],Nlev,Nlat,Nlon)) for res in result], axis=0)
+            u = np.concatenate([res[1].reshape((res[0].shape[0]*res[0].shape[1],Nlev,Nlat,Nlon)) for res in result], axis=0)
+            t_szn = np.concatenate([res[2] for res in result])
+        else:
+            gh = np.zeros((0,Nlev,Nlat,Nlon)) # First dimension will have both time and ensemble members
+            u = np.zeros((0,Nlev,Nlat,Nlon)) 
+            t_szn = np.zeros(0)
+            grid_shp = np.array([Nlev,Nlat,Nlon])
+            for i_file in range(len(data_file_list)):
+                print("Creating features: file {} out of {}".format(i_file,len(data_file_list)))
+                ds = nc.Dataset(data_file_list[i_file],"r")
+                gh_new,u_new,time,_,_,_,_ = self.get_u_gh(ds)
+                Nmem,Nt = gh_new.shape[:2]
+                shp_new = np.array(gh_new.shape)
+                if np.any(shp_new[2:5] != grid_shp):
+                    raise Exception("The file {} has a geopotential height field of shape {}, whereas it was supposed to have a shape {}".format(data_file_list[i_file],shp_new[2:5],grid_shp))
+                gh = np.concatenate((gh,gh_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
+                u = np.concatenate((u,u_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
+                t_szn = np.concatenate((t_szn,self.hours_since_nov1(ds)))
+                ds.close()
+        reading_duration = timelib.time() - reading_start
+        print(f"Reading duration = {reading_duration}")
         # Vortex moment diagnostics, only at reference level
         vtx_moments = self.compute_vortex_moments_sphere(gh,lat,lon,i_lev_subset=[i_lev_uref])
         vtx_diags = np.array([vtx_moments[v] for v in ['area','centerlat','aspect_ratio','excess_kurtosis']]).T
@@ -417,16 +461,41 @@ class WinterStratosphereFeatures:
         gh_unseasoned = self.unseason(t_szn,gh,gh_szn_mean,gh_szn_std,normalize=False)
         cosine = np.cos(np.pi/180 * lat)
         weight = 1/np.sqrt(len(gh_unseasoned))*np.outer(np.sqrt(cosine),np.ones(Nlon)).flatten()
-        eofs = np.zeros((Nlev,Nlat*Nlon,self.Npc_per_level_max))
-        singvals = np.zeros((Nlev,self.Npc_per_level_max))
-        tot_var = np.zeros(Nlev)
-        for i_lev in range(Nlev):
-            print("svd'ing level %i out of %i"%(i_lev,Nlev))
-            U,S,Vh = np.linalg.svd((gh_unseasoned[:,i_lev,:,:].reshape((len(gh),Nlat*Nlon))*weight).T, full_matrices=False)
-            eofs[i_lev,:,:] = U[:,:self.Npc_per_level_max]
-            singvals[i_lev,:] = S[:self.Npc_per_level_max]
-            tot_var[i_lev] = np.sum(S**2)
-        # TODO: deseasonalize temperature and heat flux, and lump that in with the tpt_features too. 
+        svd_start = timelib.time()
+        if multiprocessing_flag:
+            eofs = MP.Array(ctypes.c_double,Nlev*Nlat*Nlon*self.Npc_per_level_max)
+            singvals = MP.Array(ctypes.c_couble,Nlev*self.Npc_per_level_max)
+            tot_var = MP.Array(ctypes.c_double,Nlev)
+            num_workers = 2 #min(5, MP.cpu_count())
+            chunk_sizes = np.zeros(num_workers, dtype=int)
+            total_levels = 0
+            for i_wk in range(num_workers):
+                chunk_sizes[i_wk] = min(Nlev//num_workers, Nlev - total_levels)
+                total_levels += chunk_sizes[i_wk]
+            process_list = []
+            for i_wk in range(num_workers):
+                p = MP.Process(target=pca_onelev,args=((gh_unseasoned[:,i_lev,:,:].reshape((len(gh),Nlat*Nlon))*weight).T, 
+
+            #with MP.Pool(num_workers) as pool:
+            #    svd_results = pool.map(reduced_svd, ((gh_unseasoned[:,i_lev,:,:].reshape((len(gh),Nlat*Nlon))*weight).T for i_lev in range(Nlev)), chunksize=5)
+            #for i_lev in range(Nlev):
+            #    U,S,Vh = svd_results[i_lev]
+            #    eofs[i_lev,:,:] = U[:,:self.Npc_per_level_max]
+            #    singvals[i_lev,:] = S[:self.Npc_per_level_max]
+            #    tot_var[i_lev] = np.sum(S**2)
+        else:
+            eofs = np.zeros((Nlev,Nlat*Nlon,self.Npc_per_level_max))
+            singvals = np.zeros((Nlev,self.Npc_per_level_max))
+            tot_var = np.zeros(Nlev)
+            for i_lev in range(Nlev):
+                print("svd'ing level %i out of %i"%(i_lev,Nlev))
+                U,S,Vh = np.linalg.svd((gh_unseasoned[:,i_lev,:,:].reshape((len(gh),Nlat*Nlon))*weight).T, full_matrices=False)
+                eofs[i_lev,:,:] = U[:,:self.Npc_per_level_max]
+                singvals[i_lev,:] = S[:self.Npc_per_level_max]
+                tot_var[i_lev] = np.sum(S**2)
+        svd_duration = timelib.time() - svd_start
+        print(f"with multiprocessing = {multiprocessing_flag}, svd_duration = {svd_duration}")
+        sys.exit()
         # Temperature: first compute cap average, then deseasonalize
         temperature = self.get_temperature(gh,plev,lat,lon)
         vT = self.get_meridional_heat_flux(gh,temperature,plev,lat,lon) 
