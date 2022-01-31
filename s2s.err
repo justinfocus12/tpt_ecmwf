@@ -1,13 +1,1 @@
-Traceback (most recent call last):
-  File "/home/jf4241/ecmwf/tpt_ecmwf/driver2.py", line 37, in <module>
-    import strat_feat
-  File "/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py", line 464
-    fall_year_list = np.zeros(len(file_list), dtype=int)
-    ^
-SyntaxError: invalid syntax
-Traceback (most recent call last):
-  File "/home/jf4241/ecmwf/tpt_ecmwf/driver2.py", line 37, in <module>
-    import strat_feat
-  File "/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py", line 36, in <module>
-    class Feature(ABC):
-NameError: name 'ABC' is not defined
+slurmstepd: error: *** JOB 14511025 ON cl004 CANCELLED AT 2022-01-31T10:53:14 ***

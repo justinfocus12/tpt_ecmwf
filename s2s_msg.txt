@@ -1,0 +1,2 @@
+Evaluating S2S database
+evaluated ds_filename /scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc2013-11-07_rt2016-11-07.nc

@@ -159,11 +159,10 @@ class WinterStratosphereFeatures:
                     Nmem += 1
         return dssource,Nmem
     def get_u_gh_from_filename(self,ds_filename):
-        # All features will follow from this. 
         ds = nc.Dataset(ds_filename,"r")
-        gh,u,time,_,_,_,_ = self.get_u_gh(ds)
+        ugh = self.get_u_gh(ds)
         ds.close()
-        return gh,u,time
+        return ugh
     def get_u_gh(self,ds):
         # All features will follow from this. 
         dssource,Nmem = self.get_ensemble_source_size(ds)
@@ -188,14 +187,16 @@ class WinterStratosphereFeatures:
         # gh shape should be (Nx,Nlev,Nlat,Nlon). 
         Omega = 2*np.pi/(3600*24*365)
         fcor = np.outer(2*Omega*np.sin(lat*np.pi/180), np.ones(lon.size))
+        fcor_pole = np.max(fcor)
+        fcor_eps = 2*Omega*np.sin(10.0*np.pi/180) # 10 degrees N should be the highest altitude where geostrophic balance is assumed. We won't even consider lower laitudes.
         earth_radius = 6371e3 
         grav_accel = 9.80665
         dx = np.outer(earth_radius*np.cos(lat*np.pi/180), np.roll(lon,-1) - np.roll(lon,1)) # this counts both sides
         dy = np.outer((np.roll(lat,-1) - np.roll(lat,1))*earth_radius, np.ones(lon.size))
         gh_x = (np.roll(gh,-1,axis=3) - np.roll(gh,1,axis=3))/dx 
         gh_y = (np.roll(gh,-1,axis=2) - np.roll(gh,1,axis=2))/dy
-        u = -gh_y/fcor * grav_accel
-        v = gh_x/fcor * grav_accel
+        u = -gh_y*(np.abs(fcor) > fcor_eps)/(fcor + 1.0*(np.abs(fcor) < fcor_eps)) * grav_accel
+        v = gh_x*(np.abs(fcor) > fcor_eps)/(fcor + 1.0*(np.abs(fcor) < fcor_eps)) * grav_accel
         return u,v
     def get_temperature(self,gh,plev,lat,lon):
         # Use the hypsometric law: d(gz)/dp = -RT/p
@@ -412,13 +413,21 @@ class WinterStratosphereFeatures:
         reading_start = timelib.time()
         if multiprocessing_flag:
             num_workers = min(4,MP.cpu_count())
-            with MP.Pool(num_workers) as pool:
-                result = pool.map(self.get_u_gh_from_filename,data_file_list)
+            gen = data_file_list #(nc.Dataset(ds_filename,"r") for ds_filename in data_file_list)
+            pool = MP.Pool(num_workers)
+            result = pool.map(self.get_u_gh_from_filename,gen)
             reading_mid = timelib.time() - reading_start
             print(f"Reading mid = {reading_mid}")
-            gh = np.concatenate([res[0].reshape((res[0].shape[0]*res[0].shape[1],Nlev,Nlat,Nlon)) for res in result], axis=0)
-            u = np.concatenate([res[1].reshape((res[0].shape[0]*res[0].shape[1],Nlev,Nlat,Nlon)) for res in result], axis=0)
-            t_szn = np.concatenate([res[2] for res in result])
+            gh = np.zeros((0,Nlev,Nlat,Nlon))
+            u = np.zeros((0,Nlev,Nlat,Nlon))
+            t_szn = np.zeros(0)
+            for res in result:
+                gh = np.concatenate((gh,res[0].reshape((res[0].shape[0]*res[0].shape[1],Nlev,Nlat,Nlon))),axis=0)
+                u = np.concatenate((u,res[0].reshape((res[0].shape[0]*res[0].shape[1],Nlev,Nlat,Nlon))),axis=0)
+                t_szn = np.concatenate((t_szn,res[2]))
+            print(f"gh.shape = {gh.shape}")
+            print(f"u.shape = {u.shape}")
+            print(f"t_szn.shape = {t_szn.shape}")
         else:
             gh = np.zeros((0,Nlev,Nlat,Nlon)) # First dimension will have both time and ensemble members
             u = np.zeros((0,Nlev,Nlat,Nlon)) 
@@ -461,32 +470,18 @@ class WinterStratosphereFeatures:
         gh_unseasoned = self.unseason(t_szn,gh,gh_szn_mean,gh_szn_std,normalize=False)
         cosine = np.cos(np.pi/180 * lat)
         weight = 1/np.sqrt(len(gh_unseasoned))*np.outer(np.sqrt(cosine),np.ones(Nlon)).flatten()
+        eofs = np.zeros((Nlev,Nlat*Nlon,self.Npc_per_level_max))
+        singvals = np.zeros((Nlev,self.Npc_per_level_max))
+        tot_var = np.zeros(Nlev)
         svd_start = timelib.time()
         if multiprocessing_flag:
-            eofs = MP.Array(ctypes.c_double,Nlev*Nlat*Nlon*self.Npc_per_level_max)
-            singvals = MP.Array(ctypes.c_couble,Nlev*self.Npc_per_level_max)
-            tot_var = MP.Array(ctypes.c_double,Nlev)
-            num_workers = 2 #min(5, MP.cpu_count())
-            chunk_sizes = np.zeros(num_workers, dtype=int)
-            total_levels = 0
-            for i_wk in range(num_workers):
-                chunk_sizes[i_wk] = min(Nlev//num_workers, Nlev - total_levels)
-                total_levels += chunk_sizes[i_wk]
-            process_list = []
-            for i_wk in range(num_workers):
-                p = MP.Process(target=pca_onelev,args=((gh_unseasoned[:,i_lev,:,:].reshape((len(gh),Nlat*Nlon))*weight).T, 
-
-            #with MP.Pool(num_workers) as pool:
-            #    svd_results = pool.map(reduced_svd, ((gh_unseasoned[:,i_lev,:,:].reshape((len(gh),Nlat*Nlon))*weight).T for i_lev in range(Nlev)), chunksize=5)
-            #for i_lev in range(Nlev):
-            #    U,S,Vh = svd_results[i_lev]
-            #    eofs[i_lev,:,:] = U[:,:self.Npc_per_level_max]
-            #    singvals[i_lev,:] = S[:self.Npc_per_level_max]
-            #    tot_var[i_lev] = np.sum(S**2)
+            with MP.Pool(num_workers) as pool:
+                svd_results = pool.map(reduced_svd, ((gh_unseasoned[:,i_lev,:,:].reshape((len(gh),Nlat*Nlon))*weight).T for i_lev in range(Nlev)))
+            for i_lev,svd_ilev in enumerate(svd_results):
+                eofs[i_lev,:,:] = svd_ilev[0][:,:self.Npc_per_level_max]
+                singvals[i_lev,:] = svd_ilev[1][:self.Npc_per_level_max]
+                tot_var[i_lev] = np.sum(svd_ilev[1]**2)
         else:
-            eofs = np.zeros((Nlev,Nlat*Nlon,self.Npc_per_level_max))
-            singvals = np.zeros((Nlev,self.Npc_per_level_max))
-            tot_var = np.zeros(Nlev)
             for i_lev in range(Nlev):
                 print("svd'ing level %i out of %i"%(i_lev,Nlev))
                 U,S,Vh = np.linalg.svd((gh_unseasoned[:,i_lev,:,:].reshape((len(gh),Nlat*Nlon))*weight).T, full_matrices=False)
@@ -495,7 +490,6 @@ class WinterStratosphereFeatures:
                 tot_var[i_lev] = np.sum(S**2)
         svd_duration = timelib.time() - svd_start
         print(f"with multiprocessing = {multiprocessing_flag}, svd_duration = {svd_duration}")
-        sys.exit()
         # Temperature: first compute cap average, then deseasonalize
         temperature = self.get_temperature(gh,plev,lat,lon)
         vT = self.get_meridional_heat_flux(gh,temperature,plev,lat,lon) 
@@ -519,23 +513,26 @@ class WinterStratosphereFeatures:
                 }
         pickle.dump(feat_def,open(self.feature_file,"wb"))
         return
-    def evaluate_features_database_parallel(self,file_list,feat_def,feat_filename,ens_start_filename,fall_year_filename,tmin,tmax,Nmem):
+    def evaluate_features_database_parallel(self,file_list,feat_def,feat_filename,ens_start_filename,fall_year_filename,tmin,tmax):
         # Stack a bunch of forecasts together. They can start at different times, but must all have same length.
-        pool = Pool(2)
         #X_fallyear_list = pool.map(self.evaluate_features,
         ens_start_idx = np.zeros(len(file_list), dtype=int)
         fall_year_list = np.zeros(len(file_list), dtype=int)
         i_ens = 0
         # Now start up a pool of workers to read in all the files. 
-        for i in range(len(file_list)):
-            if i % 10 == 0:
-                print("file %i out of %i: %s"%(i,len(file_list),file_list[i]))
+        arg_gen = ((ds_filename, feat_def) for ds_filename in file_list)
+        pool = MP.Pool(max(1, min(len(file_list)//20,MP.cpu_count())))
+        result = pool.starmap(self.evaluate_features_from_filename,arg_gen)
+        for i,res in enumerate(result):
             ens_start_idx[i] = i_ens
-            ds = nc.Dataset(file_list[i],"r")
-            Xnew,fall_year = self.evaluate_features(ds,feat_def)
+            Xnew,fall_year = res
+            #print(f"Xnew.shape = {Xnew.shape}, fall_year = {fall_year}")
+            dstime = Xnew[0,:,0] - Xnew[0,0,0]
+            #print(f"dstime = {dstime}")
             fall_year_list[i] = fall_year
-            ti_initial = np.where(ds['time'][:] >= tmin)[0][0]
-            ti_final = np.where(ds['time'][:] <= tmax)[0][-1]
+            ti_initial = np.where(dstime >= tmin)[0][0]
+            ti_final = np.where(dstime <= tmax)[0][-1]
+            #print(f"ti_initial = {ti_initial}, ti_final = {ti_final}")
             Xnew = Xnew[:,ti_initial:ti_final+1,:]
             if i == 0:
                 X = Xnew.copy()
@@ -558,15 +555,20 @@ class WinterStratosphereFeatures:
             ens_start_idx[i] = i_ens
             ds = nc.Dataset(file_list[i],"r")
             Xnew,fall_year = self.evaluate_features(ds,feat_def)
+            print(f"Xnew.shape = {Xnew.shape}, fall_year = {fall_year}")
             fall_year_list[i] = fall_year
             ti_initial = np.where(ds['time'][:] >= tmin)[0][0]
             ti_final = np.where(ds['time'][:] <= tmax)[0][-1]
+            print(f"ds['time'][:] = {ds['time'][:]}")
+            print(f"Xnew[0,:,0] = {Xnew[0,:,0]}")
+            print(f"ti_initial = {ti_initial}, ti_final = {ti_final}")
             Xnew = Xnew[:,ti_initial:ti_final+1,:]
             if i == 0:
                 X = Xnew.copy()
             else:
                 X = np.concatenate((X,Xnew),axis=0)
             i_ens += Xnew.shape[0]
+            ds.close()
         # Save them in the directory
         np.save(feat_filename,X)
         np.save(ens_start_filename,ens_start_idx)
@@ -699,6 +701,12 @@ class WinterStratosphereFeatures:
         tpt_feat = {"Y": Y, "szn_mean_Y": szn_mean_Y, "szn_std_Y": szn_std_Y}
         pickle.dump(tpt_feat, open(tpt_feat_filename,"wb"))
         return 
+    def evaluate_features_from_filename(self,ds_filename,feat_def):
+        ds = nc.Dataset(ds_filename,"r")
+        features = self.evaluate_features(ds,feat_def)
+        print(f"evaluated ds_filename {ds_filename}")
+        ds.close()
+        return features
     def evaluate_features(self,ds,feat_def):
         # Given a single ensemble in ds, evaluate the features and return a big matrix
         i_lev_uref,i_lat_uref = self.get_ilev_ilat(ds)
@@ -744,12 +752,12 @@ class WinterStratosphereFeatures:
             X[:,i_feat:i_feat+self.Npc_per_level_max] = (gh[:,i_lev,:,:].reshape((Nmem*Nt,Nlat*Nlon)) @ (feat_def["eofs"][i_lev,:,:self.Npc_per_level_max])) / feat_def["singvals"][i_lev]
             i_feat += self.Npc_per_level_max
         # Vortex moments
-        trun = time.time()
+        trun = timelib.time()
         if self.num_vortex_moments_max >= 1: # 0 means no moments at all
             vtx_moments = self.compute_vortex_moments_sphere(gh,feat_def['lat'],feat_def['lon'],i_lev_subset=[i_lev_uref],num_vortex_moments=self.num_vortex_moments_max)
             X[:,i_feat:i_feat+self.num_vortex_moments_max+1] = np.array([vtx_moments[v] for v in ['area','centerlat','aspect_ratio','excess_kurtosis']]).T
             i_feat += self.num_vortex_moments_max+1
-        time_moments = time.time() - trun
+        time_moments = timelib.time() - trun
         # Temperature: polar cap average, and meridional heat flux
         i_lat_cap = np.argmin(np.abs(lat - 60))
         temp_capavg = np.sum((temperature*area_factor)[:,:,:i_lat_cap,:], axis=(2,3))/np.sum(area_factor[:i_lat_cap,:])
@@ -761,7 +769,7 @@ class WinterStratosphereFeatures:
         time_vT = timelib.time() - trun
         X[:,i_feat:i_feat+Nlev] = vT
         X = X.reshape((Nmem,Nt,Nfeat))
-        print(f"read times: ugh = {time_ugh}, vmer = {time_vmer}, waves = {time_waves}, vT = {time_vT}, temperature = {time_temperature}, moments = {time_moments}")
+        #print(f"read times: ugh = {time_ugh}, vmer = {time_vmer}, waves = {time_waves}, vT = {time_vT}, temperature = {time_temperature}, moments = {time_moments}")
         return X,fall_year
     def plot_vortex_evolution(self,dsfile,savedir,save_suffix,i_mem=0):
         # Plot the holistic information about a single member of a single ensemble. Include some timeseries and some snapshots, perhaps along the region of maximum deceleration in zonal wind. 

@@ -1,5 +1,6 @@
 import pickle
 import numpy as np
+import time as timelib
 import matplotlib
 matplotlib.use('AGG')
 import matplotlib.colors as colors
@@ -51,8 +52,8 @@ for i_fy in range(len(fall_years_ei)):
     file_list_ei += [join(datadir_ei,"%s-11-01_to_%s-04-30.nc"%(fall_years_ei[i_fy],fall_years_ei[i_fy]+1))]
 file_list_s2s = [join(datadir_s2s,f) for f in os.listdir(datadir_s2s) if f.endswith(".nc")]
 prng = np.random.RandomState(0)
-ftidx_e2 = prng.choice(np.arange(len(file_list_e2)),size=15,replace=False)
-dga_idx_s2s = np.random.choice(np.arange(len(file_list_s2s)),size=500,replace=False) # Subset of filed to use for DGA.
+ftidx_e2 = prng.choice(np.arange(len(file_list_e2)),size=30,replace=False)
+dga_idx_s2s = prng.choice(np.arange(len(file_list_s2s)),size=500,replace=False) # Subset of filed to use for DGA.
 
 # ----------------- Constant parameters ---------------------
 winter_day0 = 0.0
@@ -113,8 +114,8 @@ for i in range(num_seeds_s2s):
 
 # Parameters to determine what to do
 # Featurization
-create_features_flag =         1
-display_features_flag =        1
+create_features_flag =         0
+display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
 tpt_featurize_e2 =             0
@@ -124,13 +125,13 @@ evaluate_database_ei =         0
 tpt_featurize_ei =             0
 tpt_ei_flag =                  0
 # s2s
-evaluate_database_s2s =        0
-tpt_featurize_s2s =            0
-cluster_flag =                 0
-build_msm_flag =               0
-tpt_s2s_flag =                 0
+evaluate_database_s2s =        1
+tpt_featurize_s2s =            1
+cluster_flag =                 1
+build_msm_flag =               1
+tpt_s2s_flag =                 1
 # Summary statistics
-plot_rate_flag =               0
+plot_rate_flag =               1
 
 
 feature_file = join(featdir,"feat_def")
@@ -168,7 +169,10 @@ if e2_flag:
     fall_year_filename = join(expdir_e2,"fall_year_list.npy")
     if evaluate_database_e2:
         print("Evaluating ERA20C database")
-        winstrat.evaluate_features_database(file_list_e2,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+        eval_start = timelib.time()
+        winstrat.evaluate_features_database_parallel(file_list_e2,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+        eval_dur = timelib.time() - eval_start
+        print(f"eval_dur = {eval_dur}")
     if tpt_e2_flag: 
         print("Starting TPT on era20c")
         for i_seed in range(num_seeds_e2):
@@ -202,7 +206,10 @@ if ei_flag:
     fall_year_filename = join(expdir_ei,"fall_year_list.npy")
     if evaluate_database_ei:
         print("Evaluating ERA-Int database")
-        winstrat.evaluate_features_database(file_list_ei,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+        eval_start = timelib.time()
+        winstrat.evaluate_features_database_parallel(file_list_ei,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+        eval_dur = timelib.time() - eval_start
+        print(f"eval_dur = {eval_dur}")
     if tpt_ei_flag: 
         print("Starting TPT on eraint")
         for i_seed in range(len(seeddir_list_ei)):
@@ -233,7 +240,10 @@ ens_start_filename = join(expdir_s2s,"ens_start_idx.npy")
 fall_year_filename = join(expdir_s2s,"fall_year_list.npy")
 if evaluate_database_s2s: # Expensive!
     print("Evaluating S2S database")
-    winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+    eval_start = timelib.time()
+    winstrat.evaluate_features_database_parallel([file_list_s2s[i] for i in dga_idx_s2s],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+    eval_dur = timelib.time() - eval_start
+    print(f"eval_dur = {eval_dur}")
 print("Starting TPT on S2S")
 for i_seed in np.arange(len(seeddir_list_s2s)):
     print("\tSeed {} of {}".format(i_seed,num_seeds_s2s))
