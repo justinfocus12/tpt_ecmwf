@@ -342,7 +342,7 @@ class WinterStratosphereTPT:
                 int2b_cond['m4'] += [cond_m4[j:j+nclust]]
                 j += nclust
         return int2b_cond 
-    def tpt_pipeline_dga(self,tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves,plot_field_flag=True):
+    def tpt_pipeline_dga(self,tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,num_vortex_moments,Nwaves,plot_field_flag=True):
         # Label each cluster as in A or B or elsewhere
         tpt_feat = pickle.load(open(tpt_feat_filename,"rb"))
         Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
@@ -437,8 +437,10 @@ class WinterStratosphereTPT:
         if plot_field_flag:
             centers_all = np.concatenate(centers, axis=0)
             #keypairs = [['time_d','area'],['time_d','centerlat'],['time_d','uref'],['time_d','asprat'],['time_d','kurt'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4']][:5]
-            keypairs = [['time_d',v] for v in ['uref','area','asprat','kurt','lev0_vT','lev1_vT','lev2_vT','lev0_temp']]
-            keypairs += [['area','uref'],['kurt','uref']]
+            keypairs = [['time_d',v] for v in ['uref','lev0_vT','lev1_vT','lev2_vT','lev0_temp']]
+            if num_vortex_moments >= 4:
+                keypairs += [['time_d',v] for v in ['area','asprat','kurt']]
+                keypairs += [['area','uref'],['kurt','uref']]
             keypairs += [['lev0_pc1','lev0_pc4']]
             keypairs += [['dl0_ubar','dl%i_ubar'%(i_dl)] for i_dl in range(1,min(5,winstrat.ndelay))]
             for i_kp in range(len(keypairs)):

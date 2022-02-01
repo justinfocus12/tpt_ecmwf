@@ -26,13 +26,13 @@ datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2021-12-12"
 datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
 featdir = "/scratch/jf4241/ecmwf_data/features/2022-01-30"
 if not exists(featdir): mkdir(featdir)
-feat_display_dir = join(featdir,"display0")
+feat_display_dir = join(featdir,"display1")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
 daydir = join(resultsdir,"2022-01-30")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"0")
+expdir = join(daydir,"1")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -52,14 +52,14 @@ for i_fy in range(len(fall_years_ei)):
     file_list_ei += [join(datadir_ei,"%s-11-01_to_%s-04-30.nc"%(fall_years_ei[i_fy],fall_years_ei[i_fy]+1))]
 file_list_s2s = [join(datadir_s2s,f) for f in os.listdir(datadir_s2s) if f.endswith(".nc")]
 prng = np.random.RandomState(0)
-ftidx_e2 = prng.choice(np.arange(len(file_list_e2)),size=30,replace=False)
+ftidx_e2 = prng.choice(np.arange(len(file_list_e2)),size=15,replace=False)
 dga_idx_s2s = prng.choice(np.arange(len(file_list_s2s)),size=500,replace=False) # Subset of filed to use for DGA.
 
 # ----------------- Constant parameters ---------------------
 winter_day0 = 0.0
 spring_day0 = 150.0
 Npc_per_level_max = 6
-num_vortex_moments_max = 0 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
+num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 # ----------------- Phase space definition parameters -------
 delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay
 # ----------------- Directories for this experiment --------
@@ -70,22 +70,26 @@ if not exists(expdir_ei): mkdir(expdir_ei)
 expdir_s2s = join(expdir,"s2s")
 if not exists(expdir_s2s): mkdir(expdir_s2s)
 # ------------------ Algorithmic parameters ---------------------
+multiprocessing_flag = 1
 num_clusters = 120
 #Npc_per_level_single = 4
 Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
 heatflux_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
-num_vortex_moments = 0 # must be <= num_vortex_moments_max
+num_vortex_moments = 4 # must be <= num_vortex_moments_max
 pcstr = ""
 hfstr = ""
+tempstr = ""
 for i_lev in range(len(Npc_per_level)):
     if Npc_per_level[i_lev] != 0:
         pcstr += f"lev{i_lev}pc{Npc_per_level[i_lev]}-"
     if heatflux_flag[i_lev]:
         hfstr += f"{i_lev}-"
+    if captemp_flag[i_lev]:
+        tempstr += f"{i_lev}-"
 if len(pcstr) > 1: pcstr = pcstr[:-1]
 Nwaves = 0
-paramdir_s2s = join(expdir_s2s, f"delay{int(delaytime_days)}_nclust{num_clusters}_nwaves{Nwaves}_vxm{num_vortex_moments}_pc-{pcstr}_hf-{hfstr}")
+paramdir_s2s = join(expdir_s2s, f"delay{int(delaytime_days)}_nclust{num_clusters}_nwaves{Nwaves}_vxm{num_vortex_moments}_pc-{pcstr}_hf-{hfstr}_temp-{tempstr}")
 if not exists(paramdir_s2s): mkdir(paramdir_s2s)
 paramdir_e2 = join(expdir_e2, f"delay{int(delaytime_days)}")
 if not exists(paramdir_e2): mkdir(paramdir_e2)
@@ -118,14 +122,14 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             0
-tpt_e2_flag =                  0
+tpt_featurize_e2 =             1
+tpt_e2_flag =                  1
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             0
-tpt_ei_flag =                  0
+tpt_featurize_ei =             1
+tpt_ei_flag =                  1
 # s2s
-evaluate_database_s2s =        1
+evaluate_database_s2s =        0
 tpt_featurize_s2s =            1
 cluster_flag =                 1
 build_msm_flag =               1
@@ -139,7 +143,7 @@ winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring
 
 if create_features_flag:
     print("Creating features")
-    winstrat.create_features([file_list_e2[i_ft] for i_ft in ftidx_e2], multiprocessing_flag=True)
+    winstrat.create_features([file_list_e2[i_ft] for i_ft in ftidx_e2], multiprocessing_flag=multiprocessing_flag)
 if display_features_flag:
     # Show characteristics of the basis functions, e.g., EOFs and spectrum
     print("Showing EOFs")
@@ -170,7 +174,10 @@ if e2_flag:
     if evaluate_database_e2:
         print("Evaluating ERA20C database")
         eval_start = timelib.time()
-        winstrat.evaluate_features_database_parallel(file_list_e2,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+        if multiprocessing_flag:
+            winstrat.evaluate_features_database_parallel(file_list_e2,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+        else:
+            winstrat.evaluate_features_database(file_list_e2,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
         eval_dur = timelib.time() - eval_start
         print(f"eval_dur = {eval_dur}")
     if tpt_e2_flag: 
@@ -207,7 +214,10 @@ if ei_flag:
     if evaluate_database_ei:
         print("Evaluating ERA-Int database")
         eval_start = timelib.time()
-        winstrat.evaluate_features_database_parallel(file_list_ei,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+        if multiprocessing_flag:
+            winstrat.evaluate_features_database_parallel(file_list_ei,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+        else:
+            winstrat.evaluate_features_database(file_list_ei,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
         eval_dur = timelib.time() - eval_start
         print(f"eval_dur = {eval_dur}")
     if tpt_ei_flag: 
@@ -241,7 +251,10 @@ fall_year_filename = join(expdir_s2s,"fall_year_list.npy")
 if evaluate_database_s2s: # Expensive!
     print("Evaluating S2S database")
     eval_start = timelib.time()
-    winstrat.evaluate_features_database_parallel([file_list_s2s[i] for i in dga_idx_s2s],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+    if multiprocessing_flag:
+        winstrat.evaluate_features_database_parallel([file_list_s2s[i] for i in dga_idx_s2s],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+    else:
+        winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
     eval_dur = timelib.time() - eval_start
     print(f"eval_dur = {eval_dur}")
 print("Starting TPT on S2S")
@@ -265,7 +278,7 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            summary_dga = tpt.tpt_pipeline_dga(tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,Nwaves,plot_field_flag=(i_seed==0))
+            summary_dga = tpt.tpt_pipeline_dga(tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,num_vortex_moments,Nwaves,plot_field_flag=(i_seed==0))
 # =============================================================================
 # ------------- Compare rates ---------------------
 if plot_rate_flag:
