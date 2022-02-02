@@ -30,9 +30,9 @@ feat_display_dir = join(featdir,"display1")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-01-30")
+daydir = join(resultsdir,"2022-02-02")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"1")
+expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -76,7 +76,7 @@ num_clusters = 120
 Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
 heatflux_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
-num_vortex_moments = 4 # must be <= num_vortex_moments_max
+num_vortex_moments = 0 # must be <= num_vortex_moments_max
 pcstr = ""
 hfstr = ""
 tempstr = ""
@@ -89,6 +89,10 @@ for i_lev in range(len(Npc_per_level)):
         tempstr += f"{i_lev}-"
 if len(pcstr) > 1: pcstr = pcstr[:-1]
 Nwaves = 0
+# Make a dictionary for all these parameters
+algo_params = {"Nwaves": Nwaves, "Npc_per_level": Npc_per_level, "captemp_flag": captemp_flag, "heatflux_flag": heatflux_flag, "num_vortex_moments": num_vortex_moments}
+fidx_X_filename = join(expdir,"fidx_X")
+fidx_Y_filename = join(expdir,"fidx_Y")
 paramdir_s2s = join(expdir_s2s, f"delay{int(delaytime_days)}_nclust{num_clusters}_nwaves{Nwaves}_vxm{num_vortex_moments}_pc-{pcstr}_hf-{hfstr}_temp-{tempstr}")
 if not exists(paramdir_s2s): mkdir(paramdir_s2s)
 paramdir_e2 = join(expdir_e2, f"delay{int(delaytime_days)}")
@@ -118,18 +122,18 @@ for i in range(num_seeds_s2s):
 
 # Parameters to determine what to do
 # Featurization
-create_features_flag =         0
-display_features_flag =        0
+create_features_flag =         1
+display_features_flag =        1
 # era20c
-evaluate_database_e2 =         0
+evaluate_database_e2 =         1
 tpt_featurize_e2 =             1
 tpt_e2_flag =                  1
 # eraint
-evaluate_database_ei =         0
+evaluate_database_ei =         1
 tpt_featurize_ei =             1
 tpt_ei_flag =                  1
 # s2s
-evaluate_database_s2s =        0
+evaluate_database_s2s =        1
 tpt_featurize_s2s =            1
 cluster_flag =                 1
 build_msm_flag =               1
@@ -144,6 +148,12 @@ winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring
 if create_features_flag:
     print("Creating features")
     winstrat.create_features([file_list_e2[i_ft] for i_ft in ftidx_e2], multiprocessing_flag=multiprocessing_flag)
+# ------------------ Initialize the TPT object -------------------------------------
+feat_def = pickle.load(open(winstrat.feature_file,"rb"))
+winstrat.set_feature_indices_X(feat_def,fidx_X_filename)
+winstrat.set_feature_indices_Y(feat_def,fidx_Y_filename)
+tpt = tpt_general.WinterStratosphereTPT()
+# ----------------- Display features ------------------------------------------
 if display_features_flag:
     # Show characteristics of the basis functions, e.g., EOFs and spectrum
     print("Showing EOFs")
@@ -152,9 +162,6 @@ if display_features_flag:
     for display_idx in np.arange(96,98):
         winstrat.plot_vortex_evolution(file_list_e2[display_idx],feat_display_dir,"fy{}".format(fall_years_e2[display_idx]))
 
-# ------------------ Initialize the TPT object -------------------------------------
-feat_def = pickle.load(open(winstrat.feature_file,"rb"))
-tpt = tpt_general.WinterStratosphereTPT()
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = 30 # First day that SSW could happen
 tthresh1 = 145.0 # Last day that SSW could happen
@@ -188,7 +195,7 @@ if e2_flag:
             if not exists(seeddir): mkdir(seeddir)
             tpt_feat_filename = join(seeddir,"Y")
             if tpt_featurize_e2:
-                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
+                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,algo_params,tpt_feat_filename,algo_params,resample_flag=(i_seed>0),seed=i_seed)
             rates_e2 = np.zeros(len(uthresh_list))
             for i_uth in range(len(uthresh_list)):
                 uthresh_b = uthresh_list[i_uth]
@@ -228,7 +235,7 @@ if ei_flag:
             if not exists(seeddir): mkdir(seeddir)
             tpt_feat_filename = join(seeddir,"Y")
             if tpt_featurize_ei:
-                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>0),seed=i_seed)
+                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,algo_params,tpt_feat_filename,resample_flag=(i_seed>0),seed=i_seed)
             rates_ei = np.zeros(len(uthresh_list))
             for i_uth in range(len(uthresh_list)):
                 uthresh_b = uthresh_list[i_uth]
@@ -266,7 +273,7 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
     clust_filename = join(seeddir,"kmeans")
     msm_filename = join(seeddir,"msm")
     if tpt_featurize_s2s:
-        winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,Npc_per_level=Npc_per_level,Nwaves=Nwaves,resample_flag=(i_seed>=1),seed=i_seed)
+        winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,algo_params,tpt_feat_filename,resample_flag=(i_seed>=1),seed=i_seed)
     if cluster_flag:
         tpt.cluster_features(tpt_feat_filename,clust_filename,winstrat,num_clusters=num_clusters)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
     if build_msm_flag:
