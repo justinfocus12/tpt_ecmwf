@@ -712,7 +712,7 @@ class WinterStratosphereFeatures:
         flab[key] = r"$\overline{u}$ (10 hPa, 60$^\circ$N) [m/s]"
         i_feat += 1
         # -------------- Waves -------------------
-        for i_wave in range(self.num_wavenumbers):
+        for i_wave in range(1,self.num_wavenumbers+1):
             key = "real%i"%(i_wave)
             fidx[key] = i_feat
             flab[key] = r"$\mathrm{Re}\{\mathrm{Wave %i}\}$"%(i_wave)
@@ -739,7 +739,7 @@ class WinterStratosphereFeatures:
         for i_lev in range(Nlev):
             key = "captemp_lev%i"%(i_lev)
             fidx[key] = i_feat
-            flab[key] = r"Polar cap temp. at %i hPa [K]"%(feat_def["plev"]/100.0) 
+            flab[key] = r"Polar cap temp. at %i hPa [K]"%(feat_def["plev"][i_lev]/100.0) 
             i_feat += 1
         # -------- Heat flux at 10 hPa -----------
         for i_lev in range(Nlev):
@@ -752,7 +752,7 @@ class WinterStratosphereFeatures:
         self.fidx_X = fidx
         self.flab_X = flab
         return fidx
-    def set_feature_indices_Y(self,feat_def,algo_params,fidx_Y_filename):
+    def set_feature_indices_Y(self,feat_def,fidx_Y_filename,algo_params):
         # Build a mapping from feature names to indices in Y. (These will approximately match those in X, but will also include time-delay embeddings and perhaps more complicated combinations.) 
         fidx = dict()
         Nlev = len(feat_def["plev"])
@@ -763,7 +763,7 @@ class WinterStratosphereFeatures:
             fidx["uref_dl%i"%(i_dl)] = i_feat
             i_feat += 1
         # --------- Waves (magnitude and phase) ----
-        for i_wave in range(algo_params["Nwaves"]):
+        for i_wave in range(1,algo_params["Nwaves"]+1):
             fidx["real%i"%(i_wave)] = i_feat
             i_feat += 1
             fidx["imag%i"%(i_wave)] = i_feat
@@ -810,7 +810,9 @@ class WinterStratosphereFeatures:
         trun = timelib.time()
         _,vmer = self.compute_geostrophic_wind(gh,lat,lon) # for meridional wind
         time_vmer = timelib.time() - trun
-        Nfeat = len(np.unique(np.array(self.fidx_X.values())))
+        Nfeat = len(set(self.fidx_X.values()))
+        print(f"Nfeat = {Nfeat}")
+        print(f"self.fidx_X.values() = {self.fidx_X.values()}")
         #Nfeat = 1 # Time
         #Nfeat += 1 # zonal-mean zonal wind
         #Nfeat += 2*self.num_wavenumbers # Real and imaginary part of each 
@@ -826,21 +828,22 @@ class WinterStratosphereFeatures:
         uref = np.mean(u[:,i_lev_uref,i_lat_uref,:],axis=1)
         i_feat = self.fidx_X['uref']
         X[:,i_feat] = uref
+        print(f"uref: min={uref.min()}, max={uref.max()}")
         # ---------- Waves ---------------------
         trun = timelib.time()
         waves = self.get_wavenumbers(gh,i_lev_uref,self.lat_range_uref,lat,lon)
         time_waves = timelib.time() - trun
-        for i_wave in range(self.num_wavenumbers):
+        for i_wave in range(1,self.num_wavenumbers+1):
             i_feat = self.fidx_X['real%i'%(i_wave)]
-            X[:,i_feat] = waves[:,2*i_wave]
+            X[:,i_feat] = waves[:,2*(i_wave-1)]
             i_feat = self.fidx_X['imag%i'%(i_wave)]
-            X[:,i_feat] = waves[:,2*i_wave+1]
+            X[:,i_feat] = waves[:,2*(i_wave-1)+1]
         # -------- EOFs ----------------------
         gh = self.unseason(X[:,0],gh,feat_def["gh_szn_mean"],feat_def["gh_szn_std"],normalize=False)
         for i_lev in range(Nlev):
             for i_pc in range(self.Npc_per_level_max):
-                i_feat = self.fidx_X["lev%i_pc%i"%(i_lev,i_eof)]
-                X[:,i_feat] = (gh[:,i_lev,:,:].reshape((Nmem*Nt,Nlat*Nlon)) @ (feat_def["eofs"][i_lev,:,i_pc])) / feat_def["singvals"][i_lev] 
+                i_feat = self.fidx_X["pc%i_lev%i"%(i_pc,i_lev)]
+                X[:,i_feat] = (gh[:,i_lev,:,:].reshape((Nmem*Nt,Nlat*Nlon)) @ (feat_def["eofs"][i_lev,:,i_pc])) / feat_def["singvals"][i_lev,i_pc] 
         # --------- Temperature ---------------
         trun = timelib.time()
         temperature = self.get_temperature(gh,plev,lat,lon)
@@ -883,16 +886,22 @@ class WinterStratosphereFeatures:
         decel_time_range = [max(0,start-decel_window), min(len(time)-1, start+2*decel_window)]
         full_time_range = self.wtime[[0,-1]]
         # Make a list of things to plot
-        obs_key_list = ["captemp_lev0","heatflux_lev0","heatflux_lev1","heatflux_lev2","uref","mag1","mag2","pc0_lev0","pc1_lev0","pc2_lev0","pc3_lev0","pc4_lev0","pc5_lev0"]
-        for oki in range(len(obs_key_list)):
-            obs_key = obs_key_list[oki]
+        obs_key_list = ["mag1","mag2","captemp_lev0","heatflux_lev0","heatflux_lev1","heatflux_lev2","uref","pc0_lev0","pc1_lev0","pc2_lev0","pc3_lev0","pc4_lev0","pc5_lev0"]
+        for obs_key in obs_key_list:
             fig,ax = plt.subplots()
             ydata = funlib[obs_key]["fun"](X)
-            if obs_key_list[oki].startswith("pc0"):
+            #ydata = X[:,self.fidx_X[obs_key]]
+            ylab = funlib[obs_key]["label"]
+            #ylab = self.flab_X[obs_key]
+            xdata = funlib["time_h"]["fun"](X)
+            #xdata = X[:,self.fidx_X["time_h"]]
+            xlab = "%s %i"%(funlib["time_h"]["label"], fall_year)
+            #xlab = self.flab_X["time_h"]
+            if obs_key.startswith("pc0"):
                 ydata *= -1
-            ax.plot(funlib["time_h"]["fun"](X),ydata,color='black')
-            ax.set_xlabel("%s %i"%(funlib["time_h"]["label"],fall_year))
-            ax.set_ylabel(funlib[obs_key]["label"])
+            ax.plot(xdata,ydata,color='black')
+            ax.set_xlabel(xlab)
+            ax.set_ylabel(ylab)
             ax.axvspan(time[decel_time_range[0]],time[decel_time_range[1]],color='orange',zorder=-1)
             fig.savefig(join(savedir,"timeseries_%s_%s"%(save_suffix,obs_key)))
             plt.close(fig)
@@ -949,17 +958,22 @@ class WinterStratosphereFeatures:
         funlib = dict()
         for key in self.fidx_X.keys():
             funlib[key] = {
-                    "fun": lambda X: X[:,self.fidx_X[key]],
+                    "fun": lambda X,key=key: X[:,self.fidx_X[key]],
                     "label": self.flab_X[key],
                     }
+        # Linear functions
+        funlib["time_d"] = {
+                "fun": lambda X: X[:,self.fidx_X["time_h"]]/24.0, 
+                "label": "Time since Nov. 1 [days]",
+                }
         # Nonlinear functions
-        for i_wave in range(self.num_wavenumbers):
+        for i_wave in range(1,self.num_wavenumbers+1):
             funlib["mag%i"%(i_wave)] = {
-                    "fun": lambda X: np.sqrt(X[:,self.fidx_X["real%i"%(i_wave)]]**2 + X[:,self.fidx_X["imag%i"%(i_wave)]]**2),
+                    "fun": lambda X,i_wave=i_wave: np.sqrt(X[:,self.fidx_X["real%i"%(i_wave)]]**2 + X[:,self.fidx_X["imag%i"%(i_wave)]]**2),
                     "label": "Wave %i magnitude"%(i_wave),
                     }
             funlib["ph%i"%(i_wave)] = {
-                    "fun": lambda X: np.arctan2(X[:,self.fidx_X["imag%i"%(i_wave)]]**2, X[:,self.fidx_X["real%i"%(i_wave)]]),
+                    "fun": lambda X,i_wave=i_wave: np.arctan2(X[:,self.fidx_X["imag%i"%(i_wave)]]**2, X[:,self.fidx_X["real%i"%(i_wave)]]),
                     "label": "Wave %i phase"%(i_wave),
                     }
         return funlib

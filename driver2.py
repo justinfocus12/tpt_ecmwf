@@ -24,9 +24,9 @@ os.chdir(codedir)
 datadir_e2 = "/scratch/jf4241/ecmwf_data/era20c_data/2021-11-03"
 datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2021-12-12"
 datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
-featdir = "/scratch/jf4241/ecmwf_data/features/2022-01-30"
+featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-02"
 if not exists(featdir): mkdir(featdir)
-feat_display_dir = join(featdir,"display1")
+feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
@@ -122,8 +122,8 @@ for i in range(num_seeds_s2s):
 
 # Parameters to determine what to do
 # Featurization
-create_features_flag =         1
-display_features_flag =        1
+create_features_flag =         0
+display_features_flag =        0
 # era20c
 evaluate_database_e2 =         1
 tpt_featurize_e2 =             1
@@ -151,7 +151,7 @@ if create_features_flag:
 # ------------------ Initialize the TPT object -------------------------------------
 feat_def = pickle.load(open(winstrat.feature_file,"rb"))
 winstrat.set_feature_indices_X(feat_def,fidx_X_filename)
-winstrat.set_feature_indices_Y(feat_def,fidx_Y_filename)
+winstrat.set_feature_indices_Y(feat_def,fidx_Y_filename,algo_params)
 tpt = tpt_general.WinterStratosphereTPT()
 # ----------------- Display features ------------------------------------------
 if display_features_flag:
@@ -366,4 +366,4 @@ if plot_rate_flag:
     plt.close(fig)
 
 # Print the rate lists
-if e2_flag and ei_flag: print(f"rate_lists:\nera20c:\n{rate_list_e2[0]}\neraint:\n{rate_list_ei[0]}\ns2s:\n{rate_list_s2s[0]}")
+if e2_flag and ei_flag and plot_rate_flag: print(f"rate_lists:\nera20c:\n{rate_list_e2[0]}\neraint:\n{rate_list_ei[0]}\ns2s:\n{rate_list_s2s[0]}")
