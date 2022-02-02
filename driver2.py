@@ -195,7 +195,7 @@ if e2_flag:
             if not exists(seeddir): mkdir(seeddir)
             tpt_feat_filename = join(seeddir,"Y")
             if tpt_featurize_e2:
-                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,algo_params,tpt_feat_filename,algo_params,resample_flag=(i_seed>0),seed=i_seed)
+                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=(i_seed>0),seed=i_seed)
             rates_e2 = np.zeros(len(uthresh_list))
             for i_uth in range(len(uthresh_list)):
                 uthresh_b = uthresh_list[i_uth]
@@ -203,7 +203,7 @@ if e2_flag:
                 if not exists(savedir): mkdir(savedir)
                 tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
                 tpt.set_boundaries(tpt_bndy)
-                summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level,plot_field_flag=(i_seed==0))
+                summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,algo_params,plot_field_flag=(i_seed==0))
                 rates_e2[i_uth] = summary_dns["rate"]
 # ================================================================================
 
@@ -235,7 +235,7 @@ if ei_flag:
             if not exists(seeddir): mkdir(seeddir)
             tpt_feat_filename = join(seeddir,"Y")
             if tpt_featurize_ei:
-                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,algo_params,tpt_feat_filename,resample_flag=(i_seed>0),seed=i_seed)
+                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=(i_seed>0),seed=i_seed)
             rates_ei = np.zeros(len(uthresh_list))
             for i_uth in range(len(uthresh_list)):
                 uthresh_b = uthresh_list[i_uth]
@@ -273,7 +273,7 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
     clust_filename = join(seeddir,"kmeans")
     msm_filename = join(seeddir,"msm")
     if tpt_featurize_s2s:
-        winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,algo_params,tpt_feat_filename,resample_flag=(i_seed>=1),seed=i_seed)
+        winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=(i_seed>=1),seed=i_seed)
     if cluster_flag:
         tpt.cluster_features(tpt_feat_filename,clust_filename,winstrat,num_clusters=num_clusters)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
     if build_msm_flag:

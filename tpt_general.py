@@ -49,7 +49,7 @@ class WinterStratosphereTPT:
         rate = np.mean(absum)
         print(f"rate = {rate}")
         return rate
-    def tpt_pipeline_dns(self,tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level,plot_field_flag=True):
+    def tpt_pipeline_dns(self,tpt_feat_filename,savedir,winstrat,feat_def,algo_params,plot_field_flag=True):
         # savedir: where all the results of this particular TPT will be saved.
         # winstrat: the object that was used to create features, and that can go on to evaluate other features.
         # feat_def: the feature definitions that came out of winstrat.
@@ -57,7 +57,7 @@ class WinterStratosphereTPT:
         Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
         Ny,Nt,ydim = Y.shape
         #print(f"in DNS pipeline: ydim = {ydim}")
-        funlib = winstrat.observable_function_library_Y(Nwaves,Npc_per_level)
+        funlib = winstrat.observable_function_library_Y(algo_params,Npc_per_level)
         # ---- Plot committor in a few different coordinates -----
         src_tag,dest_tag = winstrat.compute_src_dest_tags(Y,feat_def,self.tpt_bndy,"src_dest")
         #print(f"src_tag[:,0] = {src_tag[:,0]}")

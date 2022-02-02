@@ -679,19 +679,21 @@ class WinterStratosphereFeatures:
             szn_std_Y[:,i_feat_y-1] = feat_def["vtx_diags_szn_std"][i_mom]
         # ------- Polar cap temperature ------------
         for i_lev in range(Nlev):
-            i_feat_y = self.fidx_Y["captemp_lev%i"%(i_lev)]
-            i_feat_x = self.fidx_X["captemp_lev%i"%(i_lev)]
-            Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
-            szn_mean_Y[:,i_feat_y-1] = feat_def["temp_capavg_szn_mean"][i_lev]
-            szn_std_Y[:,i_feat_y-1] = feat_def["temp_capavg_szn_std"][i_lev]
+            if algo_params["captemp_flag"][i_lev]:
+                i_feat_y = self.fidx_Y["captemp_lev%i"%(i_lev)]
+                i_feat_x = self.fidx_X["captemp_lev%i"%(i_lev)]
+                Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
+                szn_mean_Y[:,i_feat_y-1] = feat_def["temp_capavg_szn_mean"][:,i_lev]
+                szn_std_Y[:,i_feat_y-1] = feat_def["temp_capavg_szn_std"][:,i_lev]
         # ------- Heat flux ------------
         # TODO: make this a time integral
         for i_lev in range(Nlev):
-            i_feat_y = self.fidx_Y["heatflux_lev%i"%(i_lev)]
-            i_feat_x = self.fidx_X["heatflux_lev%i"%(i_lev)]
-            Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
-            szn_mean_Y[:,i_feat_y-1] = feat_def["vT_szn_mean"][i_lev]
-            szn_std_Y[:,i_feat_y-1] = feat_def["vT_szn_std"][i_lev]
+            if algo_params["heatflux_flag"][i_lev]:
+                i_feat_y = self.fidx_Y["heatflux_lev%i"%(i_lev)]
+                i_feat_x = self.fidx_X["heatflux_lev%i"%(i_lev)]
+                Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
+                szn_mean_Y[:,i_feat_y-1] = feat_def["vT_szn_mean"][:,i_lev]
+                szn_std_Y[:,i_feat_y-1] = feat_def["vT_szn_std"][:,i_lev]
         tpt_feat = {"Y": Y, "szn_mean_Y": szn_mean_Y, "szn_std_Y": szn_std_Y}
         pickle.dump(tpt_feat, open(tpt_feat_filename,"wb"))
         return 
@@ -755,18 +757,29 @@ class WinterStratosphereFeatures:
     def set_feature_indices_Y(self,feat_def,fidx_Y_filename,algo_params):
         # Build a mapping from feature names to indices in Y. (These will approximately match those in X, but will also include time-delay embeddings and perhaps more complicated combinations.) 
         fidx = dict()
+        flab = dict()
         Nlev = len(feat_def["plev"])
-        fidx["time_h"] = 0
-        i_feat = 1
+        i_feat = 0
+        # ---------- Time ---------------
+        key = "time_h"
+        fidx[key] = i_feat
+        flab[key] = "Days since Nov. 1"
+        i_feat += 1
         # -------- Time-delayed uref ---------------
         for i_dl in range(self.ndelay):
-            fidx["uref_dl%i"%(i_dl)] = i_feat
+            key = "uref_dl%i"%(i_dl)
+            fidx[key] = i_feat
+            flab[key] = r"$\overline{u}$ (10 hPa, 60$^\circ$N, %i days ago) [m/s]"%(i_dl*self.dtwint/24.0)
             i_feat += 1
         # --------- Waves (magnitude and phase) ----
         for i_wave in range(1,algo_params["Nwaves"]+1):
-            fidx["real%i"%(i_wave)] = i_feat
+            key = "real%i"%(i_wave)
+            fidx[key] = i_feat
+            flab[key] = 
             i_feat += 1
-            fidx["imag%i"%(i_wave)] = i_feat
+            key = "imag%i"%(i_wave)
+            fidx[key] = i_feat
+
             i_feat += 1
         # ----- Principal components ---------------
         for i_lev in range(Nlev):
@@ -811,8 +824,8 @@ class WinterStratosphereFeatures:
         _,vmer = self.compute_geostrophic_wind(gh,lat,lon) # for meridional wind
         time_vmer = timelib.time() - trun
         Nfeat = len(set(self.fidx_X.values()))
-        print(f"Nfeat = {Nfeat}")
-        print(f"self.fidx_X.values() = {self.fidx_X.values()}")
+        #print(f"Nfeat = {Nfeat}")
+        #print(f"self.fidx_X.values() = {self.fidx_X.values()}")
         #Nfeat = 1 # Time
         #Nfeat += 1 # zonal-mean zonal wind
         #Nfeat += 2*self.num_wavenumbers # Real and imaginary part of each 
@@ -849,7 +862,7 @@ class WinterStratosphereFeatures:
         temperature = self.get_temperature(gh,plev,lat,lon)
         i_lat_cap = np.argmin(np.abs(lat - 60))
         temp_capavg = np.sum((temperature*area_factor)[:,:,:i_lat_cap,:], axis=(2,3))/np.sum(area_factor[:i_lat_cap,:])
-        print(f"temp_capavg.shape = {temp_capavg.shape}")
+        #print(f"temp_capavg.shape = {temp_capavg.shape}")
         time_temperature = timelib.time() - trun
         for i_lev in range(Nlev):
             i_feat = self.fidx_X["captemp_lev%i"%(i_lev)]
@@ -858,7 +871,7 @@ class WinterStratosphereFeatures:
         trun = timelib.time()
         vT = self.get_meridional_heat_flux(gh,temperature,plev,lat,lon)
         time_vT = timelib.time() - trun
-        print(f"Nlev = {Nlev}, vT.shape = {vT.shape}, i_feat = {i_feat}, X.shape = {X.shape}")
+        #print(f"Nlev = {Nlev}, vT.shape = {vT.shape}, i_feat = {i_feat}, X.shape = {X.shape}")
         for i_lev in range(Nlev):
             i_feat = self.fidx_X["heatflux_lev%i"%(i_lev)]
             X[:,i_feat] = vT[:,i_lev]
@@ -1025,23 +1038,17 @@ class WinterStratosphereFeatures:
                         "label": "PC %i at %i hPa"%(i_eof+1, feat_def["plev"][i_lev]/100.0),
                         }
         return funlib
-    def observable_function_library_Y(self,Nwaves=None,Npc_per_level=None,num_vortex_moments=None,heatflux_flag=None,captemp_flag=None):
+    def observable_function_library_Y(self,algo_params):
         # Build the database of observable functions
-        Nlev = len(feat_def['plev'])
         feat_def = pickle.load(open(self.feature_file,"rb"))
-        if Nwaves is None:
-            Nwaves = self.num_wavenumbers
-        if Npc_per_level is None:
-            Npc_per_level = self.Npc_per_level_max * np.ones(len(feat_def["plev"]), dtype=int)
-        if num_vortex_moments is None:
-            num_vortex_moments = self.num_vortex_moments_max
-        if captemp_flag is None:
-            captemp_flag = np.zeros(Nlev, dtype=bool)
-        if heatflux_flag is None:
-            heatflux_flag = np.zeros(Nlev, dtype=bool)
-        print(f"Nwaves = {Nwaves}, Npc_per_level = {Npc_per_level}")
-        print(f"Npc_per_level = {Npc_per_level}")
-        print(f"Index for area = {1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)}")
+        Nlev = len(feat_def['plev'])
+        funlib = dict()
+        for key in self.fidx_Y.keys():
+            funlib[key] = {
+                    "fun": lambda Y,key=key: Y[:,self.fidx_Y[key]],
+                    "label": self.flab_Y[key],
+                    }
+        print(f"Nwaves = {algo_params['Nwaves']}, Npc_per_level = {algo_params['Npc_per_level']}")
         funlib = {
                 "time_h": {"fun": lambda Y: Y[:,0],
                     "label": r"Hours since Nov. 1",},

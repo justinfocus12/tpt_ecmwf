@@ -1,8 +1,6 @@
-/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:250: RuntimeWarning: divide by zero encountered in true_divide
-  qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(
 Traceback (most recent call last):
-  File "/home/jf4241/ecmwf/tpt_ecmwf/driver2.py", line 153, in <module>
-    winstrat.set_feature_indices_X(feat_def,fidx_X_filename)
-  File "/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py", line 742, in set_feature_indices_X
-    flab[key] = r"Polar cap temp. at %i hPa [K]"%(feat_def["plev"]/100.0) 
-TypeError: %i format: a number is required, not MaskedArray
+  File "/home/jf4241/ecmwf/tpt_ecmwf/driver2.py", line 198, in <module>
+    winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=(i_seed>0),seed=i_seed)
+  File "/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py", line 682, in evaluate_tpt_features
+    i_feat_y = self.fidx_Y["captemp_lev%i"%(i_lev)]
+KeyError: 'captemp_lev3'
