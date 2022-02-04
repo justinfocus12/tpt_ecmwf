@@ -57,7 +57,7 @@ class WinterStratosphereTPT:
         Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
         Ny,Nt,ydim = Y.shape
         #print(f"in DNS pipeline: ydim = {ydim}")
-        funlib = winstrat.observable_function_library_Y(algo_params,Npc_per_level)
+        funlib = winstrat.observable_function_library_Y(algo_params)
         # ---- Plot committor in a few different coordinates -----
         src_tag,dest_tag = winstrat.compute_src_dest_tags(Y,feat_def,self.tpt_bndy,"src_dest")
         #print(f"src_tag[:,0] = {src_tag[:,0]}")
@@ -68,7 +68,7 @@ class WinterStratosphereTPT:
         pi = 1.0*np.ones(Ny*Nt)/(Ny*Nt)
         #keypairs = [['time_d','area'],['time_d','displacement'],['time_d','uref'],['time_d','mag1'],['time_d','lev0_pc0'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4']]
         if plot_field_flag:
-            keypairs = [['time_d','uref']]
+            keypairs = [['time_d','uref_dl0']]
             for i_kp in range(len(keypairs)):
                 fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
                 theta0_x = funlib[keypairs[i_kp][0]]["fun"](Y.reshape((Ny*Nt,ydim)))
@@ -342,12 +342,12 @@ class WinterStratosphereTPT:
                 int2b_cond['m4'] += [cond_m4[j:j+nclust]]
                 j += nclust
         return int2b_cond 
-    def tpt_pipeline_dga(self,tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,num_vortex_moments,Nwaves,plot_field_flag=True):
+    def tpt_pipeline_dga(self,tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,algo_params,plot_field_flag=True):
         # Label each cluster as in A or B or elsewhere
         tpt_feat = pickle.load(open(tpt_feat_filename,"rb"))
         Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
         Ny,Nt,ydim = Y.shape
-        funlib = winstrat.observable_function_library_Y(Nwaves=Nwaves,Npc_per_level=Npc_per_level)
+        funlib = winstrat.observable_function_library_Y(algo_params)
         #uref_y = funlib["uref"]["fun"](Y.reshape((Ny*Nt,ydim)))
         #print("uref_y: min={}, max={}, mean={}".format(uref_y.min(),uref_y.max(),uref_y.mean()))
         kmdict = pickle.load(open(clust_filename,"rb"))
@@ -437,12 +437,10 @@ class WinterStratosphereTPT:
         if plot_field_flag:
             centers_all = np.concatenate(centers, axis=0)
             #keypairs = [['time_d','area'],['time_d','centerlat'],['time_d','uref'],['time_d','asprat'],['time_d','kurt'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4']][:5]
-            keypairs = [['time_d',v] for v in ['uref','lev0_vT','lev1_vT','lev2_vT','lev0_temp']]
-            if num_vortex_moments >= 4:
-                keypairs += [['time_d',v] for v in ['area','asprat','kurt']]
-                keypairs += [['area','uref'],['kurt','uref']]
-            keypairs += [['lev0_pc1','lev0_pc4']]
-            keypairs += [['dl0_ubar','dl%i_ubar'%(i_dl)] for i_dl in range(1,min(5,winstrat.ndelay))]
+            keypairs = [['time_d',v] for v in ['uref_dl0','heatflux_lev0','heatflux_lev1','heatflux_lev2','captemp_lev0'][:1]]
+            #keypairs += [['time_d','vxmom%i'] for i in range(algo_params['num_vortex_moments'])]
+            #keypairs += [['pc1_lev0','pc3_lev0']]
+            #keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in range(1,min(5,winstrat.ndelay))]
             for i_kp in range(len(keypairs)):
                 fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
                 theta_x = np.array([funlib[keypairs[i_kp][j]]["fun"](centers_all) for j in range(2)]).T

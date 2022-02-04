@@ -1,6 +1,18 @@
-Traceback (most recent call last):
-  File "/home/jf4241/ecmwf/tpt_ecmwf/driver2.py", line 198, in <module>
-    winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=(i_seed>0),seed=i_seed)
-  File "/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py", line 682, in evaluate_tpt_features
-    i_feat_y = self.fidx_Y["captemp_lev%i"%(i_lev)]
-KeyError: 'captemp_lev3'
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:537: RuntimeWarning: divide by zero encountered in double_scalars
+  coeff1 = 3.0/maxmag
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:539: RuntimeWarning: invalid value encountered in double_scalars
+  coeff0 = dsmax / (np.exp(-coeff1 * maxmag) - 1)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:540: RuntimeWarning: invalid value encountered in multiply
+  ds = coeff0 * (np.exp(-coeff1 * Jmag) - 1)
+/home/jf4241/ecmwf/tpt_ecmwf/helper.py:207: RuntimeWarning: All-NaN slice encountered
+  field_std_Linf = np.nanmax(field_std)*np.prod(dth)
+/ext3/miniconda3/lib/python3.9/site-packages/matplotlib/contour.py:1430: UserWarning: Warning: converting a masked element to nan.
+  self.zmax = float(z.max())
+/ext3/miniconda3/lib/python3.9/site-packages/matplotlib/contour.py:1431: UserWarning: Warning: converting a masked element to nan.
+  self.zmin = float(z.min())
+/home/jf4241/ecmwf/tpt_ecmwf/helper.py:294: RuntimeWarning: All-NaN slice encountered
+  cbar_fmt = generate_sci_fmt(np.nanmin(field_mean),np.nanmax(field_mean),20)
+/home/jf4241/ecmwf/tpt_ecmwf/helper.py:306: RuntimeWarning: All-NaN slice encountered
+  cbarmin,cbarmax = np.nanmin(field_mean),np.nanmax(field_mean)

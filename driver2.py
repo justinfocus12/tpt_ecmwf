@@ -61,7 +61,7 @@ spring_day0 = 150.0
 Npc_per_level_max = 6
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay
+delaytime_days = 10.0 # Both zonal wind and heat flux will be saved with this time delay
 # ----------------- Directories for this experiment --------
 expdir_e2 = join(expdir,"era20c")
 if not exists(expdir_e2): mkdir(expdir_e2)
@@ -73,7 +73,7 @@ if not exists(expdir_s2s): mkdir(expdir_s2s)
 multiprocessing_flag = 1
 num_clusters = 120
 #Npc_per_level_single = 4
-Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level = np.array([4,4,4,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
 heatflux_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
@@ -125,15 +125,15 @@ for i in range(num_seeds_s2s):
 create_features_flag =         0
 display_features_flag =        0
 # era20c
-evaluate_database_e2 =         1
+evaluate_database_e2 =         0
 tpt_featurize_e2 =             1
 tpt_e2_flag =                  1
 # eraint
-evaluate_database_ei =         1
+evaluate_database_ei =         0
 tpt_featurize_ei =             1
 tpt_ei_flag =                  1
 # s2s
-evaluate_database_s2s =        1
+evaluate_database_s2s =        0
 tpt_featurize_s2s =            1
 cluster_flag =                 1
 build_msm_flag =               1
@@ -243,7 +243,7 @@ if ei_flag:
                 if not exists(savedir): mkdir(savedir)
                 tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
                 tpt.set_boundaries(tpt_bndy)
-                summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,Nwaves,Npc_per_level,plot_field_flag=(i_seed==0))
+                summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,algo_params,plot_field_flag=(i_seed==0))
                 rates_ei[i_uth] = summary_dns["rate"]
     #print(f"rates_e2 = {rates_e2}\nrates_ei = {rates_ei}")
 # =============================================================================
@@ -285,7 +285,7 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            summary_dga = tpt.tpt_pipeline_dga(tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,Npc_per_level,num_vortex_moments,Nwaves,plot_field_flag=(i_seed==0))
+            summary_dga = tpt.tpt_pipeline_dga(tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,algo_params,plot_field_flag=(i_seed==0))
 # =============================================================================
 # ------------- Compare rates ---------------------
 if plot_rate_flag:

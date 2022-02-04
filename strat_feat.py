@@ -112,8 +112,8 @@ class WinterStratosphereFeatures:
         #print(f"nonwinter_flag = {nonwinter_flag}")
         nbuffer = int(round(tpt_bndy['sswbuffer']/self.dtwint))
         uref = y[:,i_uref] #self.uref_history(y,feat_def)
-        weak_wind_flag = (np.min(uref[:,:self.ndelay-nbuffer-1], axis=1) < tpt_bndy['uthresh_b'])  # This has to be defined from the Y construction
-        strong_wind_flag = (uref[:,-1] > tpt_bndy['uthresh_a'])
+        weak_wind_flag = (np.min(uref[:,:self.ndelay-nbuffer], axis=1) < tpt_bndy['uthresh_b'])  # This has to be defined from the Y construction
+        strong_wind_flag = (uref[:,0] > tpt_bndy['uthresh_a'])
         ina = nonwinter_flag + winter_flag*(1 - weak_wind_flag)*strong_wind_flag
         return ina
     def inb_test(self,y,feat_def,tpt_bndy):
@@ -621,13 +621,14 @@ class WinterStratosphereFeatures:
         # Y dimension: (time, uref, real + imag for each wave, pc for each level, vortex area, centroid latitude) all times the number of time lags
         Nty = Ntx - self.ndelay + 1
         print(f"self.ndelay = {self.ndelay}")
-        ydim = 1 # Time
-        ydim += self.ndelay # Zonal wind for some history
-        ydim += 2*algo_params["Nwaves"] # real and imaginary parts of each 
-        ydim += np.sum(algo_params["Npc_per_level"]) 
-        ydim += algo_params["num_vortex_moments"] # Vortex moments
-        ydim += np.sum(algo_params["captemp_flag"]) # Polar cap averaged temperature
-        ydim += np.sum(algo_params["heatflux_flag"]) #*self.ndelay # Heat flux at each level and lag time
+        #ydim = 1 # Time
+        #ydim += self.ndelay # Zonal wind for some history
+        #ydim += 2*algo_params["Nwaves"] # real and imaginary parts of each 
+        #ydim += np.sum(algo_params["Npc_per_level"]) 
+        #ydim += algo_params["num_vortex_moments"] # Vortex moments
+        #ydim += np.sum(algo_params["captemp_flag"]) # Polar cap averaged temperature
+        #ydim += np.sum(algo_params["heatflux_flag"]) #*self.ndelay # Heat flux at each level and lag time
+        ydim = len(set(self.fidx_Y.values()))
         print(f"ydim = {ydim}")
         Y = np.zeros((Nx,Nty,ydim))
         # Store information to unseason Y, simply as a set of seasonal means, one per column.
@@ -675,8 +676,8 @@ class WinterStratosphereFeatures:
             i_feat_y = self.fidx_Y["vxmom%i"%(i_mom)]
             i_feat_x = self.fidx_X["vxmom%i"%(i_mom)]
             Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
-            szn_mean_Y[:,i_feat_y-1] = feat_def["vtx_diags_szn_mean"][i_mom]
-            szn_std_Y[:,i_feat_y-1] = feat_def["vtx_diags_szn_std"][i_mom]
+            szn_mean_Y[:,i_feat_y-1] = feat_def["vtx_diags_szn_mean"][:,i_mom]
+            szn_std_Y[:,i_feat_y-1] = feat_def["vtx_diags_szn_std"][:,i_mom]
         # ------- Polar cap temperature ------------
         for i_lev in range(Nlev):
             if algo_params["captemp_flag"][i_lev]:
@@ -763,46 +764,55 @@ class WinterStratosphereFeatures:
         # ---------- Time ---------------
         key = "time_h"
         fidx[key] = i_feat
-        flab[key] = "Days since Nov. 1"
+        flab[key] = "Hours since Nov. 1"
         i_feat += 1
-        # -------- Time-delayed uref ---------------
+        # -------- Time-delayed reference zonal wind ---------------
         for i_dl in range(self.ndelay):
             key = "uref_dl%i"%(i_dl)
             fidx[key] = i_feat
             flab[key] = r"$\overline{u}$ (10 hPa, 60$^\circ$N, %i days ago) [m/s]"%(i_dl*self.dtwint/24.0)
             i_feat += 1
-        # --------- Waves (magnitude and phase) ----
+        # --------- Waves ----
         for i_wave in range(1,algo_params["Nwaves"]+1):
             key = "real%i"%(i_wave)
             fidx[key] = i_feat
-            flab[key] = 
+            flab[key] = r"$\mathrm{Re}\{\mathrm{Wave %i}\}$"%(i_wave)
             i_feat += 1
             key = "imag%i"%(i_wave)
             fidx[key] = i_feat
-
+            flab[key] = r"$\mathrm{Im}\{\mathrm{Wave %i}\}$"%(i_wave)
             i_feat += 1
         # ----- Principal components ---------------
         for i_lev in range(Nlev):
             for i_pc in range(algo_params["Npc_per_level"][i_lev]):
-                fidx["pc%i_lev%i"%(i_pc,i_lev)] = i_feat
+                key = "pc%i_lev%i"%(i_pc,i_lev)
+                fidx[key] = i_feat
+                flab[key] = r"PC %i at %i hPa"%(i_pc+1,feat_def["plev"][i_lev]/100.0)
                 i_feat += 1
         # -------- Vortex moments ----------------
         for i_mom in range(algo_params["num_vortex_moments"]):
-            fidx["vxmom%i"%(i_mom)] = i_feat
+            key = "vxmom%i"%(i_mom)
+            fidx[key] = i_feat
+            flab[key] = self.flab_X[key]
             i_feat += 1
         # -------- Polar cap temperature ---------
         for i_lev in range(Nlev):
             if algo_params["captemp_flag"][i_lev]:
-                fidx["captemp_lev%i"%(i_lev)] = i_feat
+                key = "captemp_lev%i"%(i_lev)
+                fidx[key] = i_feat
+                flab[key] = r"Polar cap temp. at %i hPa [K]"%(feat_def["plev"][i_lev]/100.0) 
                 i_feat += 1
         # -------- Heat flux at 10 hPa -----------
         for i_lev in range(Nlev):
             if algo_params["heatflux_flag"][i_lev]:
-                fidx["heatflux_lev%i"%(i_lev)] = i_feat
+                key = "heatflux_lev%i"%(i_lev)
+                fidx[key] = i_feat
+                flab[key] = r"$\overline{v'T'}$ at 45-75$^\circ$N, %i hPa [K$\cdot$m/s]"%(feat_def["plev"][i_lev]/100.0)
                 i_feat += 1
         # Save the file
         pickle.dump(fidx,open(fidx_Y_filename,"wb"))
         self.fidx_Y = fidx
+        self.flab_Y = flab
         return fidx
     def evaluate_features_from_filename(self,ds_filename,feat_def):
         ds = nc.Dataset(ds_filename,"r")
@@ -1048,87 +1058,20 @@ class WinterStratosphereFeatures:
                     "fun": lambda Y,key=key: Y[:,self.fidx_Y[key]],
                     "label": self.flab_Y[key],
                     }
-        print(f"Nwaves = {algo_params['Nwaves']}, Npc_per_level = {algo_params['Npc_per_level']}")
-        funlib = {
-                "time_h": {"fun": lambda Y: Y[:,0],
-                    "label": r"Hours since Nov. 1",},
-                "time_d": {"fun": lambda Y: Y[:,0]/24.0,
-                    "label": r"Days since Nov. 1",},
-                "uref": {"fun": lambda Y: self.uref_history(Y,feat_def)[:,-1],
-                    "label": r"$\overline{u}$ (10 hPa, 60$^\circ$N) [m/s]",},
-                "mag1": {"fun": lambda Y: self.wave_mph(Y,feat_def,1)[:,0],
-                    "label": "Wave 1 magnitude",},
-                "mag2": {"fun": lambda Y: self.wave_mph(Y,feat_def,2)[:,0],
-                    "label": "Wave 2 magnitude",},
-                "ph1": {"fun": lambda x: self.wave_mph(x,feat_def,1)[:,1],
-                    "label": "Wave 1 phase",},
-                "ph2": {"fun": lambda x: self.wave_mph(x,feat_def,2)[:,1],
-                    "label": "Wave 2 phase",},
-                }
-        funlib = dict()
-        i_feat_y = 0
-        # ------ Time ---------
-        funlib["time_h"] = {
-                "fun": lambda Y: Y[:,i_feat_y],
-                "label": r"Hours since Nov. 1"},
+        # Linear functions
         funlib["time_d"] = {
-                "fun": lambda Y: Y[:,i_feat_y]/24.0,
-                "label": r"Days since Nov. 1"},
-        i_feat_y += 1
-        # ------ Zonal wind at 10 hPa and 60N -----------
-        funlib["uref"] = {
-                "fun": lambda Y: self.uref_history(Y,feat_def)[:,-1],
-                "label": r"$\overline{u}$ (10 hPa, 60$^\circ$N) [m/s]",}
-        # Time-delays for zonal wind
-        for i_dl in range(self.ndelay):
-            key = "dl%i_ubar"%(i_dl)
-            funlib[key] = {
-                    "fun": lambda Y: self.uref_history(Y,feat_def)[:,self.ndelay-1-i_dl],
-                    "label": "$\overline{u}(60^\circ$N, 10 hPa), $t-$ %i days"%(i_dl),
+                "fun": lambda Y: Y[:,self.fidx_Y["time_h"]]/24.0, 
+                "label": "Time since Nov. 1 [days]",
+                }
+        # Nonlinear functions
+        for i_wave in range(1,self.num_wavenumbers+1):
+            funlib["mag%i"%(i_wave)] = {
+                    "fun": lambda Y,i_wave=i_wave: np.sqrt(Y[:,self.fidx_Y["real%i"%(i_wave)]]**2 + Y[:,self.fidx_Y["imag%i"%(i_wave)]]**2),
+                    "label": "Wave %i magnitude"%(i_wave),
                     }
-            i_feat_y += 1
-        # ------------ Wave magnitudes and phases -------------
-        for i_wave in range(Nwaves):
-            funlib["mag%i"%(i_wave)] = np.sqrt(Y[:,i_feat_y:i_feat_y+2]**2, axis=1)
-            funlib["ph%i"%(i_wave)] = np.arctan2(Y[:,i_feat_y+1],Y[:,i_feat_y])
-            i_feat_y += 2
-        # ------------- PCs corresponding to EOFs --------------------
-        for i_lev in range(len(feat_def["plev"])):
-            for i_eof in range(Npc_per_level[i_lev]):
-                funlib["lev%i_pc%i"%(i_lev,i_eof)] = {
-                        "fun": lambda Y,i_lev=i_lev,i_eof=i_eof: Y[:,i_feat_y], #self.get_pc(Y,i_lev,i_eof,Nwaves,Npc_per_level),
-                        "label": "PC %i at %i hPa"%(i_eof+1, feat_def["plev"][i_lev]/100.0),
-                        }
-                i_feat_y += 1
-        # --------------- Vortex moments ---------------------------
-        if num_vortex_moments >= 1:
-            funlib["area"] = {
-                    "fun": lambda Y: Y[:,i_feat_y],
-                    "label": "Vortex area",}
-            i_feat_y += 1
-        if num_vortex_moments >= 2:
-            funlib["centerlat"] = {
-                    "fun": lambda Y: Y[:,i_feat_y],
-                    "label": "Vortex center latitude",}
-            i_feat_y += 1
-        if num_vortex_moments >= 3:
-            funlib["asprat"] = {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+2],
-                "label": "Vortex aspect ratio",}
-            i_feat_y += 1
-        if num_vortex_moments >= 4:
-            funlib["kurt"] = {"fun": lambda Y: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+3],
-                "label": "Vortex excess kurtosis",}
-            i_feat_y += 1
-        for i_lev in range(len(feat_def["plev"])):
-            key = "lev%i_temp"%(i_lev)
-            funlib[key] = {
-                    "fun": lambda Y,i_lev=i_lev: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+num_vortex_moments+i_lev],
-                    "label": "Cap temp. at %i hPa [K]"%(feat_def["plev"][i_lev]/100.0),
-                    }
-            key = "lev%i_vT"%(i_lev)
-            funlib[key] = {
-                    "fun": lambda Y,i_lev=i_lev: Y[:,1+self.ndelay+2*Nwaves+np.sum(Npc_per_level)+num_vortex_moments+len(feat_def['plev'])+i_lev],
-                    "label": "$\overline{v'T'}$ at 45-75$^\circ$N, %i hPa [Km/s]"%(feat_def["plev"][i_lev]/100.0),
+            funlib["ph%i"%(i_wave)] = {
+                    "fun": lambda Y,i_wave=i_wave: np.arctan2(Y[:,self.fidx_Y["imag%i"%(i_wave)]]**2, Y[:,self.fidx_Y["real%i"%(i_wave)]]),
+                    "label": "Wave %i phase"%(i_wave),
                     }
         return funlib
     def get_pc(self,Y,i_lev,i_eof,Nwaves=None,Npc_per_level=None):
