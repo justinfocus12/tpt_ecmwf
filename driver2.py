@@ -24,13 +24,13 @@ os.chdir(codedir)
 datadir_e2 = "/scratch/jf4241/ecmwf_data/era20c_data/2021-11-03"
 datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2021-12-12"
 datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
-featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-02"
+featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-05"
 if not exists(featdir): mkdir(featdir)
 feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-02-02")
+daydir = join(resultsdir,"2022-02-05")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -52,7 +52,7 @@ for i_fy in range(len(fall_years_ei)):
     file_list_ei += [join(datadir_ei,"%s-11-01_to_%s-04-30.nc"%(fall_years_ei[i_fy],fall_years_ei[i_fy]+1))]
 file_list_s2s = [join(datadir_s2s,f) for f in os.listdir(datadir_s2s) if f.endswith(".nc")]
 prng = np.random.RandomState(0)
-ftidx_e2 = prng.choice(np.arange(len(file_list_e2)),size=15,replace=False)
+ftidx_e2 = np.random.choice(np.arange(len(file_list_e2)),size=15,replace=False)
 dga_idx_s2s = prng.choice(np.arange(len(file_list_s2s)),size=500,replace=False) # Subset of filed to use for DGA.
 
 # ----------------- Constant parameters ---------------------
@@ -61,7 +61,7 @@ spring_day0 = 150.0
 Npc_per_level_max = 6
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 10.0 # Both zonal wind and heat flux will be saved with this time delay
+delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay
 # ----------------- Directories for this experiment --------
 expdir_e2 = join(expdir,"era20c")
 if not exists(expdir_e2): mkdir(expdir_e2)
@@ -70,12 +70,12 @@ if not exists(expdir_ei): mkdir(expdir_ei)
 expdir_s2s = join(expdir,"s2s")
 if not exists(expdir_s2s): mkdir(expdir_s2s)
 # ------------------ Algorithmic parameters ---------------------
-multiprocessing_flag = 1
+multiprocessing_flag = 0
 num_clusters = 120
 #Npc_per_level_single = 4
 Npc_per_level = np.array([4,4,4,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
-captemp_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
-heatflux_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
+captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
+heatflux_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
 pcstr = ""
 hfstr = ""
@@ -304,10 +304,11 @@ if plot_rate_flag:
                 savedir = join(seeddir_list_ei[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
                 summary = pickle.load(open(join(savedir,"summary"),"rb"))
                 rate_list_ei[i_seed,i_uth] = summary["rate"]
-        for i_seed in range(num_seeds_s2s):
-            savedir = join(seeddir_list_s2s[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
-            summary = pickle.load(open(join(savedir,"summary"),"rb"))
-            rate_list_s2s[i_seed,i_uth] = summary["rate_tob"]
+        if tpt_s2s_flag:
+            for i_seed in range(num_seeds_s2s):
+                savedir = join(seeddir_list_s2s[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
+                summary = pickle.load(open(join(savedir,"summary"),"rb"))
+                rate_list_s2s[i_seed,i_uth] = summary["rate_tob"]
     fig,ax = plt.subplots()
     ax.set_xlabel("Zonal wind threshold",fontdict=font)
     ax.set_ylabel("Rate",fontdict=font)
@@ -338,7 +339,7 @@ if plot_rate_flag:
     fig.savefig(join(paramdir_s2s,"rate_%s_eie2"%(suffix)))
     ax.set_yscale('log')
     fig.savefig(join(paramdir_s2s,"lograte_%s_eie2"%(suffix)))
-    if True: # s2s flag is always true
+    if tpt_s2s_flag: # s2s flag is always true
         hs2s, = ax.plot(uthresh_list,rate_list_s2s[0],color='red',linewidth=3,marker='o',label="S2S")
         handles += [hs2s]
         if num_seeds_s2s > 1:

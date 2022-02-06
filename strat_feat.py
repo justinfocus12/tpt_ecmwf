@@ -563,9 +563,9 @@ class WinterStratosphereFeatures:
             fall_year_list[i] = fall_year
             ti_initial = np.where(ds['time'][:] >= tmin)[0][0]
             ti_final = np.where(ds['time'][:] <= tmax)[0][-1]
-            print(f"ds['time'][:] = {ds['time'][:]}")
-            print(f"Xnew[0,:,0] = {Xnew[0,:,0]}")
-            print(f"ti_initial = {ti_initial}, ti_final = {ti_final}")
+            #print(f"ds['time'][:] = {ds['time'][:]}")
+            #print(f"Xnew[0,:,0] = {Xnew[0,:,0]}")
+            #print(f"ti_initial = {ti_initial}, ti_final = {ti_final}")
             Xnew = Xnew[:,ti_initial:ti_final+1,:]
             if i == 0:
                 X = Xnew.copy()
@@ -618,18 +618,8 @@ class WinterStratosphereFeatures:
         print(f"Nx = {Nx}, Ntx = {Ntx}, xdim = {xdim}")
         # ------------- Define the cluster features Y ------------------
         # Y will have time-delay features built in. 
-        # Y dimension: (time, uref, real + imag for each wave, pc for each level, vortex area, centroid latitude) all times the number of time lags
         Nty = Ntx - self.ndelay + 1
-        print(f"self.ndelay = {self.ndelay}")
-        #ydim = 1 # Time
-        #ydim += self.ndelay # Zonal wind for some history
-        #ydim += 2*algo_params["Nwaves"] # real and imaginary parts of each 
-        #ydim += np.sum(algo_params["Npc_per_level"]) 
-        #ydim += algo_params["num_vortex_moments"] # Vortex moments
-        #ydim += np.sum(algo_params["captemp_flag"]) # Polar cap averaged temperature
-        #ydim += np.sum(algo_params["heatflux_flag"]) #*self.ndelay # Heat flux at each level and lag time
         ydim = len(set(self.fidx_Y.values()))
-        print(f"ydim = {ydim}")
         Y = np.zeros((Nx,Nty,ydim))
         # Store information to unseason Y, simply as a set of seasonal means, one per column.
         szn_mean_Y = np.zeros((self.Ntwint,ydim-1))
@@ -642,7 +632,8 @@ class WinterStratosphereFeatures:
         i_feat_x = self.fidx_X["uref"]
         for i_dl in range(self.ndelay):
             i_feat_y = self.fidx_Y["uref_dl%i"%(i_dl)]
-            Y[:,:,i_feat_y] = X[:,i_dl:i_dl+Nty,i_feat_x]
+            #Y[:,:,i_feat_y] = X[:,i_dl:i_dl+Nty,i_feat_x]
+            Y[:,:,i_feat_y] = X[:,self.ndelay-1-i_dl:self.ndelay-1-i_dl+Nty,i_feat_x]
             print(f"t_szn.shape = {feat_def['t_szn'].shape}, uref_szn_mean.shape = {feat_def['uref_szn_mean'].shape}")
             szn_mean_Y[:,i_feat_y-1] = feat_def["uref_szn_mean"] 
             szn_std_Y[:,i_feat_y-1] = feat_def["uref_szn_std"]
@@ -676,6 +667,10 @@ class WinterStratosphereFeatures:
             i_feat_y = self.fidx_Y["vxmom%i"%(i_mom)]
             i_feat_x = self.fidx_X["vxmom%i"%(i_mom)]
             Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
+            ## ---------- average ----------
+            #for i_dl in range(self.ndelay):
+            #    Y[:,:,i_feat_y] += X[:,self.ndelay-1-i_dl:Ntx-i_dl,i_feat_x]/self.ndelay
+            ## ----------------------------
             szn_mean_Y[:,i_feat_y-1] = feat_def["vtx_diags_szn_mean"][:,i_mom]
             szn_std_Y[:,i_feat_y-1] = feat_def["vtx_diags_szn_std"][:,i_mom]
         # ------- Polar cap temperature ------------
@@ -693,6 +688,10 @@ class WinterStratosphereFeatures:
                 i_feat_y = self.fidx_Y["heatflux_lev%i"%(i_lev)]
                 i_feat_x = self.fidx_X["heatflux_lev%i"%(i_lev)]
                 Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
+                ## ---------- average ----------
+                #for i_dl in range(self.ndelay):
+                #    Y[:,:,i_feat_y] += X[:,self.ndelay-1-i_dl:Ntx-i_dl,i_feat_x]/self.ndelay
+                ## ----------------------------
                 szn_mean_Y[:,i_feat_y-1] = feat_def["vT_szn_mean"][:,i_lev]
                 szn_std_Y[:,i_feat_y-1] = feat_def["vT_szn_std"][:,i_lev]
         tpt_feat = {"Y": Y, "szn_mean_Y": szn_mean_Y, "szn_std_Y": szn_std_Y}
