@@ -437,7 +437,10 @@ class WinterStratosphereTPT:
         if plot_field_flag:
             centers_all = np.concatenate(centers, axis=0)
             #keypairs = [['time_d','area'],['time_d','centerlat'],['time_d','uref'],['time_d','asprat'],['time_d','kurt'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4']][:5]
-            keypairs = [['time_d',v] for v in ['uref_dl0','heatflux_lev0','heatflux_lev1','heatflux_lev2','captemp_lev0'][:1]]
+            keypairs = [['time_d','uref_dl0']]
+            keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
+            keypairs += [['time_d','captemp_lev%i'%(i_lev)] for i_lev in np.where(algo_params["captemp_flag"])[0]]
+            keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in np.where(algo_params["captemp_flag"])[0]]
             #keypairs += [['time_d','vxmom%i'] for i in range(algo_params['num_vortex_moments'])]
             #keypairs += [['pc1_lev0','pc3_lev0']]
             #keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in range(1,min(5,winstrat.ndelay))]

@@ -73,7 +73,7 @@ if not exists(expdir_s2s): mkdir(expdir_s2s)
 multiprocessing_flag = 0
 num_clusters = 120
 #Npc_per_level_single = 4
-Npc_per_level = np.array([4,4,4,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level = np.array([6,6,6,6,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 heatflux_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
@@ -101,9 +101,9 @@ paramdir_ei = join(expdir_ei, f"delay{int(delaytime_days)}")
 if not exists(paramdir_ei): mkdir(paramdir_ei)
 
 # ------------ Random seeds for bootstrap resampling ------------
-num_seeds_e2 =  1   
-num_seeds_ei =  1   
-num_seeds_s2s = 1
+num_seeds_e2 =  5
+num_seeds_ei =  5
+num_seeds_s2s = 5
 
 # Debugging: turn off each reanalysis individually
 e2_flag = True

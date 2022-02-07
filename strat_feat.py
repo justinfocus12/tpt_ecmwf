@@ -801,7 +801,7 @@ class WinterStratosphereFeatures:
                 fidx[key] = i_feat
                 flab[key] = r"Polar cap temp. at %i hPa [K]"%(feat_def["plev"][i_lev]/100.0) 
                 i_feat += 1
-        # -------- Heat flux at 10 hPa -----------
+        # -------- Heat flux -----------
         for i_lev in range(Nlev):
             if algo_params["heatflux_flag"][i_lev]:
                 key = "heatflux_lev%i"%(i_lev)
