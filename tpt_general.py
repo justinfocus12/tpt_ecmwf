@@ -439,10 +439,10 @@ class WinterStratosphereTPT:
             #keypairs = [['time_d','area'],['time_d','centerlat'],['time_d','uref'],['time_d','asprat'],['time_d','kurt'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4']][:5]
             keypairs = [['time_d','uref_dl0']]
             keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
-            keypairs += [['time_d','captemp_lev%i'%(i_lev)] for i_lev in np.where(algo_params["captemp_flag"])[0]]
-            keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in np.where(algo_params["captemp_flag"])[0]]
+            #keypairs += [['time_d','captemp_lev%i'%(i_lev)] for i_lev in np.where(algo_params["captemp_flag"])[0]]
+            #keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in np.where(algo_params["captemp_flag"])[0]]
             #keypairs += [['time_d','vxmom%i'] for i in range(algo_params['num_vortex_moments'])]
-            #keypairs += [['pc1_lev0','pc3_lev0']]
+            keypairs += [['pc1_lev0','pc3_lev0']]
             #keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in range(1,min(5,winstrat.ndelay))]
             for i_kp in range(len(keypairs)):
                 fun0name,fun1name = [funlib[keypairs[i_kp][j]]["label"] for j in range(2)]
@@ -503,6 +503,37 @@ class WinterStratosphereTPT:
                 fig.savefig(join(savedir,"lt_skew_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
                 plt.close(fig)
         return summary 
+    def reactive_flux_density_levelset(self,theta_centers,Jth,theta_lower_list,theta_upper_list):
+        # For all data points with a value of theta between theta_lower and theta_upper, find the reactive flux density on that level set. 
+        # Assume the current has already been projected onto the observable and is given by Jth
+        # theta_centers is a list of numpy arrays, one array for each time step.
+        centers_all = np.concatenate(centers, axis=0)
+        close_idx = []
+        reactive_flux = []
+        for i_theta in range(len(theta_lower_list)):
+            theta_lower = theta_lower_list[i_theta]
+            theta_upper = theta_upper_list[i_theta]
+            close_idx.append([np.where((theta_centers > theta_lower)*(theta_centers <= theta_upper))[0]])
+            reactive_flux.append([Jth[close_idx[-1],:]])
+        return close_idx,reactive_flux
+    def plot_flux_distributions_1d(self,centers,theta_normal,theta_tangential,time,flux,num_levels=8):
+        theta_normal_flat = np.concatenate(theta_normal).reshape(-1,1)
+        theta_tangential_flat = np.concatenate(theta_tangential).reshape(-1,1)
+        dth_tangential = (np.nanmax(theta_tangential_flat) - np.nanmin(theta_tangential_flat))/20
+        Jth = self.project_current(theta_normal_flat,time,centers,flux)
+        theta_normal_min = np.nanmin(theta_normal_flat)
+        theta_normal_max = np.nanmax(theta_normal_flat)
+        theta_edges = np.linspace(theta_normal_min-1e-10,theta_normal_max+1e-10,num_levels+1)
+        close_idx,reactive_flux = self.reactive_flux_density_levelset(theta_normal,Jth,theta_edges[:-1],theta_edges[1:])
+        fig,ax = plt.subplots()
+        for i_thlev in range(num_levels):
+            # Make a histogram of the reactive flux density distribution
+            idx = close_idx[i_thlev]
+            bins = int((np.nanmax(theta_tangential_flat[idx]) - np.nanmin(theta_tangential_flat[idx]))/dth_tangential)
+            hist,bin_edges = np.histogram(theta_tangential_flat[idx],weight=reactive_flux[idx],bins=bins)
+            bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
+            ax.plot(bin_centers,hist,color=plt.cm.coolwarm(i_thlev/(num_levels-1)),label="%.2f"%((theta_edges[i_thlev]+theta_edges[i_thlev+1])/2))
+        return fig,ax
     def project_current(self,theta_flat,time,centers,flux):
         # For a given vector-valued observable theta, evaluate the current operator J dot grad(theta)
         # theta is a list of (Mt x d) arrays, where d is the dimensionality of theta and Mt is the number of clusters at time step t

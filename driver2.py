@@ -30,7 +30,7 @@ feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-02-05")
+daydir = join(resultsdir,"2022-02-08")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -73,7 +73,7 @@ if not exists(expdir_s2s): mkdir(expdir_s2s)
 multiprocessing_flag = 0
 num_clusters = 120
 #Npc_per_level_single = 4
-Npc_per_level = np.array([6,6,6,6,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level = np.array([4,4,4,4,4,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 heatflux_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
