@@ -433,12 +433,19 @@ class WinterStratosphereTPT:
         # Do the time-dependent Markov Chain analysis
         summary = {"rate_froma": rate_froma, "rate_tob": rate_tob,}
         pickle.dump(summary,open(join(savedir,"summary"),"wb"))
-        # Plot 
+
+        # ------------ Plot -------------------
+        # Plot distribution of uref across different committor level sets
+        theta_tangential_flat = funlib["uref_dl0"]["fun"](np.concatenate(centers,axis=0))
+        theta_normal_flag = qpflat
+        fig,ax = self.plot_flux_distributions_1d(centers,qpflat,theta_tangential_flat,kmtime,flux)
+        fig.savefig(join(savedir,"Jab_flux_dens_uref"))
+        plt.close(fig)
         if plot_field_flag:
             centers_all = np.concatenate(centers, axis=0)
             #keypairs = [['time_d','area'],['time_d','centerlat'],['time_d','uref'],['time_d','asprat'],['time_d','kurt'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4']][:5]
             keypairs = [['time_d','uref_dl0']]
-            keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
+            #keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
             #keypairs += [['time_d','captemp_lev%i'%(i_lev)] for i_lev in np.where(algo_params["captemp_flag"])[0]]
             #keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in np.where(algo_params["captemp_flag"])[0]]
             #keypairs += [['time_d','vxmom%i'] for i in range(algo_params['num_vortex_moments'])]
@@ -507,32 +514,37 @@ class WinterStratosphereTPT:
         # For all data points with a value of theta between theta_lower and theta_upper, find the reactive flux density on that level set. 
         # Assume the current has already been projected onto the observable and is given by Jth
         # theta_centers is a list of numpy arrays, one array for each time step.
-        centers_all = np.concatenate(centers, axis=0)
         close_idx = []
         reactive_flux = []
         for i_theta in range(len(theta_lower_list)):
             theta_lower = theta_lower_list[i_theta]
             theta_upper = theta_upper_list[i_theta]
-            close_idx.append([np.where((theta_centers > theta_lower)*(theta_centers <= theta_upper))[0]])
-            reactive_flux.append([Jth[close_idx[-1],:]])
+            close_idx.append(np.where((theta_centers > theta_lower)*(theta_centers <= theta_upper))[0])
+            reactive_flux.append(Jth[close_idx[-1],:])
         return close_idx,reactive_flux
-    def plot_flux_distributions_1d(self,centers,theta_normal,theta_tangential,time,flux,num_levels=8):
-        theta_normal_flat = np.concatenate(theta_normal).reshape(-1,1)
-        theta_tangential_flat = np.concatenate(theta_tangential).reshape(-1,1)
+    def plot_flux_distributions_1d(self,centers,theta_normal_flat,theta_tangential_flat,time,flux,num_levels=4):
         dth_tangential = (np.nanmax(theta_tangential_flat) - np.nanmin(theta_tangential_flat))/20
-        Jth = self.project_current(theta_normal_flat,time,centers,flux)
+        Jth = self.project_current(theta_normal_flat.reshape(-1,1),time,centers,flux)
         theta_normal_min = np.nanmin(theta_normal_flat)
         theta_normal_max = np.nanmax(theta_normal_flat)
         theta_edges = np.linspace(theta_normal_min-1e-10,theta_normal_max+1e-10,num_levels+1)
-        close_idx,reactive_flux = self.reactive_flux_density_levelset(theta_normal,Jth,theta_edges[:-1],theta_edges[1:])
+        close_idx,reactive_flux = self.reactive_flux_density_levelset(theta_normal_flat,Jth,theta_edges[:-1],theta_edges[1:])
         fig,ax = plt.subplots()
+        handles = []
         for i_thlev in range(num_levels):
             # Make a histogram of the reactive flux density distribution
             idx = close_idx[i_thlev]
-            bins = int((np.nanmax(theta_tangential_flat[idx]) - np.nanmin(theta_tangential_flat[idx]))/dth_tangential)
-            hist,bin_edges = np.histogram(theta_tangential_flat[idx],weight=reactive_flux[idx],bins=bins)
-            bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
-            ax.plot(bin_centers,hist,color=plt.cm.coolwarm(i_thlev/(num_levels-1)),label="%.2f"%((theta_edges[i_thlev]+theta_edges[i_thlev+1])/2))
+            if len(idx) > 0:
+                idx = np.array(idx)
+                bins = int((np.nanmax(theta_tangential_flat[idx]) - np.nanmin(theta_tangential_flat[idx]))/dth_tangential)
+                weights = reactive_flux[i_thlev]
+                x = theta_tangential_flat[idx]
+                print(f"weights.shape = {weights.shape}, x.shape = {x.shape}")
+                hist,bin_edges = np.histogram(theta_tangential_flat[idx],weights=reactive_flux[i_thlev][:,0],bins=bins)
+                bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
+                h, = ax.plot(bin_centers,hist,color=plt.cm.coolwarm(i_thlev/(num_levels-1)),label="%.2f"%((theta_edges[i_thlev]+theta_edges[i_thlev+1])/2))
+                handles.append(h)
+        ax.legend(handles=handles)
         return fig,ax
     def project_current(self,theta_flat,time,centers,flux):
         # For a given vector-valued observable theta, evaluate the current operator J dot grad(theta)

@@ -101,13 +101,13 @@ paramdir_ei = join(expdir_ei, f"delay{int(delaytime_days)}")
 if not exists(paramdir_ei): mkdir(paramdir_ei)
 
 # ------------ Random seeds for bootstrap resampling ------------
-num_seeds_e2 =  5
-num_seeds_ei =  5
-num_seeds_s2s = 5
+num_seeds_e2 =  1
+num_seeds_ei =  1
+num_seeds_s2s = 1
 
 # Debugging: turn off each reanalysis individually
-e2_flag = True
-ei_flag = True
+e2_flag = False
+ei_flag = False
 
 
 seeddir_list_e2 = []
@@ -126,17 +126,17 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             1
+tpt_featurize_e2 =             0
 tpt_e2_flag =                  1
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             1
+tpt_featurize_ei =             0
 tpt_ei_flag =                  1
 # s2s
 evaluate_database_s2s =        0
-tpt_featurize_s2s =            1
-cluster_flag =                 1
-build_msm_flag =               1
+tpt_featurize_s2s =            0
+cluster_flag =                 0
+build_msm_flag =               0
 tpt_s2s_flag =                 1
 # Summary statistics
 plot_rate_flag =               1
