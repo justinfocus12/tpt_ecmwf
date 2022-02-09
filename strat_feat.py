@@ -769,7 +769,8 @@ class WinterStratosphereFeatures:
         for i_dl in range(self.ndelay):
             key = "uref_dl%i"%(i_dl)
             fidx[key] = i_feat
-            flab[key] = r"$\overline{u}$ (10 hPa, 60$^\circ$N, %i days ago) [m/s]"%(i_dl*self.dtwint/24.0)
+            delaystr = ", $t-%i$ day"%(i_dl*self.dtwint/24.0) if i_dl>0 else ""
+            flab[key] = r"$\overline{u}$ (10 hPa, 60$^\circ$N%s) [m/s]"%(delaystr)
             i_feat += 1
         # --------- Waves ----
         for i_wave in range(1,algo_params["Nwaves"]+1):

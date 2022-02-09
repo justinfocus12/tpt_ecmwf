@@ -436,12 +436,51 @@ class WinterStratosphereTPT:
 
         # ------------ Plot -------------------
         # Plot distribution of uref across different committor level sets
+        # Jab dot grad (qp) d(uref)
+        theta_normal_flat = qpflat
+        theta_normal_label = r"$q_B^+$"
+        theta_lower_list = [0.2,0.45,0.7]
+        theta_upper_list = [0.3,0.55,0.8]
         theta_tangential_flat = funlib["uref_dl0"]["fun"](np.concatenate(centers,axis=0))
-        theta_normal_flag = qpflat
-        fig,ax = self.plot_flux_distributions_1d(centers,qpflat,theta_tangential_flat,kmtime,flux)
-        fig.savefig(join(savedir,"Jab_flux_dens_uref"))
+        theta_tangential_label = funlib["uref_dl0"]["label"]
+        fig,ax = self.plot_flux_distributions_1d(centers,theta_normal_flat,theta_tangential_flat,theta_normal_label,theta_tangential_label,kmtime,flux,theta_lower_list=theta_lower_list,theta_upper_list=theta_upper_list)
+        fig.savefig(join(savedir,"Jab-qp_d-uref"))
         plt.close(fig)
-        if plot_field_flag:
+        # Jab dot grad (qp) d(time)
+        theta_normal_flat = qpflat
+        theta_normal_label = r"$q_B^+$"
+        theta_lower_list = [0.2,0.45,0.7]
+        theta_upper_list = [0.3,0.55,0.8]
+        theta_tangential_flat = funlib["time_d"]["fun"](np.concatenate(centers,axis=0))
+        theta_tangential_label = funlib["time_d"]["label"]
+        fig,ax = self.plot_flux_distributions_1d(centers,theta_normal_flat,theta_tangential_flat,theta_normal_label,theta_tangential_label,kmtime,flux,theta_lower_list=theta_lower_list,theta_upper_list=theta_upper_list)
+        fig.savefig(join(savedir,"Jab-qp_d-timed"))
+        plt.close(fig)
+        # Jab dot grad (-leadtime) d(time)
+        theta_normal_flat = -np.concatenate(int2b['time'][0])
+        theta_normal_label = r"$-\eta_B^+$"
+        theta_tangential_flat = funlib["uref_dl0"]["fun"](np.concatenate(centers,axis=0))
+        theta_tangential_label = funlib["uref_dl0"]["label"]
+        fig,ax = self.plot_flux_distributions_1d(centers,theta_normal_flat,theta_tangential_flat,theta_normal_label,theta_tangential_label,kmtime,flux)
+        fig.savefig(join(savedir,"Jab-tbd_d-uref"))
+        plt.close(fig)
+        # Jab dot grad (time) d(uref)
+        theta_normal_flat = funlib["time_d"]["fun"](np.concatenate(centers,axis=0))
+        theta_normal_label = funlib["time_d"]["label"]
+        theta_tangential_flat = funlib["uref_dl0"]["fun"](np.concatenate(centers,axis=0))
+        theta_tangential_label = funlib["uref_dl0"]["label"]
+        fig,ax = self.plot_flux_distributions_1d(centers,theta_normal_flat,theta_tangential_flat,theta_normal_label,theta_tangential_label,kmtime,flux)
+        fig.savefig(join(savedir,"Jab-timed_d-uref"))
+        plt.close(fig)
+        # Jab dot grad (uref) d(time)
+        theta_normal_flat = funlib["uref_dl0"]["fun"](np.concatenate(centers,axis=0))
+        theta_normal_label = funlib["uref_dl0"]["label"]
+        theta_tangential_flat = funlib["time_d"]["fun"](np.concatenate(centers,axis=0))
+        theta_tangential_label = funlib["time_d"]["label"]
+        fig,ax = self.plot_flux_distributions_1d(centers,theta_normal_flat,theta_tangential_flat,theta_normal_label,theta_tangential_label,kmtime,flux)
+        fig.savefig(join(savedir,"Jab-uref_d-timed"))
+        plt.close(fig)
+        if 0*plot_field_flag:
             centers_all = np.concatenate(centers, axis=0)
             #keypairs = [['time_d','area'],['time_d','centerlat'],['time_d','uref'],['time_d','asprat'],['time_d','kurt'],['time_d','lev0_pc1'],['time_d','lev0_pc2'],['time_d','lev0_pc3'],['time_d','lev0_pc4']][:5]
             keypairs = [['time_d','uref_dl0']]
@@ -519,16 +558,20 @@ class WinterStratosphereTPT:
         for i_theta in range(len(theta_lower_list)):
             theta_lower = theta_lower_list[i_theta]
             theta_upper = theta_upper_list[i_theta]
-            close_idx.append(np.where((theta_centers > theta_lower)*(theta_centers <= theta_upper))[0])
+            close_idx.append(np.where((theta_centers >= theta_lower)*(theta_centers <= theta_upper))[0])
             reactive_flux.append(Jth[close_idx[-1],:])
         return close_idx,reactive_flux
-    def plot_flux_distributions_1d(self,centers,theta_normal_flat,theta_tangential_flat,time,flux,num_levels=4):
+    def plot_flux_distributions_1d(self,centers,theta_normal_flat,theta_tangential_flat,theta_normal_label,theta_tangential_label,time,flux,theta_lower_list=None,theta_upper_list=None):
         dth_tangential = (np.nanmax(theta_tangential_flat) - np.nanmin(theta_tangential_flat))/20
         Jth = self.project_current(theta_normal_flat.reshape(-1,1),time,centers,flux)
-        theta_normal_min = np.nanmin(theta_normal_flat)
-        theta_normal_max = np.nanmax(theta_normal_flat)
-        theta_edges = np.linspace(theta_normal_min-1e-10,theta_normal_max+1e-10,num_levels+1)
-        close_idx,reactive_flux = self.reactive_flux_density_levelset(theta_normal_flat,Jth,theta_edges[:-1],theta_edges[1:])
+        if theta_lower_list is None or theta_upper_list is None:
+            theta_normal_min = np.nanmin(theta_normal_flat)
+            theta_normal_max = np.nanmax(theta_normal_flat)
+            theta_edges = np.linspace(theta_normal_min-1e-10,theta_normal_max+1e-10,4+1)
+            theta_lower_list = theta_edges[:-1]
+            theta_upper_list = theta_edges[1:]
+        num_levels = len(theta_lower_list)
+        close_idx,reactive_flux = self.reactive_flux_density_levelset(theta_normal_flat,Jth,theta_lower_list,theta_upper_list)
         fig,ax = plt.subplots()
         handles = []
         for i_thlev in range(num_levels):
@@ -539,12 +582,15 @@ class WinterStratosphereTPT:
                 bins = int((np.nanmax(theta_tangential_flat[idx]) - np.nanmin(theta_tangential_flat[idx]))/dth_tangential)
                 weights = reactive_flux[i_thlev]
                 x = theta_tangential_flat[idx]
-                print(f"weights.shape = {weights.shape}, x.shape = {x.shape}")
+                #print(f"weights.shape = {weights.shape}, x.shape = {x.shape}")
                 hist,bin_edges = np.histogram(theta_tangential_flat[idx],weights=reactive_flux[i_thlev][:,0],bins=bins)
                 bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
-                h, = ax.plot(bin_centers,hist,color=plt.cm.coolwarm(i_thlev/(num_levels-1)),label="%.2f"%((theta_edges[i_thlev]+theta_edges[i_thlev+1])/2))
+                h, = ax.plot(bin_centers,hist,color=plt.cm.coolwarm(i_thlev/(num_levels-1)),label=r"$%.2f$"%((theta_lower_list[i_thlev]+theta_upper_list[i_thlev])/2),marker='o')
                 handles.append(h)
         ax.legend(handles=handles)
+        ax.set_xlabel(theta_tangential_label,fontdict=font)
+        ax.set_ylabel(r"d[%s]"%(theta_normal_label),fontdict=font)
+        ax.axhline(y=0,color='black')
         return fig,ax
     def project_current(self,theta_flat,time,centers,flux):
         # For a given vector-valued observable theta, evaluate the current operator J dot grad(theta)
