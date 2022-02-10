@@ -873,6 +873,12 @@ class WinterStratosphereFeatures:
             for i_pc in range(self.Npc_per_level_max):
                 i_feat = self.fidx_X["pc%i_lev%i"%(i_pc,i_lev)]
                 X[:,i_feat] = (gh_unseasoned[:,i_lev,:,:].reshape((Nmem*Nt,Nlat*Nlon)) @ (feat_def["eofs"][i_lev,:,i_pc])) / feat_def["singvals"][i_lev,i_pc] 
+        # ---------- Vortex moments ------------
+        vtx_moments = self.compute_vortex_moments_sphere(gh,lat,lon,i_lev_subset=[i_lev_uref])
+        moment_names = ["area","centerlat","aspect_ratio","excess_kurtosis"]
+        for i_mom in range(self.num_vortex_moments_max):
+            i_feat = self.fidx_X["vxmom%i"%(i_mom)]
+            X[:,i_feat] = vtx_moments[moment_names[i_mom]]
         # --------- Temperature ---------------
         trun = timelib.time()
         temperature = self.get_temperature(gh,plev,lat,lon)

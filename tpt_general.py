@@ -497,9 +497,6 @@ class WinterStratosphereTPT:
             raise Exception(f"ERROR: X.shape = {X.shape} and Y.shape = {Y.shape}")
         Y = Y.reshape((Ny*Nty,ydim))
         X = X.reshape((Ny*Nty,xdim))
-        xcaptemp = X[:,winstrat.fidx_X["captemp_lev0"]]
-        print(f"xcaptemp: min={np.min(xcaptemp)}, max={np.max(xcaptemp)}")
-        sys.exit()
         qp_Y = np.load(join(savedir,"qp_Y.npy")).reshape(Ny*Nty)
         qm_Y = np.load(join(savedir,"qm_Y.npy")).reshape(Ny*Nty)
         pi_Y = np.load(join(savedir,"pi_Y.npy")).reshape(Ny*Nty)
