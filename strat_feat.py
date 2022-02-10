@@ -213,6 +213,11 @@ class WinterStratosphereFeatures:
         for i_lev in range(1,Nlev-1):
             dgh_dlnp[:,i_lev] = (gh[:,i_lev+1] - gh[:,i_lev-1])/np.log(plev[i_lev+1]/plev[i_lev-1])
         T = -dgh_dlnp*grav_accel / ideal_gas_const
+        print(f"T: min={T.min()}, max={T.max()}")
+        if T.min() < 0:
+            print(f"max diff gh = {np.max(np.diff(gh,axis=1))}")
+            print(f"min log p ratio = {np.min(np.log(plev[1:]/plev[:-1]))}")
+            raise Exception(f"ERROR: negative temperature: min(T) = {T.min()}")
         return T
     def get_meridional_heat_flux(self,gh,temperature,plev,lat,lon): # Returns average between 45N and 75N 
         Nx,Nlev,Nlat,Nlon = gh.shape
@@ -500,6 +505,7 @@ class WinterStratosphereFeatures:
         i_lat_cap = np.argmin(np.abs(lat - 60))
         area_factor = np.outer(np.cos(lat*np.pi/180), np.ones(Nlon))
         temp_capavg = np.sum((temperature*area_factor)[:,:,:i_lat_cap,:], axis=(2,3))/np.sum(area_factor[:i_lat_cap,:])
+        print(f"temp_capavg: min={np.min(temp_capavg)}, max={np.max(temp_capavg)}")
         temp_capavg_szn_mean,temp_capavg_szn_std = self.get_seasonal_mean(t_szn,temp_capavg)
         vT_szn_mean,vT_szn_std = self.get_seasonal_mean(t_szn,vT)
         feat_def = {
@@ -554,7 +560,7 @@ class WinterStratosphereFeatures:
         fall_year_list = np.zeros(len(file_list), dtype=int)
         i_ens = 0
         for i in range(len(file_list)):
-            if i % 10 == 0:
+            if i % 1 == 0:
                 print("file %i out of %i: %s"%(i,len(file_list),file_list[i]))
             ens_start_idx[i] = i_ens
             ds = nc.Dataset(file_list[i],"r")
@@ -862,11 +868,11 @@ class WinterStratosphereFeatures:
             i_feat = self.fidx_X['imag%i'%(i_wave)]
             X[:,i_feat] = waves[:,2*(i_wave-1)+1]
         # -------- EOFs ----------------------
-        gh = self.unseason(X[:,0],gh,feat_def["gh_szn_mean"],feat_def["gh_szn_std"],normalize=False)
+        gh_unseasoned = self.unseason(X[:,0],gh,feat_def["gh_szn_mean"],feat_def["gh_szn_std"],normalize=False)
         for i_lev in range(Nlev):
             for i_pc in range(self.Npc_per_level_max):
                 i_feat = self.fidx_X["pc%i_lev%i"%(i_pc,i_lev)]
-                X[:,i_feat] = (gh[:,i_lev,:,:].reshape((Nmem*Nt,Nlat*Nlon)) @ (feat_def["eofs"][i_lev,:,i_pc])) / feat_def["singvals"][i_lev,i_pc] 
+                X[:,i_feat] = (gh_unseasoned[:,i_lev,:,:].reshape((Nmem*Nt,Nlat*Nlon)) @ (feat_def["eofs"][i_lev,:,i_pc])) / feat_def["singvals"][i_lev,i_pc] 
         # --------- Temperature ---------------
         trun = timelib.time()
         temperature = self.get_temperature(gh,plev,lat,lon)

@@ -24,13 +24,13 @@ os.chdir(codedir)
 datadir_e2 = "/scratch/jf4241/ecmwf_data/era20c_data/2021-11-03"
 datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2021-12-12"
 datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
-featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-05"
+featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-10"
 if not exists(featdir): mkdir(featdir)
 feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-02-08")
+daydir = join(resultsdir,"2022-02-10")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -101,9 +101,9 @@ paramdir_ei = join(expdir_ei, f"delay{int(delaytime_days)}")
 if not exists(paramdir_ei): mkdir(paramdir_ei)
 
 # ------------ Random seeds for bootstrap resampling ------------
-num_seeds_e2 =  1
-num_seeds_ei =  1
-num_seeds_s2s = 1
+num_seeds_e2 =  5
+num_seeds_ei =  5
+num_seeds_s2s = 5
 
 # Debugging: turn off each reanalysis individually
 e2_flag = False
@@ -122,25 +122,25 @@ for i in range(num_seeds_s2s):
 
 # Parameters to determine what to do
 # Featurization
-create_features_flag =         0
-display_features_flag =        0
+create_features_flag =         1
+display_features_flag =        1
 # era20c
-evaluate_database_e2 =         0
-tpt_featurize_e2 =             0
+evaluate_database_e2 =         1
+tpt_featurize_e2 =             1
 tpt_e2_flag =                  1
 # eraint
-evaluate_database_ei =         0
-tpt_featurize_ei =             0
+evaluate_database_ei =         1
+tpt_featurize_ei =             1
 tpt_ei_flag =                  1
 # s2s
-evaluate_database_s2s =        0
-tpt_featurize_s2s =            0
-cluster_flag =                 0
-build_msm_flag =               0
-tpt_s2s_flag =                 0
+evaluate_database_s2s =        1
+tpt_featurize_s2s =            1
+cluster_flag =                 1
+build_msm_flag =               1
+tpt_s2s_flag =                 1
 plot_tpt_results_s2s_flag =    1
 # Summary statistics
-plot_rate_flag =               0
+plot_rate_flag =               1
 
 
 feature_file = join(featdir,"feat_def")
@@ -294,7 +294,8 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
+            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_def,savedir,winstrat,algo_params)
+            #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
 
 # =============================================================================
 # ------------- Compare rates ---------------------

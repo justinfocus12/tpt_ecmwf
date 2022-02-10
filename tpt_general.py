@@ -485,8 +485,78 @@ class WinterStratosphereTPT:
             lt_Y = self.interpolate_field_clust2data(kmdict,Ny,Nt,int2b_cond['time'][mom_name],density_flag=False,idx_a=idx_a,idx_b=idx_b)
             np.save(join(savedir,"lt_%s_Y"%(mom_name)),lt_Y)
         return summary 
-    def plot_results_data(self,savedir):
+    def plot_results_data(self,feat_filename,tpt_feat_filename,feat_def,savedir,winstrat,algo_params):
         # Plot fields using the data points rather than the clusters
+        funlib = winstrat.observable_function_library_Y(algo_params)
+        tpt_feat = pickle.load(open(tpt_feat_filename, "rb"))
+        Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
+        X = np.load(feat_filename)[:,winstrat.ndelay-1:,:]
+        Ny,Nty,ydim = Y.shape
+        Nx,Ntx,xdim = X.shape
+        if not (Ntx==Nty and Nx==Ny):
+            raise Exception(f"ERROR: X.shape = {X.shape} and Y.shape = {Y.shape}")
+        Y = Y.reshape((Ny*Nty,ydim))
+        X = X.reshape((Ny*Nty,xdim))
+        xcaptemp = X[:,winstrat.fidx_X["captemp_lev0"]]
+        print(f"xcaptemp: min={np.min(xcaptemp)}, max={np.max(xcaptemp)}")
+        sys.exit()
+        qp_Y = np.load(join(savedir,"qp_Y.npy")).reshape(Ny*Nty)
+        qm_Y = np.load(join(savedir,"qm_Y.npy")).reshape(Ny*Nty)
+        pi_Y = np.load(join(savedir,"pi_Y.npy")).reshape(Ny*Nty)
+        lt_mean = np.load(join(savedir,"lt_mean_Y.npy")).reshape(Ny*Nty)
+        lt_std = np.load(join(savedir,"lt_std_Y.npy")).reshape(Ny*Nty)
+        lt_skew = np.load(join(savedir,"lt_skew_Y.npy")).reshape(Ny*Nty)
+        # ----------- New plot: short histories of zonal wind, colored by committor. Maybe this will inform new coordinates --------------
+        fig,ax = plt.subplots()
+        prng = np.random.RandomState(1)
+        ss = Nty*prng.choice(np.arange(Ny),size=min(Ny,500)) # The Nty makes sure it's always at the beginning
+        print(f"qp on ss: min={np.min(qp_Y[ss])}, max={np.max(qp_Y[ss])}")
+        time_full = np.arange(winstrat.ndelay)*winstrat.dtwint/24.0
+        time_full -= time_full[-1]
+        uref_idx = np.array([winstrat.fidx_Y["uref_dl%i"%(i_dl)] for i_dl in range(winstrat.ndelay)])[::-1]
+        uref = Y[:,uref_idx]
+        for i_y in ss:
+            time_i = time_full + Y[i_y,winstrat.fidx_Y['time_h']]/24.0
+            ax.plot(time_i,uref[i_y],color=plt.cm.coolwarm(qp_Y[i_y]),alpha=0.4)
+        ax.set_xlabel(funlib["time_d"]["label"])
+        ax.set_ylabel(funlib["uref_dl0"]["label"])
+        fig.savefig(join(savedir,"qp_uref_spaghetti"))
+        plt.close(fig)
+        print("saved spaghetti, now moving on...")
+        # ------------- Current plots (Y) --------------------
+        keypairs = [['time_d','uref_dl0']]
+        keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
+        keypairs += [['pc1_lev0','pc3_lev0']]
+        keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
+        keypairs = []
+        for key0,key1 in keypairs:
+            print(f"Plotting current on key pair {key0},{key1}")
+            theta_x = np.array([funlib[key0]["fun"](Y), funlib[key1]["fun"](Y)]).T
+            fig,ax = helper.plot_field_2d(qp_Y,pi_Y,theta_x,fieldname=r"$q_B^+$",fun0name=funlib[key0]["label"],fun1name=funlib[key1]["label"])
+            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2)),qm_Y.reshape((Ny,Nty)),qp_Y.reshape((Ny,Nty)),pi_Y.reshape((Ny,Nty)),fig,ax)
+            fig.savefig(join(savedir,"qp_data_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
+            plt.close(fig)
+            fig,ax = helper.plot_field_2d(-lt_mean,pi_Y,theta_x,fieldname=r"$-\eta_B^+$",fun0name=funlib[key0]["label"],fun1name=funlib[key1]["label"])
+            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2)),qm_Y.reshape((Ny,Nty)),qp_Y.reshape((Ny,Nty)),pi_Y.reshape((Ny,Nty)),fig,ax)
+            fig.savefig(join(savedir,"lt_data_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
+            plt.close(fig)
+        # ------------------ Current plots outside the TPT observables ------------
+        Nlev = len(feat_def['plev'])
+        funlib_X = winstrat.observable_function_library_X()
+        keypairs = [['time_d','captemp_lev%i'%(i_lev)] for i_lev in range(Nlev)]
+        keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in range(Nlev)]
+        keypairs += [['time_d','vxmom%i'%(i_mom)] for i_mom in range(winstrat.num_vortex_moments_max)]
+        for key0,key1 in keypairs:
+            print(f"Plotting current on key pair {key0},{key1}")
+            theta_x = np.array([funlib_X[key0]["fun"](X), funlib_X[key1]["fun"](X)]).T
+            fig,ax = helper.plot_field_2d(qp_Y,pi_Y,theta_x,fieldname=r"$q_B^+$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"])
+            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2)),qm_Y.reshape((Ny,Nty)),qp_Y.reshape((Ny,Nty)),pi_Y.reshape((Ny,Nty)),fig,ax)
+            fig.savefig(join(savedir,"qp_data_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
+            plt.close(fig)
+            fig,ax = helper.plot_field_2d(-lt_mean,pi_Y,theta_x,fieldname=r"$-\eta_B^+$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"])
+            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2)),qm_Y.reshape((Ny,Nty)),qp_Y.reshape((Ny,Nty)),pi_Y.reshape((Ny,Nty)),fig,ax)
+            fig.savefig(join(savedir,"lt_data_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
+            plt.close(fig)
         return
     def plot_results_clust(self,feat_def,savedir,winstrat,algo_params):
         qp = pickle.load(open(join(savedir,"qp"),"rb"))
@@ -686,6 +756,38 @@ class WinterStratosphereTPT:
                     Jth[i1:i2,j] += fwd_weight*np.sum(flux[k]*np.add.outer(-theta_flat[i1:i2,j], theta_flat[i2:i3,j]), axis=1)
             i1 = i2
         return Jth
+    def plot_current_overlay_data(self,theta_x,qm,qp,pi,fig,ax):
+        # Plot the current using data directly.
+        # theta_x is a (Nx,Nt,2) array with trajectories separated from each other. 
+        # Keep everything to a lag time of 1.0
+        # 1. Forward component
+        Nx,Nt,_ = theta_x.shape
+        Jth = np.zeros((Nx,Nt-1,2))
+        thmid = np.zeros((Nx,Nt-1,2))
+        for i_time in range(Nt-1):
+            for i_th in range(2):
+                Jth[:,i_time,i_th] = qm[:,i_time]*qp[:,i_time+1]*(theta_x[:,i_time+1,i_th] - theta_x[:,i_time,i_th])
+                thmid[:,i_time,i_th] = 0.5*(theta_x[:,i_time,i_th] + theta_x[:,i_time+1,i_th])
+        weight = pi[:,:Nt-1].flatten()
+        thmid = thmid.reshape((Nx*(Nt-1),2))
+        Jth = Jth.reshape((Nx*(Nt-1),2))
+        print(f"Jth.shape = {Jth.shape}")
+        shp,dth,thaxes,_,J0_proj,_,_,_,bounds = helper.project_field(Jth[:,0],weight,thmid,avg_flag=False)
+        _,_,_,_,J1_proj,_,_,_,_ = helper.project_field(Jth[:,1],weight,thmid,shp=shp,bounds=bounds,avg_flag=False)
+        Jmag = np.sqrt(J0_proj**2 + J1_proj**2)
+        minmag,maxmag = np.nanmin(Jmag),np.nanmax(Jmag)
+        coeff1 = 3.0/maxmag
+        dsmin,dsmax = np.max(shp)/200,np.max(shp)/15
+        coeff0 = dsmax / (np.exp(-coeff1 * maxmag) - 1)
+        ds = coeff0 * (np.exp(-coeff1 * Jmag) - 1)
+        #ds = dsmin + (dsmax - dsmin)*(Jmag - minmag)/(maxmag - minmag)
+        normalizer = ds*(Jmag != 0)/(np.sqrt((J0_proj/(dth[0]))**2 + (J1_proj/(dth[1]))**2) + (Jmag == 0))
+        J0_proj *= normalizer*(1 - np.isnan(J0_proj))
+        J1_proj *= normalizer*(1 - np.isnan(J1_proj))
+        th01,th10 = np.meshgrid(thaxes[0],thaxes[1],indexing='ij') 
+        ax.quiver(th01,th10,J0_proj,J1_proj,angles='xy',scale_units='xy',scale=1.0,color='black',width=1.5,headwidth=4.4,units='dots',zorder=4)
+        # Maybe plot a flux distribution across a surface
+        return th01,th10,J0_proj,J1_proj
     def plot_current_overlay(self,theta_x,Jth,weight,fig,ax):
         # Plot a field on a (time,var1) plane.
         # field must be a list of arrays in the same shape as the state space
