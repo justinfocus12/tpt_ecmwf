@@ -13,7 +13,7 @@
 
 
 module load cdo/intel/1.9.10
-datadir="/scratch/jf4241/ecmwf_data/era20c_data/2022-02-10"
+datadir="/scratch/jf4241/ecmwf_data/eraint_data/2022-02-10"
 echo $datadir
 for grib_filename in $datadir/*.grb
 do

@@ -520,6 +520,19 @@ class WinterStratosphereTPT:
         fig.savefig(join(savedir,"qp_uref_spaghetti"))
         plt.close(fig)
         print("saved spaghetti, now moving on...")
+        # ------------ New plot: vertical profiles of zonal wind colored by committor. -------------
+        Nlev = len(feat_def['plev'])
+        fig,ax = plt.subplots()
+        prng = np.random.RandomState(1)
+        ss = Nty*prng.choice(np.arange(Ny),size=min(Ny,1000)) # The Nty makes sure it's always at the beginning
+        ubar_idx = np.array([winstrat.fidx_X["ubar_60N_lev%i"%(i_lev)] for i_lev in range(Nlev)])
+        ubar = X[:,ubar_idx]
+        for i_x in ss:
+            ax.plot(ubar[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[i_x]),alpha=0.1,linewidth=2)
+        ax.set_xlabel(r"$\overline{u}$ [m/s]")
+        ax.set_ylabel(r"Pseudo-height [km]")
+        fig.savefig(join(savedir,"qp_uprofile_spaghetti"))
+        plt.close(fig)
         # ------------ New plot: vertical profiles of heat flux colored by committor. -------------
         Nlev = len(feat_def['plev'])
         fig,ax = plt.subplots()
@@ -548,7 +561,7 @@ class WinterStratosphereTPT:
         plt.close(fig)
         # ------------- Current plots (Y) --------------------
         keypairs = []
-        #keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
+        keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
         for key0,key1 in keypairs:
             print(f"Plotting current on key pair {key0},{key1}")
             theta_x = np.array([funlib_Y[key0]["fun"](Y), funlib_Y[key1]["fun"](Y)]).T
@@ -564,7 +577,7 @@ class WinterStratosphereTPT:
         funlib_X = winstrat.observable_function_library_X()
         keypairs = []
         #keypairs += [['time_d','captemp_lev%i'%(i_lev)] for i_lev in range(Nlev)]
-        #keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in range(Nlev)]
+        keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in range(Nlev)]
         #keypairs += [['time_d','vxmom%i'%(i_mom)] for i_mom in range(winstrat.num_vortex_moments_max)]
         #keypairs += [['time_d','uref']]
         #keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]

@@ -6,5 +6,5 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=10GB 
 #SBATCH --time=15:00:00
-source grb2nc_s2s.sh
+source grb2nc_eraint.sh
 

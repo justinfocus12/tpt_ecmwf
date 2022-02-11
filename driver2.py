@@ -21,16 +21,16 @@ from os import mkdir
 from os.path import join,exists
 codedir = "/home/jf4241/ecmwf/s2s"
 os.chdir(codedir)
-datadir_e2 = "/scratch/jf4241/ecmwf_data/era20c_data/2021-11-03"
-datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2021-12-12"
+datadir_e2 = "/scratch/jf4241/ecmwf_data/era20c_data/2022-02-10"
+datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2022-02-10"
 datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
-featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-10"
+featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-11"
 if not exists(featdir): mkdir(featdir)
 feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-02-10")
+daydir = join(resultsdir,"2022-02-11")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -46,22 +46,22 @@ fall_years_s2s = np.arange(1996,2017)
 # Specify the data files
 file_list_e2 = []
 for i_fy in range(len(fall_years_e2)):
-    file_list_e2 += [join(datadir_e2,"%s-11-01_to_%s-04-30.nc"%(fall_years_e2[i_fy],fall_years_e2[i_fy]+1))]
+    file_list_e2 += [join(datadir_e2,"%s-10-01_to_%s-04-30.nc"%(fall_years_e2[i_fy],fall_years_e2[i_fy]+1))]
 file_list_ei = []
 for i_fy in range(len(fall_years_ei)):
-    file_list_ei += [join(datadir_ei,"%s-11-01_to_%s-04-30.nc"%(fall_years_ei[i_fy],fall_years_ei[i_fy]+1))]
+    file_list_ei += [join(datadir_ei,"%s-10-01_to_%s-04-30.nc"%(fall_years_ei[i_fy],fall_years_ei[i_fy]+1))]
 file_list_s2s = [join(datadir_s2s,f) for f in os.listdir(datadir_s2s) if f.endswith(".nc")]
 prng = np.random.RandomState(0)
-ftidx_e2 = np.random.choice(np.arange(len(file_list_e2)),size=15,replace=False)
+ftidx_ei = np.arange(15) #np.random.choice(np.arange(len(file_list_ei)),size=15,replace=False)
 dga_idx_s2s = prng.choice(np.arange(len(file_list_s2s)),size=500,replace=False) # Subset of filed to use for DGA.
 
 # ----------------- Constant parameters ---------------------
 winter_day0 = 0.0
-spring_day0 = 150.0
+spring_day0 = 180.0
 Npc_per_level_max = 6
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay
+delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 expdir_e2 = join(expdir,"era20c")
 if not exists(expdir_e2): mkdir(expdir_e2)
@@ -74,8 +74,8 @@ multiprocessing_flag = 0
 num_clusters = 120
 #Npc_per_level_single = 4
 Npc_per_level = np.array([4,4,4,4,4,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
-captemp_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
-heatflux_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
+captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
+heatflux_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
 pcstr = ""
 hfstr = ""
@@ -101,9 +101,9 @@ paramdir_ei = join(expdir_ei, f"delay{int(delaytime_days)}")
 if not exists(paramdir_ei): mkdir(paramdir_ei)
 
 # ------------ Random seeds for bootstrap resampling ------------
-num_seeds_e2 =  5
-num_seeds_ei =  5
-num_seeds_s2s = 5
+num_seeds_e2 =  1
+num_seeds_ei =  1
+num_seeds_s2s = 1
 
 # Debugging: turn off each reanalysis individually
 e2_flag = True
@@ -126,21 +126,21 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             0
-tpt_e2_flag =                  0
+tpt_featurize_e2 =             1
+tpt_e2_flag =                  1
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             0
-tpt_ei_flag =                  0
+tpt_featurize_ei =             1
+tpt_ei_flag =                  1
 # s2s
 evaluate_database_s2s =        0
-tpt_featurize_s2s =            0
-cluster_flag =                 0
-build_msm_flag =               0
-tpt_s2s_flag =                 0
+tpt_featurize_s2s =            1
+cluster_flag =                 1
+build_msm_flag =               1
+tpt_s2s_flag =                 1
 plot_tpt_results_s2s_flag =    1
 # Summary statistics
-plot_rate_flag =               0
+plot_rate_flag =               1
 
 
 feature_file = join(featdir,"feat_def")
@@ -148,11 +148,10 @@ winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring
 
 if create_features_flag:
     print("Creating features")
-    winstrat.create_features([file_list_e2[i_ft] for i_ft in ftidx_e2], multiprocessing_flag=multiprocessing_flag)
+    winstrat.create_features([file_list_ei[i_ft] for i_ft in ftidx_ei], multiprocessing_flag=multiprocessing_flag)
 # ------------------ Initialize the TPT object -------------------------------------
 feat_def = pickle.load(open(winstrat.feature_file,"rb"))
 print(f"plev = {feat_def['plev']/100} hPa")
-sys.exit()
 winstrat.set_feature_indices_X(feat_def,fidx_X_filename)
 winstrat.set_feature_indices_Y(feat_def,fidx_Y_filename,algo_params)
 tpt = tpt_general.WinterStratosphereTPT()
@@ -166,8 +165,8 @@ if display_features_flag:
         winstrat.plot_vortex_evolution(file_list_e2[display_idx],feat_display_dir,"fy{}".format(fall_years_e2[display_idx]))
 
 # ----------------- Determine list of SSW definitions to consider --------------
-tthresh0 = 30 # First day that SSW could happen
-tthresh1 = 145.0 # Last day that SSW could happen
+tthresh0 = 31 # First day that SSW could happen
+tthresh1 = 31 + 30 + 31 + 31 + 28  # Last day that SSW could happen: end of February
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])

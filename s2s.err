@@ -1,41 +1,3 @@
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:536: RuntimeWarning: divide by zero encountered in double_scalars
-  coeff1 = 3.0/maxmag
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:538: RuntimeWarning: invalid value encountered in double_scalars
-  coeff0 = dsmax / (np.exp(-coeff1 * maxmag) - 1)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:539: RuntimeWarning: invalid value encountered in multiply
-  ds = coeff0 * (np.exp(-coeff1 * Jmag) - 1)
-/home/jf4241/ecmwf/tpt_ecmwf/helper.py:207: RuntimeWarning: All-NaN slice encountered
-  field_std_Linf = np.nanmax(field_std)*np.prod(dth)
-/ext3/miniconda3/lib/python3.9/site-packages/matplotlib/contour.py:1430: UserWarning: Warning: converting a masked element to nan.
-  self.zmax = float(z.max())
-/ext3/miniconda3/lib/python3.9/site-packages/matplotlib/contour.py:1431: UserWarning: Warning: converting a masked element to nan.
-  self.zmin = float(z.min())
-/home/jf4241/ecmwf/tpt_ecmwf/helper.py:294: RuntimeWarning: All-NaN slice encountered
-  cbar_fmt = generate_sci_fmt(np.nanmin(field_mean),np.nanmax(field_mean),20)
-/home/jf4241/ecmwf/tpt_ecmwf/helper.py:306: RuntimeWarning: All-NaN slice encountered
-  cbarmin,cbarmax = np.nanmin(field_mean),np.nanmax(field_mean)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
-/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:306: RuntimeWarning: invalid value encountered in sqrt
-  cond = np.sqrt(cond)
 /home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:255: RuntimeWarning: divide by zero encountered in true_divide
   qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(
 /home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:255: RuntimeWarning: divide by zero encountered in true_divide
@@ -44,6 +6,11 @@
   qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(
 /home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:332: RuntimeWarning: invalid value encountered in sqrt
   cond = np.sqrt(cond)
-/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:255: RuntimeWarning: divide by zero encountered in true_divide
-  qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(
-slurmstepd: error: *** JOB 14812460 ON cm011 CANCELLED AT 2022-02-10T09:12:40 ***
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:332: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:332: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:332: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:332: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)

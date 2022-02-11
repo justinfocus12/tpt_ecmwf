@@ -128,6 +128,20 @@ class WinterStratosphereFeatures:
         weak_wind_flag = (uref < tpt_bndy['uthresh_b'])
         inb = winter_flag*weak_wind_flag
         return inb
+    def hours_since_oct1(self,ds):
+        # Given the time from a dataset, convert the number to time in days since the most recent November 1
+        dstime = ds['time']
+        Nt = dstime.size
+        date = nc.num2date(dstime[:],dstime.units,dstime.calendar)
+        year = np.array([date[i].year for i in range(Nt)])
+        month = np.array([date[i].month for i in range(Nt)])
+        nov1_year = year*(month >= 10) + (year-1)*(month < 10)
+        nov1_date = np.array([datetime.datetime(nov1_year[i], 10, 1) for i in range(Nt)])
+        nov1_time = np.array([nc.date2num(nov1_date[i],dstime.units,dstime.calendar) for i in range(Nt)])
+        #ensemble_size = ds['number'].size
+        #dstime_adj = np.outer(np.ones(ensemble_size), (dstime - nov1_time)/24.0)
+        dstime_adj = dstime - nov1_time 
+        return dstime_adj # This is just one-dimensional. 
     def get_ilev_ilat(self,ds):
         # Get the latitude and longitude indices
         ds_plev_hPa = ds['plev'][:]
@@ -136,20 +150,6 @@ class WinterStratosphereFeatures:
         i_lev = np.argmin(np.abs(self.pres_uref - ds_plev_hPa))
         i_lat = np.argmin(np.abs(self.lat_uref - ds['lat'][:]))
         return i_lev,i_lat
-    def hours_since_nov1(self,ds):
-        # Given the time from a dataset, convert the number to time in days since the most recent November 1
-        dstime = ds['time']
-        Nt = dstime.size
-        date = nc.num2date(dstime[:],dstime.units,dstime.calendar)
-        year = np.array([date[i].year for i in range(Nt)])
-        month = np.array([date[i].month for i in range(Nt)])
-        nov1_year = year*(month >= 11) + (year-1)*(month < 11)
-        nov1_date = np.array([datetime.datetime(nov1_year[i], 11, 1) for i in range(Nt)])
-        nov1_time = np.array([nc.date2num(nov1_date[i],dstime.units,dstime.calendar) for i in range(Nt)])
-        #ensemble_size = ds['number'].size
-        #dstime_adj = np.outer(np.ones(ensemble_size), (dstime - nov1_time)/24.0)
-        dstime_adj = dstime - nov1_time 
-        return dstime_adj # This is just one-dimensional. 
     def get_ensemble_source_size(self,ds):
         vbls = list(ds.variables.keys())
         if 'var129' in vbls: # This means it's from era20c OR eraint
@@ -185,7 +185,7 @@ class WinterStratosphereFeatures:
                 u[i_mem] = ds['var131'][:]
             else:
                 raise Exception("The dssource you gave me, %s, is not recognized"%(dssource))
-        time,fall_year = self.time_since_nov1(ds['time'])
+        time,fall_year = self.time_since_oct1(ds['time'])
         return gh,u,time,ds['plev'][:],ds['lat'][:],ds['lon'][:],fall_year
     def compute_geostrophic_wind(self,gh,lat,lon):
         # gh shape should be (Nx,Nlev,Nlat,Nlon). 
@@ -399,16 +399,16 @@ class WinterStratosphereFeatures:
         #print("field_szn_std[wti].shape = {}, field_unseasoned.shape = {}, field_szn_mean[wti].shape = {}".format(field_szn_std[wti].shape,field_unseasoned.shape,field_szn_mean[wti].shape))
         field = field_szn_std[wti] * field_unseasoned + field_szn_mean[wti]
         return field
-    def time_since_nov1(self,dstime):
+    def time_since_oct1(self,dstime):
         Nt = dstime.size
         date = nc.num2date(dstime[0],dstime.units,dstime.calendar)
         year = date.year 
         month = date.month
-        nov1_year = year*(month >= 11) + (year-1)*(month < 11)
-        nov1_date = datetime.datetime(nov1_year, 11, 1)
-        nov1_time = nc.date2num(nov1_date,dstime.units,dstime.calendar)
-        dstime_adj = nc.date2num(date,dstime.units,dstime.calendar) - nov1_time + dstime
-        return dstime_adj,nov1_year # This is just one-dimensional. 
+        oct1_year = year*(month >= 10) + (year-1)*(month < 10)
+        oct1_date = datetime.datetime(oct1_year, 10, 1)
+        oct1_time = nc.date2num(oct1_date,dstime.units,dstime.calendar)
+        dstime_adj = nc.date2num(date,dstime.units,dstime.calendar) - oct1_time + dstime
+        return dstime_adj,oct1_year # This is just one-dimensional. 
     def create_features(self,data_file_list,multiprocessing_flag=False):
         # Use data in data_file_list as training, and dump the results into feature_file. Note this is NOT a DGA basis yet, just a set of features.
         # Time-delay embedding happens not at this stage, but possibly at the next stage when creating DGA features.
@@ -452,7 +452,7 @@ class WinterStratosphereFeatures:
                     raise Exception("The file {} has a geopotential height field of shape {}, whereas it was supposed to have a shape {}".format(data_file_list[i_file],shp_new[2:5],grid_shp))
                 gh = np.concatenate((gh,gh_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
                 u = np.concatenate((u,u_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
-                t_szn = np.concatenate((t_szn,self.hours_since_nov1(ds)))
+                t_szn = np.concatenate((t_szn,self.hours_since_oct1(ds)))
                 ds.close()
         reading_duration = timelib.time() - reading_start
         print(f"Reading duration = {reading_duration}")
@@ -712,13 +712,19 @@ class WinterStratosphereFeatures:
         # ----------- Time (hours) -------------
         key = "time_h"
         fidx[key] = i_feat
-        flab[key] = r"Hours since Nov. 1"
+        flab[key] = r"Hours since Oct. 1"
         i_feat += 1
         # ---------- Reference zonal wind --------
         key = "uref"
         fidx[key] = i_feat
         flab[key] = r"$\overline{u}$ (10 hPa, 60$^\circ$N) [m/s]"
         i_feat += 1
+        # --------- Zonal wind at other levels -------
+        for i_lev in range(Nlev):
+            key = "ubar_60N_lev%i"%(i_lev)
+            fidx[key] = i_feat
+            flab[key] = r"$\overline{u}$ (%i hPa, 60$^\circ$N) [m/s]"%(feat_def["plev"][i_lev]/100)
+            i_feat += 1
         # -------------- Waves -------------------
         for i_wave in range(1,self.num_wavenumbers+1):
             key = "real%i"%(i_wave)
@@ -769,7 +775,7 @@ class WinterStratosphereFeatures:
         # ---------- Time ---------------
         key = "time_h"
         fidx[key] = i_feat
-        flab[key] = "Hours since Nov. 1"
+        flab[key] = "Hours since Oct. 1"
         i_feat += 1
         # -------- Time-delayed reference zonal wind ---------------
         for i_dl in range(self.ndelay):
@@ -858,6 +864,10 @@ class WinterStratosphereFeatures:
         i_feat = self.fidx_X['uref']
         X[:,i_feat] = uref
         print(f"uref: min={uref.min()}, max={uref.max()}")
+        # ------------ ubar at other levels ------------
+        for i_lev in range(Nlev):
+            i_feat = self.fidx_X["ubar_60N_lev%i"%(i_lev)]
+            X[:,i_feat] = np.mean(u[:,i_lev,i_lat_uref,:],axis=1)
         # ---------- Waves ---------------------
         trun = timelib.time()
         waves = self.get_wavenumbers(gh,i_lev_uref,self.lat_range_uref,lat,lon)
@@ -999,7 +1009,7 @@ class WinterStratosphereFeatures:
         # Linear functions
         funlib["time_d"] = {
                 "fun": lambda X: X[:,self.fidx_X["time_h"]]/24.0, 
-                "label": "Time since Nov. 1 [days]",
+                "label": "Time since Oct. 1 [days]",
                 }
         # Nonlinear functions
         for i_wave in range(1,self.num_wavenumbers+1):
@@ -1019,9 +1029,9 @@ class WinterStratosphereFeatures:
         funlib = dict()
         funlib = {
                 "time_h": {"fun": lambda X: X[:,0],
-                    "label": r"Hours since Nov. 1",},
+                    "label": r"Hours since Oct. 1",},
                 "time_d": {"fun": lambda X: X[:,0]/24.0,
-                    "label": r"Days since Nov. 1",},
+                    "label": r"Days since Oct. 1",},
                 "uref": {"fun": lambda X: X[:,1],
                     "label": r"$\overline{u}$ (10 hPa, 60$^\circ$N) [m/s]",},
                 "mag1": {"fun": lambda X: np.sqrt(np.sum(X[:,2:4]**2, axis=1)),
@@ -1073,7 +1083,7 @@ class WinterStratosphereFeatures:
         # Linear functions
         funlib["time_d"] = {
                 "fun": lambda Y: Y[:,self.fidx_Y["time_h"]]/24.0, 
-                "label": "Time since Nov. 1 [days]",
+                "label": "Time since Oct. 1 [days]",
                 }
         # Nonlinear functions
         for i_wave in range(1,self.num_wavenumbers+1):
