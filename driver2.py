@@ -126,21 +126,21 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             1
-tpt_e2_flag =                  1
+tpt_featurize_e2 =             0
+tpt_e2_flag =                  0
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             1
-tpt_ei_flag =                  1
+tpt_featurize_ei =             0
+tpt_ei_flag =                  0
 # s2s
 evaluate_database_s2s =        0
-tpt_featurize_s2s =            1
-cluster_flag =                 1
-build_msm_flag =               1
-tpt_s2s_flag =                 1
+tpt_featurize_s2s =            0
+cluster_flag =                 0
+build_msm_flag =               0
+tpt_s2s_flag =                 0
 plot_tpt_results_s2s_flag =    1
 # Summary statistics
-plot_rate_flag =               1
+plot_rate_flag =               0
 
 
 feature_file = join(featdir,"feat_def")
@@ -151,6 +151,8 @@ if create_features_flag:
     winstrat.create_features([file_list_e2[i_ft] for i_ft in ftidx_e2], multiprocessing_flag=multiprocessing_flag)
 # ------------------ Initialize the TPT object -------------------------------------
 feat_def = pickle.load(open(winstrat.feature_file,"rb"))
+print(f"plev = {feat_def['plev']/100} hPa")
+sys.exit()
 winstrat.set_feature_indices_X(feat_def,fidx_X_filename)
 winstrat.set_feature_indices_Y(feat_def,fidx_Y_filename,algo_params)
 tpt = tpt_general.WinterStratosphereTPT()

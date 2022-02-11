@@ -487,7 +487,7 @@ class WinterStratosphereTPT:
         return summary 
     def plot_results_data(self,feat_filename,tpt_feat_filename,feat_def,savedir,winstrat,algo_params):
         # Plot fields using the data points rather than the clusters
-        funlib = winstrat.observable_function_library_Y(algo_params)
+        funlib_Y = winstrat.observable_function_library_Y(algo_params)
         tpt_feat = pickle.load(open(tpt_feat_filename, "rb"))
         Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
         X = np.load(feat_filename)[:,winstrat.ndelay-1:,:]
@@ -515,34 +515,60 @@ class WinterStratosphereTPT:
         for i_y in ss:
             time_i = time_full + Y[i_y,winstrat.fidx_Y['time_h']]/24.0
             ax.plot(time_i,uref[i_y],color=plt.cm.coolwarm(qp_Y[i_y]),alpha=0.4)
-        ax.set_xlabel(funlib["time_d"]["label"])
-        ax.set_ylabel(funlib["uref_dl0"]["label"])
+        ax.set_xlabel(funlib_Y["time_d"]["label"])
+        ax.set_ylabel(funlib_Y["uref_dl0"]["label"])
         fig.savefig(join(savedir,"qp_uref_spaghetti"))
         plt.close(fig)
         print("saved spaghetti, now moving on...")
+        # ------------ New plot: vertical profiles of heat flux colored by committor. -------------
+        Nlev = len(feat_def['plev'])
+        fig,ax = plt.subplots()
+        prng = np.random.RandomState(1)
+        ss = Nty*prng.choice(np.arange(Ny),size=min(Ny,1000)) # The Nty makes sure it's always at the beginning
+        vT_idx = np.array([winstrat.fidx_X["heatflux_lev%i"%(i_lev)] for i_lev in range(Nlev)])
+        vT = X[:,vT_idx]
+        for i_x in ss:
+            ax.plot(vT[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[i_x]),alpha=0.1,linewidth=2)
+        ax.set_xlabel(r"$\overline{v'T'}$ [K$\cdot$m/s]")
+        ax.set_ylabel(r"Pseudo-height [km]")
+        fig.savefig(join(savedir,"qp_vTprofile_spaghetti"))
+        plt.close(fig)
+        # ------------ New plot: vertical profiles of leading EOF (annular mode), colored by committor. -------------
+        Nlev = len(feat_def['plev'])
+        fig,ax = plt.subplots()
+        prng = np.random.RandomState(1)
+        ss = Nty*prng.choice(np.arange(Ny),size=min(Ny,100)) # The Nty makes sure it's always at the beginning
+        pc0_idx = np.array([winstrat.fidx_X["pc0_lev%i"%(i_lev)] for i_lev in range(Nlev)])
+        pc0 = X[:,pc0_idx]
+        for i_x in ss:
+            ax.plot(pc0[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[i_x]),alpha=0.4)
+        ax.set_xlabel(r"PC 1")
+        ax.set_ylabel(r"Pseudo-height [km]")
+        fig.savefig(join(savedir,"qp_pc0profile_spaghetti"))
+        plt.close(fig)
         # ------------- Current plots (Y) --------------------
-        keypairs = [['time_d','uref_dl0']]
-        keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
-        keypairs += [['pc1_lev0','pc3_lev0']]
-        keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
         keypairs = []
+        #keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
         for key0,key1 in keypairs:
             print(f"Plotting current on key pair {key0},{key1}")
-            theta_x = np.array([funlib[key0]["fun"](Y), funlib[key1]["fun"](Y)]).T
-            fig,ax = helper.plot_field_2d(qp_Y,pi_Y,theta_x,fieldname=r"$q_B^+$",fun0name=funlib[key0]["label"],fun1name=funlib[key1]["label"])
+            theta_x = np.array([funlib_Y[key0]["fun"](Y), funlib_Y[key1]["fun"](Y)]).T
+            fig,ax = helper.plot_field_2d(qp_Y,pi_Y,theta_x,fieldname=r"$q_B^+$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"])
             _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2)),qm_Y.reshape((Ny,Nty)),qp_Y.reshape((Ny,Nty)),pi_Y.reshape((Ny,Nty)),fig,ax)
             fig.savefig(join(savedir,"qp_data_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
             plt.close(fig)
-            fig,ax = helper.plot_field_2d(-lt_mean,pi_Y,theta_x,fieldname=r"$-\eta_B^+$",fun0name=funlib[key0]["label"],fun1name=funlib[key1]["label"])
+            fig,ax = helper.plot_field_2d(-lt_mean,pi_Y,theta_x,fieldname=r"$-\eta_B^+$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"])
             _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2)),qm_Y.reshape((Ny,Nty)),qp_Y.reshape((Ny,Nty)),pi_Y.reshape((Ny,Nty)),fig,ax)
             fig.savefig(join(savedir,"lt_data_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
             plt.close(fig)
         # ------------------ Current plots outside the TPT observables ------------
-        Nlev = len(feat_def['plev'])
         funlib_X = winstrat.observable_function_library_X()
-        keypairs = [['time_d','captemp_lev%i'%(i_lev)] for i_lev in range(Nlev)]
-        keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in range(Nlev)]
-        keypairs += [['time_d','vxmom%i'%(i_mom)] for i_mom in range(winstrat.num_vortex_moments_max)]
+        keypairs = []
+        #keypairs += [['time_d','captemp_lev%i'%(i_lev)] for i_lev in range(Nlev)]
+        #keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in range(Nlev)]
+        #keypairs += [['time_d','vxmom%i'%(i_mom)] for i_mom in range(winstrat.num_vortex_moments_max)]
+        #keypairs += [['time_d','uref']]
+        #keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
+        #keypairs += [['pc1_lev0','pc%i_lev0'%(i_pc)] for i_pc in range(2,winstrat.Npc_per_level_max)]
         for key0,key1 in keypairs:
             print(f"Plotting current on key pair {key0},{key1}")
             theta_x = np.array([funlib_X[key0]["fun"](X), funlib_X[key1]["fun"](X)]).T
