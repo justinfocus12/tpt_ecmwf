@@ -584,7 +584,7 @@ class WinterStratosphereFeatures:
         np.save(ens_start_filename,ens_start_idx)
         np.save(fall_year_filename,fall_year_list)
         return X
-    def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=False,seed=0):
+    def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=False,fy_resamp=None):
         print(f" -------------- Inside evaluate_tpt_features: tpt_feat_filename = {tpt_feat_filename}, resample_flag = {resample_flag}, seed = {seed} --------------")
         # Evaluate a subset of the full features to use for clustering TPT.
         # A normalized version of these will be used for clustering.
@@ -606,7 +606,7 @@ class WinterStratosphereFeatures:
                 fall_year_x[ens_start_idx[i]:ens_start_idx[i]+ens_size] = fall_year_list[i]
                 #print("ens_start_idx[i] = {}".format(ens_start_idx[i]))
             #print("fall_year_x: min={}, max={}, shape={}".format(fall_year_x.min(),fall_year_x.max(),fall_year_x.shape))
-            fy_resamp = prng.choice(fy_unique,size=len(fy_unique),replace=True)
+            #fy_resamp = prng.choice(fy_unique,size=len(fy_unique),replace=True)
             #print("len(fy_resamp) = {}".format(len(fy_resamp)))
             idx_resamp = np.zeros(0, dtype=int)
             avg_match = 0

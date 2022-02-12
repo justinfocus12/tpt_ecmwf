@@ -105,6 +105,17 @@ num_seeds_e2 =  1
 num_seeds_ei =  1
 num_seeds_s2s = 1
 
+# Decide on seeds for resampling. Index them by the time period
+interval_length_list = [5,10,20]
+subset_list_e2 = []
+subset_list_ei = []
+subset_list_s2s = []
+for interval_length in interval_length_list:
+    starts_e2 = np.arange(fall_years_e2[0],fall_years_e2[-1],interval_length)
+    for k0_e2 in starts_e2:
+        subset_list_e2.append(np.arange(k0_e2,min(k0_e2+interval_length, fall_years_e2[-1]+1)))
+    # TODO: same for ei and s2s
+
 # Debugging: turn off each reanalysis individually
 e2_flag = True
 ei_flag = True
