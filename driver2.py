@@ -21,16 +21,19 @@ from os import mkdir
 from os.path import join,exists
 codedir = "/home/jf4241/ecmwf/s2s"
 os.chdir(codedir)
-datadir_e2 = "/scratch/jf4241/ecmwf_data/era20c_data/2022-02-10"
-datadir_ei = "/scratch/jf4241/ecmwf_data/eraint_data/2022-02-10"
-datadir_s2s = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
-featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-11"
+datadirs = dict({
+    "e2": "/scratch/jf4241/ecmwf_data/era20c_data/2022-02-10",
+    "ei": "/scratch/jf4241/ecmwf_data/eraint_data/2022-02-10",
+    "s2s": "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23",
+    })
+sources = list(datadirs.keys())
+featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-12"
 if not exists(featdir): mkdir(featdir)
 feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-02-11")
+daydir = join(resultsdir,"2022-02-12")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -39,36 +42,43 @@ import strat_feat
 import tpt_general
 
 # Which years to use for each dataset
-fall_years_e2 = np.arange(1900,2007)
-fall_years_ei = np.arange(1996,2017)
-fall_years_s2s = np.arange(1996,2017)
+fall_years = dict({
+    "e2": np.arange(1900,2007),
+    "ei": np.arange(1979,2017),
+    "s2s": np.arange(1996,2017),
+    })
 
-# Specify the data files
-file_list_e2 = []
-for i_fy in range(len(fall_years_e2)):
-    file_list_e2 += [join(datadir_e2,"%s-10-01_to_%s-04-30.nc"%(fall_years_e2[i_fy],fall_years_e2[i_fy]+1))]
-file_list_ei = []
-for i_fy in range(len(fall_years_ei)):
-    file_list_ei += [join(datadir_ei,"%s-10-01_to_%s-04-30.nc"%(fall_years_ei[i_fy],fall_years_ei[i_fy]+1))]
-file_list_s2s = [join(datadir_s2s,f) for f in os.listdir(datadir_s2s) if f.endswith(".nc")]
-prng = np.random.RandomState(0)
-ftidx_ei = np.arange(15) #np.random.choice(np.arange(len(file_list_ei)),size=15,replace=False)
-dga_idx_s2s = prng.choice(np.arange(len(file_list_s2s)),size=500,replace=False) # Subset of filed to use for DGA.
+file_lists = dict()
+for key in ["e2","ei"]:
+    file_lists[key] = [join(datadirs[key],"%s-10-01_to_%s-04-30.nc"%(fall_year,fall_year+1)) for fall_year in fall_years[key]]
+file_lists["s2s"] = [join(datadirs["s2s"],f) for f in os.listdir(datadirs["s2s"]) if f.endswith(".nc")]
+
+# Which files to use to construct the climate average 
+file_list_climavg = file_lists["e2"][:15]
+
+# ------------ Subsetting for robustness tests ------------
+interval_length_list = [5,10,20]
+subset_lists = dict()
+for key in ["e2","ei","s2s"]:
+    subset_lists[key] = []
+    for interval_length in interval_length_list:
+        starts = np.arange(fall_years[key][0],fall_years[key][-1],interval_length)
+        for k0 in starts:
+            subset_lists[key].append(np.arange(k0,min(k0+interval_length, fall_years[key][-1])))
 
 # ----------------- Constant parameters ---------------------
 winter_day0 = 0.0
 spring_day0 = 180.0
-Npc_per_level_max = 6
+Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 # ----------------- Phase space definition parameters -------
 delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
-expdir_e2 = join(expdir,"era20c")
-if not exists(expdir_e2): mkdir(expdir_e2)
-expdir_ei = join(expdir,"eraint")
-if not exists(expdir_ei): mkdir(expdir_ei)
-expdir_s2s = join(expdir,"s2s")
-if not exists(expdir_s2s): mkdir(expdir_s2s)
+print(f"expdir = {expdir}, sources = {sources}")
+expdirs = dict({key: join(expdir,key) for key in sources})
+print(f"expdirs = {expdirs}")
+for key in sources:
+    if not exists(expdirs[key]): mkdir(expdirs[key])
 # ------------------ Algorithmic parameters ---------------------
 multiprocessing_flag = 0
 num_clusters = 120
@@ -93,43 +103,20 @@ Nwaves = 0
 algo_params = {"Nwaves": Nwaves, "Npc_per_level": Npc_per_level, "captemp_flag": captemp_flag, "heatflux_flag": heatflux_flag, "num_vortex_moments": num_vortex_moments}
 fidx_X_filename = join(expdir,"fidx_X")
 fidx_Y_filename = join(expdir,"fidx_Y")
-paramdir_s2s = join(expdir_s2s, f"delay{int(delaytime_days)}_nclust{num_clusters}_nwaves{Nwaves}_vxm{num_vortex_moments}_pc-{pcstr}_hf-{hfstr}_temp-{tempstr}")
-if not exists(paramdir_s2s): mkdir(paramdir_s2s)
-paramdir_e2 = join(expdir_e2, f"delay{int(delaytime_days)}")
-if not exists(paramdir_e2): mkdir(paramdir_e2)
-paramdir_ei = join(expdir_ei, f"delay{int(delaytime_days)}")
-if not exists(paramdir_ei): mkdir(paramdir_ei)
+paramdirs = dict({
+    "s2s": join(expdir, "s2s", f"delay{int(delaytime_days)}_nclust{num_clusters}_nwaves{Nwaves}_vxm{num_vortex_moments}_pc-{pcstr}_hf-{hfstr}_temp-{tempstr}"),
+    "e2": join(expdir, "e2", f"delay{int(delaytime_days)}"),
+    "ei": join(expdir, "ei", f"delay{int(delaytime_days)}"),
+    })
+for key in sources:
+    if not exists(paramdirs[key]): mkdir(paramdirs[key])
 
-# ------------ Random seeds for bootstrap resampling ------------
-num_seeds_e2 =  1
-num_seeds_ei =  1
-num_seeds_s2s = 1
-
-# Decide on seeds for resampling. Index them by the time period
-interval_length_list = [5,10,20]
-subset_list_e2 = []
-subset_list_ei = []
-subset_list_s2s = []
-for interval_length in interval_length_list:
-    starts_e2 = np.arange(fall_years_e2[0],fall_years_e2[-1],interval_length)
-    for k0_e2 in starts_e2:
-        subset_list_e2.append(np.arange(k0_e2,min(k0_e2+interval_length, fall_years_e2[-1]+1)))
-    # TODO: same for ei and s2s
 
 # Debugging: turn off each reanalysis individually
 e2_flag = True
 ei_flag = True
 
-
-seeddir_list_e2 = []
-for i in range(num_seeds_e2):
-    seeddir_list_e2 += [join(paramdir_e2,"seed%i"%(i))]
-seeddir_list_ei = []
-for i in range(num_seeds_ei):
-    seeddir_list_ei += [join(paramdir_ei,"seed%i"%(i))]
-seeddir_list_s2s = []
-for i in range(num_seeds_s2s):
-    seeddir_list_s2s += [join(paramdir_s2s,"seed%i"%(i))]
+subsetdirs = dict({key: [join(paramdirs[key],"%i-%i"%(subset[0],subset[-1]+1)) for subset in subset_lists[key]] for key in sources})
 
 # Parameters to determine what to do
 # Featurization
@@ -137,14 +124,14 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             1
-tpt_e2_flag =                  1
+tpt_featurize_e2 =             0
+tpt_e2_flag =                  0
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             1
-tpt_ei_flag =                  1
+tpt_featurize_ei =             0
+tpt_ei_flag =                  0
 # s2s
-evaluate_database_s2s =        0
+evaluate_database_s2s =        1
 tpt_featurize_s2s =            1
 cluster_flag =                 1
 build_msm_flag =               1
@@ -159,7 +146,7 @@ winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring
 
 if create_features_flag:
     print("Creating features")
-    winstrat.create_features([file_list_ei[i_ft] for i_ft in ftidx_ei], multiprocessing_flag=multiprocessing_flag)
+    winstrat.create_features(file_list_climavg, multiprocessing_flag=multiprocessing_flag)
 # ------------------ Initialize the TPT object -------------------------------------
 feat_def = pickle.load(open(winstrat.feature_file,"rb"))
 print(f"plev = {feat_def['plev']/100} hPa")
@@ -173,7 +160,7 @@ if display_features_flag:
     winstrat.show_multiple_eofs(feat_display_dir)
     # Show the basis functions evaluated on various samples
     for display_idx in np.arange(96,98):
-        winstrat.plot_vortex_evolution(file_list_e2[display_idx],feat_display_dir,"fy{}".format(fall_years_e2[display_idx]))
+        winstrat.plot_vortex_evolution(file_lists["e2"][display_idx],feat_display_dir,"fy{}".format(fall_years["e2"][display_idx]))
 
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = 31 # First day that SSW could happen
@@ -188,105 +175,101 @@ uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 # =============================================================================
 if e2_flag:
     # ------------------ TPT direct estimates from ERA20C --------------------------
-    feat_filename = join(expdir_e2,"X.npy")
-    ens_start_filename = join(expdir_e2,"ens_start_idx.npy")
-    fall_year_filename = join(expdir_e2,"fall_year_list.npy")
+    feat_filename = join(expdirs["e2"],"X.npy")
+    ens_start_filename = join(expdirs["e2"],"ens_start_idx.npy")
+    fall_year_filename = join(expdirs["e2"],"fall_year_list.npy")
     if evaluate_database_e2:
         print("Evaluating ERA20C database")
         eval_start = timelib.time()
         if multiprocessing_flag:
-            winstrat.evaluate_features_database_parallel(file_list_e2,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+            winstrat.evaluate_features_database_parallel(file_lists["e2"],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
         else:
-            winstrat.evaluate_features_database(file_list_e2,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+            winstrat.evaluate_features_database(file_lists["e2"],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
         eval_dur = timelib.time() - eval_start
         print(f"eval_dur = {eval_dur}")
     if tpt_e2_flag: 
         print("Starting TPT on era20c")
-        for i_seed in range(num_seeds_e2):
-            print("\tSeed {} of {}".format(i_seed,num_seeds_e2))
-            seeddir = seeddir_list_e2[i_seed]
-            if not exists(seeddir): mkdir(seeddir)
-            tpt_feat_filename = join(seeddir,"Y")
+        for i_subset,subset in enumerate(subset_lists["e2"]):
+            print(f"\tSubset {i_subset} of {len(subset_lists['e2'])}")
+            subsetdir = subsetdirs["e2"][i_subset]
+            print(f"\tsubset = {subset}, subsetdir = {subsetdir}")
+            if not exists(subsetdir): mkdir(subsetdir)
+            tpt_feat_filename = join(subsetdir,"Y")
             if tpt_featurize_e2:
-                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=(i_seed>0),seed=i_seed)
+                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=True,fy_resamp=subset)
             rates_e2 = np.zeros(len(uthresh_list))
             for i_uth in range(len(uthresh_list)):
                 uthresh_b = uthresh_list[i_uth]
-                savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
+                savedir = join(subsetdir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
                 if not exists(savedir): mkdir(savedir)
                 tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
                 tpt.set_boundaries(tpt_bndy)
-                summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,algo_params,plot_field_flag=(i_seed==0))
+                summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,algo_params,plot_field_flag=False)
                 rates_e2[i_uth] = summary_dns["rate"]
 # ================================================================================
-
-
-
-
 
 
 # =============================================================
 if ei_flag:
     # ------------------ TPT direct estimates from ERA-Interim --------------------------
-    feat_filename = join(expdir_ei,"X.npy")
-    ens_start_filename = join(expdir_ei,"ens_start_idx.npy")
-    fall_year_filename = join(expdir_ei,"fall_year_list.npy")
+    feat_filename = join(expdirs["ei"],"X.npy")
+    ens_start_filename = join(expdirs["ei"],"ens_start_idx.npy")
+    fall_year_filename = join(expdirs["ei"],"fall_year_list.npy")
     if evaluate_database_ei:
         print("Evaluating ERA-Int database")
         eval_start = timelib.time()
         if multiprocessing_flag:
-            winstrat.evaluate_features_database_parallel(file_list_ei,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+            winstrat.evaluate_features_database_parallel(file_lists["ei"],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
         else:
-            winstrat.evaluate_features_database(file_list_ei,feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+            winstrat.evaluate_features_database(file_lists["ei"],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
         eval_dur = timelib.time() - eval_start
         print(f"eval_dur = {eval_dur}")
     if tpt_ei_flag: 
         print("Starting TPT on eraint")
-        for i_seed in range(len(seeddir_list_ei)):
-            print("\tSeed {} of {}".format(i_seed,num_seeds_ei))
-            seeddir = seeddir_list_ei[i_seed]
-            if not exists(seeddir): mkdir(seeddir)
-            tpt_feat_filename = join(seeddir,"Y")
+        for i_subset,subset in enumerate(subset_lists["ei"]):
+            print(f"\tSubset {i_subset} of {len(subset_lists['ei'])}")
+            subsetdir = subsetdirs["ei"][i_subset]
+            print(f"\tsubset = {subset}, subsetdir = {subsetdir}")
+            print(f"subsetdir = {subsetdir}")
+            if not exists(subsetdir): mkdir(subsetdir)
+            tpt_feat_filename = join(subsetdir,"Y")
             if tpt_featurize_ei:
-                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=(i_seed>0),seed=i_seed)
+                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=True,fy_resamp=subset)
             rates_ei = np.zeros(len(uthresh_list))
             for i_uth in range(len(uthresh_list)):
                 uthresh_b = uthresh_list[i_uth]
-                savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
+                savedir = join(subsetdir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
                 if not exists(savedir): mkdir(savedir)
                 tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
                 tpt.set_boundaries(tpt_bndy)
-                summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,algo_params,plot_field_flag=(i_seed==0))
+                summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,algo_params,plot_field_flag=False)
                 rates_ei[i_uth] = summary_dns["rate"]
-    #print(f"rates_e2 = {rates_e2}\nrates_ei = {rates_ei}")
 # =============================================================================
 
 # =======================================================================
 # ------------------- DGA from S2S --------------------------------
-#Npc_per_level = Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
-#Npc_per_level[1:] = 0 # Only care about the top layer
-feat_filename = join(expdir_s2s,"X.npy")
-ens_start_filename = join(expdir_s2s,"ens_start_idx.npy")
-fall_year_filename = join(expdir_s2s,"fall_year_list.npy")
+feat_filename = join(expdirs["s2s"],"X.npy")
+ens_start_filename = join(expdirs["s2s"],"ens_start_idx.npy")
+fall_year_filename = join(expdirs["s2s"],"fall_year_list.npy")
 if evaluate_database_s2s: # Expensive!
     print("Evaluating S2S database")
     eval_start = timelib.time()
     if multiprocessing_flag:
-        winstrat.evaluate_features_database_parallel([file_list_s2s[i] for i in dga_idx_s2s],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+        winstrat.evaluate_features_database_parallel(file_lists["s2s"],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
     else:
-        winstrat.evaluate_features_database([file_list_s2s[i] for i in dga_idx_s2s],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+        winstrat.evaluate_features_database(file_lists["s2s"],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
     eval_dur = timelib.time() - eval_start
     print(f"eval_dur = {eval_dur}")
 print("Starting TPT on S2S")
-for i_seed in np.arange(len(seeddir_list_s2s)):
-    print("\tSeed {} of {}".format(i_seed,num_seeds_s2s))
-    seeddir = seeddir_list_s2s[i_seed]
-    if not exists(seeddir): mkdir(seeddir)
-    tpt_feat_filename = join(seeddir,"Y")
-    clust_filename = join(seeddir,"kmeans")
-    msm_filename = join(seeddir,"msm")
+for i_subset,subset in enumerate(subset_lists["s2s"]):
+    print(f"\tSubset {i_subset} of {len(subset_lists['s2s'])}")
+    subsetdir = subsetdirs["s2s"][i_subset]
+    print(f"\tsubset = {subset}, subsetdir = {subsetdir}")
+    tpt_feat_filename = join(subsetdir,"Y")
+    clust_filename = join(subsetdir,"kmeans")
+    msm_filename = join(subsetdir,"msm")
     if tpt_featurize_s2s:
-        winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=(i_seed>=1),seed=i_seed)
+        winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=True,fy_resamp=subset)
     if cluster_flag:
         tpt.cluster_features(tpt_feat_filename,clust_filename,winstrat,num_clusters=num_clusters)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
     if build_msm_flag:
@@ -294,12 +277,12 @@ for i_seed in np.arange(len(seeddir_list_s2s)):
     if tpt_s2s_flag:
         for i_uth in range(len(uthresh_list)):
             uthresh_b = uthresh_list[i_uth]
-            savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
+            savedir = join(subsetdir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
             summary_dga = tpt.tpt_pipeline_dga(tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,algo_params)
-    if plot_tpt_results_s2s_flag and i_seed==0:
+    if plot_tpt_results_s2s_flag and len(subset) == max(interval_length_list):
         for i_uth in range(len(uthresh_list)):
             uthresh_b = uthresh_list[i_uth]
             savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))

@@ -585,18 +585,16 @@ class WinterStratosphereFeatures:
         np.save(fall_year_filename,fall_year_list)
         return X
     def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=False,fy_resamp=None):
-        print(f" -------------- Inside evaluate_tpt_features: tpt_feat_filename = {tpt_feat_filename}, resample_flag = {resample_flag}, seed = {seed} --------------")
+        print(f" -------------- Inside evaluate_tpt_features: tpt_feat_filename = {tpt_feat_filename}, resample_flag = {resample_flag} --------------")
         # Evaluate a subset of the full features to use for clustering TPT.
         # A normalized version of these will be used for clustering.
         # The data set for clustering will have fewer time steps, due to time-delay embedding.
         X = np.load(feat_filename)
         print("Before resampling: X.shape = {}".format(X.shape))
-        prng = np.random.RandomState(seed)
         if resample_flag:
             ens_start_idx = np.load(ens_start_filename)
             fall_year_list = np.load(fall_year_filename)
             fy_unique = np.unique(fall_year_list)
-            #print("fy_unique = {}".format(fy_unique))
             fall_year_x = np.zeros(len(X), dtype=int)
             for i in range(len(ens_start_idx)):
                 if i < len(ens_start_idx)-1:
@@ -604,18 +602,10 @@ class WinterStratosphereFeatures:
                 else:
                     ens_size = len(X) - ens_start_idx[i]
                 fall_year_x[ens_start_idx[i]:ens_start_idx[i]+ens_size] = fall_year_list[i]
-                #print("ens_start_idx[i] = {}".format(ens_start_idx[i]))
-            #print("fall_year_x: min={}, max={}, shape={}".format(fall_year_x.min(),fall_year_x.max(),fall_year_x.shape))
-            #fy_resamp = prng.choice(fy_unique,size=len(fy_unique),replace=True)
-            #print("len(fy_resamp) = {}".format(len(fy_resamp)))
             idx_resamp = np.zeros(0, dtype=int)
-            avg_match = 0
             for i in range(len(fy_resamp)):
                 matches = np.where(fall_year_x == fy_resamp[i])[0]
-                avg_match += len(matches)
                 idx_resamp = np.concatenate((idx_resamp,matches))
-            avg_match *= 1.0/len(fy_resamp)
-            #print("avg_match = {}, len(fy_resamp) = {}, prod = {}".format(avg_match,len(fy_resamp), avg_match*len(fy_resamp)))
             X = X[idx_resamp]
         #print("len(idx_resamp) = {}".format(len(idx_resamp)))
         print("After resampling: X.shape = {}".format(X.shape))
