@@ -44,7 +44,7 @@ import tpt_general
 # Which years to use for each dataset
 fall_years = dict({
     "e2": np.arange(1900,2007),
-    "ei": np.arange(1979,2018),
+    "ei": np.arange(1996,2017),
     "s2s": np.arange(1996,2017),
     })
 
@@ -132,18 +132,18 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             1
+tpt_featurize_e2 =             0
 tpt_e2_flag =                  1
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             1
+tpt_featurize_ei =             0
 tpt_ei_flag =                  1
 # s2s
 evaluate_database_s2s =        0
-tpt_featurize_s2s =            1
-cluster_flag =                 1
-build_msm_flag =               1
-tpt_s2s_flag =                 1
+tpt_featurize_s2s =            0
+cluster_flag =                 0
+build_msm_flag =               0
+tpt_s2s_flag =                 0
 plot_tpt_results_s2s_flag =    0
 # Summary statistic
 plot_rate_flag =               1
@@ -176,6 +176,8 @@ tthresh1 = 31 + 30 + 31 + 31 + 28  # Last day that SSW could happen: end of Febr
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
+
+
 
 
 
@@ -251,8 +253,6 @@ if e2_flag:
                 summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,algo_params,plot_field_flag=False)
                 rates_e2[i_uth] = summary_dns["rate"]
 # ================================================================================
-
-
 # =======================================================================
 # ------------------- DGA from S2S --------------------------------
 feat_filename = join(expdirs["s2s"],"X.npy")

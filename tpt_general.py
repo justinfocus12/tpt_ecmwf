@@ -136,7 +136,7 @@ class WinterStratosphereTPT:
             else:
                 kmidx.append(idx)
                 kmtime.append(winstrat.wtime[ti])
-                km = MiniBatchKMeans(min(len(idx),num_clusters)).fit(Y_unseasoned[idx])
+                km = MiniBatchKMeans(min(len(idx),num_clusters),random_state=0).fit(Y_unseasoned[idx])
                 print(f"ti = {ti}, km.n_clusters = {km.n_clusters}, len(idx) = {len(idx)}")
                 kmlist.append(km)
         kmdict = {"kmlist": kmlist, "kmtime": kmtime, "kmidx": kmidx,}
