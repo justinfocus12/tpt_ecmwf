@@ -33,7 +33,7 @@ feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-02-12")
+daydir = join(resultsdir,"2022-02-13")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -44,7 +44,7 @@ import tpt_general
 # Which years to use for each dataset
 fall_years = dict({
     "e2": np.arange(1900,2007),
-    "ei": np.arange(1979,2017),
+    "ei": np.arange(1979,2018),
     "s2s": np.arange(1996,2017),
     })
 
@@ -57,14 +57,22 @@ file_lists["s2s"] = [join(datadirs["s2s"],f) for f in os.listdir(datadirs["s2s"]
 file_list_climavg = file_lists["e2"][:15]
 
 # ------------ Subsetting for robustness tests ------------
-interval_length_list = [5,10,20]
+interval_length_lists = dict({
+    "e2": [5,10,20,50,len(fall_years["e2"])][-1:],
+    "ei": [5,10,20,len(fall_years["ei"])][-1:],
+    "s2s": [5,20,20,len(fall_years["s2s"])][-1:],
+    })
 subset_lists = dict()
 for key in ["e2","ei","s2s"]:
     subset_lists[key] = []
-    for interval_length in interval_length_list:
+    for interval_length in interval_length_lists[key]:
         starts = np.arange(fall_years[key][0],fall_years[key][-1],interval_length)
+        print(f"key = {key}, starts = {starts}")
         for k0 in starts:
-            subset_lists[key].append(np.arange(k0,min(k0+interval_length, fall_years[key][-1])))
+            print(f"k0 = {k0}, k0 + interval_length = {k0 + interval_length}, fall_years[key][-1] = {fall_years[key][-1]}")
+            if k0 + interval_length - 1 <= fall_years[key][-1]:
+                subset_lists[key].append(np.arange(k0,k0+interval_length))
+    print(f"subset_lists[{key}] = {subset_lists[key]}")
 
 # ----------------- Constant parameters ---------------------
 winter_day0 = 0.0
@@ -124,20 +132,20 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             0
-tpt_e2_flag =                  0
+tpt_featurize_e2 =             1
+tpt_e2_flag =                  1
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             0
-tpt_ei_flag =                  0
+tpt_featurize_ei =             1
+tpt_ei_flag =                  1
 # s2s
-evaluate_database_s2s =        1
+evaluate_database_s2s =        0
 tpt_featurize_s2s =            1
 cluster_flag =                 1
 build_msm_flag =               1
 tpt_s2s_flag =                 1
-plot_tpt_results_s2s_flag =    1
-# Summary statistics
+plot_tpt_results_s2s_flag =    0
+# Summary statistic
 plot_rate_flag =               1
 
 
@@ -170,43 +178,6 @@ uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been s
 uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 
 
-
-
-# =============================================================================
-if e2_flag:
-    # ------------------ TPT direct estimates from ERA20C --------------------------
-    feat_filename = join(expdirs["e2"],"X.npy")
-    ens_start_filename = join(expdirs["e2"],"ens_start_idx.npy")
-    fall_year_filename = join(expdirs["e2"],"fall_year_list.npy")
-    if evaluate_database_e2:
-        print("Evaluating ERA20C database")
-        eval_start = timelib.time()
-        if multiprocessing_flag:
-            winstrat.evaluate_features_database_parallel(file_lists["e2"],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
-        else:
-            winstrat.evaluate_features_database(file_lists["e2"],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
-        eval_dur = timelib.time() - eval_start
-        print(f"eval_dur = {eval_dur}")
-    if tpt_e2_flag: 
-        print("Starting TPT on era20c")
-        for i_subset,subset in enumerate(subset_lists["e2"]):
-            print(f"\tSubset {i_subset} of {len(subset_lists['e2'])}")
-            subsetdir = subsetdirs["e2"][i_subset]
-            print(f"\tsubset = {subset}, subsetdir = {subsetdir}")
-            if not exists(subsetdir): mkdir(subsetdir)
-            tpt_feat_filename = join(subsetdir,"Y")
-            if tpt_featurize_e2:
-                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=True,fy_resamp=subset)
-            rates_e2 = np.zeros(len(uthresh_list))
-            for i_uth in range(len(uthresh_list)):
-                uthresh_b = uthresh_list[i_uth]
-                savedir = join(subsetdir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
-                if not exists(savedir): mkdir(savedir)
-                tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
-                tpt.set_boundaries(tpt_bndy)
-                summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,algo_params,plot_field_flag=False)
-                rates_e2[i_uth] = summary_dns["rate"]
-# ================================================================================
 
 
 # =============================================================
@@ -245,6 +216,42 @@ if ei_flag:
                 summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,algo_params,plot_field_flag=False)
                 rates_ei[i_uth] = summary_dns["rate"]
 # =============================================================================
+# =============================================================================
+if e2_flag:
+    # ------------------ TPT direct estimates from ERA20C --------------------------
+    feat_filename = join(expdirs["e2"],"X.npy")
+    ens_start_filename = join(expdirs["e2"],"ens_start_idx.npy")
+    fall_year_filename = join(expdirs["e2"],"fall_year_list.npy")
+    if evaluate_database_e2:
+        print("Evaluating ERA20C database")
+        eval_start = timelib.time()
+        if multiprocessing_flag:
+            winstrat.evaluate_features_database_parallel(file_lists["e2"],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+        else:
+            winstrat.evaluate_features_database(file_lists["e2"],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+        eval_dur = timelib.time() - eval_start
+        print(f"eval_dur = {eval_dur}")
+    if tpt_e2_flag: 
+        print("Starting TPT on era20c")
+        for i_subset,subset in enumerate(subset_lists["e2"]):
+            print(f"\tSubset {i_subset} of {len(subset_lists['e2'])}")
+            subsetdir = subsetdirs["e2"][i_subset]
+            print(f"\tsubset = {subset}, subsetdir = {subsetdir}")
+            if not exists(subsetdir): mkdir(subsetdir)
+            tpt_feat_filename = join(subsetdir,"Y")
+            if tpt_featurize_e2:
+                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=True,fy_resamp=subset)
+            rates_e2 = np.zeros(len(uthresh_list))
+            for i_uth in range(len(uthresh_list)):
+                uthresh_b = uthresh_list[i_uth]
+                savedir = join(subsetdir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
+                if not exists(savedir): mkdir(savedir)
+                tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
+                tpt.set_boundaries(tpt_bndy)
+                summary_dns = tpt.tpt_pipeline_dns(tpt_feat_filename,savedir,winstrat,feat_def,algo_params,plot_field_flag=False)
+                rates_e2[i_uth] = summary_dns["rate"]
+# ================================================================================
+
 
 # =======================================================================
 # ------------------- DGA from S2S --------------------------------
@@ -265,6 +272,7 @@ for i_subset,subset in enumerate(subset_lists["s2s"]):
     print(f"\tSubset {i_subset} of {len(subset_lists['s2s'])}")
     subsetdir = subsetdirs["s2s"][i_subset]
     print(f"\tsubset = {subset}, subsetdir = {subsetdir}")
+    if not exists(subsetdir): mkdir(subsetdir)
     tpt_feat_filename = join(subsetdir,"Y")
     clust_filename = join(subsetdir,"kmeans")
     msm_filename = join(subsetdir,"msm")
@@ -282,10 +290,10 @@ for i_subset,subset in enumerate(subset_lists["s2s"]):
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
             summary_dga = tpt.tpt_pipeline_dga(tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,algo_params)
-    if plot_tpt_results_s2s_flag and len(subset) == max(interval_length_list):
+    if plot_tpt_results_s2s_flag and len(subset) == max(interval_length_lists["s2s"]):
         for i_uth in range(len(uthresh_list)):
             uthresh_b = uthresh_list[i_uth]
-            savedir = join(seeddir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
+            savedir = join(subsetdir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
@@ -293,84 +301,100 @@ for i_subset,subset in enumerate(subset_lists["s2s"]):
             #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
 
 # =============================================================================
+
 # ------------- Compare rates ---------------------
 if plot_rate_flag:
-    rate_list_e2 = np.zeros((num_seeds_e2,len(uthresh_list)))
-    rate_list_ei = np.zeros((num_seeds_ei,len(uthresh_list)))
-    rate_list_s2s = np.zeros((num_seeds_s2s,len(uthresh_list)))
+    rate_lists = dict({key: np.zeros((len(subset_lists[key]),len(uthresh_list))) for key in sources})
     for i_uth in range(len(uthresh_list)):
         uthresh_b = uthresh_list[i_uth]
-        if e2_flag:
-            for i_seed in range(num_seeds_e2):
-                savedir = join(seeddir_list_e2[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
+        for key in sources:
+            for i_subset,subset in enumerate(subset_lists[key]):
+                savedir = join(subsetdirs[key][i_subset],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
                 summary = pickle.load(open(join(savedir,"summary"),"rb"))
-                rate_list_e2[i_seed,i_uth] = summary["rate"]
-        if ei_flag:
-            for i_seed in range(num_seeds_ei):
-                savedir = join(seeddir_list_ei[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
-                summary = pickle.load(open(join(savedir,"summary"),"rb"))
-                rate_list_ei[i_seed,i_uth] = summary["rate"]
-        if tpt_s2s_flag:
-            for i_seed in range(num_seeds_s2s):
-                savedir = join(seeddir_list_s2s[i_seed],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
-                summary = pickle.load(open(join(savedir,"summary"),"rb"))
-                rate_list_s2s[i_seed,i_uth] = summary["rate_tob"]
+                if key in ["e2","ei"]:
+                    rate = summary["rate"]
+                else:
+                    rate = summary["rate_tob"]
+                rate_lists[key][i_subset,i_uth] = rate
+
     fig,ax = plt.subplots()
     ax.set_xlabel("Zonal wind threshold",fontdict=font)
     ax.set_ylabel("Rate",fontdict=font)
-    ax.set_ylim([5e-3,1.2])
-    suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
+    ax.set_ylim([5e-3,1.0])
+    bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
     handles = []
     # Build this up one curve at a time
+    colors = dict({"ei": "black", "e2": "cyan", "s2s": "red"})
+    labels = dict({"ei": "ERA-Int", "e2": "ERA-20C", "s2s": "S2S"})
     du = np.abs(uthresh_list[1] - uthresh_list[0])/15.0 # How far to offset the x axis positions for the three timeseries
-    if ei_flag: 
-        hei, = ax.plot(uthresh_list,rate_list_ei[0],color='black',linewidth=3,marker='o',label="ERAI")
-        handles += [hei]
-        if num_seeds_ei > 1:
-            for i_uth in range(len(uthresh_list)):
-                ax.plot(uthresh_list[i_uth]*np.ones(2), [np.min(rate_list_ei[1:,i_uth]), np.max(rate_list_ei[1:,i_uth])], color='black',linewidth=3)
-    ax.legend(handles=handles,loc='upper left')
-    ax.set_yscale('linear')
-    fig.savefig(join(paramdir_s2s,"rate_%s_ei"%(suffix)))
+    errorbar_offsets = dict({"ei": 0, "e2": -du, "s2s": du})
+    savefig_suffix = ""
+    for key in sources:
+        label_needed = True
+        for i_subset,subset in enumerate(subset_lists[key]):
+            if len(subset) == max(interval_length_lists[key]):
+                alpha = len(subset)/max(interval_length_lists[key])
+                linewidth = 3*len(subset)/max(interval_length_lists[key])
+                h, = ax.plot(uthresh_list,rate_lists[key][i_subset],color=colors[key],linewidth=linewidth,marker='o',label=labels[key],alpha=alpha)
+                if len(subset) == max(interval_length_lists[key]) and label_needed: 
+                    handles.append(h)
+                    label_needed = False
+        savefig_suffix += key
+        ax.legend(handles=handles,loc='upper left')
+        fig.savefig(join(paramdirs["s2s"],"rate_%s_%s_linear"%(bndy_suffix,savefig_suffix)))
+        plt.close(fig)
     ax.set_yscale('log')
-    fig.savefig(join(paramdir_s2s,"lograte_%s_ei"%(suffix)))
-    if e2_flag: 
-        he2, = ax.plot(uthresh_list,rate_list_e2[0],color='cyan',linewidth=3,marker='o',label="ERA20C")
-        handles += [he2]
-        if num_seeds_e2 > 1:
-            for i_uth in range(len(uthresh_list)):
-                ax.plot((uthresh_list[i_uth]-du)*np.ones(2), [np.min(rate_list_e2[1:,i_uth]), np.max(rate_list_e2[1:,i_uth])], color='cyan',linewidth=3)
-    ax.legend(handles=handles,loc='upper left')
-    ax.set_yscale('linear')
-    fig.savefig(join(paramdir_s2s,"rate_%s_eie2"%(suffix)))
-    ax.set_yscale('log')
-    fig.savefig(join(paramdir_s2s,"lograte_%s_eie2"%(suffix)))
-    if tpt_s2s_flag: # s2s flag is always true
-        hs2s, = ax.plot(uthresh_list,rate_list_s2s[0],color='red',linewidth=3,marker='o',label="S2S")
-        handles += [hs2s]
-        if num_seeds_s2s > 1:
-            for i_uth in range(len(uthresh_list)):
-                ax.plot((uthresh_list[i_uth]+du)*np.ones(2), [np.min(rate_list_s2s[1:,i_uth], axis=0), np.max(rate_list_s2s[1:,i_uth])], color='red',linewidth=3)
-    ax.legend(handles=handles,loc='upper left')
-    ax.set_yscale('linear')
-    fig.savefig(join(paramdir_s2s,"rate_%s_eie2s2s"%(suffix)))
-    ax.set_yscale('log')
-    fig.savefig(join(paramdir_s2s,"lograte_%s_eie2s2s"%(suffix)))
-    #if e2_flag and (num_seeds_e2 > 1):
-    #    ax.plot(uthresh_list,np.min(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
-    #    ax.plot(uthresh_list,np.max(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
-    #if ei_flag and (num_seeds_ei > 1):
-    #    ax.plot(uthresh_list,np.min(rate_list_ei[1:],axis=0),color='black',linestyle='--',alpha=0.5)
-    #    ax.plot(uthresh_list,np.max(rate_list_ei[1:],axis=0),color='black',linestyle='--',alpha=0.5)
-    #if num_seeds_s2s > 1:
-    #    ax.plot(uthresh_list,np.min(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
-    #    ax.plot(uthresh_list,np.max(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
-    #fig.savefig(join(paramdir_s2s,"rate_%s"%(suffix)))
-    #ax.set_yscale('log')
-    #fig.savefig(join(paramdir_s2s,"lograte_%s"%(suffix)))
-    #ax.set_yscale('logit')
-    #fig.savefig(join(paramdir_s2s,"logitrate_%s"%(suffix)))
-    plt.close(fig)
+    fig.savefig(join(paramdirs["s2s"],"rate_%s_%s_log"%(bndy_suffix,savefig_suffix)))
 
-# Print the rate lists
-if e2_flag and ei_flag and plot_rate_flag: print(f"rate_lists:\nera20c:\n{rate_list_e2[0]}\neraint:\n{rate_list_ei[0]}\ns2s:\n{rate_list_s2s[0]}")
+
+
+    if False:
+        if ei_flag: 
+            hei, = ax.plot(uthresh_list,rate_lists["ei"][0],color='black',linewidth=3,marker='o',label="ERA-Interim")
+            handles += [hei]
+            if num_seeds_ei > 1:
+                for i_uth in range(len(uthresh_list)):
+                    ax.plot(uthresh_list[i_uth]*np.ones(2), [np.min(rate_list_ei[1:,i_uth]), np.max(rate_list_ei[1:,i_uth])], color='black',linewidth=3)
+        ax.legend(handles=handles,loc='upper left')
+        ax.set_yscale('linear')
+        fig.savefig(join(paramdir_s2s,"rate_%s_ei"%(suffix)))
+        ax.set_yscale('log')
+        fig.savefig(join(paramdir_s2s,"lograte_%s_ei"%(suffix)))
+        if e2_flag: 
+            he2, = ax.plot(uthresh_list,rate_list_e2[0],color='cyan',linewidth=3,marker='o',label="ERA20C")
+            handles += [he2]
+            if num_seeds_e2 > 1:
+                for i_uth in range(len(uthresh_list)):
+                    ax.plot((uthresh_list[i_uth]-du)*np.ones(2), [np.min(rate_list_e2[1:,i_uth]), np.max(rate_list_e2[1:,i_uth])], color='cyan',linewidth=3)
+        ax.legend(handles=handles,loc='upper left')
+        ax.set_yscale('linear')
+        fig.savefig(join(paramdir_s2s,"rate_%s_eie2"%(suffix)))
+        ax.set_yscale('log')
+        fig.savefig(join(paramdir_s2s,"lograte_%s_eie2"%(suffix)))
+        if tpt_s2s_flag: # s2s flag is always true
+            hs2s, = ax.plot(uthresh_list,rate_list_s2s[0],color='red',linewidth=3,marker='o',label="S2S")
+            handles += [hs2s]
+            if num_seeds_s2s > 1:
+                for i_uth in range(len(uthresh_list)):
+                    ax.plot((uthresh_list[i_uth]+du)*np.ones(2), [np.min(rate_list_s2s[1:,i_uth], axis=0), np.max(rate_list_s2s[1:,i_uth])], color='red',linewidth=3)
+        ax.legend(handles=handles,loc='upper left')
+        ax.set_yscale('linear')
+        fig.savefig(join(paramdir_s2s,"rate_%s_eie2s2s"%(suffix)))
+        ax.set_yscale('log')
+        fig.savefig(join(paramdir_s2s,"lograte_%s_eie2s2s"%(suffix)))
+        #if e2_flag and (num_seeds_e2 > 1):
+        #    ax.plot(uthresh_list,np.min(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
+        #    ax.plot(uthresh_list,np.max(rate_list_e2[1:],axis=0),color='cyan',linestyle='--',alpha=0.5)
+        #if ei_flag and (num_seeds_ei > 1):
+        #    ax.plot(uthresh_list,np.min(rate_list_ei[1:],axis=0),color='black',linestyle='--',alpha=0.5)
+        #    ax.plot(uthresh_list,np.max(rate_list_ei[1:],axis=0),color='black',linestyle='--',alpha=0.5)
+        #if num_seeds_s2s > 1:
+        #    ax.plot(uthresh_list,np.min(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
+        #    ax.plot(uthresh_list,np.max(rate_list_s2s[1:],axis=0),color='red',linestyle='--',alpha=0.5)
+        #fig.savefig(join(paramdir_s2s,"rate_%s"%(suffix)))
+        #ax.set_yscale('log')
+        #fig.savefig(join(paramdir_s2s,"lograte_%s"%(suffix)))
+        #ax.set_yscale('logit')
+        #fig.savefig(join(paramdir_s2s,"logitrate_%s"%(suffix)))
+        plt.close(fig)
+
