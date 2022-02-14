@@ -29,7 +29,7 @@ datadirs = dict({
 sources = list(datadirs.keys())
 featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-14"
 if not exists(featdir): mkdir(featdir)
-feat_display_dir = join(featdir,"display0")
+feat_display_dir = join(featdir,"display1")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
@@ -134,7 +134,7 @@ subsetdirs = dict({key: [join(paramdirs[key],"%i-%i"%(subset[0],subset[-1]+1)) f
 # Parameters to determine what to do
 # Featurization
 create_features_flag =         0
-display_features_flag =        0
+display_features_flag =        1
 # era20c
 evaluate_database_e2 =         0
 tpt_featurize_e2 =             0
@@ -149,7 +149,7 @@ tpt_featurize_s2s =            0
 cluster_flag =                 0
 build_msm_flag =               0
 tpt_s2s_flag =                 0
-plot_tpt_results_s2s_flag =    1
+plot_tpt_results_s2s_flag =    0
 # Summary statistic
 plot_rate_flag =               1
 
@@ -172,9 +172,8 @@ if display_features_flag:
     print("Showing EOFs")
     winstrat.show_multiple_eofs(feat_display_dir)
     # Show the basis functions evaluated on various samples
-    for display_idx in np.arange(96,98):
-        winstrat.plot_vortex_evolution(file_lists["e2"][display_idx],feat_display_dir,"fy{}".format(fall_years["e2"][display_idx]))
-
+    for display_idx in np.arange(1983,1985)-fall_years["ei"][0]:
+        winstrat.plot_vortex_evolution(file_lists["ei"][display_idx],feat_display_dir,"fy{}".format(fall_years["ei"][display_idx]))
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = 31 # First day that SSW could happen
 tthresh1 = 31 + 30 + 31 + 31 + 28  # Last day that SSW could happen: end of February

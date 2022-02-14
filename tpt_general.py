@@ -736,7 +736,7 @@ class WinterStratosphereTPT:
             fig.savefig(join(savedir,"lt_skew_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
             plt.close(fig)
         return 
-    def reactive_flux_density_levelset(self,theta_centers,Jth,theta_lower_list,theta_upper_list):
+    def reactive_flux_density_levelset(self,thmid,Jth,theta_lower_list,theta_upper_list):
         # For all data points with a value of theta between theta_lower and theta_upper, find the reactive flux density on that level set. 
         # Assume the current has already been projected onto the observable and is given by Jth
         # theta_centers is a list of numpy arrays, one array for each time step.
@@ -745,12 +745,13 @@ class WinterStratosphereTPT:
         for i_theta in range(len(theta_lower_list)):
             theta_lower = theta_lower_list[i_theta]
             theta_upper = theta_upper_list[i_theta]
-            close_idx.append(np.where((theta_centers >= theta_lower)*(theta_centers <= theta_upper))[0])
-            reactive_flux.append(Jth[close_idx[-1],:])
+            close_idx_new = np.where((thmid >= theta_lower)*(thmid <= theta_upper))[0]
+            close_idx.append(close_idx_new)
+            reactive_flux.append(Jth[close_idx_new,:])
         return close_idx,reactive_flux
-    def plot_flux_distributions_1d(self,centers,theta_normal_flat,theta_tangential_flat,theta_normal_label,theta_tangential_label,time,flux,theta_lower_list=None,theta_upper_list=None):
+    def plot_flux_distributions_1d(self,qm,qp,pi,theta_normal_flat,theta_tangential_flat,theta_normal_label,theta_tangential_label,theta_lower_list=None,theta_upper_list=None):
         dth_tangential = (np.nanmax(theta_tangential_flat) - np.nanmin(theta_tangential_flat))/20
-        Jth = self.project_current(theta_normal_flat.reshape(-1,1),time,centers,flux)
+        Jth,thmid = self.project_current_data(theta_normal_flat.reshape(-1,1),qm,qp,pi)
         if theta_lower_list is None or theta_upper_list is None:
             theta_normal_min = np.nanmin(theta_normal_flat)
             theta_normal_max = np.nanmax(theta_normal_flat)
@@ -804,21 +805,24 @@ class WinterStratosphereTPT:
                     Jth[i1:i2,j] += fwd_weight*np.sum(flux[k]*np.add.outer(-theta_flat[i1:i2,j], theta_flat[i2:i3,j]), axis=1)
             i1 = i2
         return Jth
-    def plot_current_overlay_data(self,theta_x,qm,qp,pi,fig,ax):
-        # Plot the current using data directly.
-        # theta_x is a (Nx,Nt,2) array with trajectories separated from each other. 
-        # Keep everything to a lag time of 1.0
-        # 1. Forward component
-        Nx,Nt,_ = theta_x.shape
-        Jth = np.zeros((Nx,Nt-1,2))
-        thmid = np.zeros((Nx,Nt-1,2))
+    def project_current_data(self,theta_x,qm,qp,pi):
+        Nx,Nt,thdim = theta_x.shape
+        Jth = np.zeros((Nx,Nt-1,thdim))
+        thmid = np.zeros((Nx,Nt-1,thdim))
         for i_time in range(Nt-1):
-            for i_th in range(2):
+            for i_th in range(thdim):
                 Jth[:,i_time,i_th] = qm[:,i_time]*qp[:,i_time+1]*(theta_x[:,i_time+1,i_th] - theta_x[:,i_time,i_th])
                 thmid[:,i_time,i_th] = 0.5*(theta_x[:,i_time,i_th] + theta_x[:,i_time+1,i_th])
         weight = pi[:,:Nt-1].flatten()
         thmid = thmid.reshape((Nx*(Nt-1),2))
         Jth = Jth.reshape((Nx*(Nt-1),2))
+        return Jth,thmid
+    def plot_current_overlay_data(self,theta_x,qm,qp,pi,fig,ax):
+        # Plot the current using data directly.
+        # theta_x is a (Nx,Nt,2) array with trajectories separated from each other. 
+        # Keep everything to a lag time of 1.0
+        # 1. Forward component
+        Jth,thmid = self.project_current_data(theta_x,qm,qp,pi)
         print(f"Jth.shape = {Jth.shape}")
         shp,dth,thaxes,_,J0_proj,_,_,_,bounds = helper.project_field(Jth[:,0],weight,thmid,avg_flag=False)
         _,_,_,_,J1_proj,_,_,_,_ = helper.project_field(Jth[:,1],weight,thmid,shp=shp,bounds=bounds,avg_flag=False)

@@ -228,42 +228,63 @@ class WinterStratosphereFeatures:
         imin,imax = np.argmin(np.abs(lat-75)),np.argmin(np.abs(lat-45))
         vT = np.sum(vT[:,:,imin:imax]*np.cos(lat[imin:imax]*np.pi/180), axis=2)/(Nlon*np.sum(np.cos(lat[imin:imax]*np.pi/180)))
         return vT
-    def compute_qgpv(self,gh,lat,lon):
-        # gh shape should be (Nx, Nlev,Nlat,Nlon)
-        # Quasigeostrophic potential vorticity: just do horizontal component for now
-        # QGPV = (g/f)*(laplacian(gh) - d(gh)/dy * beta/f) + f
-        #      = (g/f)*(laplacian(gh) - 1/(earth radius)**2 * cos(lat)/sin(lat) * d(gh)/dlat) + f
-        Nx,Nlev,Nlat,Nlon = gh.shape
-        Omega = 2*np.pi/(3600*24*365)
-        fcor = np.outer(2*Omega*np.sin(lat*np.pi/180), np.ones(lon.size))
-        earth_radius = 6371e3 
-        grav_accel = 9.80665
+    def classify_split_displacement(self,gh,lat,lon):
+        # Compute the split vs. displacement criterion from cp07
+        return
+    def spherical_horizontal_laplacian(self,field,lat,lon):
+        # Compute the spherical Laplacian of a field on a lat-lon grid. Assume unit sphere.
+        Nx,Nlev,Nlat,Nlon = field.shape
+        if Nlat != len(lat) or Nlon != len(lon):
+            raise Exception(f"ERROR: Shape mismatch in spherical_laplacian. len(lat) = {len(lat)} and len(lon) = {len(lon)}, while field.shape = {field.shape}.")
         dlat = np.pi/180 * (lat[1] - lat[0])
         dlon = np.pi/180 * (lon[1] - lon[0])
-        gh_lon2 = (np.roll(gh,-1,axis=3) - 2*gh + np.roll(gh,1,axis=3))/dlon**2
-        gh_lat2 = (np.roll(gh,-1,axis=2) - 2*gh + np.roll(gh,1,axis=2))/dlat**2
-        gh_lat2[:,:,0,:] = gh_lat2[:,:,1,:]
-        gh_lat2[:,:,-1,:] = gh_lat2[:,:,-2,:]
-        gh_lat = (np.roll(gh,-1,axis=2) - np.roll(gh,1,axis=2))/(2*dlat)
-        gh_lat[:,:,0,:] = (-3*gh[:,:,0,:] + 4*gh[:,:,1,:] - gh[:,:,2,:])/(2*dlat)
-        gh_lat[:,:,-1,:] = (3*gh[:,:,-1,:] - 4*gh[:,:,-2,:] + gh[:,:,-3,:])/(2*dlat)
+        field_lon2 = (np.roll(field,-1,axis=3) - 2*field + np.roll(field,1,axis=3))/dlon**2
+        field_lat2 = (np.roll(field,-1,axis=2) - 2*field + np.roll(field,1,axis=2))/dlat**2
+        field_lat2[:,:,0,:] = field_lat2[:,:,1,:]
+        field_lat2[:,:,-1,:] = field_lat2[:,:,-2,:]
+        field_lat = (np.roll(field,-1,axis=2) - np.roll(field,1,axis=2))/(2*dlat)
+        field_lat[:,:,0,:] = (-3*field[:,:,0,:] + 4*field[:,:,1,:] - field[:,:,2,:])/(2*dlat)
+        field_lat[:,:,-1,:] = (3*field[:,:,-1,:] - 4*field[:,:,-2,:] + field[:,:,-3,:])/(2*dlat)
         cos = np.outer(np.cos(lat*np.pi/180), np.ones(len(lon)))
         sin = np.outer(np.sin(lat*np.pi/180), np.ones(len(lon)))
         # Make poles nan
         cos[np.abs(cos)<1e-3] = np.nan
         sin[np.abs(sin)<1e-3] = np.nan
-        qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(
-                1.0/cos**2*gh_lon2 - (sin/cos + cos/sin)*gh_lat + gh_lat2)
-        #qgpv = 1.0/earth_radius**2 * (
-        #        1.0/cos**2*gh_lon2 + gh_lat2 - (sin/cos)*gh_lat  # Laplacian
-        #        )
-        #qgpv = fcor + 1.0/earth_radius**2 * (grav_accel/fcor)*(
-        #        1.0/cos**2*gh_lon2 + gh_lat2 - (sin/cos)*gh_lat  # Laplacian
-        #        - (cos/sin)*gh_lat # beta effect 
-        #        )
-        # Put NaN at the poles and the equator.
-        #qgpv[:,:,:2,:] = np.nan
-        #qgpv[:,:,-2:,:] = np.nan
+        lap_f = 1.0/cos**2*field_lon2 - (sin/cos)*field_lat + field_lat2
+        return lap_f,cos,sin,field_lat,field_lat2,field_lon,field_lon2
+    def smooth_spherical_field(self,field,lat,lon,nT=11):
+        # Smooth a field using a spherical harmonics truncation
+        return
+    def compute_qgpv(self,gh,lat,lon):
+        # gh shape should be (Nx, Nlev,Nlat,Nlon)
+        # Quasigeostrophic potential vorticity: just do horizontal component for now
+        # QGPV = (g/f)*(laplacian(gh) - d(gh)/dy * beta/f) + f
+        #      = (g/f)*(laplacian(gh) - 1/(earth radius)**2 * cos(lat)/sin(lat) * d(gh)/dlat) + f
+        gh_lap = self.spherical_horizontal_laplacian(gh,lat,lon)
+        cos = np.outer(np.cos(lat*np.pi/180), np.ones(len(lon)))
+        sin = np.outer(np.sin(lat*np.pi/180), np.ones(len(lon)))
+        qgpv,cos,sin,gh_lat,gh_lat2,gh_lon,gh_lon2 = fcor + grav_accel/(fcor*earth_radius**2)*(gh_lap - (cos/sin)*gh_lat)
+        #Nx,Nlev,Nlat,Nlon = gh.shape
+        #Omega = 2*np.pi/(3600*24*365)
+        #fcor = np.outer(2*Omega*np.sin(lat*np.pi/180), np.ones(lon.size))
+        #earth_radius = 6371.0e3 
+        #grav_accel = 9.80665
+        #dlat = np.pi/180 * (lat[1] - lat[0])
+        #dlon = np.pi/180 * (lon[1] - lon[0])
+        #gh_lon2 = (np.roll(gh,-1,axis=3) - 2*gh + np.roll(gh,1,axis=3))/dlon**2
+        #gh_lat2 = (np.roll(gh,-1,axis=2) - 2*gh + np.roll(gh,1,axis=2))/dlat**2
+        #gh_lat2[:,:,0,:] = gh_lat2[:,:,1,:]
+        #gh_lat2[:,:,-1,:] = gh_lat2[:,:,-2,:]
+        #gh_lat = (np.roll(gh,-1,axis=2) - np.roll(gh,1,axis=2))/(2*dlat)
+        #gh_lat[:,:,0,:] = (-3*gh[:,:,0,:] + 4*gh[:,:,1,:] - gh[:,:,2,:])/(2*dlat)
+        #gh_lat[:,:,-1,:] = (3*gh[:,:,-1,:] - 4*gh[:,:,-2,:] + gh[:,:,-3,:])/(2*dlat)
+        #cos = np.outer(np.cos(lat*np.pi/180), np.ones(len(lon)))
+        #sin = np.outer(np.sin(lat*np.pi/180), np.ones(len(lon)))
+        ## Make poles nan
+        #cos[np.abs(cos)<1e-3] = np.nan
+        #sin[np.abs(sin)<1e-3] = np.nan
+        #qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(
+        #        1.0/cos**2*gh_lon2 - (sin/cos + cos/sin)*gh_lat + gh_lat2)
         return qgpv
     def compute_vortex_moments_sphere(self,gh,lat,lon,i_lev_subset=None,num_vortex_moments=4):
         # Do the calculation in lat/lon coordinates. Regridding is too expensive
