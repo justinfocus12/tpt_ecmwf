@@ -27,13 +27,13 @@ datadirs = dict({
     "s2s": "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23",
     })
 sources = list(datadirs.keys())
-featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-12"
+featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-14"
 if not exists(featdir): mkdir(featdir)
 feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-02-13")
+daydir = join(resultsdir,"2022-02-14")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -41,10 +41,10 @@ import helper
 import strat_feat
 import tpt_general
 
-# Which years to use for each dataset
+# COMPLETE listing of possible years to use for each dataset
 fall_years = dict({
     "e2": np.arange(1900,2007),
-    "ei": np.arange(1996,2017),
+    "ei": np.arange(1979,2019),
     "s2s": np.arange(1996,2017),
     })
 
@@ -54,13 +54,18 @@ for key in ["e2","ei"]:
 file_lists["s2s"] = [join(datadirs["s2s"],f) for f in os.listdir(datadirs["s2s"]) if f.endswith(".nc")]
 
 # Which files to use to construct the climate average 
-file_list_climavg = file_lists["e2"][:15]
+file_list_climavg = file_lists["ei"][:15]
 
 # ------------ Subsetting for robustness tests ------------
 interval_length_lists = dict({
-    "e2": [5,10,20,50,len(fall_years["e2"])][-1:],
-    "ei": [5,10,20,len(fall_years["ei"])][-1:],
-    "s2s": [5,20,20,len(fall_years["s2s"])][-1:],
+    "e2": [53,106],
+    "ei": [20,40],
+    "s2s": [10,21],
+    })
+linestyle_lists = dict({
+    "e2": ['dotted','dashed','solid'],
+    "ei": ['dotted','dashed','solid'],
+    "s2s": ['dotted','dashed','solid'],
     })
 subset_lists = dict()
 for key in ["e2","ei","s2s"]:
@@ -91,7 +96,7 @@ for key in sources:
 multiprocessing_flag = 0
 num_clusters = 120
 #Npc_per_level_single = 4
-Npc_per_level = np.array([4,4,4,4,4,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level = np.array([4,4,4,4,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 heatflux_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
@@ -129,22 +134,22 @@ subsetdirs = dict({key: [join(paramdirs[key],"%i-%i"%(subset[0],subset[-1]+1)) f
 # Parameters to determine what to do
 # Featurization
 create_features_flag =         0
-display_features_flag =        0
+display_features_flag =        1
 # era20c
-evaluate_database_e2 =         0
-tpt_featurize_e2 =             0
+evaluate_database_e2 =         1
+tpt_featurize_e2 =             1
 tpt_e2_flag =                  1
 # eraint
-evaluate_database_ei =         0
-tpt_featurize_ei =             0
+evaluate_database_ei =         1
+tpt_featurize_ei =             1
 tpt_ei_flag =                  1
 # s2s
-evaluate_database_s2s =        0
-tpt_featurize_s2s =            0
-cluster_flag =                 0
-build_msm_flag =               0
-tpt_s2s_flag =                 0
-plot_tpt_results_s2s_flag =    0
+evaluate_database_s2s =        1
+tpt_featurize_s2s =            1
+cluster_flag =                 1
+build_msm_flag =               1
+tpt_s2s_flag =                 1
+plot_tpt_results_s2s_flag =    1
 # Summary statistic
 plot_rate_flag =               1
 
@@ -176,11 +181,6 @@ tthresh1 = 31 + 30 + 31 + 31 + 28  # Last day that SSW could happen: end of Febr
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
-
-
-
-
-
 
 # =============================================================
 if ei_flag:
@@ -330,15 +330,18 @@ if plot_rate_flag:
     errorbar_offsets = dict({"ei": 0, "e2": -du, "s2s": du})
     savefig_suffix = ""
     for key in sources:
+        print(f"Starting to plot rate list for {key}")
         label_needed = True
         for i_subset,subset in enumerate(subset_lists[key]):
-            if len(subset) == max(interval_length_lists[key]):
-                alpha = len(subset)/max(interval_length_lists[key])
-                linewidth = 3*len(subset)/max(interval_length_lists[key])
-                h, = ax.plot(uthresh_list,rate_lists[key][i_subset],color=colors[key],linewidth=linewidth,marker='o',label=labels[key],alpha=alpha)
-                if len(subset) == max(interval_length_lists[key]) and label_needed: 
-                    handles.append(h)
-                    label_needed = False
+            alpha = 1.0 #len(subset)/max(interval_length_lists[key])
+            linewidth = 2 #3*len(subset)/max(interval_length_lists[key])
+            print(f"subset[[0,-1]] = {subset[[0,-1]]}")
+            linestyle = linestyle_lists[key][i_subset]
+            marker = '.'
+            h, = ax.plot(uthresh_list,rate_lists[key][i_subset],color=colors[key],linewidth=linewidth,marker=marker,linestyle=linestyle,label=labels[key],alpha=alpha)
+            if len(subset) == max(interval_length_lists[key]) and label_needed: 
+                handles.append(h)
+                label_needed = False
         savefig_suffix += key
         ax.legend(handles=handles,loc='upper left')
         fig.savefig(join(paramdirs["s2s"],"rate_%s_%s_linear"%(bndy_suffix,savefig_suffix)))

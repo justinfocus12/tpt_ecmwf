@@ -495,8 +495,15 @@ class WinterStratosphereTPT:
         Nx,Ntx,xdim = X.shape
         if not (Ntx==Nty and Nx==Ny):
             raise Exception(f"ERROR: X.shape = {X.shape} and Y.shape = {Y.shape}")
+        # Keep track of which entries are the beginning of a short trajectory
         Y = Y.reshape((Ny*Nty,ydim))
         X = X.reshape((Ny*Nty,xdim))
+        traj_rank = np.outer(np.ones(Ny), np.arange(Nty)).flatten()
+        # Restrict to entries during midwinter
+        winter_flag = (Y[:,winstrat.fidx_Y['time_h']] >= self.tpt_bndy['tthresh'][0])*(Y[:,winstrat.fidx_Y['time_h']] <= self.tpt_bndy['tthresh'][1])
+        idx_winter = np.where(winter_flag)[0]
+        traj_start_positions = np.where(traj_rank == 0)[0]
+        winter_starts = np.intersect1d(idx_winter,traj_start_positions)
         qp_Y = np.load(join(savedir,"qp_Y.npy")).reshape(Ny*Nty)
         qm_Y = np.load(join(savedir,"qm_Y.npy")).reshape(Ny*Nty)
         pi_Y = np.load(join(savedir,"pi_Y.npy")).reshape(Ny*Nty)
@@ -506,7 +513,7 @@ class WinterStratosphereTPT:
         # ----------- New plot: short histories of zonal wind, colored by committor. Maybe this will inform new coordinates --------------
         fig,ax = plt.subplots()
         prng = np.random.RandomState(1)
-        ss = Nty*prng.choice(np.arange(Ny),size=min(Ny,500)) # The Nty makes sure it's always at the beginning
+        ss = prng.choice(winter_starts,size=min(len(winter_starts),500),replace=False) 
         print(f"qp on ss: min={np.min(qp_Y[ss])}, max={np.max(qp_Y[ss])}")
         time_full = np.arange(winstrat.ndelay)*winstrat.dtwint/24.0
         time_full -= time_full[-1]
@@ -524,7 +531,7 @@ class WinterStratosphereTPT:
         Nlev = len(feat_def['plev'])
         fig,ax = plt.subplots()
         prng = np.random.RandomState(1)
-        ss = Nty*prng.choice(np.arange(Ny),size=min(Ny,1000)) # The Nty makes sure it's always at the beginning
+        ss = prng.choice(winter_starts,size=min(len(winter_starts),1000)) # The Nty makes sure it's always at the beginning
         ubar_idx = np.array([winstrat.fidx_X["ubar_60N_lev%i"%(i_lev)] for i_lev in range(Nlev)])
         ubar = X[:,ubar_idx]
         for i_x in ss:
@@ -537,7 +544,7 @@ class WinterStratosphereTPT:
         Nlev = len(feat_def['plev'])
         fig,ax = plt.subplots()
         prng = np.random.RandomState(1)
-        ss = Nty*prng.choice(np.arange(Ny),size=min(Ny,1000)) # The Nty makes sure it's always at the beginning
+        ss = prng.choice(winter_starts,size=min(len(winter_starts),1000)) # The Nty makes sure it's always at the beginning
         vT_idx = np.array([winstrat.fidx_X["heatflux_lev%i"%(i_lev)] for i_lev in range(Nlev)])
         vT = X[:,vT_idx]
         for i_x in ss:
@@ -546,26 +553,13 @@ class WinterStratosphereTPT:
         ax.set_ylabel(r"Pseudo-height [km]")
         fig.savefig(join(savedir,"qp_vTprofile_spaghetti"))
         plt.close(fig)
-        # ------------ New plot: vertical profiles of leading EOF (annular mode), colored by committor. -------------
-        Nlev = len(feat_def['plev'])
-        fig,ax = plt.subplots()
-        prng = np.random.RandomState(1)
-        ss = Nty*prng.choice(np.arange(Ny),size=min(Ny,100)) # The Nty makes sure it's always at the beginning
-        pc0_idx = np.array([winstrat.fidx_X["pc0_lev%i"%(i_lev)] for i_lev in range(Nlev)])
-        pc0 = X[:,pc0_idx]
-        for i_x in ss:
-            ax.plot(pc0[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[i_x]),alpha=0.4)
-        ax.set_xlabel(r"PC 1")
-        ax.set_ylabel(r"Pseudo-height [km]")
-        fig.savefig(join(savedir,"qp_pc0profile_spaghetti"))
-        plt.close(fig)
         # ------------- Current plots (Y) --------------------
         keypairs = []
         keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
         for key0,key1 in keypairs:
             print(f"Plotting current on key pair {key0},{key1}")
             theta_x = np.array([funlib_Y[key0]["fun"](Y), funlib_Y[key1]["fun"](Y)]).T
-            fig,ax = helper.plot_field_2d(qp_Y,pi_Y,theta_x,fieldname=r"$q_B^+$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"])
+            fig,ax = helper.plot_field_2d(qp_Y[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$q_B^+$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"])
             _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2)),qm_Y.reshape((Ny,Nty)),qp_Y.reshape((Ny,Nty)),pi_Y.reshape((Ny,Nty)),fig,ax)
             fig.savefig(join(savedir,"qp_data_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
             plt.close(fig)
@@ -577,11 +571,11 @@ class WinterStratosphereTPT:
         funlib_X = winstrat.observable_function_library_X()
         keypairs = []
         #keypairs += [['time_d','captemp_lev%i'%(i_lev)] for i_lev in range(Nlev)]
-        keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in range(Nlev)]
+        #keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in range(Nlev)]
         #keypairs += [['time_d','vxmom%i'%(i_mom)] for i_mom in range(winstrat.num_vortex_moments_max)]
-        #keypairs += [['time_d','uref']]
+        keypairs += [['time_d','uref']]
         #keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
-        #keypairs += [['pc1_lev0','pc%i_lev0'%(i_pc)] for i_pc in range(2,winstrat.Npc_per_level_max)]
+        keypairs += [['pc0_lev0','pc%i_lev0'%(i_pc)] for i_pc in range(1,5)]
         for key0,key1 in keypairs:
             print(f"Plotting current on key pair {key0},{key1}")
             theta_x = np.array([funlib_X[key0]["fun"](X), funlib_X[key1]["fun"](X)]).T

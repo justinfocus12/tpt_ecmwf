@@ -475,11 +475,12 @@ class WinterStratosphereFeatures:
         print("wave_mag.shape = {}".format(wave_mag.shape))
         print("waves_szn_mean.shape = {}, waves_szn_std.shape = {}".format(waves_szn_mean.shape,waves_szn_std.shape))
         # EOFs level by level
+        Nlat_nh = np.argmin(np.abs(lat - 0.0)) # Equator
         gh_szn_mean,gh_szn_std = self.get_seasonal_mean(t_szn,gh)
         gh_unseasoned = self.unseason(t_szn,gh,gh_szn_mean,gh_szn_std,normalize=False)
-        cosine = np.cos(np.pi/180 * lat)
+        cosine = np.cos(np.pi/180 * lat[:Nlat_nh])
         weight = 1/np.sqrt(len(gh_unseasoned))*np.outer(np.sqrt(cosine),np.ones(Nlon)).flatten()
-        eofs = np.zeros((Nlev,Nlat*Nlon,self.Npc_per_level_max))
+        eofs = np.zeros((Nlev,Nlat_nh*Nlon,self.Npc_per_level_max))
         singvals = np.zeros((Nlev,self.Npc_per_level_max))
         tot_var = np.zeros(Nlev)
         svd_start = timelib.time()
@@ -493,7 +494,7 @@ class WinterStratosphereFeatures:
         else:
             for i_lev in range(Nlev):
                 print("svd'ing level %i out of %i"%(i_lev,Nlev))
-                U,S,Vh = np.linalg.svd((gh_unseasoned[:,i_lev,:,:].reshape((len(gh),Nlat*Nlon))*weight).T, full_matrices=False)
+                U,S,Vh = np.linalg.svd((gh_unseasoned[:,i_lev,:Nlat_nh,:].reshape((len(gh),Nlat_nh*Nlon))*weight).T, full_matrices=False)
                 eofs[i_lev,:,:] = U[:,:self.Npc_per_level_max]
                 singvals[i_lev,:] = S[:self.Npc_per_level_max]
                 tot_var[i_lev] = np.sum(S**2)
@@ -510,13 +511,13 @@ class WinterStratosphereFeatures:
         vT_szn_mean,vT_szn_std = self.get_seasonal_mean(t_szn,vT)
         feat_def = {
                 "t_szn": t_szn, "plev": plev, "lat": lat, "lon": lon,
-                "i_lev_uref": i_lev_uref, "i_lat_uref": i_lat_uref,
+                "i_lev_uref": i_lev_uref, "i_lat_uref": i_lat_uref, "Nlat_nh": Nlat_nh,
                 "uref_mean": uref_mean, "uref_std": uref_std,
                 "uref_szn_mean": uref_szn_mean, "uref_szn_std": uref_szn_std,
                 "waves_szn_mean": waves_szn_mean, "waves_szn_std": waves_szn_std,
                 "wave_mag_szn_mean": wave_mag_szn_mean, "wave_mag_szn_std": wave_mag_szn_std,
                 "gh_szn_mean": gh_szn_mean, "gh_szn_std": gh_szn_std,
-                "eofs": eofs, "singvals": singvals, "tot_var": tot_var,
+                "eofs": eofs, "singvals": singvals, "tot_var": tot_var, "Nlat_nh": Nlat_nh,
                 "vtx_diags_szn_mean": vtx_diags_szn_mean, "vtx_diags_szn_std": vtx_diags_szn_std,
                 "temp_capavg_szn_mean": temp_capavg_szn_mean, "temp_capavg_szn_std": temp_capavg_szn_std,
                 "vT_szn_mean": vT_szn_mean, "vT_szn_std": vT_szn_std,
@@ -829,6 +830,7 @@ class WinterStratosphereFeatures:
         gh,u,time,plev,lat,lon,fall_year = self.get_u_gh(ds)
         time_ugh = timelib.time() - trun
         Nmem,Nt,Nlev,Nlat,Nlon = gh.shape
+        Nlat_nh = feat_def["Nlat_nh"]
         area_factor = np.outer(np.cos(lat*np.pi/180), np.ones(Nlon))
         gh = gh.reshape((Nmem*Nt,Nlev,Nlat,Nlon))
         u = u.reshape((Nmem*Nt,Nlev,Nlat,Nlon))
@@ -872,7 +874,7 @@ class WinterStratosphereFeatures:
         for i_lev in range(Nlev):
             for i_pc in range(self.Npc_per_level_max):
                 i_feat = self.fidx_X["pc%i_lev%i"%(i_pc,i_lev)]
-                X[:,i_feat] = (gh_unseasoned[:,i_lev,:,:].reshape((Nmem*Nt,Nlat*Nlon)) @ (feat_def["eofs"][i_lev,:,i_pc])) / feat_def["singvals"][i_lev,i_pc] 
+                X[:,i_feat] = (gh_unseasoned[:,i_lev,:Nlat_nh,:].reshape((Nmem*Nt,Nlat_nh*Nlon)) @ (feat_def["eofs"][i_lev,:,i_pc])) / feat_def["singvals"][i_lev,i_pc] 
         # ---------- Vortex moments ------------
         vtx_moments = self.compute_vortex_moments_sphere(gh,lat,lon,i_lev_subset=[i_lev_uref])
         moment_names = ["area","centerlat","aspect_ratio","excess_kurtosis"]
@@ -1120,8 +1122,9 @@ class WinterStratosphereFeatures:
         # Display a panel of principal components
         plev,lat,lon = [feat_def[v] for v in ["plev","lat","lon"]]
         Nlev,Nlat,Nlon = len(plev),len(lat),len(lon)
-        eof = feat_def["eofs"][i_lev,:,i_eof].reshape((Nlat,Nlon))
-        fig,ax,_ = self.display_pole_field(eof,lat,lon)
+        Nlat_nh = feat_def["Nlat_nh"]
+        eof = feat_def["eofs"][i_lev,:,i_eof].reshape((Nlat_nh,Nlon))
+        fig,ax,_ = self.display_pole_field(eof,lat[:Nlat_nh],lon)
         ax.set_title("EOF %i at $p=%i$ hPa"%(i_eof+1,plev[i_lev]/100))
         fig.savefig(join(savedir,"eof_ilev%i_ieof%i"%(i_lev,i_eof)))
         plt.close(fig)
