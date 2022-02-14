@@ -489,8 +489,8 @@ class WinterStratosphereTPT:
         # Plot fields using the data points rather than the clusters
         funlib_Y = winstrat.observable_function_library_Y(algo_params)
         tpt_feat = pickle.load(open(tpt_feat_filename, "rb"))
-        Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
-        X = np.load(feat_filename)[:,winstrat.ndelay-1:,:]
+        Y,szn_mean_Y,szn_std_Y,idx_resamp = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y","idx_resamp"]]
+        X = np.load(feat_filename)[:,winstrat.ndelay-1:,:][idx_resamp]
         Ny,Nty,ydim = Y.shape
         Nx,Ntx,xdim = X.shape
         if not (Ntx==Nty and Nx==Ny):
@@ -504,6 +504,8 @@ class WinterStratosphereTPT:
         idx_winter = np.where(winter_flag)[0]
         traj_start_positions = np.where(traj_rank == 0)[0]
         winter_starts = np.intersect1d(idx_winter,traj_start_positions)
+        winter_fully_idx = np.where(np.all(winter_flag.reshape((Ny,Nty)), axis=1))[0] # Indices within the (Ny,Nty,ydim)-shaped array
+        print(f"winter_fully_idx = {winter_fully_idx}")
         qp_Y = np.load(join(savedir,"qp_Y.npy")).reshape(Ny*Nty)
         qm_Y = np.load(join(savedir,"qm_Y.npy")).reshape(Ny*Nty)
         pi_Y = np.load(join(savedir,"pi_Y.npy")).reshape(Ny*Nty)
@@ -531,7 +533,7 @@ class WinterStratosphereTPT:
         Nlev = len(feat_def['plev'])
         fig,ax = plt.subplots()
         prng = np.random.RandomState(1)
-        ss = prng.choice(winter_starts,size=min(len(winter_starts),1000)) # The Nty makes sure it's always at the beginning
+        ss = prng.choice(winter_starts,size=min(len(winter_starts),1000)) # Make sure it's always at the beginning
         ubar_idx = np.array([winstrat.fidx_X["ubar_60N_lev%i"%(i_lev)] for i_lev in range(Nlev)])
         ubar = X[:,ubar_idx]
         for i_x in ss:
@@ -556,16 +558,24 @@ class WinterStratosphereTPT:
         # ------------- Current plots (Y) --------------------
         keypairs = []
         keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
+        keypairs += [['time_d','uref_dl0']]
         for key0,key1 in keypairs:
             print(f"Plotting current on key pair {key0},{key1}")
             theta_x = np.array([funlib_Y[key0]["fun"](Y), funlib_Y[key1]["fun"](Y)]).T
-            fig,ax = helper.plot_field_2d(qp_Y[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$q_B^+$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"])
-            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2)),qm_Y.reshape((Ny,Nty)),qp_Y.reshape((Ny,Nty)),pi_Y.reshape((Ny,Nty)),fig,ax)
-            fig.savefig(join(savedir,"qp_data_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
+            # A -> B
+            fig,ax = helper.plot_field_2d((qp_Y*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"],avg_flag=True)
+            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+            fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
             plt.close(fig)
-            fig,ax = helper.plot_field_2d(-lt_mean,pi_Y,theta_x,fieldname=r"$-\eta_B^+$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"])
-            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2)),qm_Y.reshape((Ny,Nty)),qp_Y.reshape((Ny,Nty)),pi_Y.reshape((Ny,Nty)),fig,ax)
-            fig.savefig(join(savedir,"lt_data_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
+            # A -> A
+            fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"],avg_flag=True)
+            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],1-qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+            fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
+            plt.close(fig)
+            # A or B -> A or B
+            fig,ax = helper.plot_field_2d(np.ones(Ny*Nty)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"],avg_flag=False)
+            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+            fig.savefig(join(savedir,"J_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
             plt.close(fig)
         # ------------------ Current plots outside the TPT observables ------------
         funlib_X = winstrat.observable_function_library_X()
@@ -575,17 +585,25 @@ class WinterStratosphereTPT:
         #keypairs += [['time_d','vxmom%i'%(i_mom)] for i_mom in range(winstrat.num_vortex_moments_max)]
         keypairs += [['time_d','uref']]
         #keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
-        keypairs += [['pc0_lev0','pc%i_lev0'%(i_pc)] for i_pc in range(1,5)]
+        keypairs += [['uref','pc%i_lev0'%(i_pc)] for i_pc in range(6)]
+        keypairs += [['pc1_lev0','pc%i_lev0'%(i_pc)] for i_pc in range(2,6)]
         for key0,key1 in keypairs:
             print(f"Plotting current on key pair {key0},{key1}")
             theta_x = np.array([funlib_X[key0]["fun"](X), funlib_X[key1]["fun"](X)]).T
-            fig,ax = helper.plot_field_2d(qp_Y,pi_Y,theta_x,fieldname=r"$q_B^+$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"])
-            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2)),qm_Y.reshape((Ny,Nty)),qp_Y.reshape((Ny,Nty)),pi_Y.reshape((Ny,Nty)),fig,ax)
-            fig.savefig(join(savedir,"qp_data_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
+            # A -> B
+            fig,ax = helper.plot_field_2d((qp_Y*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"],avg_flag=True)
+            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+            fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
             plt.close(fig)
-            fig,ax = helper.plot_field_2d(-lt_mean,pi_Y,theta_x,fieldname=r"$-\eta_B^+$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"])
-            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2)),qm_Y.reshape((Ny,Nty)),qp_Y.reshape((Ny,Nty)),pi_Y.reshape((Ny,Nty)),fig,ax)
-            fig.savefig(join(savedir,"lt_data_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
+            # A -> A
+            fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"],avg_flag=True)
+            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],1-qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+            fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
+            plt.close(fig)
+            # (A or B) -> (A or B)
+            fig,ax = helper.plot_field_2d(np.ones((Ny*Nty))[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"],avg_flag=False)
+            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+            fig.savefig(join(savedir,"J_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
             plt.close(fig)
         return
     def plot_results_clust(self,feat_def,savedir,winstrat,algo_params):
@@ -806,7 +824,7 @@ class WinterStratosphereTPT:
         _,_,_,_,J1_proj,_,_,_,_ = helper.project_field(Jth[:,1],weight,thmid,shp=shp,bounds=bounds,avg_flag=False)
         Jmag = np.sqrt(J0_proj**2 + J1_proj**2)
         minmag,maxmag = np.nanmin(Jmag),np.nanmax(Jmag)
-        coeff1 = 3.0/maxmag
+        coeff1 = 1.0/maxmag
         dsmin,dsmax = np.max(shp)/200,np.max(shp)/15
         coeff0 = dsmax / (np.exp(-coeff1 * maxmag) - 1)
         ds = coeff0 * (np.exp(-coeff1 * Jmag) - 1)
