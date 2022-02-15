@@ -76,7 +76,7 @@ class WinterStratosphereFeatures:
         self.lat_range_uref = self.lat_uref + 5.0*np.array([-1,1])
         self.pres_uref = 10 # hPa for CP07 definition of SSW
         return
-    def compute_src_dest_tags(self,Y,feat_def,tpt_bndy,save_filename):
+    def compute_src_dest_tags(self,Y,feat_def,tpt_bndy,save_filename=None):
         # Compute where each trajectory started (A or B) and where it's going (A or B). Also maybe compute the first-passage times, forward and backward.
         Nmem,Nt,Nfeat = Y.shape
         ina = self.ina_test(Y.reshape((Nmem*Nt,Nfeat)),feat_def,tpt_bndy)
@@ -98,7 +98,8 @@ class WinterStratosphereFeatures:
         #print("Overall fraction in B = {}".format(np.mean(inb)))
         #print("At time zero: fraction of traj in B = {}, fraction of traj headed to B = {}".format(np.mean(dest_tag[:,0]==1),np.mean((dest_tag[:,0]==1)*(inb[:,0]==0))))
         result = {'src_tag': src_tag, 'dest_tag': dest_tag}
-        pickle.dump(result,open(save_filename,'wb'))
+        if save_filename is not None:
+            pickle.dump(result,open(save_filename,'wb'))
         return src_tag,dest_tag
     def ina_test(self,y,feat_def,tpt_bndy):
         Ny,ydim = y.shape

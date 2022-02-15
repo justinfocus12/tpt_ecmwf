@@ -134,7 +134,7 @@ subsetdirs = dict({key: [join(paramdirs[key],"%i-%i"%(subset[0],subset[-1]+1)) f
 # Parameters to determine what to do
 # Featurization
 create_features_flag =         0
-display_features_flag =        1
+display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
 tpt_featurize_e2 =             0
@@ -149,9 +149,9 @@ tpt_featurize_s2s =            0
 cluster_flag =                 0
 build_msm_flag =               0
 tpt_s2s_flag =                 0
-plot_tpt_results_s2s_flag =    0
+plot_tpt_results_s2s_flag =    1
 # Summary statistic
-plot_rate_flag =               1
+plot_rate_flag =               0
 
 
 feature_file = join(featdir,"feat_def")
@@ -255,6 +255,9 @@ if e2_flag:
 # =======================================================================
 # ------------------- DGA from S2S --------------------------------
 feat_filename = join(expdirs["s2s"],"X.npy")
+feat_filename_ra = join(expdirs["ei"],"X.npy")
+print(f"subsetdirs['ei'] = {subsetdirs['ei']}")
+tpt_feat_filename_ra = join(subsetdirs["ei"][-1],"Y")
 ens_start_filename = join(expdirs["s2s"],"ens_start_idx.npy")
 fall_year_filename = join(expdirs["s2s"],"fall_year_list.npy")
 if evaluate_database_s2s: # Expensive!
@@ -290,13 +293,13 @@ for i_subset,subset in enumerate(subset_lists["s2s"]):
             tpt.set_boundaries(tpt_bndy)
             summary_dga = tpt.tpt_pipeline_dga(tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,algo_params)
     if plot_tpt_results_s2s_flag and len(subset) == max(interval_length_lists["s2s"]):
-        for i_uth in [1]: #range(len(uthresh_list)):
+        for i_uth in range(len(uthresh_list)):
             uthresh_b = uthresh_list[i_uth]
             savedir = join(subsetdir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_def,savedir,winstrat,algo_params)
+            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra,tpt_feat_filename_ra,feat_def,savedir,winstrat,algo_params,spaghetti_flag=False,fluxdens_flag=True,current2d_flag=(i_uth==1))
             #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
 
 # =============================================================================

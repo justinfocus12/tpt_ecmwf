@@ -485,9 +485,27 @@ class WinterStratosphereTPT:
             lt_Y = self.interpolate_field_clust2data(kmdict,Ny,Nt,int2b_cond['time'][mom_name],density_flag=False,idx_a=idx_a,idx_b=idx_b)
             np.save(join(savedir,"lt_%s_Y"%(mom_name)),lt_Y)
         return summary 
-    def plot_results_data(self,feat_filename,tpt_feat_filename,feat_def,savedir,winstrat,algo_params):
+    def plot_results_data(self,feat_filename,tpt_feat_filename,feat_filename_ra,tpt_feat_filename_ra,feat_def,savedir,winstrat,algo_params,spaghetti_flag=True,fluxdens_flag=True,current2d_flag=True):
+        # Load the reanalysis data for comparison
+        Xra = np.load(feat_filename_ra)[:,winstrat.ndelay-1:,:]
+        tpt_feat_ra = pickle.load(open(tpt_feat_filename_ra,"rb"))
+        Yra = tpt_feat_ra["Y"]
+        Nyra,Ntyra,ydim = Yra.shape
+        Nxra,Ntxra,xdim = Xra.shape
+        if not (Nyra == Nxra and Ntyra == Ntxra):
+            raise Exception("ERROR: Xra and Yra have shapes {Xra.shape} and {Yra.shape} respectively. The first two dimensions should match")
+        ina_yra = winstrat.ina_test(Yra.reshape((Nyra*Ntyra,ydim)),feat_def,self.tpt_bndy).reshape(Nyra*Ntyra)
+        inb_yra = winstrat.inb_test(Yra.reshape((Nyra*Ntyra,ydim)),feat_def,self.tpt_bndy).reshape(Nyra*Ntyra)
+        # Get source and destination
+        src_tag,dest_tag = winstrat.compute_src_dest_tags(Yra,feat_def,self.tpt_bndy)
+        print(f"src_tag.shape = {src_tag.shape}, dest_tag.shape = {dest_tag.shape}, Yra.shape = {Yra.shape}")
+        Yra = Yra.reshape((Nyra*Ntyra,ydim))
+        Xra = Xra.reshape((Nyra*Ntyra,xdim))
+        src_tag = src_tag.reshape(Nyra*Ntyra)
+        dest_tag = dest_tag.reshape(Nyra*Ntyra)
         # Plot fields using the data points rather than the clusters
         funlib_Y = winstrat.observable_function_library_Y(algo_params)
+        funlib_X = winstrat.observable_function_library_X()
         tpt_feat = pickle.load(open(tpt_feat_filename, "rb"))
         Y,szn_mean_Y,szn_std_Y,idx_resamp = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y","idx_resamp"]]
         X = np.load(feat_filename)[:,winstrat.ndelay-1:,:][idx_resamp]
@@ -512,99 +530,138 @@ class WinterStratosphereTPT:
         lt_mean = np.load(join(savedir,"lt_mean_Y.npy")).reshape(Ny*Nty)
         lt_std = np.load(join(savedir,"lt_std_Y.npy")).reshape(Ny*Nty)
         lt_skew = np.load(join(savedir,"lt_skew_Y.npy")).reshape(Ny*Nty)
-        # ----------- New plot: short histories of zonal wind, colored by committor. Maybe this will inform new coordinates --------------
-        fig,ax = plt.subplots()
-        prng = np.random.RandomState(1)
-        ss = prng.choice(winter_starts,size=min(len(winter_starts),500),replace=False) 
-        print(f"qp on ss: min={np.min(qp_Y[ss])}, max={np.max(qp_Y[ss])}")
-        time_full = np.arange(winstrat.ndelay)*winstrat.dtwint/24.0
-        time_full -= time_full[-1]
-        uref_idx = np.array([winstrat.fidx_Y["uref_dl%i"%(i_dl)] for i_dl in range(winstrat.ndelay)])[::-1]
-        uref = Y[:,uref_idx]
-        for i_y in ss:
-            time_i = time_full + Y[i_y,winstrat.fidx_Y['time_h']]/24.0
-            ax.plot(time_i,uref[i_y],color=plt.cm.coolwarm(qp_Y[i_y]),alpha=0.4)
-        ax.set_xlabel(funlib_Y["time_d"]["label"])
-        ax.set_ylabel(funlib_Y["uref_dl0"]["label"])
-        fig.savefig(join(savedir,"qp_uref_spaghetti"))
-        plt.close(fig)
-        print("saved spaghetti, now moving on...")
-        # ------------ New plot: vertical profiles of zonal wind colored by committor. -------------
-        Nlev = len(feat_def['plev'])
-        fig,ax = plt.subplots()
-        prng = np.random.RandomState(1)
-        ss = prng.choice(winter_starts,size=min(len(winter_starts),1000)) # Make sure it's always at the beginning
-        ubar_idx = np.array([winstrat.fidx_X["ubar_60N_lev%i"%(i_lev)] for i_lev in range(Nlev)])
-        ubar = X[:,ubar_idx]
-        for i_x in ss:
-            ax.plot(ubar[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[i_x]),alpha=0.1,linewidth=2)
-        ax.set_xlabel(r"$\overline{u}$ [m/s]")
-        ax.set_ylabel(r"Pseudo-height [km]")
-        fig.savefig(join(savedir,"qp_uprofile_spaghetti"))
-        plt.close(fig)
-        # ------------ New plot: vertical profiles of heat flux colored by committor. -------------
-        Nlev = len(feat_def['plev'])
-        fig,ax = plt.subplots()
-        prng = np.random.RandomState(1)
-        ss = prng.choice(winter_starts,size=min(len(winter_starts),1000)) # The Nty makes sure it's always at the beginning
-        vT_idx = np.array([winstrat.fidx_X["heatflux_lev%i"%(i_lev)] for i_lev in range(Nlev)])
-        vT = X[:,vT_idx]
-        for i_x in ss:
-            ax.plot(vT[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[i_x]),alpha=0.1,linewidth=2)
-        ax.set_xlabel(r"$\overline{v'T'}$ [K$\cdot$m/s]")
-        ax.set_ylabel(r"Pseudo-height [km]")
-        fig.savefig(join(savedir,"qp_vTprofile_spaghetti"))
-        plt.close(fig)
-        # ------------- Current plots (Y) --------------------
-        keypairs = []
-        keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
-        keypairs += [['time_d','uref_dl0']]
-        for key0,key1 in keypairs:
-            print(f"Plotting current on key pair {key0},{key1}")
-            theta_x = np.array([funlib_Y[key0]["fun"](Y), funlib_Y[key1]["fun"](Y)]).T
-            # A -> B
-            fig,ax = helper.plot_field_2d((qp_Y*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"],avg_flag=True)
-            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-            fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
+        if fluxdens_flag:
+            # ----------- Plot flux distribution of entry times ----------
+            theta_normal = funlib_X['uref']['fun'](X)
+            theta_normal_label = funlib_X['uref']['label']
+            theta_tangential = funlib_X['time_d']['fun'](X)
+            theta_tangential_label = funlib_X['time_d']['label']
+            theta_mid_list = np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
+            theta_lower_list = theta_mid_list - 1.0
+            theta_upper_list = theta_mid_list + 1.0
+            fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_label,theta_tangential_label,theta_lower_list,theta_upper_list)
+            fig.savefig(join(savedir,"fluxdens_J-uref_d-timed"))
             plt.close(fig)
-            # A -> A
-            fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"],avg_flag=True)
-            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],1-qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-            fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
+            theta_normal = funlib_X['time_d']['fun'](X)
+            theta_normal_label = funlib_X['time_d']['label']
+            theta_tangential = funlib_X['uref']['fun'](X)
+            theta_tangential_label = funlib_X['uref']['label']
+            theta_mid_list = np.array([50,75,100,125], dtype=float)
+            theta_lower_list = theta_mid_list - 5.0
+            theta_upper_list = theta_mid_list + 5.0
+            fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_label,theta_tangential_label,theta_lower_list,theta_upper_list)
+            fig.savefig(join(savedir,"fluxdens_J-timed_d-uref"))
             plt.close(fig)
-            # A or B -> A or B
-            fig,ax = helper.plot_field_2d(np.ones(Ny*Nty)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"],avg_flag=False)
-            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-            fig.savefig(join(savedir,"J_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
+        if spaghetti_flag:
+            # ----------- New plot: short histories of zonal wind, colored by committor. Maybe this will inform new coordinates --------------
+            fig,ax = plt.subplots()
+            prng = np.random.RandomState(1)
+            ss = prng.choice(winter_starts,size=min(len(winter_starts),500),replace=False) 
+            print(f"qp on ss: min={np.min(qp_Y[ss])}, max={np.max(qp_Y[ss])}")
+            time_full = np.arange(winstrat.ndelay)*winstrat.dtwint/24.0
+            time_full -= time_full[-1]
+            uref_idx = np.array([winstrat.fidx_Y["uref_dl%i"%(i_dl)] for i_dl in range(winstrat.ndelay)])[::-1]
+            uref = Y[:,uref_idx]
+            for i_y in ss:
+                time_i = time_full + Y[i_y,winstrat.fidx_Y['time_h']]/24.0
+                ax.plot(time_i,uref[i_y],color=plt.cm.coolwarm(qp_Y[i_y]),alpha=0.4)
+            ax.set_xlabel(funlib_Y["time_d"]["label"])
+            ax.set_ylabel(funlib_Y["uref_dl0"]["label"])
+            fig.savefig(join(savedir,"qp_uref_spaghetti"))
             plt.close(fig)
-        # ------------------ Current plots outside the TPT observables ------------
-        funlib_X = winstrat.observable_function_library_X()
-        keypairs = []
-        #keypairs += [['time_d','captemp_lev%i'%(i_lev)] for i_lev in range(Nlev)]
-        #keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in range(Nlev)]
-        #keypairs += [['time_d','vxmom%i'%(i_mom)] for i_mom in range(winstrat.num_vortex_moments_max)]
-        keypairs += [['time_d','uref']]
-        #keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
-        keypairs += [['uref','pc%i_lev0'%(i_pc)] for i_pc in range(6)]
-        keypairs += [['pc1_lev0','pc%i_lev0'%(i_pc)] for i_pc in range(2,6)]
-        for key0,key1 in keypairs:
-            print(f"Plotting current on key pair {key0},{key1}")
-            theta_x = np.array([funlib_X[key0]["fun"](X), funlib_X[key1]["fun"](X)]).T
-            # A -> B
-            fig,ax = helper.plot_field_2d((qp_Y*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"],avg_flag=True)
-            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-            fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
+            print("saved spaghetti, now moving on...")
+            # ------------ New plot: vertical profiles of zonal wind colored by committor. -------------
+            Nlev = len(feat_def['plev'])
+            fig,ax = plt.subplots()
+            prng = np.random.RandomState(1)
+            ss = prng.choice(winter_starts,size=min(len(winter_starts),1000)) # Make sure it's always at the beginning
+            ubar_idx = np.array([winstrat.fidx_X["ubar_60N_lev%i"%(i_lev)] for i_lev in range(Nlev)])
+            ubar = X[:,ubar_idx]
+            for i_x in ss:
+                ax.plot(ubar[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[i_x]),alpha=0.1,linewidth=2)
+            ax.set_xlabel(r"$\overline{u}$ [m/s]")
+            ax.set_ylabel(r"Pseudo-height [km]")
+            fig.savefig(join(savedir,"qp_uprofile_spaghetti"))
             plt.close(fig)
-            # A -> A
-            fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"],avg_flag=True)
-            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],1-qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-            fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
+            # ------------ New plot: vertical profiles of heat flux colored by committor. -------------
+            Nlev = len(feat_def['plev'])
+            fig,ax = plt.subplots()
+            prng = np.random.RandomState(1)
+            ss = prng.choice(winter_starts,size=min(len(winter_starts),1000)) # The Nty makes sure it's always at the beginning
+            vT_idx = np.array([winstrat.fidx_X["heatflux_lev%i"%(i_lev)] for i_lev in range(Nlev)])
+            vT = X[:,vT_idx]
+            for i_x in ss:
+                ax.plot(vT[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[i_x]),alpha=0.1,linewidth=2)
+            ax.set_xlabel(r"$\overline{v'T'}$ [K$\cdot$m/s]")
+            ax.set_ylabel(r"Pseudo-height [km]")
+            fig.savefig(join(savedir,"qp_vTprofile_spaghetti"))
             plt.close(fig)
-            # (A or B) -> (A or B)
-            fig,ax = helper.plot_field_2d(np.ones((Ny*Nty))[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"],avg_flag=False)
-            _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-            fig.savefig(join(savedir,"J_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
-            plt.close(fig)
+        if current2d_flag:
+            # ------------- Current plots (Y) --------------------
+            keypairs = []
+            keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
+            keypairs += [['time_d','uref_dl0']]
+            for key0,key1 in keypairs:
+                print(f"Plotting current on key pair {key0},{key1}")
+                theta_x = np.array([funlib_Y[key0]["fun"](Y), funlib_Y[key1]["fun"](Y)]).T
+                theta_x_ra = np.array([funlib_Y[key0]["fun"](Yra), funlib_Y[key1]["fun"](Yra)]).T
+                # A -> B
+                fig,ax = helper.plot_field_2d((qp_Y*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"],avg_flag=True)
+                _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+                reactive_flag = ((src_tag==0)*(dest_tag==1)).reshape((Nyra,Ntyra))
+                self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
+                fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
+                plt.close(fig)
+                # A -> A
+                fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"],avg_flag=True)
+                _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],1-qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+                reactive_flag = ((src_tag==0)*(dest_tag==0)).reshape((Nyra,Ntyra))
+                self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
+                fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
+                plt.close(fig)
+                # A or B -> A or B
+                fig,ax = helper.plot_field_2d(np.ones(Ny*Nty)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"],avg_flag=False)
+                _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+                reactive_flag = np.ones((Nyra,Ntyra),dtype=bool)
+                self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
+                fig.savefig(join(savedir,"J_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
+                plt.close(fig)
+            # ------------------ Current plots outside the TPT observables ------------
+            funlib_X = winstrat.observable_function_library_X()
+            keypairs = []
+            #keypairs += [['time_d','captemp_lev%i'%(i_lev)] for i_lev in range(Nlev)]
+            #keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in range(Nlev)]
+            #keypairs += [['time_d','vxmom%i'%(i_mom)] for i_mom in range(winstrat.num_vortex_moments_max)]
+            keypairs += [['time_d','uref']]
+            #keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
+            keypairs += [['uref','pc%i_lev0'%(i_pc)] for i_pc in range(6)]
+            keypairs += [['pc1_lev0','pc%i_lev0'%(i_pc)] for i_pc in range(2,6)]
+            for key0,key1 in keypairs:
+                print(f"Plotting current on key pair {key0},{key1}")
+                theta_x = np.array([funlib_X[key0]["fun"](X), funlib_X[key1]["fun"](X)]).T
+                theta_x_ra = np.array([funlib_X[key0]["fun"](Xra), funlib_X[key1]["fun"](Xra)]).T
+                print(f"theta_x_ra.shape = {theta_x_ra.shape}")
+                # A -> B
+                fig,ax = helper.plot_field_2d((qp_Y*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"],avg_flag=True)
+                _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+                reactive_flag = ((src_tag==0)*(dest_tag==1)).reshape((Nyra,Ntyra))
+                self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
+                fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
+                plt.close(fig)
+                # A -> A
+                fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"],avg_flag=True)
+                _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],1-qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+                reactive_flag = ((src_tag==0)*(dest_tag==0)).reshape((Nyra,Ntyra))
+                self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
+                fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
+                plt.close(fig)
+                # (A or B) -> (A or B)
+                fig,ax = helper.plot_field_2d(np.ones((Ny*Nty))[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"],avg_flag=False)
+                _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+                reactive_flag = np.ones((Nyra,Ntyra),dtype=bool)
+                self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
+                fig.savefig(join(savedir,"J_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
+                plt.close(fig)
         return
     def plot_results_clust(self,feat_def,savedir,winstrat,algo_params):
         qp = pickle.load(open(join(savedir,"qp"),"rb"))
@@ -736,7 +793,7 @@ class WinterStratosphereTPT:
             fig.savefig(join(savedir,"lt_skew_%s_%s"%(keypairs[i_kp][0],keypairs[i_kp][1])))
             plt.close(fig)
         return 
-    def reactive_flux_density_levelset(self,thmid,Jth,theta_lower_list,theta_upper_list):
+    def reactive_flux_density_levelset(self,thmid,Jth,Jweight,theta_lower_list,theta_upper_list):
         # For all data points with a value of theta between theta_lower and theta_upper, find the reactive flux density on that level set. 
         # Assume the current has already been projected onto the observable and is given by Jth
         # theta_centers is a list of numpy arrays, one array for each time step.
@@ -747,19 +804,23 @@ class WinterStratosphereTPT:
             theta_upper = theta_upper_list[i_theta]
             close_idx_new = np.where((thmid >= theta_lower)*(thmid <= theta_upper))[0]
             close_idx.append(close_idx_new)
-            reactive_flux.append(Jth[close_idx_new,:])
+            reactive_flux.append((Jweight[close_idx_new]*Jth[close_idx_new,:].T).T)
+            print(f"At level number {i_theta} out of {len(theta_lower_list)}, bounds = ({theta_lower},{theta_upper}). There are {len(close_idx_new)} new close indices")
         return close_idx,reactive_flux
-    def plot_flux_distributions_1d(self,qm,qp,pi,theta_normal_flat,theta_tangential_flat,theta_normal_label,theta_tangential_label,theta_lower_list=None,theta_upper_list=None):
-        dth_tangential = (np.nanmax(theta_tangential_flat) - np.nanmin(theta_tangential_flat))/20
-        Jth,thmid = self.project_current_data(theta_normal_flat.reshape(-1,1),qm,qp,pi)
+    def plot_flux_distributions_1d(self,qm,qp,pi,theta_normal,theta_tangential,theta_normal_label,theta_tangential_label,theta_lower_list=None,theta_upper_list=None):
+        # theta_normal and theta_tangential must both be scalar fields. 
+        dth_tangential = (np.nanmax(theta_tangential) - np.nanmin(theta_tangential))/10
+        theta_vec = np.transpose(np.array([theta_normal,theta_tangential]), (1,2,0))
+        print(f"theta_vec.shape = {theta_vec.shape}")
+        Jth,thmid,Jweight = self.project_current_data(theta_vec,qm,qp,pi)
         if theta_lower_list is None or theta_upper_list is None:
-            theta_normal_min = np.nanmin(theta_normal_flat)
-            theta_normal_max = np.nanmax(theta_normal_flat)
+            theta_normal_min = np.nanmin(theta_normal)
+            theta_normal_max = np.nanmax(theta_normal)
             theta_edges = np.linspace(theta_normal_min-1e-10,theta_normal_max+1e-10,4+1)
             theta_lower_list = theta_edges[:-1]
             theta_upper_list = theta_edges[1:]
         num_levels = len(theta_lower_list)
-        close_idx,reactive_flux = self.reactive_flux_density_levelset(theta_normal_flat,Jth,theta_lower_list,theta_upper_list)
+        close_idx,reactive_flux = self.reactive_flux_density_levelset(thmid[:,0],Jth,Jweight,theta_lower_list,theta_upper_list)
         fig,ax = plt.subplots()
         handles = []
         for i_thlev in range(num_levels):
@@ -767,14 +828,14 @@ class WinterStratosphereTPT:
             idx = close_idx[i_thlev]
             if len(idx) > 1:
                 idx = np.array(idx)
-                bins = max(int((np.nanmax(theta_tangential_flat[idx]) - np.nanmin(theta_tangential_flat[idx]))/dth_tangential), 3)
-                #print(f"bins = {bins}, len(idx) = {len(idx)}, ttanf: min={np.nanmin(theta_tangential_flat[idx])}, max={np.nanmax(theta_tangential_flat[idx])}")
+                bins = max(int((np.nanmax(thmid[idx,1]) - np.nanmin(thmid[idx,1]))/dth_tangential), 3)
                 weights = reactive_flux[i_thlev]
-                x = theta_tangential_flat[idx]
+                x = thmid[idx,1]
                 #print(f"weights.shape = {weights.shape}, x.shape = {x.shape}")
-                hist,bin_edges = np.histogram(theta_tangential_flat[idx],weights=reactive_flux[i_thlev][:,0],bins=bins)
+                hist,bin_edges = np.histogram(thmid[idx,1],weights=reactive_flux[i_thlev][:,0],bins=bins)
+                print(f"At level {i_thlev}, bin range = {bin_edges[[0,-1]]}")
                 bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
-                h, = ax.plot(bin_centers,hist,color=plt.cm.coolwarm(i_thlev/(num_levels-1)),label=r"$%.2f$"%((theta_lower_list[i_thlev]+theta_upper_list[i_thlev])/2),marker='o')
+                h, = ax.plot(bin_centers,hist,color=plt.cm.coolwarm((i_thlev+1)/(num_levels)),label=r"$%.2f$"%((theta_lower_list[i_thlev]+theta_upper_list[i_thlev])/2),marker='o')
                 handles.append(h)
         ax.legend(handles=handles)
         ax.set_xlabel(theta_tangential_label,fontdict=font)
@@ -805,27 +866,42 @@ class WinterStratosphereTPT:
                     Jth[i1:i2,j] += fwd_weight*np.sum(flux[k]*np.add.outer(-theta_flat[i1:i2,j], theta_flat[i2:i3,j]), axis=1)
             i1 = i2
         return Jth
+    def plot_trajectory_segments(self,theta_x,reactive_flag,fig,ax,zorder=10,numtraj=3):
+        # Plot trajectory segments in 2D given by theta_x. only plot the segments with reactive_flag on
+        if theta_x.shape[2] != 2:
+            raise Exception(f"ERROR: you gave me a data set of shape {theta_x.shape}, but I need dimension 2 to have size 2")
+        prng = np.random.RandomState(2)
+        ss = prng.choice(np.arange(len(theta_x)),size=numtraj,replace=False)
+        print(f"reactive_flag.shape = {reactive_flag.shape}")
+        print(f"theta_x.shape = {theta_x.shape}")
+        for i in ss:
+            if np.any(reactive_flag[i]):
+                xx = theta_x[i,np.where(reactive_flag[i])[0],:]
+                ax.plot(xx[:,0],xx[:,1],color='cyan',linewidth=1,zorder=zorder)
+        return
     def project_current_data(self,theta_x,qm,qp,pi):
         Nx,Nt,thdim = theta_x.shape
         Jth = np.zeros((Nx,Nt-1,thdim))
         thmid = np.zeros((Nx,Nt-1,thdim))
+        Jweight = np.zeros((Nx,Nt-1))
         for i_time in range(Nt-1):
             for i_th in range(thdim):
                 Jth[:,i_time,i_th] = qm[:,i_time]*qp[:,i_time+1]*(theta_x[:,i_time+1,i_th] - theta_x[:,i_time,i_th])
                 thmid[:,i_time,i_th] = 0.5*(theta_x[:,i_time,i_th] + theta_x[:,i_time+1,i_th])
-        weight = pi[:,:Nt-1].flatten()
-        thmid = thmid.reshape((Nx*(Nt-1),2))
-        Jth = Jth.reshape((Nx*(Nt-1),2))
-        return Jth,thmid
+                Jweight[:,i_time] = 0.5*(pi[:,i_time] + pi[:,i_time+1])
+        thmid = thmid.reshape((Nx*(Nt-1),thdim))
+        Jth = Jth.reshape((Nx*(Nt-1),thdim))
+        Jweight = Jweight.flatten()
+        return Jth,thmid,Jweight
     def plot_current_overlay_data(self,theta_x,qm,qp,pi,fig,ax):
         # Plot the current using data directly.
         # theta_x is a (Nx,Nt,2) array with trajectories separated from each other. 
         # Keep everything to a lag time of 1.0
         # 1. Forward component
-        Jth,thmid = self.project_current_data(theta_x,qm,qp,pi)
+        Jth,thmid,Jweight = self.project_current_data(theta_x,qm,qp,pi)
         print(f"Jth.shape = {Jth.shape}")
-        shp,dth,thaxes,_,J0_proj,_,_,_,bounds = helper.project_field(Jth[:,0],weight,thmid,avg_flag=False)
-        _,_,_,_,J1_proj,_,_,_,_ = helper.project_field(Jth[:,1],weight,thmid,shp=shp,bounds=bounds,avg_flag=False)
+        shp,dth,thaxes,_,J0_proj,_,_,_,bounds = helper.project_field(Jth[:,0],Jweight.flatten(),thmid,avg_flag=False)
+        _,_,_,_,J1_proj,_,_,_,_ = helper.project_field(Jth[:,1],Jweight.flatten(),thmid,shp=shp,bounds=bounds,avg_flag=False)
         Jmag = np.sqrt(J0_proj**2 + J1_proj**2)
         minmag,maxmag = np.nanmin(Jmag),np.nanmax(Jmag)
         coeff1 = 1.0/maxmag
