@@ -715,6 +715,7 @@ class WinterStratosphereFeatures:
                 szn_std_Y[:,i_feat_y-1] = feat_def["vT_szn_std"][:,i_lev]
         tpt_feat = {"Y": Y, "szn_mean_Y": szn_mean_Y, "szn_std_Y": szn_std_Y, "idx_resamp": idx_resamp}
         pickle.dump(tpt_feat, open(tpt_feat_filename,"wb"))
+        print(f"Y.shape = {Y.shape}")
         return 
     def set_feature_indices_X(self,feat_def,fidx_X_filename):
         # Build a mapping from feature names to indices in X.

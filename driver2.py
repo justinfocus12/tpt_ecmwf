@@ -43,7 +43,7 @@ import tpt_general
 
 # COMPLETE listing of possible years to use for each dataset
 fall_years = dict({
-    "e2": np.arange(1900,2007),
+    "e2": np.arange(1900,2008),
     "ei": np.arange(1979,2019),
     "s2s": np.arange(1996,2017),
     })
@@ -58,7 +58,7 @@ file_list_climavg = file_lists["ei"][:15]
 
 # ------------ Subsetting for robustness tests ------------
 interval_length_lists = dict({
-    "e2": [53,106],
+    "e2": [53,107],
     "ei": [20,40],
     "s2s": [10,21],
     })
@@ -137,8 +137,8 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             0
-tpt_e2_flag =                  0
+tpt_featurize_e2 =             1
+tpt_e2_flag =                  1
 # eraint
 evaluate_database_ei =         0
 tpt_featurize_ei =             0
@@ -151,7 +151,7 @@ build_msm_flag =               0
 tpt_s2s_flag =                 0
 plot_tpt_results_s2s_flag =    1
 # Summary statistic
-plot_rate_flag =               0
+plot_rate_flag =               1
 
 
 feature_file = join(featdir,"feat_def")
@@ -255,9 +255,9 @@ if e2_flag:
 # =======================================================================
 # ------------------- DGA from S2S --------------------------------
 feat_filename = join(expdirs["s2s"],"X.npy")
-feat_filename_ra = join(expdirs["ei"],"X.npy")
-print(f"subsetdirs['ei'] = {subsetdirs['ei']}")
-tpt_feat_filename_ra = join(subsetdirs["ei"][-1],"Y")
+feat_filename_ra = join(expdirs["e2"],"X.npy")
+print(f"subsetdirs['e2'] = {subsetdirs['e2']}")
+tpt_feat_filename_ra = join(subsetdirs["e2"][-1],"Y")
 ens_start_filename = join(expdirs["s2s"],"ens_start_idx.npy")
 fall_year_filename = join(expdirs["s2s"],"fall_year_list.npy")
 if evaluate_database_s2s: # Expensive!
