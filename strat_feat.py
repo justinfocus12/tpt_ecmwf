@@ -1100,6 +1100,11 @@ class WinterStratosphereFeatures:
                 "fun": lambda Y: Y[:,self.fidx_Y["time_h"]]/24.0, 
                 "label": "Time since Oct. 1 [days]",
                 }
+        uref_idx = np.array([self.fidx_Y["uref_dl%i"%(i_dl)] for i_dl in range(self.ndelay)])
+        funlib["windfall"] = {
+                "fun": lambda Y: self.windfall(Y[:,uref_idx]),
+                "label": r"Max. decel. $\Delta\overline{u}/\Delta t$ [m/s/day]",
+                }
         # Nonlinear functions
         for i_wave in range(1,self.num_wavenumbers+1):
             funlib["mag%i"%(i_wave)] = {
@@ -1111,6 +1116,18 @@ class WinterStratosphereFeatures:
                     "label": "Wave %i phase"%(i_wave),
                     }
         return funlib
+    def windfall(self,U):
+        # Return the most negative change in zonal wind U (time is axis 1)
+        Nx,Nt = U.shape
+        dU = np.zeros((Nx,Nt*(Nt-1)/2))
+        k = 0
+        for i in range(Nt-1):
+            for j in range(i+1,Nt):
+                dU[:,k] = (U[:,j] - U[:,i])/((j-i)*self.dtwint/24)
+                k += 1
+        if k != dU.shape[1]:
+            raise Exception(f"ERROR: After the double for loop, k should be {dU.shape[1]}, but actually it's {k}")
+        return np.min(dU, axis=1)
     def get_pc(self,Y,i_lev,i_eof,Nwaves=None,Npc_per_level=None):
         if Nwaves is None:
             Nwaves = self.num_wavenumbers

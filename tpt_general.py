@@ -555,69 +555,48 @@ class WinterStratosphereTPT:
             fig.savefig(join(savedir,"fluxdens_J-timed_d-uref"))
             plt.close(fig)
         if current2d_flag:
-            # ------------- Current plots (Y) --------------------
+            # ------------- Current plots (both) --------------------
             keypairs = []
             keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
-            keypairs += [['time_d','uref_dl0']]
+            keypairs += [['time_d','uref']]
+            keypairs += [['time_d','captemp_lev0']]
+            #keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
+            #keypairs += [['uref','pc%i_lev0'%(i_pc)] for i_pc in range(6)]
+            #keypairs += [['pc1_lev0','pc%i_lev0'%(i_pc)] for i_pc in range(2,6)]
             for key0,key1 in keypairs:
                 print(f"Plotting current on key pair {key0},{key1}")
-                theta_x = np.array([funlib_Y[key0]["fun"](Y), funlib_Y[key1]["fun"](Y)]).T
-                theta_x_ra = np.array([funlib_Y[key0]["fun"](Yra), funlib_Y[key1]["fun"](Yra)]).T
+                if key0 in funlib_Y.keys() and key1 in funlib_Y.keys():
+                    theta_x = np.array([funlib_Y[key0]["fun"](Y), funlib_Y[key1]["fun"](Y)]).T
+                    theta_x_ra = np.array([funlib_Y[key0]["fun"](Yra), funlib_Y[key1]["fun"](Yra)]).T
+                    lab0 = funlib_Y[key0]["label"]
+                    lab1 = funlib_Y[key1]["label"]
+                elif key0 in funlib_X.keys() and key1 in funlib_X.keys():
+                    theta_x = np.array([funlib_X[key0]["fun"](X), funlib_X[key1]["fun"](X)]).T
+                    theta_x_ra = np.array([funlib_X[key0]["fun"](Xra), funlib_X[key1]["fun"](Xra)]).T
+                    lab0 = funlib_X[key0]["label"]
+                    lab1 = funlib_X[key1]["label"]
+                else:
+                    raise Exception(f"ERROR: {key0} and {key1} are not both in funlib_X.keys or funlib_Y.keys")
+
                 # A -> B
-                fig,ax = helper.plot_field_2d((qp_Y*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"],avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
+                fig,ax = helper.plot_field_2d((qp_Y*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
                 _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
                 reactive_flag = ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
                 self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
                 fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
                 plt.close(fig)
                 # A -> A
-                fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"],avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
+                fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
                 _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],1-qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
                 reactive_flag = ((src_tag==0)*(dest_tag==0)*winter_flag_ra).reshape((Nyra,Ntyra))
                 self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
                 fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
                 plt.close(fig)
                 # A or B -> A or B
-                fig,ax = helper.plot_field_2d(np.ones(Ny*Nty)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=funlib_Y[key0]["label"],fun1name=funlib_Y[key1]["label"],avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
+                fig,ax = helper.plot_field_2d(np.ones(Ny*Nty)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
                 _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
                 reactive_flag = winter_flag_ra.reshape((Nyra,Ntyra))
                 self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax,debug=False)
-                fig.savefig(join(savedir,"J_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
-                plt.close(fig)
-            # ------------------ Current plots outside the TPT observables ------------
-            funlib_X = winstrat.observable_function_library_X()
-            keypairs = []
-            #keypairs += [['time_d','captemp_lev%i'%(i_lev)] for i_lev in range(Nlev)]
-            #keypairs += [['time_d','heatflux_lev%i'%(i_lev)] for i_lev in range(Nlev)]
-            #keypairs += [['time_d','vxmom%i'%(i_mom)] for i_mom in range(winstrat.num_vortex_moments_max)]
-            keypairs += [['time_d','uref']]
-            #keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
-            keypairs += [['uref','pc%i_lev0'%(i_pc)] for i_pc in range(6)]
-            keypairs += [['pc1_lev0','pc%i_lev0'%(i_pc)] for i_pc in range(2,6)]
-            for key0,key1 in keypairs:
-                print(f"Plotting current on key pair {key0},{key1}")
-                theta_x = np.array([funlib_X[key0]["fun"](X), funlib_X[key1]["fun"](X)]).T
-                theta_x_ra = np.array([funlib_X[key0]["fun"](Xra), funlib_X[key1]["fun"](Xra)]).T
-                print(f"theta_x_ra.shape = {theta_x_ra.shape}")
-                # A -> B
-                fig,ax = helper.plot_field_2d((qp_Y*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"],avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
-                _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-                reactive_flag = ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
-                self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
-                fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
-                plt.close(fig)
-                # A -> A
-                fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"],avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
-                _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],1-qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-                reactive_flag = ((src_tag==0)*(dest_tag==0)*winter_flag_ra).reshape((Nyra,Ntyra))
-                self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
-                fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
-                plt.close(fig)
-                # (A or B) -> (A or B)
-                fig,ax = helper.plot_field_2d(np.ones((Ny*Nty))[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=funlib_X[key0]["label"],fun1name=funlib_X[key1]["label"],avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
-                _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-                reactive_flag = winter_flag_ra.reshape((Nyra,Ntyra))
-                self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
                 fig.savefig(join(savedir,"J_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
                 plt.close(fig)
         if spaghetti_flag:
@@ -825,16 +804,16 @@ class WinterStratosphereTPT:
         close_idx,reactive_flux = self.reactive_flux_density_levelset(thmid[:,0],Jth,Jweight,theta_lower_list,theta_upper_list)
         fig,ax = plt.subplots()
         handles = []
+        bins = max(int((np.nanmax(thmid[:,1]) - np.nanmin(thmid[:,1]))/dth_tangential), 3)
         for i_thlev in range(num_levels):
             # Make a histogram of the reactive flux density distribution
             idx = close_idx[i_thlev]
             if len(idx) > 1:
                 idx = np.array(idx)
-                bins = max(int((np.nanmax(thmid[idx,1]) - np.nanmin(thmid[idx,1]))/dth_tangential), 3)
                 weights = reactive_flux[i_thlev]
                 x = thmid[idx,1]
                 #print(f"weights.shape = {weights.shape}, x.shape = {x.shape}")
-                hist,bin_edges = np.histogram(thmid[idx,1],weights=reactive_flux[i_thlev][:,0],bins=bins)
+                hist,bin_edges = np.histogram(thmid[idx,1],weights=reactive_flux[i_thlev][:,0],bins=bins,range=(np.nanmin(thmid[:,1]),np.nanmax(thmid[:,1])))
                 print(f"At level {i_thlev}, bin range = {bin_edges[[0,-1]]}")
                 bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
                 h, = ax.plot(bin_centers,hist,color=plt.cm.coolwarm((i_thlev+1)/(num_levels)),label=r"$%.2f$"%((theta_lower_list[i_thlev]+theta_upper_list[i_thlev])/2),marker='o')
