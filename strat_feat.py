@@ -252,7 +252,7 @@ class WinterStratosphereFeatures:
         cos[np.abs(cos)<1e-3] = np.nan
         sin[np.abs(sin)<1e-3] = np.nan
         lap_f = 1.0/cos**2*field_lon2 - (sin/cos)*field_lat + field_lat2
-        return lap_f,cos,sin,field_lat,field_lat2,field_lon,field_lon2
+        return lap_f,cos,sin,field_lat,field_lat2,field_lon2
     def smooth_spherical_field(self,field,lat,lon,nT=11):
         # Smooth a field using a spherical harmonics truncation
         return
@@ -261,15 +261,13 @@ class WinterStratosphereFeatures:
         # Quasigeostrophic potential vorticity: just do horizontal component for now
         # QGPV = (g/f)*(laplacian(gh) - d(gh)/dy * beta/f) + f
         #      = (g/f)*(laplacian(gh) - 1/(earth radius)**2 * cos(lat)/sin(lat) * d(gh)/dlat) + f
-        gh_lap = self.spherical_horizontal_laplacian(gh,lat,lon)
-        cos = np.outer(np.cos(lat*np.pi/180), np.ones(len(lon)))
-        sin = np.outer(np.sin(lat*np.pi/180), np.ones(len(lon)))
-        qgpv,cos,sin,gh_lat,gh_lat2,gh_lon,gh_lon2 = fcor + grav_accel/(fcor*earth_radius**2)*(gh_lap - (cos/sin)*gh_lat)
+        gh_lap,cos,sin,gh_lat,gh_lat2,gh_lon2 = self.spherical_horizontal_laplacian(gh,lat,lon)
+        Omega = 2*np.pi/(3600*24*365)
+        fcor = np.outer(2*Omega*np.sin(lat*np.pi/180), np.ones(lon.size))
+        earth_radius = 6371.0e3 
+        grav_accel = 9.80665
+        qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(gh_lap - (cos/sin)*gh_lat)
         #Nx,Nlev,Nlat,Nlon = gh.shape
-        #Omega = 2*np.pi/(3600*24*365)
-        #fcor = np.outer(2*Omega*np.sin(lat*np.pi/180), np.ones(lon.size))
-        #earth_radius = 6371.0e3 
-        #grav_accel = 9.80665
         #dlat = np.pi/180 * (lat[1] - lat[0])
         #dlon = np.pi/180 * (lon[1] - lon[0])
         #gh_lon2 = (np.roll(gh,-1,axis=3) - 2*gh + np.roll(gh,1,axis=3))/dlon**2
@@ -925,6 +923,7 @@ class WinterStratosphereFeatures:
         # ------------ Unroll X -------------------
         X = X.reshape((Nmem,Nt,Nfeat))
         return X,fall_year
+
     def plot_vortex_evolution(self,dsfile,savedir,save_suffix,i_mem=0):
         # Plot the holistic information about a single member of a single ensemble. Include some timeseries and some snapshots, perhaps along the region of maximum deceleration in zonal wind. 
         ds = nc.Dataset(dsfile,"r")
@@ -1178,3 +1177,96 @@ class WinterStratosphereFeatures:
         ax.add_feature(cartopy.feature.COASTLINE, zorder=3, edgecolor='black')
         fig.colorbar(im,ax=ax)
         return fig,ax,data_crs
+    def illustrate_dataset(self,
+            uthresh_a,uthresh_b_list,tthresh,sswbuffer,
+            file_list_ra,file_list_hc,
+            feat_filename_ra,feat_filename_hc,
+            tpt_feat_filename_ra,tpt_feat_filename_hc,
+            ens_start_filename_ra,ens_start_filename_hc,
+            fall_year_filename_ra,fall_year_filename_hc,
+            feat_def,feat_display_dir):
+        # Plot zonal wind over time with both reanalysis and hindcast datasets. Use multiple thresholds to demonstrate the difference between SSWs of different severity.
+        tpt_feat_ra = pickle.load(open(tpt_feat_filename_ra,"rb"))
+        Yra = tpt_feat_ra["Y"]
+        idx_resamp_ra = tpt_feat_ra["idx_resamp"]
+        tpt_feat_hc = pickle.load(open(tpt_feat_filename_hc,"rb"))
+        Yhc = tpt_feat_hc["Y"]
+        idx_resamp_hc = tpt_feat_hc["idx_resamp"]
+        Xra = np.load(feat_filename_ra)[idx_resamp_ra]#[:,self.ndelay-1:]
+        Nxra,Ntra,xdim = Xra.shape
+        Xhc = np.load(feat_filename_hc)[idx_resamp_hc]#[:,self.ndelay-1:]
+        Nxhc,Nthc,_ = Xhc.shape
+        print(f"Nxhc,Nthc,_ = {Xhc.shape}")
+        fy_ra = np.load(fall_year_filename_ra)
+        enst_ra = np.load(ens_start_filename_ra)
+        fy_hc = np.load(fall_year_filename_hc)
+        print(f"fy_hc.shape = {fy_hc.shape}")
+        enst_hc = np.load(ens_start_filename_hc)
+        Nmem_hc = enst_hc[1] - enst_hc[0]
+        print(f"fy_hc[:4] = {fy_hc[:4]}")
+        print(f"enst_hc[:4] = {enst_hc[:4]}")
+        # For each threshold, identify which years achieved the event
+        tpt_bndy = dict({"tthresh": tthresh, "uthresh_a": uthresh_a, "sswbuffer": sswbuffer})
+        rare_event_idx = []
+        for i_uth,uthresh_b in enumerate(uthresh_b_list):
+            tpt_bndy["uthresh_b"] = uthresh_b
+            src_tag,dest_tag = self.compute_src_dest_tags(Yra,feat_def,tpt_bndy)
+            ab_idx = np.where(np.any((src_tag==0)*(dest_tag==1), axis=1))[0]
+            print(f"At threshold {uthresh_b}, ab_idx = {ab_idx}")
+            rare_event_idx.append(ab_idx)
+            if i_uth > 0:
+                if not all(i_y in rare_event_idx[i_uth-1] for i_y in rare_event_idx[i_uth]):
+                    raise Exception(f"ERROR: Some SSWs registered with threshold {uthresh_b_list[i_uth]} but not {uthresh_b_list[i_uth-1]}")
+                rare_event_idx[i_uth-1] = np.setdiff1d(rare_event_idx[i_uth-1],rare_event_idx[i_uth])
+        # Now plot the years in each subset
+        funlib_X = self.observable_function_library_X()
+        time_d_ra = funlib_X["time_d"]["fun"](Xra.reshape((Nxra*Ntra,xdim))).reshape((Nxra,Ntra))
+        uref_ra = funlib_X["uref"]["fun"](Xra.reshape((Nxra*Ntra,xdim))).reshape((Nxra,Ntra))
+        time_d_hc = funlib_X["time_d"]["fun"](Xhc.reshape((Nxhc*Nthc,xdim))).reshape((Nxhc,Nthc))
+        uref_hc = funlib_X["uref"]["fun"](Xhc.reshape((Nxhc*Nthc,xdim))).reshape((Nxhc,Nthc))
+        prng = np.random.RandomState(3)
+        for i_uth,uthresh_b in enumerate(uthresh_b_list):
+            tpt_bndy["uthresh_b"] = uthresh_b
+            src_tag,dest_tag = self.compute_src_dest_tags(Yra,feat_def,tpt_bndy)
+            fig,ax = plt.subplots()
+            handles = []
+            ax.axhspan(np.min(uref_ra),uthresh_b,color='red')
+            ax.axvspan(np.min(time_d_ra),tthresh[0]/24.0,color='lightskyblue')
+            ax.axvspan(tthresh[1]/24.0,np.max(time_d_ra),color='lightskyblue')
+            y_ss = prng.choice(rare_event_idx[i_uth],size=1,replace=False)
+            for i_y in y_ss: #rare_event_idx[i_uth]:
+                rxn_idx = np.where((src_tag[i_y]==0)*(dest_tag[i_y]==1))[0]
+                i0,i1 = rxn_idx[0],rxn_idx[-1]+1
+                i0 += self.ndelay-1
+                i1 += self.ndelay-1
+                h, = ax.plot(time_d_ra[i_y,i0:i1+1],uref_ra[i_y,i0:i1+1],color='black',label="%i-%i"%(fy_ra[i_y],fy_ra[i_y]+1))
+                handles += [h]
+                ax.plot(time_d_ra[i_y,:i0+1],uref_ra[i_y,:i0+1],color='gray',linewidth=0.25)
+                ax.plot(time_d_ra[i_y,i1:],uref_ra[i_y,i1:],color='gray',linewidth=0.25)
+                # ----------- Now identify three hindcast ensembles corresponding to this year ---------------
+                idx_hc = np.where(fy_hc == fy_ra[i_y])[0]
+                # -- Debugging ---
+                order = np.argsort(time_d_hc[enst_hc[idx_hc],0])
+                ax.plot(time_d_hc[enst_hc[idx_hc],0][order],uref_hc[enst_hc[idx_hc],0][order],color='green')
+                ## -----------------
+                #print(f"idx_hc = {idx_hc}\nfy_hc[idx_hc] = {fy_hc[idx_hc]}\nfy_ra[i_y] = {fy_ra[i_y]}")
+                #days_idx_hc = time_d_hc[enst_hc[idx_hc],0]
+                #print(f"days_idx_hc = {days_idx_hc}")
+                #idx_hc_ss = [idx_hc[np.argmin(np.abs(days_idx_hc - 85))]]
+                #print(f"idx_hc_ss = {idx_hc_ss}")
+                ##idx_hc_ss = prng.choice(idx_hc, size=3, replace=False)
+                #print(f"idx_hc_ss = {idx_hc_ss}")
+                #colorlist = ['orange','green','blue']
+                #i_col = 0
+                #for i_ens in idx_hc_ss:
+                #    for i_mem in range(Nmem_hc):
+                #        ax.plot(time_d_hc[enst_hc[i_ens]+i_mem],uref_hc[enst_hc[i_ens]+i_mem],color=colorlist[i_col])
+                #    i_col += 1
+            ax.set_xlabel(funlib_X["time_d"]["label"])
+            ax.set_ylabel(funlib_X["uref"]["label"])
+            ax.legend(handles=handles)
+            ax.set_ylim([np.min(uref_ra),np.max(uref_ra)])
+            ax.set_xlim([np.min(time_d_ra),np.max(time_d_ra)])
+            fig.savefig(join(feat_display_dir,"illustration_uth%i"%(uthresh_b)))
+            plt.close(fig)
+        return

@@ -1,5 +1,6 @@
 import pickle
 import numpy as np
+import datetime
 import time as timelib
 import matplotlib
 matplotlib.use('AGG')
@@ -27,13 +28,13 @@ datadirs = dict({
     "s2s": "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23",
     })
 sources = list(datadirs.keys())
-featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-14"
+featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-17"
 if not exists(featdir): mkdir(featdir)
-feat_display_dir = join(featdir,"display1")
+feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-02-14")
+daydir = join(resultsdir,"2022-02-17")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -51,7 +52,22 @@ fall_years = dict({
 file_lists = dict()
 for key in ["e2","ei"]:
     file_lists[key] = [join(datadirs[key],"%s-10-01_to_%s-04-30.nc"%(fall_year,fall_year+1)) for fall_year in fall_years[key]]
-file_lists["s2s"] = [join(datadirs["s2s"],f) for f in os.listdir(datadirs["s2s"]) if f.endswith(".nc")]
+
+# Build the s2s database, in an orderly fashion
+s2sfiles = [join(datadirs["s2s"],f) for f in os.listdir(datadirs["s2s"]) if f.endswith(".nc")]
+ref_date = datetime.date(1900,1,1)
+time_s2s = np.zeros(len(s2sfiles))
+for i,f in enumerate(s2sfiles):
+    # template: hcYYYY-MM-DD_rtYYYY-MM-DD.nc
+    base = os.path.basename(f)
+    date_f = datetime.date(int(base[2:6]),int(base[7:9]),int(base[10:12]))
+    time_s2s[i] = (date_f - ref_date).days
+order = np.argsort(time_s2s)
+file_lists["s2s"] = []
+for i in range(len(s2sfiles)):
+    file_lists["s2s"].append(s2sfiles[order[i]])
+
+print(f"file_lists['s2s'][:10] = {file_lists['s2s'][:10]}")
 
 # Which files to use to construct the climate average 
 file_list_climavg = file_lists["ei"][:15]
@@ -133,18 +149,18 @@ subsetdirs = dict({key: [join(paramdirs[key],"%i-%i"%(subset[0],subset[-1]+1)) f
 
 # Parameters to determine what to do
 # Featurization
-create_features_flag =         0
-display_features_flag =        0
+create_features_flag =         1
+display_features_flag =        1
 # era20c
-evaluate_database_e2 =         0
+evaluate_database_e2 =         1
 tpt_featurize_e2 =             1
 tpt_e2_flag =                  1
 # eraint
-evaluate_database_ei =         0
+evaluate_database_ei =         1
 tpt_featurize_ei =             1
 tpt_ei_flag =                  1
 # s2s
-evaluate_database_s2s =        0
+evaluate_database_s2s =        1
 tpt_featurize_s2s =            1
 cluster_flag =                 1
 build_msm_flag =               1
@@ -152,6 +168,7 @@ tpt_s2s_flag =                 1
 plot_tpt_results_s2s_flag =    1
 # Summary statistic
 plot_rate_flag =               1
+illustrate_dataset_flag =      1
 
 
 feature_file = join(featdir,"feat_def")
@@ -174,6 +191,7 @@ if display_features_flag:
     # Show the basis functions evaluated on various samples
     for display_idx in np.arange(1983,1985)-fall_years["ei"][0]:
         winstrat.plot_vortex_evolution(file_lists["ei"][display_idx],feat_display_dir,"fy{}".format(fall_years["ei"][display_idx]))
+
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = 31 # First day that SSW could happen
 tthresh1 = 31 + 30 + 31 + 31 + 28  # Last day that SSW could happen: end of February
@@ -403,3 +421,22 @@ if plot_rate_flag:
         #fig.savefig(join(paramdir_s2s,"logitrate_%s"%(suffix)))
         plt.close(fig)
 
+if illustrate_dataset_flag:
+    feat_filename_ra = join(expdirs["ei"],"X.npy")
+    feat_filename_hc = join(expdirs["s2s"],"X.npy")
+    ens_start_filename_ra = join(expdirs["ei"],"ens_start_idx.npy")
+    ens_start_filename_hc = join(expdirs["s2s"],"ens_start_idx.npy")
+    fall_year_filename_ra = join(expdirs["ei"],"fall_year_list.npy")
+    fall_year_filename_hc = join(expdirs["s2s"],"fall_year_list.npy")
+    tpt_feat_filename_ra = join(subsetdirs["ei"][-1],"Y")
+    tpt_feat_filename_hc = join(subsetdirs["s2s"][-1],"Y")
+    tthresh = np.array([tthresh0,tthresh1])*24.0
+    winstrat.illustrate_dataset(
+            uthresh_a,uthresh_list[[1,3]],tthresh,sswbuffer,
+            file_lists["e2"],file_lists["s2s"],
+            feat_filename_ra,feat_filename_hc,
+            tpt_feat_filename_ra,tpt_feat_filename_hc,
+            ens_start_filename_ra,ens_start_filename_hc,
+            fall_year_filename_ra,fall_year_filename_hc,
+            feat_def,feat_display_dir
+            )

@@ -487,10 +487,11 @@ class WinterStratosphereTPT:
         return summary 
     def plot_results_data(self,feat_filename,tpt_feat_filename,feat_filename_ra,tpt_feat_filename_ra,feat_def,savedir,winstrat,algo_params,spaghetti_flag=True,fluxdens_flag=True,current2d_flag=True):
         # Load the reanalysis data for comparison
-        Xra = np.load(feat_filename_ra)[:,winstrat.ndelay-1:,:]
         tpt_feat_ra = pickle.load(open(tpt_feat_filename_ra,"rb"))
         Yra = tpt_feat_ra["Y"]
+        idx_resamp_ra = tpt_feat_ra["idx_resamp"]
         Nyra,Ntyra,ydim = Yra.shape
+        Xra = np.load(feat_filename_ra)[:,winstrat.ndelay-1:,:][idx_resamp_ra]
         Nxra,Ntxra,xdim = Xra.shape
         if not (Nyra == Nxra and Ntyra == Ntxra):
             raise Exception(f"ERROR: Xra and Yra have shapes {Xra.shape} and {Yra.shape} respectively. The first two dimensions should match")
