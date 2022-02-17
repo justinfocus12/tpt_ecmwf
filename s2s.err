@@ -6,3 +6,9 @@ Traceback (most recent call last):
   File "/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py", line 694, in evaluate_tpt_features
     pickle.dump(tpt_feat, open(tpt_feat_filename,"wb"))
 FileNotFoundError: [Errno 2] No such file or directory: '/scratch/jf4241/ecmwf_data/results/2022-02-12/0/s2s/delay20_nclust120_nwaves0_vxm0_pc-lev0pc4-lev1pc4-lev2pc4-lev3pc4-lev4pc4_hf-_temp-/1996-2001/Y'
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:332: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:332: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:332: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)

@@ -1119,7 +1119,7 @@ class WinterStratosphereFeatures:
     def windfall(self,U):
         # Return the most negative change in zonal wind U (time is axis 1)
         Nx,Nt = U.shape
-        dU = np.zeros((Nx,Nt*(Nt-1)/2))
+        dU = np.zeros((Nx,int(Nt*(Nt-1)/2)))
         k = 0
         for i in range(Nt-1):
             for j in range(i+1,Nt):

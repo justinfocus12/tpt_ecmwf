@@ -85,7 +85,7 @@ spring_day0 = 180.0
 Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 0.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 25.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -96,7 +96,7 @@ for key in sources:
 multiprocessing_flag = 0
 num_clusters = 120
 #Npc_per_level_single = 4
-Npc_per_level = np.array([10,10,10,10,10,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level = np.array([0,0,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 heatflux_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
