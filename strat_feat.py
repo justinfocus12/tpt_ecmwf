@@ -1239,29 +1239,22 @@ class WinterStratosphereFeatures:
                 i0,i1 = rxn_idx[0],rxn_idx[-1]+1
                 i0 += self.ndelay-1
                 i1 += self.ndelay-1
-                h, = ax.plot(time_d_ra[i_y,i0:i1+1],uref_ra[i_y,i0:i1+1],color='black',label="%i-%i"%(fy_ra[i_y],fy_ra[i_y]+1))
+                h, = ax.plot(time_d_ra[i_y,i0:i1+1],uref_ra[i_y,i0:i1+1],color='black',label="%i-%i"%(fy_ra[i_y],fy_ra[i_y]+1),zorder=2,linewidth=2)
                 handles += [h]
-                ax.plot(time_d_ra[i_y,:i0+1],uref_ra[i_y,:i0+1],color='gray',linewidth=0.25)
-                ax.plot(time_d_ra[i_y,i1:],uref_ra[i_y,i1:],color='gray',linewidth=0.25)
+                ax.plot(time_d_ra[i_y,:i0+1],uref_ra[i_y,:i0+1],color='gray',linewidth=0.75,zorder=2)
+                ax.plot(time_d_ra[i_y,i1:],uref_ra[i_y,i1:],color='gray',linewidth=0.75,zorder=2)
                 # ----------- Now identify three hindcast ensembles corresponding to this year ---------------
                 idx_hc = np.where(fy_hc == fy_ra[i_y])[0]
-                # -- Debugging ---
-                order = np.argsort(time_d_hc[enst_hc[idx_hc],0])
-                ax.plot(time_d_hc[enst_hc[idx_hc],0][order],uref_hc[enst_hc[idx_hc],0][order],color='green')
-                ## -----------------
-                #print(f"idx_hc = {idx_hc}\nfy_hc[idx_hc] = {fy_hc[idx_hc]}\nfy_ra[i_y] = {fy_ra[i_y]}")
-                #days_idx_hc = time_d_hc[enst_hc[idx_hc],0]
-                #print(f"days_idx_hc = {days_idx_hc}")
-                #idx_hc_ss = [idx_hc[np.argmin(np.abs(days_idx_hc - 85))]]
-                #print(f"idx_hc_ss = {idx_hc_ss}")
-                ##idx_hc_ss = prng.choice(idx_hc, size=3, replace=False)
-                #print(f"idx_hc_ss = {idx_hc_ss}")
-                #colorlist = ['orange','green','blue']
-                #i_col = 0
-                #for i_ens in idx_hc_ss:
-                #    for i_mem in range(Nmem_hc):
-                #        ax.plot(time_d_hc[enst_hc[i_ens]+i_mem],uref_hc[enst_hc[i_ens]+i_mem],color=colorlist[i_col])
-                #    i_col += 1
+                days_idx_hc = time_d_hc[enst_hc[idx_hc],0]
+                idx_hc_ss = idx_hc[np.array([np.argmin(np.abs(days_idx_hc - d)) for d in [30,100]])]
+                #idx_hc_ss = idx_hc[np.linspace(0,len(idx_hc)-1,5).astype(int)[1:-1]]
+                #idx_hc_ss = prng.choice(idx_hc, size=3, replace=False)
+                colorlist = ['orange']*3
+                i_col = 0
+                for i_ens in idx_hc_ss:
+                    for i_mem in range(Nmem_hc):
+                        ax.plot(time_d_hc[enst_hc[i_ens]+i_mem],uref_hc[enst_hc[i_ens]+i_mem],color=colorlist[i_col],zorder=1)
+                    i_col += 1
             ax.set_xlabel(funlib_X["time_d"]["label"])
             ax.set_ylabel(funlib_X["uref"]["label"])
             ax.legend(handles=handles)

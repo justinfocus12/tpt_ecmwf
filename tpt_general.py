@@ -915,7 +915,7 @@ class WinterStratosphereTPT:
         _,_,_,_,J1_proj,_,_,_,_ = helper.project_field(Jth[:,1],Jweight.flatten(),thmid,shp=shp,bounds=bounds,avg_flag=False)
         Jmag = np.sqrt(J0_proj**2 + J1_proj**2)
         minmag,maxmag = np.nanmin(Jmag),np.nanmax(Jmag)
-        coeff1 = 1.0/maxmag
+        coeff1 = 4.0/maxmag
         dsmin,dsmax = np.max(shp)/200,np.max(shp)/15
         coeff0 = dsmax / (np.exp(-coeff1 * maxmag) - 1)
         ds = coeff0 * (np.exp(-coeff1 * Jmag) - 1)
