@@ -94,7 +94,7 @@ class WinterStratosphereTPT:
         summary = {"rate": rate}
         pickle.dump(summary,open(join(savedir,"summary"),"wb"))
         return summary 
-    def interpolate_field_clust2data(self,kmdict,Ny,Nt,field_clust,density_flag=False,idx_a=None,idx_b=None,val_a=None,val_b=None):
+    def interpolate_field_clust2data(self,kmdict,Y_unseasoned,Ny,Nt,field_clust,density_flag=False,idx_a=None,idx_b=None,val_a=None,val_b=None):
         # field_clust is a list of arrays, one array for each time step in the winter, and has a value for each cluster center. This function interpolates the field onto data points (in feature space). 
         kmlist,kmtime,kmidx = kmdict["kmlist"],kmdict["kmtime"],kmdict["kmidx"]
         #print(f"n_clusters: {[km.n_clusters for km in kmlist]}")
@@ -103,16 +103,18 @@ class WinterStratosphereTPT:
         for i_time in range(len(kmlist)):
             idx_Y = np.array(kmidx[i_time])
             if len(idx_Y) > 0:
-                #print(f"idx_Y: min={idx_Y.min()}, max={idx_Y.max()}, len={len(idx_Y)}")
-                #print(f"nclust = {kmlist[i_time].n_clusters}")
+                # ------- Option 1: Interpolate from cluster centers smoothly onto data points -------
+                #Dsq_y_c = Y_unseasoned[idx_Y].dot(kmlist[i_time].cluster_centers_.T) + np.add.outer(np.sum(Y_unseasoned[idx_Y]**2, axis=1),np.sum(kmlist[i_time].cluster_centers_**2, axis=1))
+                #weights = np.exp(-0.1*Dsq_y_c)
+                #weights = np.diag(1/np.sum(weights,axis=1)).dot(weights)
+                #field_Y[idx_Y] = weights.dot(field_clust[i_time])
+                # ------------ Option 2: Just use nearest cluster (same as above procedure, in limit that weights is a single 1 in every row) -------------
                 for i_cl in range(kmlist[i_time].n_clusters):
                     idx_cl = np.array(np.where(kmlist[i_time].labels_ == i_cl)[0])
                     if len(idx_cl) > 0:
-                        #print(f"idx_cl: min={idx_cl.min()}, max={idx_cl.max()}, len={len(idx_cl)}")
                         field_Y[idx_Y[idx_cl]] = field_clust[i_time][i_cl] 
                         if density_flag:
                             field_Y[idx_Y[idx_cl]] *= 1.0/len(idx_cl) # So the change of measure normalizes
-        # TODO: spruce this up with continuous interpolation
         if idx_a is not None and val_a is not None:
             field_Y[idx_a] = val_a
         if idx_b is not None and val_b is not None:
@@ -141,7 +143,8 @@ class WinterStratosphereTPT:
                 kmidx.append(idx)
                 kmtime.append(winstrat.wtime[ti])
                 km = MiniBatchKMeans(min(len(idx),num_clusters),random_state=0).fit(Y_unseasoned[idx])
-                print(f"ti = {ti}, km.n_clusters = {km.n_clusters}, len(idx) = {len(idx)}")
+                if ti % 30 == 0:
+                    print(f"ti = {ti}, km.n_clusters = {km.n_clusters}, len(idx) = {len(idx)}")
                 kmlist.append(km)
         kmdict = {"kmlist": kmlist, "kmtime": kmtime, "kmidx": kmidx,}
         pickle.dump(kmdict,open(clust_filename,"wb"))
@@ -475,18 +478,19 @@ class WinterStratosphereTPT:
         idx_b = np.where(inb_Y)[0]
         np.save(join(savedir,"ina_Y"),ina_Y)
         np.save(join(savedir,"inb_Y"),inb_Y)
+        Y_unseasoned = winstrat.unseason(Y.reshape((Ny*Nt,ydim))[:,0],Y.reshape((Ny*Nt,ydim))[:,1:],szn_mean_Y,szn_std_Y,normalize=True).reshape((Ny*Nt,ydim-1))
         # Committor
-        qp_Y = self.interpolate_field_clust2data(kmdict,Ny,Nt,qp,density_flag=False,idx_a=idx_a,idx_b=idx_b,val_a=0.0,val_b=1.0)
+        qp_Y = self.interpolate_field_clust2data(kmdict,Y_unseasoned,Ny,Nt,qp,density_flag=False,idx_a=idx_a,idx_b=idx_b,val_a=0.0,val_b=1.0)
         np.save(join(savedir,"qp_Y"),qp_Y)
         # Backward committor
-        qm_Y = self.interpolate_field_clust2data(kmdict,Ny,Nt,qm,density_flag=False,idx_a=idx_a,idx_b=idx_b,val_a=1.0,val_b=0.0)
+        qm_Y = self.interpolate_field_clust2data(kmdict,Y_unseasoned,Ny,Nt,qm,density_flag=False,idx_a=idx_a,idx_b=idx_b,val_a=1.0,val_b=0.0)
         np.save(join(savedir,"qm_Y"),qm_Y)
         # Change of measure
-        pi_Y = self.interpolate_field_clust2data(kmdict,Ny,Nt,pi,density_flag=True)
+        pi_Y = self.interpolate_field_clust2data(kmdict,Y_unseasoned,Ny,Nt,pi,density_flag=True)
         np.save(join(savedir,"pi_Y"),pi_Y)
         # Lead time 
         for mom_name in int2b_cond['time'].keys():
-            lt_Y = self.interpolate_field_clust2data(kmdict,Ny,Nt,int2b_cond['time'][mom_name],density_flag=False,idx_a=idx_a,idx_b=idx_b)
+            lt_Y = self.interpolate_field_clust2data(kmdict,Y_unseasoned,Ny,Nt,int2b_cond['time'][mom_name],density_flag=False,idx_a=idx_a,idx_b=idx_b)
             np.save(join(savedir,"lt_%s_Y"%(mom_name)),lt_Y)
         return summary 
     def plot_results_data(self,feat_filename,tpt_feat_filename,feat_filename_ra,tpt_feat_filename_ra,feat_def,savedir,winstrat,algo_params,spaghetti_flag=True,fluxdens_flag=True,current2d_flag=True):
@@ -577,7 +581,7 @@ class WinterStratosphereTPT:
             keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
             keypairs += [['time_d','uref']]
             keypairs += [['time_d','captemp_lev0']]
-            keypairs += [['time_d','windfall']]
+            keypairs += [['time_d','heatflux_lev4_wn%i'%(i_wn)] for i_wn in range(winstrat.heatflux_wavenumbers_per_level_max)]
             #keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
             #keypairs += [['uref','pc%i_lev0'%(i_pc)] for i_pc in range(6)]
             #keypairs += [['pc1_lev0','pc%i_lev0'%(i_pc)] for i_pc in range(2,6)]
@@ -806,13 +810,11 @@ class WinterStratosphereTPT:
             close_idx_new = np.where((thmid >= theta_lower)*(thmid <= theta_upper))[0]
             close_idx.append(close_idx_new)
             reactive_flux.append((Jweight[close_idx_new]*Jth[close_idx_new,:].T).T)
-            print(f"At level number {i_theta} out of {len(theta_lower_list)}, bounds = ({theta_lower},{theta_upper}). There are {len(close_idx_new)} new close indices")
         return close_idx,reactive_flux
     def plot_flux_distributions_1d(self,qm,qp,pi,theta_normal,theta_tangential,theta_normal_label,theta_tangential_label,theta_lower_list=None,theta_upper_list=None,timeseries_like=False):
         # theta_normal and theta_tangential must both be scalar fields. 
         dth_tangential = (np.nanmax(theta_tangential) - np.nanmin(theta_tangential))/10
         theta_vec = np.transpose(np.array([theta_normal,theta_tangential]), (1,2,0))
-        print(f"theta_vec.shape = {theta_vec.shape}")
         Jth,thmid,Jweight = self.project_current_data(theta_vec,qm,qp,pi)
         if theta_lower_list is None or theta_upper_list is None:
             theta_normal_min = np.nanmin(theta_normal)

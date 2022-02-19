@@ -36,7 +36,7 @@ resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
 daydir = join(resultsdir,"2022-02-18")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"0")
+expdir = join(daydir,"1")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -111,9 +111,9 @@ for key in sources:
     if not exists(expdirs[key]): mkdir(expdirs[key])
 # ------------------ Algorithmic parameters ---------------------
 multiprocessing_flag = 0
-num_clusters = 120
+num_clusters = 170
 #Npc_per_level_single = 4
-Npc_per_level = np.array([0,0,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level = np.array([4,4,4,4,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 heatflux_wavenumbers = np.array([0,0,0,0,0,0,0,0,0,0], dtype=int)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
@@ -166,10 +166,10 @@ tpt_featurize_s2s =            1
 cluster_flag =                 1
 build_msm_flag =               1
 tpt_s2s_flag =                 1
-plot_tpt_results_s2s_flag =    1
+plot_tpt_results_s2s_flag =    0
 # Summary statistic
 plot_rate_flag =               1
-illustrate_dataset_flag =      1
+illustrate_dataset_flag =      0
 
 
 feature_file = join(featdir,"feat_def")
@@ -195,7 +195,7 @@ if display_features_flag:
 
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = 31 # First day that SSW could happen
-tthresh1 = 31 + 30 + 31 + 31 + 28  # Last day that SSW could happen: end of February
+tthresh1 = 31 + 30 + 31 + 31 + 28  # Last day that SSW could happen: end of February or March
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
