@@ -59,7 +59,7 @@ def pca_several_levels(gh,Nsamp,Nlat,Nlon,Npc,arr_eof,arr_singvals,arr_totvar,le
 
 class WinterStratosphereFeatures:
     # Create a set of features, including out-of-sample extension. 
-    def __init__(self,feature_file,winter_day0,spring_day0,delaytime_days=0,Npc_per_level_max=10,num_vortex_moments_max=4):
+    def __init__(self,feature_file,winter_day0,spring_day0,delaytime_days=0,Npc_per_level_max=10,num_vortex_moments_max=4,heatflux_wavenumbers_per_level_max=3):
         self.feature_file = feature_file
         self.winter_day0 = winter_day0
         self.spring_day0 = spring_day0
@@ -70,6 +70,7 @@ class WinterStratosphereFeatures:
         self.delaytime = delaytime_days*24.0 
         self.ndelay = int(self.delaytime/self.dtwint) + 1
         self.Npc_per_level_max = Npc_per_level_max # Determine from SVD if not specified
+        self.heatflux_wavenumbers_per_level_max = heatflux_wavenumbers_per_level_max
         self.num_vortex_moments_max = num_vortex_moments_max
         self.num_wavenumbers = 2 # How many wavenumbers to look at 
         self.lat_uref = 60 # Degrees North for CP07 definition of SSW
@@ -222,13 +223,13 @@ class WinterStratosphereFeatures:
         return T
     def get_meridional_heat_flux(self,gh,temperature,plev,lat,lon): # Returns average between 45N and 75N 
         Nx,Nlev,Nlat,Nlon = gh.shape
-        _,vmer = self.compute_geostrophic_wind(gh,lat,lon)
-        vbar = np.outer(np.mean(vmer,axis=3).flatten(),np.ones(Nlon)).reshape((Nx,Nlev,Nlat,Nlon))
-        Tbar = np.outer(np.mean(temperature,axis=3).flatten(),np.ones(Nlon)).reshape((Nx,Nlev,Nlat,Nlon))
-        vT = np.mean((vmer - vbar)*(temperature - Tbar), axis=3)
+        cosine = np.outer(np.cos(lat*np.pi/180), np.ones(Nlon))
         imin,imax = np.argmin(np.abs(lat-75)),np.argmin(np.abs(lat-45))
-        vT = np.sum(vT[:,:,imin:imax]*np.cos(lat[imin:imax]*np.pi/180), axis=2)/(Nlon*np.sum(np.cos(lat[imin:imax]*np.pi/180)))
-        return vT
+        _,vmer = self.compute_geostrophic_wind(gh,lat,lon)
+        vT = np.sum((vmer*temperature*cosine)[:,:,imin:imax,:], axis=2)/np.sum(cosine[imin:imax,:], axis=0)
+        vThat = 1/Nlon*np.abs(np.fft.rfft(vT, axis=2)[:,:,:self.heatflux_wavenumbers_per_level_max])
+        vThat[:,:,1:] *= 2 # Account for both halves of the spectrum
+        return vThat
     def classify_split_displacement(self,gh,lat,lon):
         # Compute the split vs. displacement criterion from cp07
         return
@@ -506,7 +507,7 @@ class WinterStratosphereFeatures:
         svd_start = timelib.time()
         if multiprocessing_flag:
             with MP.Pool(num_workers) as pool:
-                svd_results = pool.map(reduced_svd, ((gh_unseasoned[:,i_lev,:,:].reshape((len(gh),Nlat*Nlon))*weight).T for i_lev in range(Nlev)))
+                svd_results = pool.map(reduced_svd, ((gh_unseasoned[:,i_lev,:Nlat_nh,:].reshape((len(gh),Nlat_nh*Nlon))*weight).T for i_lev in range(Nlev)))
             for i_lev,svd_ilev in enumerate(svd_results):
                 eofs[i_lev,:,:] = svd_ilev[0][:,:self.Npc_per_level_max]
                 singvals[i_lev,:] = svd_ilev[1][:self.Npc_per_level_max]
@@ -522,13 +523,14 @@ class WinterStratosphereFeatures:
         print(f"with multiprocessing = {multiprocessing_flag}, svd_duration = {svd_duration}")
         # Temperature: first compute cap average, then deseasonalize
         temperature = self.get_temperature(gh,plev,lat,lon)
-        vT = self.get_meridional_heat_flux(gh,temperature,plev,lat,lon) 
         i_lat_cap = np.argmin(np.abs(lat - 60))
         area_factor = np.outer(np.cos(lat*np.pi/180), np.ones(Nlon))
         temp_capavg = np.sum((temperature*area_factor)[:,:,:i_lat_cap,:], axis=(2,3))/np.sum(area_factor[:i_lat_cap,:])
         print(f"temp_capavg: min={np.min(temp_capavg)}, max={np.max(temp_capavg)}")
         temp_capavg_szn_mean,temp_capavg_szn_std = self.get_seasonal_mean(t_szn,temp_capavg)
+        vT = self.get_meridional_heat_flux(gh,temperature,plev,lat,lon) 
         vT_szn_mean,vT_szn_std = self.get_seasonal_mean(t_szn,vT)
+        print(f"vT_szn_std: shape = {vT_szn_std.shape}, min={vT_szn_std.min()}, max={vT_szn_std.max()}")
         feat_def = {
                 "t_szn": t_szn, "plev": plev, "lat": lat, "lon": lon,
                 "i_lev_uref": i_lev_uref, "i_lat_uref": i_lat_uref, "Nlat_nh": Nlat_nh,
@@ -701,16 +703,17 @@ class WinterStratosphereFeatures:
         # ------- Heat flux ------------
         # TODO: make this a time integral
         for i_lev in range(Nlev):
-            if algo_params["heatflux_flag"][i_lev]:
-                i_feat_y = self.fidx_Y["heatflux_lev%i"%(i_lev)]
-                i_feat_x = self.fidx_X["heatflux_lev%i"%(i_lev)]
+            for i_wn in range(algo_params["heatflux_wavenumbers"][i_lev]):
+            #if algo_params["heatflux_flag"][i_lev]:
+                i_feat_y = self.fidx_Y["heatflux_lev%i_wn%i"%(i_lev,i_wn)]
+                i_feat_x = self.fidx_X["heatflux_lev%i_wn%i"%(i_lev,i_wn)]
                 Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
                 ## ---------- average ----------
                 #for i_dl in range(self.ndelay):
                 #    Y[:,:,i_feat_y] += X[:,self.ndelay-1-i_dl:Ntx-i_dl,i_feat_x]/self.ndelay
                 ## ----------------------------
-                szn_mean_Y[:,i_feat_y-1] = feat_def["vT_szn_mean"][:,i_lev]
-                szn_std_Y[:,i_feat_y-1] = feat_def["vT_szn_std"][:,i_lev]
+                szn_mean_Y[:,i_feat_y-1] = feat_def["vT_szn_mean"][:,i_lev,i_wn]
+                szn_std_Y[:,i_feat_y-1] = feat_def["vT_szn_std"][:,i_lev,i_wn]
         tpt_feat = {"Y": Y, "szn_mean_Y": szn_mean_Y, "szn_std_Y": szn_std_Y, "idx_resamp": idx_resamp}
         pickle.dump(tpt_feat, open(tpt_feat_filename,"wb"))
         print(f"Y.shape = {Y.shape}")
@@ -767,12 +770,13 @@ class WinterStratosphereFeatures:
             fidx[key] = i_feat
             flab[key] = r"Polar cap temp. at %i hPa [K]"%(feat_def["plev"][i_lev]/100.0) 
             i_feat += 1
-        # -------- Heat flux at 10 hPa -----------
+        # -------- Heat flux -----------
         for i_lev in range(Nlev):
-            key = "heatflux_lev%i"%(i_lev)
-            fidx[key] = i_feat
-            flab[key] = r"$\overline{v'T'}$ at 45-75$^\circ$N, %i hPa [K$\cdot$m/s]"%(feat_def["plev"][i_lev]/100.0)
-            i_feat += 1
+            for i_wn in range(self.heatflux_wavenumbers_per_level_max):
+                key = "heatflux_lev%i_wn%i"%(i_lev,i_wn)
+                fidx[key] = i_feat
+                flab[key] = r"Heat flux wave %i at 45-75$^\circ$N, %i hPa [K$\cdot$m/s]"%(i_wn,feat_def["plev"][i_lev]/100.0)
+                i_feat += 1
         # Save the file
         pickle.dump(fidx,open(fidx_X_filename,"wb"))
         self.fidx_X = fidx
@@ -828,10 +832,10 @@ class WinterStratosphereFeatures:
                 i_feat += 1
         # -------- Heat flux -----------
         for i_lev in range(Nlev):
-            if algo_params["heatflux_flag"][i_lev]:
-                key = "heatflux_lev%i"%(i_lev)
+            for i_wn in range(algo_params["heatflux_wavenumbers"][i_lev]):
+                key = "heatflux_lev%i_wn%i"%(i_lev,i_wn)
                 fidx[key] = i_feat
-                flab[key] = r"$\overline{v'T'}$ at 45-75$^\circ$N, %i hPa [K$\cdot$m/s]"%(feat_def["plev"][i_lev]/100.0)
+                flab[key] = r"Heat flux wave %i at 45-75$^\circ$N, %i hPa [K$\cdot$m/s]"%(i_wn,feat_def["plev"][i_lev]/100.0)
                 i_feat += 1
         # Save the file
         pickle.dump(fidx,open(fidx_Y_filename,"wb"))
@@ -918,8 +922,9 @@ class WinterStratosphereFeatures:
         time_vT = timelib.time() - trun
         #print(f"Nlev = {Nlev}, vT.shape = {vT.shape}, i_feat = {i_feat}, X.shape = {X.shape}")
         for i_lev in range(Nlev):
-            i_feat = self.fidx_X["heatflux_lev%i"%(i_lev)]
-            X[:,i_feat] = vT[:,i_lev]
+            for i_wn in range(self.heatflux_wavenumbers_per_level_max):
+                i_feat = self.fidx_X["heatflux_lev%i_wn%i"%(i_lev,i_wn)]
+                X[:,i_feat] = vT[:,i_lev,i_wn]
         # ------------ Unroll X -------------------
         X = X.reshape((Nmem,Nt,Nfeat))
         return X,fall_year
@@ -945,7 +950,7 @@ class WinterStratosphereFeatures:
         decel_time_range = [max(0,start-decel_window), min(len(time)-1, start+2*decel_window)]
         full_time_range = self.wtime[[0,-1]]
         # Make a list of things to plot
-        obs_key_list = ["mag1","mag2","captemp_lev0","heatflux_lev0","heatflux_lev1","heatflux_lev2","uref","pc0_lev0","pc1_lev0","pc2_lev0","pc3_lev0","pc4_lev0","pc5_lev0"]
+        obs_key_list = ["mag1","mag2","captemp_lev0","heatflux_lev0_wn0","heatflux_lev0_wn1","heatflux_lev0_wn2","uref","pc0_lev0","pc1_lev0","pc2_lev0","pc3_lev0","pc4_lev0","pc5_lev0"]
         for obs_key in obs_key_list:
             fig,ax = plt.subplots()
             ydata = funlib[obs_key]["fun"](X)
@@ -1100,10 +1105,11 @@ class WinterStratosphereFeatures:
                 "label": "Time since Oct. 1 [days]",
                 }
         uref_idx = np.array([self.fidx_Y["uref_dl%i"%(i_dl)] for i_dl in range(self.ndelay)])
-        funlib["windfall"] = {
-                "fun": lambda Y: self.windfall(Y[:,uref_idx]),
-                "label": r"Max. decel. $\Delta\overline{u}/\Delta t$ [m/s/day]",
-                }
+        if len(uref_idx) > 1:
+            funlib["windfall"] = {
+                    "fun": lambda Y: self.windfall(Y[:,uref_idx]),
+                    "label": r"Max. decel. $\Delta\overline{u}/\Delta t$ [m/s/day]",
+                    }
         # Nonlinear functions
         for i_wave in range(1,self.num_wavenumbers+1):
             funlib["mag%i"%(i_wave)] = {

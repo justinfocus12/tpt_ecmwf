@@ -28,13 +28,13 @@ datadirs = dict({
     "s2s": "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23",
     })
 sources = list(datadirs.keys())
-featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-17"
+featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-18"
 if not exists(featdir): mkdir(featdir)
 feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-02-17")
+daydir = join(resultsdir,"2022-02-18")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -100,8 +100,9 @@ winter_day0 = 0.0
 spring_day0 = 180.0
 Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
+heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 25.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -112,9 +113,9 @@ for key in sources:
 multiprocessing_flag = 0
 num_clusters = 120
 #Npc_per_level_single = 4
-Npc_per_level = np.array([2,2,2,2,2,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
-captemp_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
-heatflux_flag = np.array([1,1,1,0,0,0,0,0,0,0], dtype=bool)
+Npc_per_level = np.array([0,0,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
+heatflux_wavenumbers = np.array([0,0,0,0,0,0,0,0,0,0], dtype=int)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
 pcstr = ""
 hfstr = ""
@@ -122,14 +123,14 @@ tempstr = ""
 for i_lev in range(len(Npc_per_level)):
     if Npc_per_level[i_lev] != 0:
         pcstr += f"lev{i_lev}pc{Npc_per_level[i_lev]}-"
-    if heatflux_flag[i_lev]:
-        hfstr += f"{i_lev}-"
+    if heatflux_wavenumbers[i_lev] != 0:
+        hfstr += f"lev{i_lev}wn{heatflux_wavenumbers[i_lev]}-"
     if captemp_flag[i_lev]:
         tempstr += f"{i_lev}-"
 if len(pcstr) > 1: pcstr = pcstr[:-1]
 Nwaves = 0
 # Make a dictionary for all these parameters
-algo_params = {"Nwaves": Nwaves, "Npc_per_level": Npc_per_level, "captemp_flag": captemp_flag, "heatflux_flag": heatflux_flag, "num_vortex_moments": num_vortex_moments}
+algo_params = {"Nwaves": Nwaves, "Npc_per_level": Npc_per_level, "captemp_flag": captemp_flag, "heatflux_wavenumbers": heatflux_wavenumbers, "num_vortex_moments": num_vortex_moments}
 fidx_X_filename = join(expdir,"fidx_X")
 fidx_Y_filename = join(expdir,"fidx_Y")
 paramdirs = dict({
@@ -172,7 +173,7 @@ illustrate_dataset_flag =      1
 
 
 feature_file = join(featdir,"feat_def")
-winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring_day0,delaytime_days=delaytime_days,Npc_per_level_max=Npc_per_level_max,num_vortex_moments_max=num_vortex_moments_max)
+winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring_day0,delaytime_days=delaytime_days,Npc_per_level_max=Npc_per_level_max,num_vortex_moments_max=num_vortex_moments_max,heatflux_wavenumbers_per_level_max=heatflux_wavenumbers_per_level_max)
 
 if create_features_flag:
     print("Creating features")

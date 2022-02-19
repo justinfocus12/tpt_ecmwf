@@ -122,7 +122,11 @@ class WinterStratosphereTPT:
         # Read in a feature array from feat_filename and build clusters. Save cluster centers. Save them out in clust_filename.
         tpt_feat = pickle.load(open(tpt_feat_filename,"rb"))
         Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
+        print(f"min(szn_std_Y) = {np.min(szn_std_Y)}")
+        print(f"which feature has zero szn_std? {np.where(np.min(szn_std_Y,axis=0)==0)[0]}")
         Nx,Nt,ydim = Y.shape
+        print(f"Y.shape = {Y.shape}")
+        print(f"fidx_Y = {winstrat.fidx_Y}")
         Y = Y.reshape((Nx*Nt,ydim))
         # cluster based on the non-time features. 
         Y_unseasoned = winstrat.unseason(Y[:,0],Y[:,1:],szn_mean_Y,szn_std_Y,normalize=True)
@@ -579,40 +583,42 @@ class WinterStratosphereTPT:
             #keypairs += [['pc1_lev0','pc%i_lev0'%(i_pc)] for i_pc in range(2,6)]
             for key0,key1 in keypairs:
                 print(f"Plotting current on key pair {key0},{key1}")
-                if key0 in funlib_Y.keys() and key1 in funlib_Y.keys():
-                    theta_x = np.array([funlib_Y[key0]["fun"](Y), funlib_Y[key1]["fun"](Y)]).T
-                    theta_x_ra = np.array([funlib_Y[key0]["fun"](Yra), funlib_Y[key1]["fun"](Yra)]).T
-                    lab0 = funlib_Y[key0]["label"]
-                    lab1 = funlib_Y[key1]["label"]
-                elif key0 in funlib_X.keys() and key1 in funlib_X.keys():
-                    theta_x = np.array([funlib_X[key0]["fun"](X), funlib_X[key1]["fun"](X)]).T
-                    theta_x_ra = np.array([funlib_X[key0]["fun"](Xra), funlib_X[key1]["fun"](Xra)]).T
-                    lab0 = funlib_X[key0]["label"]
-                    lab1 = funlib_X[key1]["label"]
+                y_flag = (key0 in funlib_Y.keys() and key1 in funlib_Y.keys())
+                x_flag = (key0 in funlib_X.keys() and key1 in funlib_X.keys())
+                if not (y_flag or x_flag):
+                    print(f"WARNING: {key0} and {key1} are not both in funlib_X.keys or funlib_Y.keys")
                 else:
-                    raise Warning(f"WARNING: {key0} and {key1} are not both in funlib_X.keys or funlib_Y.keys")
-
-                # A -> B
-                fig,ax = helper.plot_field_2d((qp_Y*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
-                _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-                reactive_flag = ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
-                self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
-                fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
-                plt.close(fig)
-                # A -> A
-                fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
-                _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],1-qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-                reactive_flag = ((src_tag==0)*(dest_tag==0)*winter_flag_ra).reshape((Nyra,Ntyra))
-                self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
-                fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
-                plt.close(fig)
-                # A or B -> A or B
-                fig,ax = helper.plot_field_2d(np.ones(Ny*Nty)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
-                _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-                reactive_flag = winter_flag_ra.reshape((Nyra,Ntyra))
-                self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax,debug=False)
-                fig.savefig(join(savedir,"J_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
-                plt.close(fig)
+                    if y_flag:
+                        theta_x = np.array([funlib_Y[key0]["fun"](Y), funlib_Y[key1]["fun"](Y)]).T
+                        theta_x_ra = np.array([funlib_Y[key0]["fun"](Yra), funlib_Y[key1]["fun"](Yra)]).T
+                        lab0 = funlib_Y[key0]["label"]
+                        lab1 = funlib_Y[key1]["label"]
+                    else: 
+                        theta_x = np.array([funlib_X[key0]["fun"](X), funlib_X[key1]["fun"](X)]).T
+                        theta_x_ra = np.array([funlib_X[key0]["fun"](Xra), funlib_X[key1]["fun"](Xra)]).T
+                        lab0 = funlib_X[key0]["label"]
+                        lab1 = funlib_X[key1]["label"]
+                    # A -> B
+                    fig,ax = helper.plot_field_2d((qp_Y*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
+                    _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+                    reactive_flag = ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
+                    self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
+                    fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
+                    plt.close(fig)
+                    # A -> A
+                    fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
+                    _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],1-qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+                    reactive_flag = ((src_tag==0)*(dest_tag==0)*winter_flag_ra).reshape((Nyra,Ntyra))
+                    self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
+                    fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
+                    plt.close(fig)
+                    # A or B -> A or B
+                    fig,ax = helper.plot_field_2d(np.ones(Ny*Nty)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
+                    _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+                    reactive_flag = winter_flag_ra.reshape((Nyra,Ntyra))
+                    self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax,debug=False)
+                    fig.savefig(join(savedir,"J_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
+                    plt.close(fig)
         if spaghetti_flag:
             # ----------- New plot: short histories of zonal wind, colored by committor. Maybe this will inform new coordinates --------------
             fig,ax = plt.subplots()
