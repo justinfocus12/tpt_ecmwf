@@ -113,7 +113,7 @@ for key in sources:
 multiprocessing_flag = 0
 num_clusters = 170
 #Npc_per_level_single = 4
-Npc_per_level = np.array([4,4,4,4,4,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level = np.array([4,4,4,4,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 heatflux_wavenumbers = np.array([0,0,0,0,0,0,0,0,0,0], dtype=int)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
@@ -274,8 +274,8 @@ if e2_flag:
 # =======================================================================
 # ------------------- DGA from S2S --------------------------------
 feat_filename = join(expdirs["s2s"],"X.npy")
-feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in sources})
-tpt_feat_filename_ra_dict = dict({key: join(subsetdirs[key][-1],"Y") for key in sources})
+feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in ["e2","ei"]})
+tpt_feat_filename_ra_dict = dict({key: join(subsetdirs[key][-1],"Y") for key in ["e2","ei"]})
 #feat_filename_ra = join(expdirs["e2"],"X.npy")
 #tpt_feat_filename_ra = join(subsetdirs["e2"][-1],"Y")
 ens_start_filename = join(expdirs["s2s"],"ens_start_idx.npy")
