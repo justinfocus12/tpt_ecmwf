@@ -274,8 +274,10 @@ if e2_flag:
 # =======================================================================
 # ------------------- DGA from S2S --------------------------------
 feat_filename = join(expdirs["s2s"],"X.npy")
-feat_filename_ra = join(expdirs["e2"],"X.npy")
-tpt_feat_filename_ra = join(subsetdirs["e2"][-1],"Y")
+feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in sources})
+tpt_feat_filename_ra_dict = dict({key: join(subsetdirs[key][-1],"Y") for key in sources})
+#feat_filename_ra = join(expdirs["e2"],"X.npy")
+#tpt_feat_filename_ra = join(subsetdirs["e2"][-1],"Y")
 ens_start_filename = join(expdirs["s2s"],"ens_start_idx.npy")
 fall_year_filename = join(expdirs["s2s"],"fall_year_list.npy")
 if evaluate_database_s2s: # Expensive!
@@ -317,7 +319,7 @@ for i_subset,subset in enumerate(subset_lists["s2s"]):
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra,tpt_feat_filename_ra,feat_def,savedir,winstrat,algo_params,spaghetti_flag=False,fluxdens_flag=True,current2d_flag=0*(i_uth==1))
+            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,spaghetti_flag=False,fluxdens_flag=True,current2d_flag=0*(i_uth==1))
             #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
 
 # =============================================================================

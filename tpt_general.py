@@ -494,27 +494,30 @@ class WinterStratosphereTPT:
             np.save(join(savedir,"lt_%s_Y"%(mom_name)),lt_Y)
         return summary 
     def plot_results_data(self,feat_filename,tpt_feat_filename,feat_filename_ra,tpt_feat_filename_ra,feat_def,savedir,winstrat,algo_params,spaghetti_flag=True,fluxdens_flag=True,current2d_flag=True):
+        # Get DGA rate 
+        rate = pickle.load(open(join(savedir,"summary"),"rb"))["rate_tob"]
         # Load the reanalysis data for comparison
-        tpt_feat_ra = pickle.load(open(tpt_feat_filename_ra,"rb"))
-        Yra = tpt_feat_ra["Y"]
-        idx_resamp_ra = tpt_feat_ra["idx_resamp"]
-        Nyra,Ntyra,ydim = Yra.shape
-        Xra = np.load(feat_filename_ra)[:,winstrat.ndelay-1:,:][idx_resamp_ra]
-        Nxra,Ntxra,xdim = Xra.shape
-        if not (Nyra == Nxra and Ntyra == Ntxra):
-            raise Exception(f"ERROR: Xra and Yra have shapes {Xra.shape} and {Yra.shape} respectively. The first two dimensions should match")
-        ina_yra = winstrat.ina_test(Yra.reshape((Nyra*Ntyra,ydim)),feat_def,self.tpt_bndy).reshape(Nyra*Ntyra)
-        inb_yra = winstrat.inb_test(Yra.reshape((Nyra*Ntyra,ydim)),feat_def,self.tpt_bndy).reshape(Nyra*Ntyra)
-        # Get source and destination
-        src_tag,dest_tag = winstrat.compute_src_dest_tags(Yra,feat_def,self.tpt_bndy)
-        print(f"src_tag.shape = {src_tag.shape}, dest_tag.shape = {dest_tag.shape}, Yra.shape = {Yra.shape}")
-        # Restrict reanalysis to the midwinter
-        winter_flag_ra = (Yra[:,:,winstrat.fidx_Y['time_h']] >= self.tpt_bndy['tthresh'][0])*(Yra[:,:,winstrat.fidx_Y['time_h']] <= self.tpt_bndy['tthresh'][1])
-        winter_flag_ra = winter_flag_ra.reshape(Nyra*Ntyra)
-        Yra = Yra.reshape((Nyra*Ntyra,ydim))
-        Xra = Xra.reshape((Nyra*Ntyra,xdim))
-        src_tag = src_tag.reshape(Nyra*Ntyra)
-        dest_tag = dest_tag.reshape(Nyra*Ntyra)
+        keys_ra = list(feat_filename_ra.keys()) # e2 and ei
+        ra = dict({key: dict({}) for key in keys_ra})
+        for k in keys_ra:
+            tpt_feat_ra = pickle.load(open(tpt_feat_filename_ra[k],"rb"))
+            ra[k]["Y"] = tpt_feat_ra["Y"]
+            ra[k]["idx_resamp"] = tpt_feat_ra["idx_resamp"]
+            ra[k]["Ny"],ra[k]["Nty"],ra[k]["ydim"] = ra[k]["Y"].shape
+            ra[k]["X"] = np.load(feat_filename_ra[k])[:,winstrat.ndelay-1:,:][ra[k]["idx_resamp"]]
+            ra[k]["Nx"],ra[k]["Ntx"],ra[k]["xdim"] = ra[k]["X"].shape
+            if not (ra[k]["Ny"] == ra[k]["Nx"] and ra[k]["Nty"] == ra[k]["Ntx"]):
+                raise Exception(f"ERROR: Xra and Yra have shapes {ra[k]['X'].shape} and {ra[k]['Y'].shape} respectively. The first two dimensions should match")
+            ra[k]["ina"] = winstrat.ina_test(ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nt"],ra[k]["ydim"])),feat_def,self.tpt_bndy)#.reshape(Nyra*Ntyra)
+            ra[k]["inb"] = winstrat.inb_test(ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nt"],ra[k]["ydim"])),feat_def,self.tpt_bndy)#.reshape(Nyra*Ntyra)
+            # Get source and destination
+            ra[k]["src_tag"],ra[k]["dest_tag"] = winstrat.compute_src_dest_tags(ra[k]["Y"],feat_def,self.tpt_bndy)
+            ra[k]["src_tag"] = ra[k]["src_tag"]
+            ra[k]["dest_tag"] = ra[k]["dest_tag"]
+            # Restrict reanalysis to the midwinter
+            ra[k]["winter_flag"] = ((ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] >= self.tpt_bndy['tthresh'][0])*(ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] <= self.tpt_bndy['tthresh'][1]))#.flatten()
+            ra[k]["Y"] = ra[k]["Y"]#.reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))
+            ra[k]["X"] = ra[k]["X"]#.reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))
         # Plot fields using the data points rather than the clusters
         funlib_Y = winstrat.observable_function_library_Y(algo_params)
         funlib_X = winstrat.observable_function_library_X()
@@ -526,49 +529,55 @@ class WinterStratosphereTPT:
         if not (Ntx==Nty and Nx==Ny):
             raise Exception(f"ERROR: X.shape = {X.shape} and Y.shape = {Y.shape}")
         # Keep track of which entries are the beginning of a short trajectory
-        Y = Y.reshape((Ny*Nty,ydim))
-        X = X.reshape((Ny*Nty,xdim))
+        #Y = Y.reshape((Ny*Nty,ydim))
+        #X = X.reshape((Ny*Nty,xdim))
         traj_rank = np.outer(np.ones(Ny), np.arange(Nty)).flatten()
-        winter_flag = (Y[:,winstrat.fidx_Y['time_h']] >= self.tpt_bndy['tthresh'][0])*(Y[:,winstrat.fidx_Y['time_h']] <= self.tpt_bndy['tthresh'][1])
-        idx_winter = np.where(winter_flag)[0]
-        traj_start_positions = np.where(traj_rank == 0)[0]
-        winter_starts = np.intersect1d(idx_winter,traj_start_positions)
-        winter_fully_idx = np.where(np.all(winter_flag.reshape((Ny,Nty)), axis=1))[0] # Indices within the (Ny,Nty,ydim)-shaped array
+        winter_flag = (Y[:,:,winstrat.fidx_Y['time_h']] >= self.tpt_bndy['tthresh'][0])*(Y[:,:,winstrat.fidx_Y['time_h']] <= self.tpt_bndy['tthresh'][1])
+        #idx_winter = np.where(winter_flag)[0]
+        #traj_start_positions = np.where(traj_rank == 0)[0]
+        #winter_starts = np.intersect1d(idx_winter,traj_start_positions)
+        winter_fully_idx = np.where(np.all(winter_flag, axis=1))[0] # Indices within the (Ny,Nty,ydim)-shaped array
         print(f"winter_fully_idx = {winter_fully_idx}")
-        qp_Y = np.load(join(savedir,"qp_Y.npy")).reshape(Ny*Nty)
-        qm_Y = np.load(join(savedir,"qm_Y.npy")).reshape(Ny*Nty)
-        pi_Y = np.load(join(savedir,"pi_Y.npy")).reshape(Ny*Nty)
-        lt_mean = np.load(join(savedir,"lt_mean_Y.npy")).reshape(Ny*Nty)
-        lt_std = np.load(join(savedir,"lt_std_Y.npy")).reshape(Ny*Nty)
-        lt_skew = np.load(join(savedir,"lt_skew_Y.npy")).reshape(Ny*Nty)
+        qp_Y = np.load(join(savedir,"qp_Y.npy"))#.reshape(Ny*Nty)
+        qm_Y = np.load(join(savedir,"qm_Y.npy"))#.reshape(Ny*Nty)
+        pi_Y = np.load(join(savedir,"pi_Y.npy"))#.reshape(Ny*Nty)
+        lt_mean = np.load(join(savedir,"lt_mean_Y.npy"))#.reshape(Ny*Nty)
+        lt_std = np.load(join(savedir,"lt_std_Y.npy"))#.reshape(Ny*Nty)
+        lt_skew = np.load(join(savedir,"lt_skew_Y.npy"))#.reshape(Ny*Nty)
         if fluxdens_flag:
-            reactive_flag = ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
+            reactive_code = [0,1] #= ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
             # ----------- Plot flux distribution of entry times ----------
             theta_normal = funlib_X['uref']['fun'](X)
-            theta_normal_ra = funlib_X['uref']['fun'](Xra)
+            theta_normal_ra = dict({k: funlib_X['uref']['fun'](ra[k]["X"].reshape((ra[k]["Nx"]*ra[k]["Nt"],ra[k]["xdim"]))).reshape((ra[k]["Nx"],ra[k]["Nt"])) for k in keys_ra})
+            theta_tangential_ra = dict({k: funlib_X['time_d']['fun'](ra[k]["X"].reshape((ra[k]["Nx"]*ra[k]["Nt"],ra[k]["xdim"]))).reshape((ra[k]["Nx"],ra[k]["Nt"])) for k in keys_ra})
             theta_normal_label = funlib_X['uref']['label']
             theta_tangential = funlib_X['time_d']['fun'](X)
-            theta_tangential_ra = funlib_X['time_d']['fun'](Xra)
             theta_tangential_label = funlib_X['time_d']['label']
-            theta_mid_list = np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
+            theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
             theta_lower_list = theta_mid_list - 1.0
             theta_upper_list = theta_mid_list + 1.0
-            fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_ra.reshape((Nyra,Ntyra)),theta_tangential_ra.reshape((Nyra,Ntyra)),reactive_flag,theta_normal_label,theta_tangential_label,theta_lower_list,theta_upper_list)
+            fig,ax = self.plot_flux_distributions_1d(
+                    qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
+                    theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
+                    theta_normal_ra,theta_tangential_ra,
+                    theta_normal_label,theta_tangential_label,
+                    reactive_code,rate,
+                    theta_lower_list,theta_upper_list)
             fig.savefig(join(savedir,"fluxdens_J-uref_d-timed"))
             plt.close(fig)
-            # --------- Plot distribution of zonal wind over different times ------
-            theta_normal = funlib_X['time_d']['fun'](X)
-            theta_normal_ra = funlib_X['time_d']['fun'](Xra)
-            theta_normal_label = funlib_X['time_d']['label']
-            theta_tangential = funlib_X['uref']['fun'](X)
-            theta_tangential_ra = funlib_X['uref']['fun'](Xra)
-            theta_tangential_label = funlib_X['uref']['label']
-            theta_mid_list = np.linspace(40,140,20)
-            theta_lower_list = theta_mid_list - 0.5*(theta_mid_list[1]-theta_mid_list[0])
-            theta_upper_list = theta_mid_list + 0.5*(theta_mid_list[1]-theta_mid_list[0])
-            fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_ra.reshape((Nyra,Ntyra)),theta_tangential_ra.reshape((Nyra,Ntyra)),reactive_flag,theta_normal_label,theta_tangential_label,theta_lower_list,theta_upper_list,timeseries_like=True)
-            fig.savefig(join(savedir,"fluxdens_J-timed_d-uref"))
-            plt.close(fig)
+            ## --------- Plot distribution of zonal wind over different times ------
+            #theta_normal = funlib_X['time_d']['fun'](X)
+            #theta_normal_ra = funlib_X['time_d']['fun'](Xra)
+            #theta_normal_label = funlib_X['time_d']['label']
+            #theta_tangential = funlib_X['uref']['fun'](X)
+            #theta_tangential_ra = funlib_X['uref']['fun'](Xra)
+            #theta_tangential_label = funlib_X['uref']['label']
+            #theta_mid_list = np.linspace(40,140,20)
+            #theta_lower_list = theta_mid_list - 0.5*(theta_mid_list[1]-theta_mid_list[0])
+            #theta_upper_list = theta_mid_list + 0.5*(theta_mid_list[1]-theta_mid_list[0])
+            #fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_ra.reshape((Nyra,Ntyra)),theta_tangential_ra.reshape((Nyra,Ntyra)),reactive_flag,theta_normal_label,theta_tangential_label,rate,theta_lower_list,theta_upper_list,timeseries_like=True)
+            #fig.savefig(join(savedir,"fluxdens_J-timed_d-uref"))
+            #plt.close(fig)
             ## --------- Plot Jab dot grad [-lead time] d[zonal wind] ----------
             #theta_normal = -lt_mean
             #theta_normal_label = r"$-\eta_B^+$"
@@ -578,7 +587,7 @@ class WinterStratosphereTPT:
             #theta_mid_list = np.linspace(-60,1,20)
             #theta_lower_list = theta_mid_list - 0.5
             #theta_upper_list = theta_mid_list + 0.5
-            #fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_ra.reshape((Nyra,Ntyra)),theta_tangential_ra.reshape((Nyra,Ntyra)),reactive_flag,theta_normal_label,theta_tangential_label,theta_lower_list,theta_upper_list,timeseries_like=True)
+            #fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_ra.reshape((Nyra,Ntyra)),theta_tangential_ra.reshape((Nyra,Ntyra)),reactive_flag,theta_normal_label,theta_tangential_label,rate,theta_lower_list,theta_upper_list,timeseries_like=True)
             #fig.savefig(join(savedir,"fluxdens_J-leadtime_d-uref"))
             #plt.close(fig)
         if current2d_flag:
@@ -817,9 +826,9 @@ class WinterStratosphereTPT:
             close_idx.append(close_idx_new)
             reactive_flux.append((Jweight[close_idx_new]*Jth[close_idx_new,:].T).T)
         return close_idx,reactive_flux
-    def plot_flux_distributions_1d(self,qm,qp,pi,theta_normal,theta_tangential,theta_normal_ra,theta_tangential_ra,reactive_flag,theta_normal_label,theta_tangential_label,theta_lower_list=None,theta_upper_list=None,timeseries_like=False):
-        # theta_normal and theta_tangential must both be scalar fields. 
-        dth_tangential = (np.nanmax(theta_tangential) - np.nanmin(theta_tangential))/10
+    def plot_flux_distributions_1d(self,qm,qp,pi,theta_normal,theta_tangential,theta_normal_ra,theta_tangential_ra,theta_normal_label,theta_tangential_label,reactive_flag,rate,theta_lower_list=None,theta_upper_list=None,timeseries_like=False):
+        # theta_normal and theta_tangential are scalar fields. 
+        dth_tangential = (np.nanmax(theta_tangential) - np.nanmin(theta_tangential))/4
         theta_vec = np.transpose(np.array([theta_normal,theta_tangential]), (1,2,0))
         Jth,thmid,Jweight = self.project_current_data(theta_vec,qm,qp,pi)
         if theta_lower_list is None or theta_upper_list is None:
@@ -829,16 +838,20 @@ class WinterStratosphereTPT:
             theta_lower_list = theta_edges[:-1]
             theta_upper_list = theta_edges[1:]
         # Reanalysis
-        delta_theta_normal_ra = theta_normal_ra[:,1:] - theta_normal_ra[:,:-1]
-        thmid_normal_ra = 0.5*(theta_normal_ra[:,1:] + theta_normal_ra[:,:-1])
-        thmid_tangential_ra = 0.5*(theta_tangential_ra[:,1:] + theta_tangential_ra[:,:-1])
+        keys_ra = list(theta_normal_ra.keys())
+        ra = dict({}) # To hold reanalysis data
+        for k in keys_ra:
+            ra[k]["Nx"],ra[k]["Nt"] = theta_tangential[k].shape
+            ra[k]["delta_theta_normal"] = theta_normal_ra[k][:,1:] - theta_normal_ra[k][:,:-1]
+            ra[k]["thmid_normal"] = 0.5*(theta_normal_ra[k][:,1:] + theta_normal_ra[k][:,:-1])
+            ra[k]["thmid_tangential"] = 0.5*(theta_tangential_ra[k][:,1:] + theta_tangential_ra[k][:,:-1])
 
         num_levels = len(theta_lower_list)
         close_idx,reactive_flux = self.reactive_flux_density_levelset(thmid[:,0],Jth,Jweight,theta_lower_list,theta_upper_list)
         fig,ax = plt.subplots()
-        ax1 = ax.twinx()
         handles = []
         bins = max(int((np.nanmax(thmid[:,1]) - np.nanmin(thmid[:,1]))/dth_tangential), 3)
+        dth_tangential = (np.nanmax(thmid[:,1]) - np.nanmin(thmid[:,1]))/bins
         for i_thlev in range(num_levels):
             # Make a histogram of the reactive flux density distribution
             idx = close_idx[i_thlev]
@@ -849,7 +862,9 @@ class WinterStratosphereTPT:
                 #print(f"weights.shape = {weights.shape}, x.shape = {x.shape}")
                 hist,bin_edges = np.histogram(thmid[idx,1],weights=reactive_flux[i_thlev][:,0],bins=bins,range=(np.nanmin(thmid[:,1]),np.nanmax(thmid[:,1])))
                 bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
+                hist *= rate/(np.abs(np.sum(hist))*dth_tangential)
                 # ------------- Reanalysis --------------------
+                num_rxn_ra = np.sum(np.any(reactive_flag,axis=1))
                 idx_ra_upper = np.where((theta_normal_ra[:,1:] >= theta_lower_list[i_thlev])*(theta_normal_ra[:,1:] <= theta_upper_list[i_thlev])*reactive_flag[:,1:])
                 sign_upper_ra = np.sign(theta_normal_ra[idx_ra_upper[0],idx_ra_upper[1]] - theta_normal_ra[idx_ra_upper[0],idx_ra_upper[1]-1])
                 theta_tangential_ra_upper = theta_tangential_ra[idx_ra_upper[0],idx_ra_upper[1]]
@@ -860,8 +875,10 @@ class WinterStratosphereTPT:
                 print(f"num_ra = {num_ra}")
                 # Put together into a histogram
                 if num_ra > 0:
-                    hist_ra,bin_edges_ra = np.histogram(np.concatenate((theta_tangential_ra_upper,theta_tangential_ra_lower)), weights=np.abs(np.concatenate((sign_upper_ra,sign_lower_ra))), range=(min(np.min(theta_tangential_ra_upper),np.min(theta_tangential_ra_lower)),max(np.max(theta_tangential_ra_upper),np.max(theta_tangential_ra_lower))),bins=bins)
+                    hist_ra,bin_edges_ra = np.histogram(np.concatenate((theta_tangential_ra_upper,theta_tangential_ra_lower)), weights=np.concatenate((sign_upper_ra,sign_lower_ra)),range=(np.nanmin(thmid[:,1]),np.nanmax(thmid[:,1])),bins=bins)
+                    #hist_ra *= num_rxn_ra/(Nxra*dth_tan_ra*np.sum(hist_ra))
                     bin_centers_ra = (bin_edges_ra[1:] + bin_edges_ra[:-1])/2
+                    hist_ra *= rate/(np.abs(np.sum(hist_ra))*dth_tangential)
                 # ---------------------------------------------
                 if timeseries_like:
                     max_bin_height = 0.6*np.min(np.diff(theta_lower_list))
@@ -872,10 +889,10 @@ class WinterStratosphereTPT:
                     #ax.plot(x2, bin_centers, color='black')
                     ax.fill_betweenx(bin_centers, x1, x2, facecolor='gray', edgecolor='black')
                 else:
-                    h, = ax.plot(bin_centers,hist,color=plt.cm.coolwarm((i_thlev+1)/(num_levels)),label=r"$%.2f$"%((theta_lower_list[i_thlev]+theta_upper_list[i_thlev])/2),marker='o')
+                    h, = ax.plot(bin_centers,hist,color='red',label=r"$%.2f$"%((theta_lower_list[i_thlev]+theta_upper_list[i_thlev])/2),marker='o')
                     handles.append(h)
                     if (num_ra > 0):
-                        hra, = ax1.plot(bin_centers_ra,hist_ra,color=plt.cm.coolwarm((i_thlev+1)/(num_levels)),label=r"$%.2f$"%((theta_lower_list[i_thlev]+theta_upper_list[i_thlev])/2),marker='.',linestyle='--')
+                        hra, = ax.plot(bin_centers_ra,hist_ra,color='cyan',label=r"$%.2f$"%((theta_lower_list[i_thlev]+theta_upper_list[i_thlev])/2),marker='.',linestyle='--')
         ax.legend(handles=handles)
         if timeseries_like:
             ax.set_xlabel(theta_normal_label,fontdict=font)
