@@ -102,7 +102,7 @@ Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 15.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -113,7 +113,7 @@ for key in sources:
 multiprocessing_flag = 0
 num_clusters = 170
 #Npc_per_level_single = 4
-Npc_per_level = np.array([4,4,4,4,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level = np.array([4,4,4,4,4,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 heatflux_wavenumbers = np.array([0,0,0,0,0,0,0,0,0,0], dtype=int)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
@@ -154,21 +154,21 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             1
-tpt_e2_flag =                  1
+tpt_featurize_e2 =             0
+tpt_e2_flag =                  0
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             1
-tpt_ei_flag =                  1
+tpt_featurize_ei =             0
+tpt_ei_flag =                  0
 # s2s
 evaluate_database_s2s =        0
-tpt_featurize_s2s =            1
-cluster_flag =                 1
-build_msm_flag =               1
-tpt_s2s_flag =                 1
-plot_tpt_results_s2s_flag =    0
+tpt_featurize_s2s =            0
+cluster_flag =                 0
+build_msm_flag =               0
+tpt_s2s_flag =                 0
+plot_tpt_results_s2s_flag =    1
 # Summary statistic
-plot_rate_flag =               1
+plot_rate_flag =               0
 illustrate_dataset_flag =      0
 
 
@@ -275,7 +275,6 @@ if e2_flag:
 # ------------------- DGA from S2S --------------------------------
 feat_filename = join(expdirs["s2s"],"X.npy")
 feat_filename_ra = join(expdirs["e2"],"X.npy")
-print(f"subsetdirs['e2'] = {subsetdirs['e2']}")
 tpt_feat_filename_ra = join(subsetdirs["e2"][-1],"Y")
 ens_start_filename = join(expdirs["s2s"],"ens_start_idx.npy")
 fall_year_filename = join(expdirs["s2s"],"fall_year_list.npy")
@@ -318,7 +317,7 @@ for i_subset,subset in enumerate(subset_lists["s2s"]):
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra,tpt_feat_filename_ra,feat_def,savedir,winstrat,algo_params,spaghetti_flag=False,fluxdens_flag=True,current2d_flag=(i_uth==1))
+            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra,tpt_feat_filename_ra,feat_def,savedir,winstrat,algo_params,spaghetti_flag=False,fluxdens_flag=True,current2d_flag=0*(i_uth==1))
             #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
 
 # =============================================================================

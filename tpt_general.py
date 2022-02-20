@@ -542,39 +542,45 @@ class WinterStratosphereTPT:
         lt_std = np.load(join(savedir,"lt_std_Y.npy")).reshape(Ny*Nty)
         lt_skew = np.load(join(savedir,"lt_skew_Y.npy")).reshape(Ny*Nty)
         if fluxdens_flag:
+            reactive_flag = ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
             # ----------- Plot flux distribution of entry times ----------
             theta_normal = funlib_X['uref']['fun'](X)
+            theta_normal_ra = funlib_X['uref']['fun'](Xra)
             theta_normal_label = funlib_X['uref']['label']
             theta_tangential = funlib_X['time_d']['fun'](X)
+            theta_tangential_ra = funlib_X['time_d']['fun'](Xra)
             theta_tangential_label = funlib_X['time_d']['label']
             theta_mid_list = np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
             theta_lower_list = theta_mid_list - 1.0
             theta_upper_list = theta_mid_list + 1.0
-            fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_label,theta_tangential_label,theta_lower_list,theta_upper_list)
+            fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_ra.reshape((Nyra,Ntyra)),theta_tangential_ra.reshape((Nyra,Ntyra)),reactive_flag,theta_normal_label,theta_tangential_label,theta_lower_list,theta_upper_list)
             fig.savefig(join(savedir,"fluxdens_J-uref_d-timed"))
             plt.close(fig)
             # --------- Plot distribution of zonal wind over different times ------
             theta_normal = funlib_X['time_d']['fun'](X)
+            theta_normal_ra = funlib_X['time_d']['fun'](Xra)
             theta_normal_label = funlib_X['time_d']['label']
             theta_tangential = funlib_X['uref']['fun'](X)
+            theta_tangential_ra = funlib_X['uref']['fun'](Xra)
             theta_tangential_label = funlib_X['uref']['label']
             theta_mid_list = np.linspace(40,140,20)
             theta_lower_list = theta_mid_list - 0.5*(theta_mid_list[1]-theta_mid_list[0])
             theta_upper_list = theta_mid_list + 0.5*(theta_mid_list[1]-theta_mid_list[0])
-            fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_label,theta_tangential_label,theta_lower_list,theta_upper_list,timeseries_like=True)
+            fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_ra.reshape((Nyra,Ntyra)),theta_tangential_ra.reshape((Nyra,Ntyra)),reactive_flag,theta_normal_label,theta_tangential_label,theta_lower_list,theta_upper_list,timeseries_like=True)
             fig.savefig(join(savedir,"fluxdens_J-timed_d-uref"))
             plt.close(fig)
-            # --------- Plot Jab dot grad [-lead time] d[zonal wind] ----------
-            theta_normal = -lt_mean
-            theta_normal_label = r"$-\eta_B^+$"
-            theta_tangential = funlib_X['uref']['fun'](X)
-            theta_tangential_label = funlib_X['uref']['label']
-            theta_mid_list = np.linspace(-60,1,20)
-            theta_lower_list = theta_mid_list - 0.5
-            theta_upper_list = theta_mid_list + 0.5
-            fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_label,theta_tangential_label,theta_lower_list,theta_upper_list,timeseries_like=True)
-            fig.savefig(join(savedir,"fluxdens_J-leadtime_d-uref"))
-            plt.close(fig)
+            ## --------- Plot Jab dot grad [-lead time] d[zonal wind] ----------
+            #theta_normal = -lt_mean
+            #theta_normal_label = r"$-\eta_B^+$"
+            #theta_tangential = funlib_X['uref']['fun'](X)
+            #theta_tangential_ra = funlib_X['uref']['fun'](X)
+            #theta_tangential_label = funlib_X['uref']['label']
+            #theta_mid_list = np.linspace(-60,1,20)
+            #theta_lower_list = theta_mid_list - 0.5
+            #theta_upper_list = theta_mid_list + 0.5
+            #fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_ra.reshape((Nyra,Ntyra)),theta_tangential_ra.reshape((Nyra,Ntyra)),reactive_flag,theta_normal_label,theta_tangential_label,theta_lower_list,theta_upper_list,timeseries_like=True)
+            #fig.savefig(join(savedir,"fluxdens_J-leadtime_d-uref"))
+            #plt.close(fig)
         if current2d_flag:
             # ------------- Current plots (both) --------------------
             keypairs = []
@@ -811,7 +817,7 @@ class WinterStratosphereTPT:
             close_idx.append(close_idx_new)
             reactive_flux.append((Jweight[close_idx_new]*Jth[close_idx_new,:].T).T)
         return close_idx,reactive_flux
-    def plot_flux_distributions_1d(self,qm,qp,pi,theta_normal,theta_tangential,theta_normal_label,theta_tangential_label,theta_lower_list=None,theta_upper_list=None,timeseries_like=False):
+    def plot_flux_distributions_1d(self,qm,qp,pi,theta_normal,theta_tangential,theta_normal_ra,theta_tangential_ra,reactive_flag,theta_normal_label,theta_tangential_label,theta_lower_list=None,theta_upper_list=None,timeseries_like=False):
         # theta_normal and theta_tangential must both be scalar fields. 
         dth_tangential = (np.nanmax(theta_tangential) - np.nanmin(theta_tangential))/10
         theta_vec = np.transpose(np.array([theta_normal,theta_tangential]), (1,2,0))
@@ -822,9 +828,15 @@ class WinterStratosphereTPT:
             theta_edges = np.linspace(theta_normal_min-1e-10,theta_normal_max+1e-10,4+1)
             theta_lower_list = theta_edges[:-1]
             theta_upper_list = theta_edges[1:]
+        # Reanalysis
+        delta_theta_normal_ra = theta_normal_ra[:,1:] - theta_normal_ra[:,:-1]
+        thmid_normal_ra = 0.5*(theta_normal_ra[:,1:] + theta_normal_ra[:,:-1])
+        thmid_tangential_ra = 0.5*(theta_tangential_ra[:,1:] + theta_tangential_ra[:,:-1])
+
         num_levels = len(theta_lower_list)
         close_idx,reactive_flux = self.reactive_flux_density_levelset(thmid[:,0],Jth,Jweight,theta_lower_list,theta_upper_list)
         fig,ax = plt.subplots()
+        ax1 = ax.twinx()
         handles = []
         bins = max(int((np.nanmax(thmid[:,1]) - np.nanmin(thmid[:,1]))/dth_tangential), 3)
         for i_thlev in range(num_levels):
@@ -836,8 +848,21 @@ class WinterStratosphereTPT:
                 x = thmid[idx,1]
                 #print(f"weights.shape = {weights.shape}, x.shape = {x.shape}")
                 hist,bin_edges = np.histogram(thmid[idx,1],weights=reactive_flux[i_thlev][:,0],bins=bins,range=(np.nanmin(thmid[:,1]),np.nanmax(thmid[:,1])))
-                print(f"At level {i_thlev}, bin range = {bin_edges[[0,-1]]}")
                 bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
+                # ------------- Reanalysis --------------------
+                idx_ra_upper = np.where((theta_normal_ra[:,1:] >= theta_lower_list[i_thlev])*(theta_normal_ra[:,1:] <= theta_upper_list[i_thlev])*reactive_flag[:,1:])
+                sign_upper_ra = np.sign(theta_normal_ra[idx_ra_upper[0],idx_ra_upper[1]] - theta_normal_ra[idx_ra_upper[0],idx_ra_upper[1]-1])
+                theta_tangential_ra_upper = theta_tangential_ra[idx_ra_upper[0],idx_ra_upper[1]]
+                idx_ra_lower = np.where((theta_normal_ra[:,:-1] >= theta_lower_list[i_thlev])*(theta_normal_ra[:,:-1] <= theta_upper_list[i_thlev])*reactive_flag[:,:-1])
+                sign_lower_ra = np.sign(theta_normal_ra[idx_ra_lower[0],idx_ra_lower[1]+1] - theta_normal_ra[idx_ra_lower[0],idx_ra_lower[1]])
+                theta_tangential_ra_lower = theta_tangential_ra[idx_ra_lower[0],idx_ra_lower[1]]
+                num_ra = len(idx_ra_upper[0]) + len(idx_ra_lower[0])
+                print(f"num_ra = {num_ra}")
+                # Put together into a histogram
+                if num_ra > 0:
+                    hist_ra,bin_edges_ra = np.histogram(np.concatenate((theta_tangential_ra_upper,theta_tangential_ra_lower)), weights=np.abs(np.concatenate((sign_upper_ra,sign_lower_ra))), range=(min(np.min(theta_tangential_ra_upper),np.min(theta_tangential_ra_lower)),max(np.max(theta_tangential_ra_upper),np.max(theta_tangential_ra_lower))),bins=bins)
+                    bin_centers_ra = (bin_edges_ra[1:] + bin_edges_ra[:-1])/2
+                # ---------------------------------------------
                 if timeseries_like:
                     max_bin_height = 0.6*np.min(np.diff(theta_lower_list))
                     offset_horz = (theta_lower_list[i_thlev] + theta_upper_list[i_thlev])/2
@@ -849,6 +874,8 @@ class WinterStratosphereTPT:
                 else:
                     h, = ax.plot(bin_centers,hist,color=plt.cm.coolwarm((i_thlev+1)/(num_levels)),label=r"$%.2f$"%((theta_lower_list[i_thlev]+theta_upper_list[i_thlev])/2),marker='o')
                     handles.append(h)
+                    if (num_ra > 0):
+                        hra, = ax1.plot(bin_centers_ra,hist_ra,color=plt.cm.coolwarm((i_thlev+1)/(num_levels)),label=r"$%.2f$"%((theta_lower_list[i_thlev]+theta_upper_list[i_thlev])/2),marker='.',linestyle='--')
         ax.legend(handles=handles)
         if timeseries_like:
             ax.set_xlabel(theta_normal_label,fontdict=font)
