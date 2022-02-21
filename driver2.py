@@ -319,7 +319,7 @@ for i_subset,subset in enumerate(subset_lists["s2s"]):
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,spaghetti_flag=False,fluxdens_flag=True,current2d_flag=0*(i_uth==1))
+            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,spaghetti_flag=(i_uth==1 or i_uth==3),fluxdens_flag=True,current2d_flag=0*(i_uth==1 or i_uth==3))
             #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
 
 # =============================================================================
@@ -339,10 +339,11 @@ if plot_rate_flag:
                     rate = summary["rate_tob"]
                 rate_lists[key][i_subset,i_uth] = rate
 
+    ylim_lin = [0.0,1.0]
+    ylim_log = [1e-3,1.0]
     fig,ax = plt.subplots()
     ax.set_xlabel("Zonal wind threshold",fontdict=font)
     ax.set_ylabel("Rate",fontdict=font)
-    ax.set_ylim([5e-3,1.0])
     bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
     handles = []
     # Build this up one curve at a time
@@ -366,8 +367,10 @@ if plot_rate_flag:
                 label_needed = False
         savefig_suffix += key
         ax.legend(handles=handles,loc='upper left')
+        ax.set_ylim(ylim_lin)
         fig.savefig(join(paramdirs["s2s"],"rate_%s_%s_linear"%(bndy_suffix,savefig_suffix)))
         plt.close(fig)
+    ax.set_ylim(ylim_log)
     ax.set_yscale('log')
     fig.savefig(join(paramdirs["s2s"],"rate_%s_%s_log"%(bndy_suffix,savefig_suffix)))
 

@@ -510,16 +510,18 @@ class WinterStratosphereTPT:
             ra[k]["Nx"],ra[k]["Ntx"],ra[k]["xdim"] = ra[k]["X"].shape
             if not (ra[k]["Ny"] == ra[k]["Nx"] and ra[k]["Nty"] == ra[k]["Ntx"]):
                 raise Exception(f"ERROR: Xra and Yra have shapes {ra[k]['X'].shape} and {ra[k]['Y'].shape} respectively. The first two dimensions should match")
-            ra[k]["ina"] = winstrat.ina_test(ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"])),feat_def,self.tpt_bndy)#.reshape(Nyra*Ntyra)
-            ra[k]["inb"] = winstrat.inb_test(ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"])),feat_def,self.tpt_bndy)#.reshape(Nyra*Ntyra)
+            ra[k]["ina"] = winstrat.ina_test(ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"])),feat_def,self.tpt_bndy).reshape(ra[k]["Ny"],ra[k]["Nty"])
+            ra[k]["inb"] = winstrat.inb_test(ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"])),feat_def,self.tpt_bndy).reshape(ra[k]["Ny"],ra[k]["Nty"])
             # Get source and destination
             ra[k]["src_tag"],ra[k]["dest_tag"] = winstrat.compute_src_dest_tags(ra[k]["Y"],feat_def,self.tpt_bndy)
-            ra[k]["src_tag"] = ra[k]["src_tag"]
-            ra[k]["dest_tag"] = ra[k]["dest_tag"]
             # Restrict reanalysis to the midwinter
             ra[k]["winter_flag"] = ((ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] >= self.tpt_bndy['tthresh'][0])*(ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] <= self.tpt_bndy['tthresh'][1]))#.flatten()
             ra[k]["Y"] = ra[k]["Y"]#.reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))
             ra[k]["X"] = ra[k]["X"]#.reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))
+        ra["ei"]["color"] = "black"
+        ra["e2"]["color"] = "cyan"
+        ra["ei"]["label"] = "ERA-Interim"
+        ra["e2"]["label"] = "ERA-20C"
         # Plot fields using the data points rather than the clusters
         funlib_Y = winstrat.observable_function_library_Y(algo_params)
         funlib_X = winstrat.observable_function_library_X()
@@ -535,7 +537,7 @@ class WinterStratosphereTPT:
         #X = X.reshape((Ny*Nty,xdim))
         traj_rank = np.outer(np.ones(Ny), np.arange(Nty)).flatten()
         winter_flag = (Y[:,:,winstrat.fidx_Y['time_h']] >= self.tpt_bndy['tthresh'][0])*(Y[:,:,winstrat.fidx_Y['time_h']] <= self.tpt_bndy['tthresh'][1])
-        #idx_winter = np.where(winter_flag)[0]
+        idx_winter = np.where(winter_flag)
         #traj_start_positions = np.where(traj_rank == 0)[0]
         #winter_starts = np.intersect1d(idx_winter,traj_start_positions)
         winter_fully_idx = np.where(np.all(winter_flag, axis=1))[0] # Indices within the (Ny,Nty,ydim)-shaped array
@@ -560,11 +562,10 @@ class WinterStratosphereTPT:
             theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
             theta_lower_list = theta_mid_list - 5.0
             theta_upper_list = theta_mid_list + 5.0
-            colors_ra = {"ei": "black", "e2": "cyan"}
             fig,ax = self.plot_flux_distributions_1d(
                     qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
                     theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
-                    ra,rath,colors_ra,
+                    ra,rath,
                     theta_normal_label,theta_tangential_label,
                     reactive_code,rate,
                     theta_lower_list,theta_upper_list)
@@ -601,92 +602,116 @@ class WinterStratosphereTPT:
             keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
             keypairs += [['time_d','uref']]
             keypairs += [['time_d','captemp_lev0']]
-            keypairs += [['time_d','heatflux_lev4_wn%i'%(i_wn)] for i_wn in range(winstrat.heatflux_wavenumbers_per_level_max)]
+            #keypairs += [['time_d','heatflux_lev4_wn%i'%(i_wn)] for i_wn in range(winstrat.heatflux_wavenumbers_per_level_max)]
             #keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
-            #keypairs += [['uref','pc%i_lev0'%(i_pc)] for i_pc in range(6)]
+            keypairs += [['uref','pc%i_lev0'%(i_pc)] for i_pc in range(6)]
             #keypairs += [['pc1_lev0','pc%i_lev0'%(i_pc)] for i_pc in range(2,6)]
             for key0,key1 in keypairs:
                 print(f"Plotting current on key pair {key0},{key1}")
                 y_flag = (key0 in funlib_Y.keys() and key1 in funlib_Y.keys())
                 x_flag = (key0 in funlib_X.keys() and key1 in funlib_X.keys())
+                print(f"y_flag = {y_flag}, x_flag = {x_flag}")
                 if not (y_flag or x_flag):
                     print(f"WARNING: {key0} and {key1} are not both in funlib_X.keys or funlib_Y.keys")
                 else:
+                    rath = dict({key: dict({}) for key in keys_ra}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
                     if y_flag:
-                        theta_x = np.array([funlib_Y[key0]["fun"](Y), funlib_Y[key1]["fun"](Y)]).T
-                        theta_x_ra = np.array([funlib_Y[key0]["fun"](Yra), funlib_Y[key1]["fun"](Yra)]).T
+                        theta_x = np.array([funlib_Y[key0]["fun"](Y.reshape((Ny*Nty,ydim))), funlib_Y[key1]["fun"](Y.reshape((Ny*Nty,ydim)))]).T.reshape((Nx,Ntx,2))
+                        #theta_x_ra = np.array([funlib_Y[key0]["fun"](Yra), funlib_Y[key1]["fun"](Yra)]).T
+                        for k in keys_ra:
+                            rath[k]["theta"] = np.array([
+                                funlib_Y[key0]['fun'](ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))),
+                                funlib_Y[key1]['fun'](ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"])))]).T.reshape((ra[k]["Ny"],ra[k]["Nty"],2))
                         lab0 = funlib_Y[key0]["label"]
                         lab1 = funlib_Y[key1]["label"]
                     else: 
-                        theta_x = np.array([funlib_X[key0]["fun"](X), funlib_X[key1]["fun"](X)]).T
-                        theta_x_ra = np.array([funlib_X[key0]["fun"](Xra), funlib_X[key1]["fun"](Xra)]).T
+                        theta_x = np.array([funlib_X[key0]["fun"](X.reshape((Nx*Ntx,xdim))), funlib_X[key1]["fun"](X.reshape((Nx*Ntx,xdim)))]).T.reshape((Nx,Ntx,2))
+                        #theta_x_ra = np.array([funlib_X[key0]["fun"](Xra), funlib_X[key1]["fun"](Xra)]).T
+                        for k in keys_ra:
+                            rath[k]["theta"] = np.array([
+                                funlib_X[key0]['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))),
+                                funlib_X[key1]['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"])))]).T.reshape((ra[k]["Ny"],ra[k]["Nty"],2))
                         lab0 = funlib_X[key0]["label"]
                         lab1 = funlib_X[key1]["label"]
                     # A -> B
-                    fig,ax = helper.plot_field_2d((qp_Y*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
-                    _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-                    reactive_flag = ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
-                    self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
+                    reactive_code = [0,1]
+                    comm_bwd = qm_Y*(reactive_code[0] == 0) + (1-qm_Y)*(reactive_code[0] == 1)
+                    comm_fwd = qp_Y*(reactive_code[1] == 1) + (1-qp_Y)*(reactive_code[1] == 0)
+                    print(f"shapes: qp_Y: {qp_Y.shape}, pi_Y: {pi_Y.shape}, theta_x: {theta_x.shape}")
+                    print(f"idx_winter: 0: min={idx_winter[0].min()}, max={idx_winter[0].max()}")
+                    fig,ax = helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$ (winters with SSW)",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrRd)
+                    _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
+                    self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
                     fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
                     # A -> A
-                    fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
-                    _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],1-qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-                    reactive_flag = ((src_tag==0)*(dest_tag==0)*winter_flag_ra).reshape((Nyra,Ntyra))
-                    self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
+                    reactive_code = [0,0]
+                    comm_bwd = qm_Y*(reactive_code[0] == 0) + (1-qm_Y)*(reactive_code[0] == 1)
+                    comm_fwd = qp_Y*(reactive_code[1] == 1) + (1-qp_Y)*(reactive_code[1] == 0)
+                    fig,ax = helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$ (winters without SSW)",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrRd)
+                    _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
+                    self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
                     fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
-                    # A or B -> A or B
-                    fig,ax = helper.plot_field_2d(np.ones(Ny*Nty)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
-                    _,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-                    reactive_flag = winter_flag_ra.reshape((Nyra,Ntyra))
-                    self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax,debug=False)
-                    fig.savefig(join(savedir,"J_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
-                    plt.close(fig)
+                    ## A -> A
+                    #fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
+                    #_,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],1-qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+                    #reactive_flag = ((src_tag==0)*(dest_tag==0)*winter_flag_ra).reshape((Nyra,Ntyra))
+                    #self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
+                    #fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
+                    #plt.close(fig)
+                    ## A or B -> A or B
+                    #fig,ax = helper.plot_field_2d(np.ones(Ny*Nty)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
+                    #_,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
+                    #reactive_flag = winter_flag_ra.reshape((Nyra,Ntyra))
+                    #self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax,debug=False)
+                    #fig.savefig(join(savedir,"J_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
+                    #plt.close(fig)
         if spaghetti_flag:
             # ----------- New plot: short histories of zonal wind, colored by committor. Maybe this will inform new coordinates --------------
             fig,ax = plt.subplots()
-            prng = np.random.RandomState(1)
-            ss = prng.choice(winter_starts,size=min(len(winter_starts),500),replace=False) 
-            print(f"qp on ss: min={np.min(qp_Y[ss])}, max={np.max(qp_Y[ss])}")
             time_full = np.arange(winstrat.ndelay)*winstrat.dtwint/24.0
             time_full -= time_full[-1]
             uref_idx = np.array([winstrat.fidx_Y["uref_dl%i"%(i_dl)] for i_dl in range(winstrat.ndelay)])[::-1]
-            uref = Y[:,uref_idx]
+            uref = Y[:,:,uref_idx]
+            print(f"Y.shape = {Y.shape}")
+            print(f"uref.shape = {uref.shape}")
+            prng = np.random.RandomState(1)
+            ss = prng.choice(np.arange(len(idx_winter[0])),size=min(len(idx_winter[0]),100),replace=False) 
             for i_y in ss:
-                time_i = time_full + Y[i_y,winstrat.fidx_Y['time_h']]/24.0
-                ax.plot(time_i,uref[i_y],color=plt.cm.coolwarm(qp_Y[i_y]),alpha=0.4)
+                time_i = time_full + Y[idx_winter[0][i_y],idx_winter[1][i_y],winstrat.fidx_Y['time_h']]/24.0
+                ax.plot(time_i,uref[idx_winter[0][i_y],idx_winter[1][i_y]],color=plt.cm.coolwarm(qp_Y[idx_winter[0][i_y],idx_winter[1][i_y]]),alpha=0.75)
             ax.set_xlabel(funlib_Y["time_d"]["label"])
             ax.set_ylabel(funlib_Y["uref_dl0"]["label"])
             fig.savefig(join(savedir,"qp_uref_spaghetti"))
             plt.close(fig)
             print("saved spaghetti, now moving on...")
-            # ------------ New plot: vertical profiles of zonal wind colored by committor. -------------
-            Nlev = len(feat_def['plev'])
-            fig,ax = plt.subplots()
-            prng = np.random.RandomState(1)
-            ss = prng.choice(winter_starts,size=min(len(winter_starts),1000)) # Make sure it's always at the beginning
-            ubar_idx = np.array([winstrat.fidx_X["ubar_60N_lev%i"%(i_lev)] for i_lev in range(Nlev)])
-            ubar = X[:,ubar_idx]
-            for i_x in ss:
-                ax.plot(ubar[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[i_x]),alpha=0.1,linewidth=2)
-            ax.set_xlabel(r"$\overline{u}$ [m/s]")
-            ax.set_ylabel(r"Pseudo-height [km]")
-            fig.savefig(join(savedir,"qp_uprofile_spaghetti"))
-            plt.close(fig)
-            # ------------ New plot: vertical profiles of heat flux colored by committor. -------------
-            Nlev = len(feat_def['plev'])
-            fig,ax = plt.subplots()
-            prng = np.random.RandomState(1)
-            ss = prng.choice(winter_starts,size=min(len(winter_starts),1000)) # The Nty makes sure it's always at the beginning
-            vT_idx = np.array([winstrat.fidx_X["heatflux_lev%i"%(i_lev)] for i_lev in range(Nlev)])
-            vT = X[:,vT_idx]
-            for i_x in ss:
-                ax.plot(vT[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[i_x]),alpha=0.1,linewidth=2)
-            ax.set_xlabel(r"$\overline{v'T'}$ [K$\cdot$m/s]")
-            ax.set_ylabel(r"Pseudo-height [km]")
-            fig.savefig(join(savedir,"qp_vTprofile_spaghetti"))
-            plt.close(fig)
+            ## ------------ New plot: vertical profiles of zonal wind colored by committor. -------------
+            #Nlev = len(feat_def['plev'])
+            #fig,ax = plt.subplots()
+            #prng = np.random.RandomState(1)
+            #ss = prng.choice(winter_starts,size=min(len(winter_starts),1000)) # Make sure it's always at the beginning
+            #ubar_idx = np.array([winstrat.fidx_X["ubar_60N_lev%i"%(i_lev)] for i_lev in range(Nlev)])
+            #ubar = X[:,ubar_idx]
+            #for i_x in ss:
+            #    ax.plot(ubar[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[i_x]),alpha=0.1,linewidth=2)
+            #ax.set_xlabel(r"$\overline{u}$ [m/s]")
+            #ax.set_ylabel(r"Pseudo-height [km]")
+            #fig.savefig(join(savedir,"qp_uprofile_spaghetti"))
+            #plt.close(fig)
+            ## ------------ New plot: vertical profiles of heat flux colored by committor. -------------
+            #Nlev = len(feat_def['plev'])
+            #fig,ax = plt.subplots()
+            #prng = np.random.RandomState(1)
+            #ss = prng.choice(winter_starts,size=min(len(winter_starts),1000)) # The Nty makes sure it's always at the beginning
+            #vT_idx = np.array([winstrat.fidx_X["heatflux_lev%i"%(i_lev)] for i_lev in range(Nlev)])
+            #vT = X[:,vT_idx]
+            #for i_x in ss:
+            #    ax.plot(vT[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[i_x]),alpha=0.1,linewidth=2)
+            #ax.set_xlabel(r"$\overline{v'T'}$ [K$\cdot$m/s]")
+            #ax.set_ylabel(r"Pseudo-height [km]")
+            #fig.savefig(join(savedir,"qp_vTprofile_spaghetti"))
+            #plt.close(fig)
         return
     def plot_results_clust(self,feat_def,savedir,winstrat,algo_params):
         qp = pickle.load(open(join(savedir,"qp"),"rb"))
@@ -834,7 +859,7 @@ class WinterStratosphereTPT:
     def plot_flux_distributions_1d(self,
             qm,qp,pi,
             theta_normal,theta_tangential,
-            ra,rath,colors_ra,
+            ra,rath,
             theta_normal_label,theta_tangential_label,
             reactive_code,rate,
             theta_lower_list=None,theta_upper_list=None,
@@ -875,7 +900,7 @@ class WinterStratosphereTPT:
                 #print(f"weights.shape = {weights.shape}, x.shape = {x.shape}")
                 hist,bin_edges = np.histogram(thmid[idx,1],weights=reactive_flux[i_thlev][:,0],bins=bins,range=(np.nanmin(thmid[:,1]),np.nanmax(thmid[:,1])))
                 bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
-                hist *= rate/(np.sum(hist)*dth_tangential)
+                hist *= 1.0/(np.sum(hist)*dth_tangential)
                 # ------------- Reanalysis --------------------
                 theta_mid = 0.5*(theta_lower_list[i_thlev] + theta_upper_list[i_thlev])
                 print(f"theta_mid = {theta_mid}")
@@ -884,18 +909,15 @@ class WinterStratosphereTPT:
                     idx_ra_bwd = np.where((rath[k]["theta_normal"][:,:-1] > theta_mid)*(rath[k]["theta_normal"][:,1:] < theta_mid)*(rath[k]["reactive_flag"][:,:-1]+rath[k]["reactive_flag"][:,1:]))
                     idx_ra = (np.concatenate((idx_ra_fwd[0], idx_ra_bwd[0])),
                             np.concatenate((idx_ra_fwd[1], idx_ra_bwd[1])))
-                    print(f"lengths: fwd->{len(idx_ra_fwd[0])}, bwd->{len(idx_ra_bwd[0])}")
                     signs_ra = np.concatenate((np.ones(len(idx_ra_fwd[0])),-np.ones(len(idx_ra_bwd[0])))) * np.sign(theta_normal_comm_corr)
                     theta_tangential_ra = 0.5*(rath[k]["theta_tangential"][idx_ra[0],idx_ra[1]] + rath[k]["theta_tangential"][idx_ra[0],idx_ra[1]+1])
                     rath[k]["num_rxn"] = np.sum(signs_ra) 
-                    print(f"num_rxn[{k}] = {rath[k]['num_rxn']}")
-                    print(f"But really, ... num_rxn = {np.sum(np.any(rath[k]['reactive_flag'],axis=1))}")
                     # Put together into a histogram
                     if rath[k]["num_rxn"] > 0:
                         hist_ra,bin_edges_ra = np.histogram(theta_tangential_ra, weights=signs_ra,range=(np.nanmin(thmid[:,1]),np.nanmax(thmid[:,1])),bins=bins)
                         #hist_ra *= num_rxn_ra/(Nxra*dth_tan_ra*np.sum(hist_ra))
                         rath[k]["bin_centers"] = (bin_edges_ra[1:] + bin_edges_ra[:-1])/2
-                        rath[k]["hist"] = hist_ra*rate/(np.abs(np.sum(hist_ra))*dth_tangential)
+                        rath[k]["hist"] = hist_ra*1.0/(np.abs(np.sum(hist_ra))*dth_tangential)
                 # ---------------------------------------------
                 if timeseries_like:
                     max_bin_height = 0.6*np.min(np.diff(theta_lower_list))
@@ -906,18 +928,19 @@ class WinterStratosphereTPT:
                     #ax.plot(x2, bin_centers, color='black')
                     ax.fill_betweenx(bin_centers, x1, x2, facecolor='gray', edgecolor='black')
                 else:
-                    h, = ax.plot(bin_centers,hist,color='red',label=r"$%.2f$"%((theta_lower_list[i_thlev]+theta_upper_list[i_thlev])/2),marker='o')
+                    h, = ax.plot(bin_centers,hist,color='red',label="S2S",marker='.')
                     handles.append(h)
                     for k in keys_ra:
                         if rath[k]["num_rxn"] > 0:
-                            hra, = ax.plot(rath[k]["bin_centers"],rath[k]["hist"],color=colors_ra[k],label=r"$%.2f$"%((theta_lower_list[i_thlev]+theta_upper_list[i_thlev])/2),marker='.',linestyle='--')
+                            hra, = ax.plot(rath[k]["bin_centers"],rath[k]["hist"],color=ra[k]["color"],label=ra[k]["label"],marker='.',linestyle='-')
+                            handles.append(hra)
         ax.legend(handles=handles)
         if timeseries_like:
             ax.set_xlabel(theta_normal_label,fontdict=font)
             ax.set_ylabel(theta_tangential_label,fontdict=font)
         else:
             ax.set_xlabel(theta_tangential_label,fontdict=font)
-            ax.set_ylabel(r"d[%s]"%(theta_normal_label),fontdict=font)
+            ax.set_ylabel(r"Probability density",fontdict=font)
             ax.axhline(y=0,color='black')
         return fig,ax
     def project_current(self,theta_flat,time,centers,flux):
@@ -944,21 +967,19 @@ class WinterStratosphereTPT:
                     Jth[i1:i2,j] += fwd_weight*np.sum(flux[k]*np.add.outer(-theta_flat[i1:i2,j], theta_flat[i2:i3,j]), axis=1)
             i1 = i2
         return Jth
-    def plot_trajectory_segments(self,theta_x,reactive_flag,fig,ax,zorder=10,numtraj=20,debug=False):
+    def plot_trajectory_segments(self,ra,rath,reactive_code,fig,ax,zorder=10,numtraj=5,debug=False):
         # Plot trajectory segments in 2D given by theta_x. only plot the segments with reactive_flag on
-        if theta_x.shape[2] != 2:
-            raise Exception(f"ERROR: you gave me a data set of shape {theta_x.shape}, but I need dimension 2 to have size 2")
-        prng = np.random.RandomState(2)
-        ss = prng.choice(np.arange(len(theta_x)),size=numtraj,replace=False)
-        print(f"reactive_flag.shape = {reactive_flag.shape}")
-        print(f"theta_x.shape = {theta_x.shape}")
-        for i in ss:
-            ridx = np.where(reactive_flag[i])[0]
-            xx = theta_x[i,ridx,:]
-            #xx[np.where(reactive_flag[i]==0)[0],:] = np.nan
-            #if debug: print(f"At index {i}, reactive_flag[i] = {reactive_flag[i]}")
-            ax.plot(xx[:,0],xx[:,1],color='cyan',linewidth=1,zorder=zorder)
-        if debug: sys.exit()
+        for k in rath.keys():
+            if rath[k]["theta"].shape[2] != 2:
+                raise Exception(f"ERROR: you gave me a data set of shape {theta_x.shape}, but I need dimension 2 to have size 2")
+            reactive_flag = (ra[k]["src_tag"] == reactive_code[0])*(ra[k]["dest_tag"] == reactive_code[1])*(ra[k]["ina"] == 0)*(ra[k]["inb"] == 0)
+            any_rxn_idx = np.where(np.any(reactive_flag, axis=1))[0]
+            prng = np.random.RandomState(2)
+            ss = prng.choice(any_rxn_idx,size=min(numtraj,len(any_rxn_idx)),replace=False)
+            for i in ss:
+                ridx = np.where(reactive_flag[i])[0]
+                xx = rath[k]["theta"][i,ridx,:]
+                ax.plot(xx[:,0],xx[:,1],color=ra[k]["color"],linewidth=0.75,zorder=zorder)
         return
     def project_current_data(self,theta_x,qm,qp,pi):
         Nx,Nt,thdim = theta_x.shape
