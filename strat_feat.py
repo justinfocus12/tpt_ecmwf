@@ -227,8 +227,23 @@ class WinterStratosphereFeatures:
         imin,imax = np.argmin(np.abs(lat-75)),np.argmin(np.abs(lat-45))
         _,vmer = self.compute_geostrophic_wind(gh,lat,lon)
         vT = np.sum((vmer*temperature*cosine)[:,:,imin:imax,:], axis=2)/np.sum(cosine[imin:imax,:], axis=0)
+        #vT = (vmer*temperature)[:,:,(imin+imax)//2,:]
         vThat = 1/Nlon*np.abs(np.fft.rfft(vT, axis=2)[:,:,:self.heatflux_wavenumbers_per_level_max])
         vThat[:,:,1:] *= 2 # Account for both halves of the spectrum
+        # ------- Debugging --------
+        #print(f"Level 2 stats:")
+        #print(f"vmer mean = {np.mean(vmer[:,2,(imin+imax)//2,:])}")
+        #print(f"temp mean = {np.mean(temperature[:,2,(imin+imax)//2,:])}")
+        #print(f"vT mean = {np.mean(vT[:,2,:])}")
+        ## Compute v'T' by hand
+        #vprime = np.transpose(np.transpose(vmer, (3,0,1,2)) - np.mean(vmer, axis=3), (1,2,3,0))
+        #Tprime = np.transpose(np.transpose(temperature, (3,0,1,2)) - np.mean(temperature, axis=3), (1,2,3,0))
+        #vpTp = np.mean(vprime*Tprime, axis=3)
+        #print(f"level 0 vpTp  mean = {np.mean(vpTp[:,0,(imin+imax)//2])}")
+        #for i_wn in range(6):
+        #    print(f"level 0 vThat wave {i_wn} mean = {np.mean(vThat[:,0,i_wn])}")
+        #    print(f"level 0 vThat wave {i_wn} std = {np.std(vThat[:,0,i_wn])}")
+        #sys.exit()
         return vThat
     def classify_split_displacement(self,gh,lat,lon):
         # Compute the split vs. displacement criterion from cp07
@@ -950,7 +965,7 @@ class WinterStratosphereFeatures:
         decel_time_range = [max(0,start-decel_window), min(len(time)-1, start+2*decel_window)]
         full_time_range = self.wtime[[0,-1]]
         # Make a list of things to plot
-        obs_key_list = ["mag1","mag2","captemp_lev0","heatflux_lev0_wn0","heatflux_lev0_wn1","heatflux_lev0_wn2","uref","pc0_lev0","pc1_lev0","pc2_lev0","pc3_lev0","pc4_lev0","pc5_lev0"]
+        obs_key_list = ["mag1","mag2","captemp_lev0","heatflux_lev4_wn0","heatflux_lev4_wn1","heatflux_lev4_wn2","uref","pc0_lev0","pc1_lev0","pc2_lev0","pc3_lev0","pc4_lev0","pc5_lev0"]
         for obs_key in obs_key_list:
             fig,ax = plt.subplots()
             ydata = funlib[obs_key]["fun"](X)

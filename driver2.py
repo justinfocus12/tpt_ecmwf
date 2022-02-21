@@ -30,7 +30,7 @@ datadirs = dict({
 sources = list(datadirs.keys())
 featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-18"
 if not exists(featdir): mkdir(featdir)
-feat_display_dir = join(featdir,"display0")
+feat_display_dir = join(featdir,"display1")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
@@ -151,7 +151,7 @@ subsetdirs = dict({key: [join(paramdirs[key],"%i-%i"%(subset[0],subset[-1]+1)) f
 # Parameters to determine what to do
 # Featurization
 create_features_flag =         0
-display_features_flag =        0
+display_features_flag =        1
 # era20c
 evaluate_database_e2 =         0
 tpt_featurize_e2 =             0
@@ -166,10 +166,10 @@ tpt_featurize_s2s =            0
 cluster_flag =                 0
 build_msm_flag =               0
 tpt_s2s_flag =                 0
-plot_tpt_results_s2s_flag =    1
+plot_tpt_results_s2s_flag =    0
 # Summary statistic
 plot_rate_flag =               0
-illustrate_dataset_flag =      1
+illustrate_dataset_flag =      0
 
 
 feature_file = join(featdir,"feat_def")

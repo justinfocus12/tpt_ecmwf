@@ -571,6 +571,69 @@ class WinterStratosphereTPT:
                     theta_lower_list,theta_upper_list)
             fig.savefig(join(savedir,"fluxdens_J-uref_d-timed"))
             plt.close(fig)
+            # ----------- Plot flux distribution of wavenumber 0  ---------
+            theta_normal = funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
+            theta_normal_label = funlib_X['uref']['label']
+            theta_tangential = funlib_X['heatflux_lev4_wn0']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
+            theta_tangential_label = funlib_X['heatflux_lev4_wn0']['label']
+            rath = dict({key: dict({}) for key in keys_ra}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
+            for k in keys_ra:
+                rath[k]["theta_normal"] = funlib_X['uref']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
+                rath[k]["theta_tangential"] = funlib_X['heatflux_lev4_wn0']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
+            theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
+            theta_lower_list = theta_mid_list - 5.0
+            theta_upper_list = theta_mid_list + 5.0
+            fig,ax = self.plot_flux_distributions_1d(
+                    qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
+                    theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
+                    ra,rath,
+                    theta_normal_label,theta_tangential_label,
+                    reactive_code,rate,
+                    theta_lower_list,theta_upper_list)
+            fig.savefig(join(savedir,"fluxdens_J-uref_d-hflev4wn0"))
+            plt.close(fig)
+            # ----------- Plot flux distribution of wavenumber 1  ---------
+            theta_normal = funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
+            theta_normal_label = funlib_X['uref']['label']
+            theta_tangential = funlib_X['heatflux_lev4_wn1']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
+            theta_tangential_label = funlib_X['heatflux_lev4_wn1']['label']
+            rath = dict({key: dict({}) for key in keys_ra}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
+            for k in keys_ra:
+                rath[k]["theta_normal"] = funlib_X['uref']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
+                rath[k]["theta_tangential"] = funlib_X['heatflux_lev4_wn1']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
+            theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
+            theta_lower_list = theta_mid_list - 5.0
+            theta_upper_list = theta_mid_list + 5.0
+            fig,ax = self.plot_flux_distributions_1d(
+                    qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
+                    theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
+                    ra,rath,
+                    theta_normal_label,theta_tangential_label,
+                    reactive_code,rate,
+                    theta_lower_list,theta_upper_list)
+            fig.savefig(join(savedir,"fluxdens_J-uref_d-hflev4wn1"))
+            plt.close(fig)
+            # ----------- Plot flux distribution of wavenumber 2  ---------
+            theta_normal = funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
+            theta_normal_label = funlib_X['uref']['label']
+            theta_tangential = funlib_X['heatflux_lev4_wn2']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
+            theta_tangential_label = funlib_X['heatflux_lev4_wn2']['label']
+            rath = dict({key: dict({}) for key in keys_ra}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
+            for k in keys_ra:
+                rath[k]["theta_normal"] = funlib_X['uref']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
+                rath[k]["theta_tangential"] = funlib_X['heatflux_lev4_wn2']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
+            theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
+            theta_lower_list = theta_mid_list - 5.0
+            theta_upper_list = theta_mid_list + 5.0
+            fig,ax = self.plot_flux_distributions_1d(
+                    qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
+                    theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
+                    ra,rath,
+                    theta_normal_label,theta_tangential_label,
+                    reactive_code,rate,
+                    theta_lower_list,theta_upper_list)
+            fig.savefig(join(savedir,"fluxdens_J-uref_d-hflev4wn2"))
+            plt.close(fig)
             ## --------- Plot distribution of zonal wind over different times ------
             #theta_normal = funlib_X['time_d']['fun'](X)
             #theta_normal_ra = funlib_X['time_d']['fun'](Xra)
