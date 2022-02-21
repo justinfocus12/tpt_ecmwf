@@ -34,9 +34,9 @@ feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-02-18")
+daydir = join(resultsdir,"2022-02-21")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"1")
+expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -169,7 +169,7 @@ tpt_s2s_flag =                 0
 plot_tpt_results_s2s_flag =    1
 # Summary statistic
 plot_rate_flag =               0
-illustrate_dataset_flag =      0
+illustrate_dataset_flag =      1
 
 
 feature_file = join(featdir,"feat_def")
@@ -319,7 +319,7 @@ for i_subset,subset in enumerate(subset_lists["s2s"]):
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,spaghetti_flag=(i_uth==1 or i_uth==3),fluxdens_flag=True,current2d_flag=0*(i_uth==1 or i_uth==3))
+            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,spaghetti_flag=(i_uth==1 or i_uth==4),fluxdens_flag=True,current2d_flag=1*(i_uth==1 or i_uth==4))
             #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
 
 # =============================================================================
@@ -437,7 +437,7 @@ if illustrate_dataset_flag:
     tpt_feat_filename_hc = join(subsetdirs["s2s"][-1],"Y")
     tthresh = np.array([tthresh0,tthresh1])*24.0
     winstrat.illustrate_dataset(
-            uthresh_a,uthresh_list[[1,3]],tthresh,sswbuffer,
+            uthresh_a,uthresh_list[[1,3,4]],tthresh,sswbuffer,
             file_lists["e2"],file_lists["s2s"],
             feat_filename_ra,feat_filename_hc,
             tpt_feat_filename_ra,tpt_feat_filename_hc,

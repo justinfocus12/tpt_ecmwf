@@ -1230,6 +1230,8 @@ class WinterStratosphereFeatures:
         uref_ra = funlib_X["uref"]["fun"](Xra.reshape((Nxra*Ntra,xdim))).reshape((Nxra,Ntra))
         time_d_hc = funlib_X["time_d"]["fun"](Xhc.reshape((Nxhc*Nthc,xdim))).reshape((Nxhc,Nthc))
         uref_hc = funlib_X["uref"]["fun"](Xhc.reshape((Nxhc*Nthc,xdim))).reshape((Nxhc,Nthc))
+        # Before randomly sampling a reanalysis year, make sure there are corresponding hindcasts 
+        common_years_hc_ra = np.intersect1d(fy_ra,fy_hc)
         prng = np.random.RandomState(3)
         for i_uth,uthresh_b in enumerate(uthresh_b_list):
             tpt_bndy["uthresh_b"] = uthresh_b
@@ -1239,34 +1241,42 @@ class WinterStratosphereFeatures:
             ax.axhspan(np.min(uref_ra),uthresh_b,color='red')
             ax.axvspan(np.min(time_d_ra),tthresh[0]/24.0,color='lightskyblue')
             ax.axvspan(tthresh[1]/24.0,np.max(time_d_ra),color='lightskyblue')
-            y_ss = prng.choice(rare_event_idx[i_uth],size=1,replace=False)
-            for i_y in y_ss: #rare_event_idx[i_uth]:
-                rxn_idx = np.where((src_tag[i_y]==0)*(dest_tag[i_y]==1))[0]
-                i0,i1 = rxn_idx[0],rxn_idx[-1]+1
-                i0 += self.ndelay-1
-                i1 += self.ndelay-1
-                h, = ax.plot(time_d_ra[i_y,i0:i1+1],uref_ra[i_y,i0:i1+1],color='black',label=r"ERA-Interim %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1),zorder=2,linewidth=2)
-                handles += [h]
-                ax.plot(time_d_ra[i_y,:i0+1],uref_ra[i_y,:i0+1],color='black',linewidth=1.0,zorder=2,linestyle='--')
-                ax.plot(time_d_ra[i_y,i1:],uref_ra[i_y,i1:],color='black',linewidth=1.0,zorder=2,linestyle='--')
-                # ----------- Now identify three hindcast ensembles corresponding to this year ---------------
-                idx_hc = np.where(fy_hc == fy_ra[i_y])[0]
-                days_idx_hc = time_d_hc[enst_hc[idx_hc],0]
-                idx_hc_ss = idx_hc[np.array([np.argmin(np.abs(days_idx_hc - d)) for d in [30,100]])]
-                #idx_hc_ss = idx_hc[np.linspace(0,len(idx_hc)-1,5).astype(int)[1:-1]]
-                #idx_hc_ss = prng.choice(idx_hc, size=3, replace=False)
-                colorlist = ['gray']*3
-                i_col = 0
-                for i_ens in idx_hc_ss:
-                    for i_mem in range(Nmem_hc):
-                        h, = ax.plot(time_d_hc[enst_hc[i_ens]+i_mem],uref_hc[enst_hc[i_ens]+i_mem],color=colorlist[i_col],zorder=1,linewidth=0.75,label=r"S2S")
-                    i_col += 1
-                handles += [h]
-            ax.set_xlabel(funlib_X["time_d"]["label"])
-            ax.set_ylabel(funlib_X["uref"]["label"])
-            ax.legend(handles=handles)
-            ax.set_ylim([np.min(uref_ra),np.max(uref_ra)])
-            ax.set_xlim([np.min(time_d_ra),np.max(time_d_ra)])
-            fig.savefig(join(feat_display_dir,"illustration_uth%i"%(uthresh_b)))
-            plt.close(fig)
+            admissible_idx = np.intersect1d(rare_event_idx[i_uth], np.where(np.in1d(fy_ra, fy_hc))[0])
+            if len(admissible_idx) == 0:
+                print("WARNING: no common RA and HC years")
+            else:
+                #y_ss = prng.choice(rare_event_idx[i_uth],size=1,replace=False)
+                y_ss = prng.choice(admissible_idx,size=1,replace=False)
+                print(f"y_ss.shape = {y_ss.shape}")
+                for i_y in y_ss: #rare_event_idx[i_uth]:
+                    rxn_idx = np.where((src_tag[i_y]==0)*(dest_tag[i_y]==1))[0]
+                    i0,i1 = rxn_idx[0],rxn_idx[-1]+1
+                    i0 += self.ndelay-1
+                    i1 += self.ndelay-1
+                    h, = ax.plot(time_d_ra[i_y,i0:i1+1],uref_ra[i_y,i0:i1+1],color='black',label=r"ERA-Interim %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1),zorder=2,linewidth=2)
+                    handles += [h]
+                    ax.plot(time_d_ra[i_y,:i0+1],uref_ra[i_y,:i0+1],color='black',linewidth=1.0,zorder=2,linestyle='--')
+                    ax.plot(time_d_ra[i_y,i1:],uref_ra[i_y,i1:],color='black',linewidth=1.0,zorder=2,linestyle='--')
+                    # ----------- Now identify three hindcast ensembles corresponding to this year ---------------
+                    print(f"fy_ra[i_y] = {fy_ra[i_y]}")
+                    idx_hc = np.where(fy_hc == fy_ra[i_y])[0]
+                    print(f"idx_hc.shape = {idx_hc.shape}")
+                    days_idx_hc = time_d_hc[enst_hc[idx_hc],0]
+                    idx_hc_ss = idx_hc[np.array([np.argmin(np.abs(days_idx_hc - d)) for d in [30,100]])]
+                    #idx_hc_ss = idx_hc[np.linspace(0,len(idx_hc)-1,5).astype(int)[1:-1]]
+                    #idx_hc_ss = prng.choice(idx_hc, size=3, replace=False)
+                    colorlist = ['gray']*3
+                    i_col = 0
+                    for i_ens in idx_hc_ss:
+                        for i_mem in range(Nmem_hc):
+                            h, = ax.plot(time_d_hc[enst_hc[i_ens]+i_mem],uref_hc[enst_hc[i_ens]+i_mem],color=colorlist[i_col],zorder=1,linewidth=0.75,label=r"S2S")
+                        i_col += 1
+                    handles += [h]
+                ax.set_xlabel(funlib_X["time_d"]["label"])
+                ax.set_ylabel(funlib_X["uref"]["label"])
+                ax.legend(handles=handles)
+                ax.set_ylim([np.min(uref_ra),np.max(uref_ra)])
+                ax.set_xlim([np.min(time_d_ra),np.max(time_d_ra)])
+                fig.savefig(join(feat_display_dir,"illustration_uth%i"%(uthresh_b)))
+                plt.close(fig)
         return
