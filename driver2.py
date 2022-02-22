@@ -168,7 +168,7 @@ build_msm_flag =               0
 tpt_s2s_flag =                 0
 plot_tpt_results_s2s_flag =    1
 # Summary statistic
-plot_rate_flag =               1
+plot_rate_flag =               0
 illustrate_dataset_flag =      0
 
 
