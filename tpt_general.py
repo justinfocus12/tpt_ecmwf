@@ -380,6 +380,8 @@ class WinterStratosphereTPT:
         tpt_feat = pickle.load(open(tpt_feat_filename,"rb"))
         Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
         Ny,Nt,ydim = Y.shape
+        ina_Y = winstrat.ina_test(Y.reshape((Ny*Nt,ydim)),feat_def,self.tpt_bndy)
+        inb_Y = winstrat.inb_test(Y.reshape((Ny*Nt,ydim)),feat_def,self.tpt_bndy)
         funlib = winstrat.observable_function_library_Y(algo_params)
         #uref_y = funlib["uref"]["fun"](Y.reshape((Ny*Nt,ydim)))
         #print("uref_y: min={}, max={}, mean={}".format(uref_y.min(),uref_y.max(),uref_y.mean()))
@@ -453,7 +455,6 @@ class WinterStratosphereTPT:
         #ti_froma = np.where(winstrat.wtime > self.tpt_bndy['tthresh'][0])[0][0]
         if np.abs(rate_froma - rate_tob) > 0.1*max(rate_froma, rate_tob):
             raise Exception(f"Rate discrepancy: froma is {rate_froma}, tob is {rate_tob}")
-        print(f"Rate: froma={rate_froma}, tob={rate_tob}")
         #rate = np.sum(flux[ti_froma])
         pickle.dump(qp,open(join(savedir,"qp"),"wb"))
         pickle.dump(qm,open(join(savedir,"qm"),"wb"))
@@ -466,14 +467,14 @@ class WinterStratosphereTPT:
         pickle.dump(centers,open(join(savedir,"centers"),"wb"))
         np.save(join(savedir,"kmtime"),kmtime)
         # Do the time-dependent Markov Chain analysis
-        summary = {"rate_froma": rate_froma, "rate_tob": rate_tob,}
+        summary = {"rate_froma": rate_froma, "rate_tob": rate_tob, "rate_naive": np.mean(np.any(inb_Y.reshape((Ny,Nt)), axis=1))}
         pickle.dump(summary,open(join(savedir,"summary"),"wb"))
+        print(f"Rate: froma={summary['rate_froma']}, tob={summary['rate_tob']}, naive={summary['rate_naive']}")
         
         # ------------------------------------------------------------------------------------
         # Interpolate quantities of interest onto all the points. Enforce boundary conditions. 
         # ------------------------------------------------------------------------------------
-        ina_Y = winstrat.ina_test(Y.reshape((Ny*Nt,ydim)),feat_def,self.tpt_bndy)
-        inb_Y = winstrat.inb_test(Y.reshape((Ny*Nt,ydim)),feat_def,self.tpt_bndy)
+        
         idx_a = np.where(ina_Y)[0]
         idx_b = np.where(inb_Y)[0]
         np.save(join(savedir,"ina_Y"),ina_Y)
@@ -560,8 +561,8 @@ class WinterStratosphereTPT:
                 rath[k]["theta_normal"] = funlib_X['uref']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
                 rath[k]["theta_tangential"] = funlib_X['time_d']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
             theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
-            theta_lower_list = theta_mid_list - 5.0
-            theta_upper_list = theta_mid_list + 5.0
+            theta_lower_list = theta_mid_list - 1.0
+            theta_upper_list = theta_mid_list + 1.0
             fig,ax = self.plot_flux_distributions_1d(
                     qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
                     theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
@@ -938,7 +939,7 @@ class WinterStratosphereTPT:
             theta_edges = np.linspace(theta_normal_min-1e-10,theta_normal_max+1e-10,4+1)
             theta_lower_list = theta_edges[:-1]
             theta_upper_list = theta_edges[1:]
-        # Reanalysis
+        # ---------- Reanalysis --------------
         theta_normal_comm_corr = np.nansum((theta_normal - theta_normal.mean())*(qp - qp.mean()))
         keys_ra = list(ra.keys())
         for k in keys_ra:
@@ -946,7 +947,6 @@ class WinterStratosphereTPT:
             rath[k]["thmid_normal"] = 0.5*(rath[k]["theta_normal"][:,1:] + rath[k]["theta_normal"][:,:-1])
             rath[k]["thmid_tangential"] = 0.5*(rath[k]["theta_tangential"][:,1:] + rath[k]["theta_tangential"][:,:-1])
             rath[k]["reactive_flag"] = (ra[k]["src_tag"] == reactive_code[0])*(ra[k]["dest_tag"] == reactive_code[1])
-
         num_levels = len(theta_lower_list)
         close_idx,reactive_flux = self.reactive_flux_density_levelset(thmid[:,0],Jth,Jweight,theta_lower_list,theta_upper_list)
         fig,ax = plt.subplots()
@@ -964,6 +964,10 @@ class WinterStratosphereTPT:
                 hist,bin_edges = np.histogram(thmid[idx,1],weights=reactive_flux[i_thlev][:,0],bins=bins,range=(np.nanmin(thmid[:,1]),np.nanmax(thmid[:,1])))
                 bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
                 hist *= 1.0/(np.sum(hist)*dth_tangential)
+                # Naive histogram
+                hist_nv,bin_edges_nv = np.histogram(thmid[idx,1],bins=bins,weights=np.ones(len(idx)),range=(np.nanmin(thmid[:,1]),np.nanmax(thmid[:,1])))
+                bin_centers_nv = (bin_edges_nv[1:] + bin_edges_nv[:-1])/2
+                hist_nv *= 1.0/(np.sum(hist_nv)*dth_tangential)
                 # ------------- Reanalysis --------------------
                 theta_mid = 0.5*(theta_lower_list[i_thlev] + theta_upper_list[i_thlev])
                 print(f"theta_mid = {theta_mid}")
@@ -991,12 +995,14 @@ class WinterStratosphereTPT:
                     #ax.plot(x2, bin_centers, color='black')
                     ax.fill_betweenx(bin_centers, x1, x2, facecolor='gray', edgecolor='black')
                 else:
-                    h, = ax.plot(bin_centers,hist,color='red',label="S2S",marker='.')
-                    handles.append(h)
                     for k in keys_ra:
                         if rath[k]["num_rxn"] > 0:
                             hra, = ax.plot(rath[k]["bin_centers"],rath[k]["hist"],color=ra[k]["color"],label=ra[k]["label"],marker='.',linestyle='-')
                             handles.append(hra)
+                    h, = ax.plot(bin_centers,hist,color='red',label="S2S",marker='.')
+                    handles.append(h)
+                    hnv, = ax.plot(bin_centers_nv,hist_nv,color='orange',linestyle='-',label="S2S unweighted",marker='.')
+                    handles.append(hnv)
         ax.legend(handles=handles)
         if timeseries_like:
             ax.set_xlabel(theta_normal_label,fontdict=font)
@@ -1005,6 +1011,7 @@ class WinterStratosphereTPT:
             ax.set_xlabel(theta_tangential_label,fontdict=font)
             ax.set_ylabel(r"Probability density",fontdict=font)
             ax.axhline(y=0,color='black')
+        ax.set_ylim([-0.005,0.03])
         return fig,ax
     def project_current(self,theta_flat,time,centers,flux):
         # For a given vector-valued observable theta, evaluate the current operator J dot grad(theta)

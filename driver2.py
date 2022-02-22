@@ -151,7 +151,7 @@ subsetdirs = dict({key: [join(paramdirs[key],"%i-%i"%(subset[0],subset[-1]+1)) f
 # Parameters to determine what to do
 # Featurization
 create_features_flag =         0
-display_features_flag =        1
+display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
 tpt_featurize_e2 =             0
@@ -166,9 +166,9 @@ tpt_featurize_s2s =            0
 cluster_flag =                 0
 build_msm_flag =               0
 tpt_s2s_flag =                 0
-plot_tpt_results_s2s_flag =    0
+plot_tpt_results_s2s_flag =    1
 # Summary statistic
-plot_rate_flag =               0
+plot_rate_flag =               1
 illustrate_dataset_flag =      0
 
 
@@ -327,6 +327,7 @@ for i_subset,subset in enumerate(subset_lists["s2s"]):
 # ------------- Compare rates ---------------------
 if plot_rate_flag:
     rate_lists = dict({key: np.zeros((len(subset_lists[key]),len(uthresh_list))) for key in sources})
+    rate_lists["s2s_naive"] = np.zeros((len(subset_lists["s2s"]),len(uthresh_list)))
     for i_uth in range(len(uthresh_list)):
         uthresh_b = uthresh_list[i_uth]
         for key in sources:
@@ -334,10 +335,10 @@ if plot_rate_flag:
                 savedir = join(subsetdirs[key][i_subset],"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
                 summary = pickle.load(open(join(savedir,"summary"),"rb"))
                 if key in ["e2","ei"]:
-                    rate = summary["rate"]
-                else:
-                    rate = summary["rate_tob"]
-                rate_lists[key][i_subset,i_uth] = rate
+                    rate_lists[key][i_subset,i_uth] = summary["rate"]
+                elif key == "s2s":
+                    rate_lists[key][i_subset,i_uth] = summary["rate_tob"]
+                    rate_lists["s2s_naive"][i_subset,i_uth] = summary["rate_naive"]
 
     ylim_lin = [0.0,1.0]
     ylim_log = [1e-3,1.0]
@@ -347,14 +348,14 @@ if plot_rate_flag:
     bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
     handles = []
     # Build this up one curve at a time
-    colors = dict({"ei": "black", "e2": "cyan", "s2s": "red"})
-    labels = dict({"ei": "ERA-Int", "e2": "ERA-20C", "s2s": "S2S"})
+    colors = dict({"ei": "black", "e2": "cyan", "s2s": "red", "s2s_naive": "orange"})
+    labels = dict({"ei": "ERA-Interim", "e2": "ERA-20C", "s2s": "S2S", "s2s_naive": "S2S unweighted"})
+    label_needed = dict({key: True for key in colors.keys()})
     du = np.abs(uthresh_list[1] - uthresh_list[0])/15.0 # How far to offset the x axis positions for the three timeseries
     errorbar_offsets = dict({"ei": 0, "e2": -du, "s2s": du})
     savefig_suffix = ""
     for key in sources:
         print(f"Starting to plot rate list for {key}")
-        label_needed = True
         for i_subset,subset in enumerate(subset_lists[key]):
             alpha = 1.0 #len(subset)/max(interval_length_lists[key])
             linewidth = 2 #3*len(subset)/max(interval_length_lists[key])
@@ -362,9 +363,15 @@ if plot_rate_flag:
             linestyle = linestyle_lists[key][i_subset]
             marker = '.'
             h, = ax.plot(uthresh_list,rate_lists[key][i_subset],color=colors[key],linewidth=linewidth,marker=marker,linestyle=linestyle,label=labels[key],alpha=alpha)
-            if len(subset) == max(interval_length_lists[key]) and label_needed: 
+            if len(subset) == max(interval_length_lists[key]) and label_needed[key]: 
                 handles.append(h)
-                label_needed = False
+                label_needed[key] = False
+            if key == "s2s":
+                # Plot the naive one too
+                h, = ax.plot(uthresh_list,rate_lists["s2s_naive"][i_subset],color=colors["s2s_naive"],linewidth=linewidth,marker=marker,linestyle=linestyle,label=labels["s2s_naive"],alpha=alpha)
+                if len(subset) == max(interval_length_lists[key]) and label_needed["s2s_naive"]:
+                    handles.append(h)
+                    label_needed["s2s_naive"] = False
         savefig_suffix += key
         ax.legend(handles=handles,loc='upper left')
         ax.set_ylim(ylim_lin)
@@ -372,6 +379,7 @@ if plot_rate_flag:
         plt.close(fig)
     ax.set_ylim(ylim_log)
     ax.set_yscale('log')
+    ax.legend(handles=handles,loc='lower right')
     fig.savefig(join(paramdirs["s2s"],"rate_%s_%s_log"%(bndy_suffix,savefig_suffix)))
 
 
