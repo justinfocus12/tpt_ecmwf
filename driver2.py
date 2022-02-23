@@ -73,27 +73,51 @@ print(f"file_lists['s2s'][:10] = {file_lists['s2s'][:10]}")
 file_list_climavg = file_lists["ei"][:15]
 
 # ------------ Subsetting for robustness tests ------------
-interval_length_lists = dict({
-    "e2": [53,107],
-    "ei": [20,40],
-    "s2s": [10,21],
-    })
-linestyle_lists = dict({
-    "e2": ['dotted','dashed','solid'],
-    "ei": ['dotted','dashed','solid'],
-    "s2s": ['dotted','dashed','solid'],
-    })
-subset_lists = dict()
-for key in ["e2","ei","s2s"]:
-    subset_lists[key] = []
-    for interval_length in interval_length_lists[key]:
-        starts = np.arange(fall_years[key][0],fall_years[key][-1],interval_length)
-        print(f"key = {key}, starts = {starts}")
-        for k0 in starts:
-            print(f"k0 = {k0}, k0 + interval_length = {k0 + interval_length}, fall_years[key][-1] = {fall_years[key][-1]}")
-            if k0 + interval_length - 1 <= fall_years[key][-1]:
-                subset_lists[key].append(np.arange(k0,k0+interval_length))
-    print(f"subset_lists[{key}] = {subset_lists[key]}")
+# Two purposes here: error bars, and climate change signal. How should we mix them? 
+# Method 1: divide years into disjoint subsets
+#interval_length_lists = dict({
+#    "e2": [53,107],
+#    "ei": [20,40],
+#    "s2s": [10,21],
+#    })
+#linestyle_lists = dict({
+#    "e2": ['dotted','dashed','solid'],
+#    "ei": ['dotted','dashed','solid'],
+#    "s2s": ['dotted','dashed','solid'],
+#    })
+#subset_lists = dict()
+#for key in ["e2","ei","s2s"]:
+#    subset_lists[key] = []
+#    for interval_length in interval_length_lists[key]:
+#        starts = np.arange(fall_years[key][0],fall_years[key][-1],interval_length)
+#        print(f"key = {key}, starts = {starts}")
+#        for k0 in starts:
+#            print(f"k0 = {k0}, k0 + interval_length = {k0 + interval_length}, fall_years[key][-1] = {fall_years[key][-1]}")
+#            if k0 + interval_length - 1 <= fall_years[key][-1]:
+#                subset_lists[key].append(np.arange(k0,k0+interval_length))
+#    print(f"subset_lists[{key}] = {subset_lists[key]}")
+
+# Method 2: resample with replacement
+num_bootstrap = 5
+prng = np.random.RandomState(0) # This will be used for subsampling the years. 
+subsets = dict({"num_bootstrap": num_bootstrap, "num_full_kmeans_seeds": num_full_kmeans_seeds})
+for key in sources:
+    num_full_kmeans_seeds = 4 if key == "s2s" else 1
+    subsets[key] = dict()
+    subsets[key]["full_kmeans_seeds"] = np.arange(num_full_kmeans_seeds) # random-number generator seeds to use for KMeans. 
+    else:
+        subsets[key]["full_kmeans_seeds"] = np.arange(1) # random-number generator seeds to use for KMeans. 
+    subsets[key]["full_subset"] = fall_years[key]
+    Nyears = len(subsets[key]["full_subset"])
+    subsets[key]["resampled_kmeans_seeds"] = num_full_kmeans_seeds + np.arange(num_bootstrap)
+    subsets[key]["resampled_subsets"] = np.zeros((num_bootstrap,Nyears), dtype=int)
+    for i_ss in range(num_bootstrap):
+        subsets[key]["resampled_subset"][i_ss] = prng.choice(subsets[key]["full_subset"], size=Nyears, replace=True)
+    # Concatenate these
+    subsets[key]["all_kmeans_seeds"] = np.concatenate((subsets[key]["full_kmeans_seeds"], subsets[key]["resampled_kmeans_seeds"]))
+    subsets[key]["all_subsets"] = np.concatenate((
+        np.outer(np.ones(num_full_kmeans_seeds, dtype=int),subsets[key]["full_subset"]),
+        subsets[key]["resampled_subsets"]), axis=0)
 
 # ----------------- Constant parameters ---------------------
 winter_day0 = 0.0
@@ -146,7 +170,13 @@ for key in sources:
 e2_flag = True
 ei_flag = True
 
-subsetdirs = dict({key: [join(paramdirs[key],"%i-%i"%(subset[0],subset[-1]+1)) for subset in subset_lists[key]] for key in sources})
+#subsetdirs = dict({key: [join(paramdirs[key],"%i-%i"%(subset[0],subset[-1]+1)) for subset in subset_lists[key]] for key in sources})
+for key in sources:
+    subsets[key]["full_dirs"] = [join(paramdirs[key],"full_seed%i"%(seed)) for seed in subsets[key]["full_kmeans_seeds"]]
+    subsets[key]["resampled_dirs"] = [join(paramdirs[key],"resampled_%i"%(i_ss)) for i_ss in range(subsets["num_bootstrap"])]
+    subsets[key]["all_dirs"] = np.concatenate((subsets[key]["full_dirs"],subsets[key]["resampled_dirs"]))
+
+    
 
 # Parameters to determine what to do
 # Featurization
@@ -217,15 +247,14 @@ if ei_flag:
         print(f"eval_dur = {eval_dur}")
     if tpt_ei_flag: 
         print("Starting TPT on eraint")
-        for i_subset,subset in enumerate(subset_lists["ei"]):
-            print(f"\tSubset {i_subset} of {len(subset_lists['ei'])}")
-            subsetdir = subsetdirs["ei"][i_subset]
-            print(f"\tsubset = {subset}, subsetdir = {subsetdir}")
+        #for i_subset,subset in enumerate(subsets["ei"]):
+        for i_subset,subset in subsets["ei"]["all_subsets"]:
+            subsetdir = subsetdirs["ei"]["all_dirs"][i_subset]
             print(f"subsetdir = {subsetdir}")
             if not exists(subsetdir): mkdir(subsetdir)
             tpt_feat_filename = join(subsetdir,"Y")
             if tpt_featurize_ei:
-                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=True,fy_resamp=subset)
+                winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=True,fy_resamp=subsets["ei"]["all_subsets"][i_subset])
             rates_ei = np.zeros(len(uthresh_list))
             for i_uth in range(len(uthresh_list)):
                 uthresh_b = uthresh_list[i_uth]
