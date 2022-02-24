@@ -632,7 +632,6 @@ class WinterStratosphereFeatures:
         if resample_flag:
             ens_start_idx = np.load(ens_start_filename)
             fall_year_list = np.load(fall_year_filename)
-            fy_unique = np.unique(fall_year_list)
             fall_year_x = np.zeros(len(X), dtype=int)
             for i in range(len(ens_start_idx)):
                 if i < len(ens_start_idx)-1:
@@ -643,7 +642,7 @@ class WinterStratosphereFeatures:
             idx_resamp = np.zeros(0, dtype=int)
             for i in range(len(fy_resamp)):
                 matches = np.where(fall_year_x == fy_resamp[i])[0]
-                idx_resamp = np.concatenate((idx_resamp,matches))
+                idx_resamp = np.concatenate((idx_resamp,np.sort(matches)))
             X = X[idx_resamp]
         #print("len(idx_resamp) = {}".format(len(idx_resamp)))
         print("After resampling: X.shape = {}".format(X.shape))

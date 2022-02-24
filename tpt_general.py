@@ -120,6 +120,25 @@ class WinterStratosphereTPT:
         if idx_b is not None and val_b is not None:
             field_Y[idx_b] = val_b
         return field_Y.reshape((Ny,Nt))
+    def out_of_sample_extension(self,winstrat,clust,f_clust,tpt_feat_test):
+        # Given a function defined on cluster centers, evaluate the function on a "test set" tpt_feat_test. 
+        Y,szn_mean_Y,szn_std_Y = [tpt_feat_test[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
+        Y_unseasoned = winstrat.unseason(Y[:,0],Y[:,1:],szn_mean_Y,szn_std_Y,normalize=True)
+        Nx,Nt,ydim = Y_unseasoned.shape
+        Y_unseasoned = Y_unseasoned.reshape((Nx*Nt,ydim))
+        kmlist,kmtime = [clust[v] for v in ["kmlist","kmtime"]]
+        f_Y = np.nan*np.ones(Nx*Nt)
+        for ti in range(winstrat.Ntwint):
+            idx_Y = np.where(np.abs(Y[:,winstrat.fidx_Y['time_h']] - winstrat.wtime[ti]) < winstrat.szn_hour_window/2)[0]
+            if len(idx) == 0:
+                print("WARNING, we don't have any data in time slot {}. Y time: min={}, max={}. wtime: min={}, max={}.".format(ti,Y[:,0].min(),Y[:,0].max(),winstrat.wtime.min(),winstrat.wtime.max()))
+            else:
+                labels = kmlist[ti].predict(Y_unseasoned[idx_Y])
+                for i_cl in range(kmlist[ti].n_clusters):
+                    idx_cl = np.where(labels == i_cl)[0]
+                    if len(idx_cl) > 0:
+                        f_Y[idx_Y[idx_cl]] = f_clust[ti][i_cl]
+        return f_Y
     def cluster_features(self,tpt_feat_filename,clust_filename,winstrat,num_clusters=100,resample_flag=False,seed=0):
         # Read in a feature array from feat_filename and build clusters. Save cluster centers. Save them out in clust_filename.
         tpt_feat = pickle.load(open(tpt_feat_filename,"rb"))
@@ -142,7 +161,7 @@ class WinterStratosphereTPT:
             else:
                 kmidx.append(idx)
                 kmtime.append(winstrat.wtime[ti])
-                km = MiniBatchKMeans(min(len(idx),num_clusters),random_state=0).fit(Y_unseasoned[idx])
+                km = MiniBatchKMeans(min(len(idx),num_clusters),random_state=seed).fit(Y_unseasoned[idx])
                 if ti % 30 == 0:
                     print(f"ti = {ti}, km.n_clusters = {km.n_clusters}, len(idx) = {len(idx)}")
                 kmlist.append(km)

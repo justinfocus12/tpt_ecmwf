@@ -36,7 +36,7 @@ resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
 daydir = join(resultsdir,"2022-02-23")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"0")
+expdir = join(daydir,"1")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -116,6 +116,8 @@ for key in sources:
     subsets[key]["all_subsets"] = np.concatenate((
         np.outer(np.ones(num_full_kmeans_seeds, dtype=int),subsets[key]["full_subset"]),
         subsets[key]["resampled_subsets"]), axis=0)
+
+print(f"s2s subsets: \n{subsets['s2s']['all_subsets']}")
 
 # ----------------- Constant parameters ---------------------
 winter_day0 = 0.0
@@ -326,7 +328,10 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
     if tpt_featurize_s2s:
         winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=True,fy_resamp=subsets["s2s"]["all_subsets"][i_subset])
     if cluster_flag:
-        tpt.cluster_features(tpt_feat_filename,clust_filename,winstrat,num_clusters=num_clusters)  # In the future, maybe cluster A and B separately, which has to be done at each threshold
+        tpt.cluster_features(tpt_feat_filename,clust_filename,winstrat,num_clusters=num_clusters,seed=subsets["s2s"]["all_kmeans_seeds"][i_subset])  # In the future, maybe cluster A and B separately, which has to be done at each threshold
+    if i_subset > 0: 
+        print(f"i_subset = {i_subset}, clust_filename = {clust_filename}")
+        print(f"Has it been saved? {os.listdir(subsetdir)}")
     if build_msm_flag:
         tpt.build_msm(tpt_feat_filename,clust_filename,msm_filename,winstrat)
     if tpt_s2s_flag:
@@ -377,26 +382,36 @@ if plot_rate_flag:
     labels = dict({"ei": "ERA-Interim", "e2": "ERA-20C", "s2s": "S2S", "s2s_naive": "S2S unweighted"})
     label_needed = dict({key: True for key in colors.keys()})
     du = np.abs(uthresh_list[1] - uthresh_list[0])/15.0 # How far to offset the x axis positions for the three timeseries
-    errorbar_offsets = dict({"ei": 0, "e2": -du, "s2s": du})
+    errorbar_offsets = dict({"ei": -du, "e2": -du/3, "s2s": du/3, "s2s_naive": du})
     savefig_suffix = ""
     for key in sources:
         print(f"Starting to plot rate list for {key}")
-        for i_subset,subset in enumerate(subsets[key]["all_subsets"]):
-            alpha = 1.0 #len(subset)/max(interval_length_lists[key])
-            linewidth = 2 #3*len(subset)/max(interval_length_lists[key])
-            print(f"subset[[0,-1]] = {subset[[0,-1]]}")
-            linestyle = '-' if i_subset < len(subsets[key]["full_kmeans_seeds"]) else '--' #linestyle_lists[key][i_subset]
-            marker = '.'
-            h, = ax.plot(uthresh_list,rate_lists[key][i_subset],color=colors[key],linewidth=linewidth,marker=marker,linestyle=linestyle,label=labels[key],alpha=alpha)
-            if i_subset == 0 and label_needed[key]: #len(subset) == max(interval_length_lists[key]) and label_needed[key]: 
-                handles.append(h)
-                label_needed[key] = False
-            if key == "s2s":
-                # Plot the naive one too
-                h, = ax.plot(uthresh_list,rate_lists["s2s_naive"][i_subset],color=colors["s2s_naive"],linewidth=linewidth,marker=marker,linestyle=linestyle,label=labels["s2s_naive"],alpha=alpha)
-                if i_subset == 0 and label_needed["s2s_naive"]:
-                    handles.append(h)
-                    label_needed["s2s_naive"] = False
+        # ---------- Plot a single line with error bars ---------
+        h, = ax.plot(uthresh_list,rate_lists[key][np.arange(len(subsets[key]["full_kmeans_seeds"]))].mean(axis=0),color=colors[key],linewidth=1.5,marker='.',linestyle='-',label=labels[key],alpha=1.0)
+        handles += [h]
+        for i_uth,uth in enumerate(uthresh_list):
+            ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([rate_lists[key][:,i_uth].min(), rate_lists[key][:,i_uth].max()]), color=colors[key], linewidth=1.5)
+        if key == "s2s":
+            h, = ax.plot(uthresh_list,rate_lists["s2s_naive"][i_ss],color=colors["s2s_naive"],linewidth=1.5,marker='.',label=labels["s2s_naive"],alpha=1.0)
+            for i_uth,uth in enumerate(uthresh_list):
+                ax.plot((uth+errorbar_offsets["s2s_naive"])*np.ones(2), np.array([rate_lists["s2s_naive"][:,i_uth].min(), rate_lists["s2s_naive"][:,i_uth].max()]), color=colors["s2s_naive"], linewidth=1.5)
+        ## --------- Plot all the subsets in dotted lines --------
+        #for i_subset,subset in enumerate(subsets[key]["all_subsets"]):
+        #    alpha = 1.0 #len(subset)/max(interval_length_lists[key])
+        #    linewidth = 2 #3*len(subset)/max(interval_length_lists[key])
+        #    print(f"subset[[0,-1]] = {subset[[0,-1]]}")
+        #    linestyle = '-' if i_subset < len(subsets[key]["full_kmeans_seeds"]) else '--' #linestyle_lists[key][i_subset]
+        #    marker = '.'
+        #    h, = ax.plot(uthresh_list,rate_lists[key][i_subset],color=colors[key],linewidth=linewidth,marker=marker,linestyle=linestyle,label=labels[key],alpha=alpha)
+        #    if i_subset == 0 and label_needed[key]: #len(subset) == max(interval_length_lists[key]) and label_needed[key]: 
+        #        handles.append(h)
+        #        label_needed[key] = False
+        #    if key == "s2s":
+        #        # Plot the naive one too
+        #        h, = ax.plot(uthresh_list,rate_lists["s2s_naive"][i_subset],color=colors["s2s_naive"],linewidth=linewidth,marker=marker,linestyle=linestyle,label=labels["s2s_naive"],alpha=alpha)
+        #        if i_subset == 0 and label_needed["s2s_naive"]:
+        #            handles.append(h)
+        #            label_needed["s2s_naive"] = False
         savefig_suffix += key
         ax.legend(handles=handles,loc='upper left')
         ax.set_ylim(ylim_lin)
