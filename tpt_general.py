@@ -120,6 +120,41 @@ class WinterStratosphereTPT:
         if idx_b is not None and val_b is not None:
             field_Y[idx_b] = val_b
         return field_Y.reshape((Ny,Nt))
+    def transfer_tpt_results(self,
+            tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,algo_params,
+            tpt_feat_filename_ra,savedir_ra):
+        tpt_qoi_keys = "qp qm pi flux int2b int2b_cond ina inb".split(" ")
+        qtpt = dict()
+        for qk in tpt_qoi_keys:
+            qtpt[qk] = pickle.load(open(join(savedir,qk),"rb"))
+        centers = pickle.load(open(join(savedir,"centers"),"rb"))
+        # Now load reanalysis results
+        tpt_feat_ra = pickle.load(open(tpt_feat_filename_ra,"rb"))
+        Yra,szn_mean_Yra,szn_std_Yra = [tpt_feat_ra[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
+        Nyra,Ntra,ydim = Yra.shape
+        Yra = Yra.reshape((Nyra*Ntyra,ydim))
+        # Now find cluster labels of them all 
+        Yra_unseasoned = winstrat.unseason(Yra[:,0],Yra[:,1:],szn_mean_Yra,szn_std_Yra)
+        kmdict = pickle.load(open(clust_filename,"rb"))
+        kmlist,kmtime,kmidx = kmdict["kmlist"],kmdict["kmtime"],kmdict["kmidx"]
+        # Identify the cluster time step that each Y corresponds to
+        kmtime_idx = np.zeros(Nyra*Ntra, dtype=int)
+        labels_Y = np.zeros(Nyra*Ntra, dtype=int)
+        q_Yra = dict({np.zeros(Nyra*Ntra) for qk in tpt_qoi_keys})
+        for i_time in range(winstrat.Ntwint):
+            idx_Y = np.where(np.abs(Y[:,winstrat.fidx_Y['time_h']] - winstrat.wtime[ti]) < winstrat.szn_hour_window/2)[0]
+            kmtime_idx[idx_Y] = i_time
+            if len(idx) == 0:
+                print("WARNING, we don't have any data in time slot {}. Y time: min={}, max={}. wtime: min={}, max={}.".format(i_time,Y[:,0].min(),Y[:,0].max(),winstrat.wtime.min(),winstrat.wtime.max()))
+            else:
+                labels_Y[idx_Y] = kmlist[i_time].predict(Y_unseasoned[idx_Y])
+                for i_cl in range(kmlist[i_time].n_clusters):
+                    idx_Y_cl = idx_Y[np.where(labels_Y[idx_Y] == i_cl)[0]]
+                    for qk in tpt_qoi_keys:
+                        q_Yra[qk][idx_Y_cl] = qtpt[qk][i_time][i_cl]
+        for qk in tpt_qoi_keys:
+            pickle.dump(q_Yra[qk],open(join(savedir_ra,qk),"wb"))
+        return
     def out_of_sample_extension(self,winstrat,clust,f_clust,tpt_feat_test):
         # Given a function defined on cluster centers, evaluate the function on a "test set" tpt_feat_test. 
         Y,szn_mean_Y,szn_std_Y = [tpt_feat_test[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
