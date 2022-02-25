@@ -123,10 +123,14 @@ class WinterStratosphereTPT:
     def transfer_tpt_results(self,
             tpt_feat_filename,clust_filename,feat_def,savedir,winstrat,algo_params,
             tpt_feat_filename_ra,key_ra):
-        tpt_qoi_keys = "qp qm pi ina inb".split(" ")
+        tpt_qoi_keys = "qp qm pi ina inb lt_mean".split(" ")
         qtpt = dict()
         for qk in tpt_qoi_keys:
-            qtpt[qk] = pickle.load(open(join(savedir,qk),"rb"))
+            if qk != "lt_mean":
+                qtpt[qk] = pickle.load(open(join(savedir,qk),"rb"))
+            else:
+                int2b_cond = pickle.load(open(join(savedir,"int2b_cond"),"rb"))
+                qtpt["lt_mean"] = int2b_cond["time"]["mean"]
         centers = pickle.load(open(join(savedir,"centers"),"rb"))
         # Now load reanalysis results
         print(f"tpt_feat_filename_ra = {tpt_feat_filename_ra}")
@@ -613,6 +617,10 @@ class WinterStratosphereTPT:
         lt_mean = np.load(join(savedir,"lt_mean_Y.npy"))#.reshape(Ny*Nty)
         lt_std = np.load(join(savedir,"lt_std_Y.npy"))#.reshape(Ny*Nty)
         lt_skew = np.load(join(savedir,"lt_skew_Y.npy"))#.reshape(Ny*Nty)
+        # Now load the same quantities of interest interpolated onto reanalysis
+        for k in keys_ra:
+            for qk in "qp qm pi lt_mean".split(" "):
+                ra[k][qk] = pickle.load(open(join(savedir,f"qp_{k}"),"rb"))
         if fluxdens_flag:
             reactive_code = [0,1] #= ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
             # ----------- Plot flux distribution of zonal wind at different times ----------

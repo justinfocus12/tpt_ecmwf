@@ -137,7 +137,7 @@ for key in sources:
 multiprocessing_flag = 0
 num_clusters = 170
 #Npc_per_level_single = 4
-Npc_per_level = np.array([4,4,4,4,4,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level = np.array([2,2,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 heatflux_wavenumbers = np.array([0,0,0,0,0,0,0,0,0,0], dtype=int)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
