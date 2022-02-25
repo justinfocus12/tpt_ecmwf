@@ -121,39 +121,48 @@ class WinterStratosphereTPT:
             field_Y[idx_b] = val_b
         return field_Y.reshape((Ny,Nt))
     def transfer_tpt_results(self,
-            tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,algo_params,
-            tpt_feat_filename_ra,savedir_ra):
-        tpt_qoi_keys = "qp qm pi flux int2b int2b_cond ina inb".split(" ")
+            tpt_feat_filename,clust_filename,feat_def,savedir,winstrat,algo_params,
+            tpt_feat_filename_ra,key_ra):
+        tpt_qoi_keys = "qp qm pi ina inb".split(" ")
         qtpt = dict()
         for qk in tpt_qoi_keys:
             qtpt[qk] = pickle.load(open(join(savedir,qk),"rb"))
         centers = pickle.load(open(join(savedir,"centers"),"rb"))
         # Now load reanalysis results
+        print(f"tpt_feat_filename_ra = {tpt_feat_filename_ra}")
         tpt_feat_ra = pickle.load(open(tpt_feat_filename_ra,"rb"))
         Yra,szn_mean_Yra,szn_std_Yra = [tpt_feat_ra[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
-        Nyra,Ntra,ydim = Yra.shape
+        print(f"Yra.shape = {Yra.shape}, centers[0][0].shape = {centers[0][0].shape}")
+        Nyra,Ntyra,ydim = Yra.shape
         Yra = Yra.reshape((Nyra*Ntyra,ydim))
         # Now find cluster labels of them all 
         Yra_unseasoned = winstrat.unseason(Yra[:,0],Yra[:,1:],szn_mean_Yra,szn_std_Yra)
         kmdict = pickle.load(open(clust_filename,"rb"))
         kmlist,kmtime,kmidx = kmdict["kmlist"],kmdict["kmtime"],kmdict["kmidx"]
         # Identify the cluster time step that each Y corresponds to
-        kmtime_idx = np.zeros(Nyra*Ntra, dtype=int)
-        labels_Y = np.zeros(Nyra*Ntra, dtype=int)
-        q_Yra = dict({np.zeros(Nyra*Ntra) for qk in tpt_qoi_keys})
-        for i_time in range(winstrat.Ntwint):
-            idx_Y = np.where(np.abs(Y[:,winstrat.fidx_Y['time_h']] - winstrat.wtime[ti]) < winstrat.szn_hour_window/2)[0]
-            kmtime_idx[idx_Y] = i_time
-            if len(idx) == 0:
-                print("WARNING, we don't have any data in time slot {}. Y time: min={}, max={}. wtime: min={}, max={}.".format(i_time,Y[:,0].min(),Y[:,0].max(),winstrat.wtime.min(),winstrat.wtime.max()))
+        kmtime_idx = np.zeros(Nyra*Ntyra, dtype=int)
+        labels_Y = np.zeros(Nyra*Ntyra, dtype=int)
+        q_Yra = dict({qk: np.nan*np.ones(Nyra*Ntyra) for qk in tpt_qoi_keys})
+        for i_time in range(len(kmlist)):
+            idx_Y = np.where(np.abs(Yra[:,winstrat.fidx_Y['time_h']] - kmtime[i_time]) < winstrat.dtwint/2)[0] #szn_hour_window/2)[0]
+            if len(idx_Y) == 0:
+                #print("WARNING, we don't have any data in time slot {}. Y time: min={}, max={}. wtime: min={}, max={}.".format(i_time,Yra[:,0].min(),Yra[:,0].max(),winstrat.wtime.min(),winstrat.wtime.max()))
+                pass
             else:
-                labels_Y[idx_Y] = kmlist[i_time].predict(Y_unseasoned[idx_Y])
+                kmtime_idx[idx_Y] = i_time
+                labels_Y[idx_Y] = kmlist[i_time].predict(Yra_unseasoned[idx_Y])
                 for i_cl in range(kmlist[i_time].n_clusters):
                     idx_Y_cl = idx_Y[np.where(labels_Y[idx_Y] == i_cl)[0]]
-                    for qk in tpt_qoi_keys:
-                        q_Yra[qk][idx_Y_cl] = qtpt[qk][i_time][i_cl]
+                    if len(idx_Y_cl) > 0:
+                        for qk in tpt_qoi_keys:
+                            q_Yra[qk][idx_Y_cl] = qtpt[qk][i_time][i_cl]
+        # Check to see if we left any out
         for qk in tpt_qoi_keys:
-            pickle.dump(q_Yra[qk],open(join(savedir_ra,qk),"wb"))
+            if np.any(np.isnan(q_Yra[qk])):
+                print(f"WARNING: key {qk} has a nan fraction of {np.mean(np.isnan(q_Yra[qk]))}")
+            else:
+                print(f"All values were filled for key {qk}")
+            pickle.dump(q_Yra[qk],open(join(savedir,f"{qk}_{key_ra}"),"wb"))
         return
     def out_of_sample_extension(self,winstrat,clust,f_clust,tpt_feat_test):
         # Given a function defined on cluster centers, evaluate the function on a "test set" tpt_feat_test. 
@@ -190,7 +199,8 @@ class WinterStratosphereTPT:
         kmlist = []
         kmidx = [] # At each time step, which snapshots have the same time. 
         for ti in range(winstrat.Ntwint):
-            idx = np.where(np.abs(Y[:,winstrat.fidx_Y['time_h']] - winstrat.wtime[ti]) < winstrat.szn_hour_window/2)[0]
+            #idx = np.where(np.abs(Y[:,winstrat.fidx_Y['time_h']] - winstrat.wtime[ti]) < winstrat.szn_hour_window/2)[0]
+            idx = np.where(np.abs(Y[:,winstrat.fidx_Y['time_h']] - winstrat.wtime[ti]) < winstrat.dtwint/2)[0]
             if len(idx) == 0:
                 print("WARNING, we don't have any data in time slot {}. Y time: min={}, max={}. wtime: min={}, max={}.".format(ti,Y[:,0].min(),Y[:,0].max(),winstrat.wtime.min(),winstrat.wtime.max()))
             else:

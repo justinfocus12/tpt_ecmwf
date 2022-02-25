@@ -34,9 +34,9 @@ feat_display_dir = join(featdir,"display1")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-02-23")
+daydir = join(resultsdir,"2022-02-24")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"1")
+expdir = join(daydir,"3")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -98,11 +98,11 @@ file_list_climavg = file_lists["ei"][:15]
 #    print(f"subset_lists[{key}] = {subset_lists[key]}")
 
 # Method 2: resample with replacement
-num_bootstrap = 5
+num_bootstrap = 6
 prng = np.random.RandomState(0) # This will be used for subsampling the years. 
 subsets = dict({"num_bootstrap": num_bootstrap}) #, "num_full_kmeans_seeds": num_full_kmeans_seeds})
 for key in sources:
-    num_full_kmeans_seeds = 4 if key == "s2s" else 1
+    num_full_kmeans_seeds = 6 if key == "s2s" else 1
     subsets[key] = dict()
     subsets[key]["full_kmeans_seeds"] = np.arange(num_full_kmeans_seeds) # random-number generator seeds to use for KMeans. 
     subsets[key]["full_subset"] = fall_years[key]
@@ -137,7 +137,7 @@ for key in sources:
 multiprocessing_flag = 0
 num_clusters = 170
 #Npc_per_level_single = 4
-Npc_per_level = np.array([4,4,4,4,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level = np.array([4,4,4,4,4,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 heatflux_wavenumbers = np.array([0,0,0,0,0,0,0,0,0,0], dtype=int)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
@@ -158,9 +158,11 @@ algo_params = {"Nwaves": Nwaves, "Npc_per_level": Npc_per_level, "captemp_flag":
 fidx_X_filename = join(expdir,"fidx_X")
 fidx_Y_filename = join(expdir,"fidx_Y")
 paramdirs = dict({
-    "s2s": join(expdir, "s2s", f"delay{int(delaytime_days)}_nclust{num_clusters}_nwaves{Nwaves}_vxm{num_vortex_moments}_pc-{pcstr}_hf-{hfstr}_temp-{tempstr}"),
-    "e2": join(expdir, "e2", f"delay{int(delaytime_days)}"),
-    "ei": join(expdir, "ei", f"delay{int(delaytime_days)}"),
+    "s2s": join(expdir, "s2s", f"delay{int(delaytime_days)}_nwaves{Nwaves}_vxm{num_vortex_moments}_pc-{pcstr}_hf-{hfstr}_temp-{tempstr}_nclust{num_clusters}"),
+    "e2": join(expdir, "e2", f"delay{int(delaytime_days)}_nwaves{Nwaves}_vxm{num_vortex_moments}_pc-{pcstr}_hf-{hfstr}_temp-{tempstr}"),
+    "ei": join(expdir, "ei", f"delay{int(delaytime_days)}_nwaves{Nwaves}_vxm{num_vortex_moments}_pc-{pcstr}_hf-{hfstr}_temp-{tempstr}"),
+    #"e2": join(expdir, "e2", f"delay{int(delaytime_days)}"),
+    #"ei": join(expdir, "ei", f"delay{int(delaytime_days)}"),
     })
 for key in sources:
     if not exists(paramdirs[key]): mkdir(paramdirs[key])
@@ -184,22 +186,23 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             0
-tpt_e2_flag =                  0
+tpt_featurize_e2 =             1
+tpt_e2_flag =                  1
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             0
-tpt_ei_flag =                  0
+tpt_featurize_ei =             1
+tpt_ei_flag =                  1
 # s2s
 evaluate_database_s2s =        0
-tpt_featurize_s2s =            0
-cluster_flag =                 0
-build_msm_flag =               0
-tpt_s2s_flag =                 0
-plot_tpt_results_s2s_flag =    0
+tpt_featurize_s2s =            1
+cluster_flag =                 1
+build_msm_flag =               1
+tpt_s2s_flag =                 1
+transfer_results_flag =        1
+plot_tpt_results_s2s_flag =    1
 # Summary statistic
 plot_rate_flag =               1
-illustrate_dataset_flag =      0
+illustrate_dataset_flag =      1
 
 
 feature_file = join(featdir,"feat_def")
@@ -324,6 +327,7 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
     if not exists(subsetdir): mkdir(subsetdir)
     tpt_feat_filename = join(subsetdir,"Y")
     clust_filename = join(subsetdir,"kmeans")
+    print(f"clust_filename = {clust_filename}")
     msm_filename = join(subsetdir,"msm")
     if tpt_featurize_s2s:
         winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=True,fy_resamp=subsets["s2s"]["all_subsets"][i_subset])
@@ -342,6 +346,14 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
             summary_dga = tpt.tpt_pipeline_dga(tpt_feat_filename,clust_filename,msm_filename,feat_def,savedir,winstrat,algo_params)
+    if transfer_results_flag:
+        for i_uth in range(len(uthresh_list)):
+            uthresh_b = uthresh_list[i_uth]
+            savedir = join(subsetdir,"tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer))
+            tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
+            tpt.set_boundaries(tpt_bndy)
+            for key_ra in tpt_feat_filename_ra_dict.keys():
+                tpt.transfer_tpt_results(tpt_feat_filename,clust_filename,feat_def,savedir,winstrat,algo_params,tpt_feat_filename_ra_dict[key_ra],key_ra)
     if plot_tpt_results_s2s_flag and (i_subset == 0): #len(subset) == max(interval_length_lists["s2s"]):
         for i_uth in range(len(uthresh_list)):
             uthresh_b = uthresh_list[i_uth]
@@ -430,8 +442,8 @@ if illustrate_dataset_flag:
     ens_start_filename_hc = join(expdirs["s2s"],"ens_start_idx.npy")
     fall_year_filename_ra = join(expdirs["ei"],"fall_year_list.npy")
     fall_year_filename_hc = join(expdirs["s2s"],"fall_year_list.npy")
-    tpt_feat_filename_ra = join(subsetdirs["ei"][-1],"Y")
-    tpt_feat_filename_hc = join(subsetdirs["s2s"][-1],"Y")
+    tpt_feat_filename_ra = join(subsets["ei"]["full_dirs"][0],"Y")
+    tpt_feat_filename_hc = join(subsets["s2s"]["full_dirs"][0],"Y")
     tthresh = np.array([tthresh0,tthresh1])*24.0
     winstrat.illustrate_dataset(
             uthresh_a,uthresh_list[[1,3,4]],tthresh,sswbuffer,
