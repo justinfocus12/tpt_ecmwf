@@ -45,9 +45,15 @@ import tpt_general
 # COMPLETE listing of possible years to use for each dataset
 fall_years = dict({
     "e2": np.arange(1900,2008),
-    "ei": np.arange(1979,2019),
+    "ei": np.arange(1979,2018),
     "s2s": np.arange(1996,2017),
     })
+# Listing of years that we will consider in DGA (must be a subset of the above)
+subsets = dict({
+    "e2": dict({"full_subset": fall_years["e2"]}),
+    "ei": dict({"full_subset": fall_years["s2s"]}),
+    "s2s": dict({"full_subset": fall_years["s2s"]}),
+    }) 
 
 file_lists = dict()
 for key in ["e2","ei"]:
@@ -98,18 +104,15 @@ file_list_climavg = file_lists["ei"][:15]
 #    print(f"subset_lists[{key}] = {subset_lists[key]}")
 
 # Method 2: resample with replacement
-num_bootstrap = 6
 prng = np.random.RandomState(0) # This will be used for subsampling the years. 
-subsets = dict({"num_bootstrap": num_bootstrap}) #, "num_full_kmeans_seeds": num_full_kmeans_seeds})
+subsets["num_bootstrap"] = 6
 for key in sources:
     num_full_kmeans_seeds = 6 if key == "s2s" else 1
-    subsets[key] = dict()
     subsets[key]["full_kmeans_seeds"] = np.arange(num_full_kmeans_seeds) # random-number generator seeds to use for KMeans. 
-    subsets[key]["full_subset"] = fall_years[key]
     Nyears = len(subsets[key]["full_subset"])
-    subsets[key]["resampled_kmeans_seeds"] = num_full_kmeans_seeds + np.arange(num_bootstrap)
-    subsets[key]["resampled_subsets"] = np.zeros((num_bootstrap,Nyears), dtype=int)
-    for i_ss in range(num_bootstrap):
+    subsets[key]["resampled_kmeans_seeds"] = num_full_kmeans_seeds + np.arange(subsets["num_bootstrap"])
+    subsets[key]["resampled_subsets"] = np.zeros((subsets["num_bootstrap"],Nyears), dtype=int)
+    for i_ss in range(subsets["num_bootstrap"]):
         subsets[key]["resampled_subsets"][i_ss] = prng.choice(subsets[key]["full_subset"], size=Nyears, replace=True)
     # Concatenate these
     subsets[key]["all_kmeans_seeds"] = np.concatenate((subsets[key]["full_kmeans_seeds"], subsets[key]["resampled_kmeans_seeds"]))
@@ -137,7 +140,7 @@ for key in sources:
 multiprocessing_flag = 0
 num_clusters = 170
 #Npc_per_level_single = 4
-Npc_per_level = np.array([2,2,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 heatflux_wavenumbers = np.array([0,0,0,0,0,0,0,0,0,0], dtype=int)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
@@ -186,18 +189,18 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             1
-tpt_e2_flag =                  1
+tpt_featurize_e2 =             0
+tpt_e2_flag =                  0
 # eraint
 evaluate_database_ei =         0
 tpt_featurize_ei =             1
 tpt_ei_flag =                  1
 # s2s
 evaluate_database_s2s =        0
-tpt_featurize_s2s =            1
-cluster_flag =                 1
-build_msm_flag =               1
-tpt_s2s_flag =                 1
+tpt_featurize_s2s =            0
+cluster_flag =                 0
+build_msm_flag =               0
+tpt_s2s_flag =                 0
 transfer_results_flag =        1
 plot_tpt_results_s2s_flag =    1
 # Summary statistic

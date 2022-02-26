@@ -614,9 +614,9 @@ class WinterStratosphereTPT:
         qp_Y = np.load(join(savedir,"qp_Y.npy"))#.reshape(Ny*Nty)
         qm_Y = np.load(join(savedir,"qm_Y.npy"))#.reshape(Ny*Nty)
         pi_Y = np.load(join(savedir,"pi_Y.npy"))#.reshape(Ny*Nty)
-        lt_mean = np.load(join(savedir,"lt_mean_Y.npy"))#.reshape(Ny*Nty)
-        lt_std = np.load(join(savedir,"lt_std_Y.npy"))#.reshape(Ny*Nty)
-        lt_skew = np.load(join(savedir,"lt_skew_Y.npy"))#.reshape(Ny*Nty)
+        lt_mean_Y = np.load(join(savedir,"lt_mean_Y.npy"))#.reshape(Ny*Nty)
+        lt_std_Y = np.load(join(savedir,"lt_std_Y.npy"))#.reshape(Ny*Nty)
+        lt_skew_Y = np.load(join(savedir,"lt_skew_Y.npy"))#.reshape(Ny*Nty)
         # Now load the same quantities of interest interpolated onto reanalysis
         for k in keys_ra:
             for qk in "qp qm pi lt_mean".split(" "):
@@ -780,33 +780,32 @@ class WinterStratosphereTPT:
                     theta_lower_list,theta_upper_list)
             fig.savefig(join(savedir,"fluxdens_J-uref_d-hflev4wn2"))
             plt.close(fig)
-            ## --------- Plot distribution of zonal wind over different times ------
-            #theta_normal = funlib_X['time_d']['fun'](X)
-            #theta_normal_ra = funlib_X['time_d']['fun'](Xra)
-            #theta_normal_label = funlib_X['time_d']['label']
-            #theta_tangential = funlib_X['uref']['fun'](X)
-            #theta_tangential_ra = funlib_X['uref']['fun'](Xra)
-            #theta_tangential_label = funlib_X['uref']['label']
-            #theta_mid_list = np.linspace(40,140,20)
-            #theta_lower_list = theta_mid_list - 0.5*(theta_mid_list[1]-theta_mid_list[0])
-            #theta_upper_list = theta_mid_list + 0.5*(theta_mid_list[1]-theta_mid_list[0])
-            #fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_ra.reshape((Nyra,Ntyra)),theta_tangential_ra.reshape((Nyra,Ntyra)),reactive_flag,theta_normal_label,theta_tangential_label,rate,theta_lower_list,theta_upper_list,timeseries_like=True)
-            #fig.savefig(join(savedir,"fluxdens_J-timed_d-uref"))
-            #plt.close(fig)
-            ## --------- Plot Jab dot grad [-lead time] d[zonal wind] ----------
-            #theta_normal = -lt_mean
-            #theta_normal_label = r"$-\eta_B^+$"
-            #theta_tangential = funlib_X['uref']['fun'](X)
-            #theta_tangential_ra = funlib_X['uref']['fun'](X)
-            #theta_tangential_label = funlib_X['uref']['label']
-            #theta_mid_list = np.linspace(-60,1,20)
-            #theta_lower_list = theta_mid_list - 0.5
-            #theta_upper_list = theta_mid_list + 0.5
-            #fig,ax = self.plot_flux_distributions_1d(qm_Y.reshape((Ny,Nty))[winter_fully_idx],qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],theta_normal.reshape((Ny,Nty))[winter_fully_idx],theta_tangential.reshape((Ny,Nty))[winter_fully_idx],theta_normal_ra.reshape((Nyra,Ntyra)),theta_tangential_ra.reshape((Nyra,Ntyra)),reactive_flag,theta_normal_label,theta_tangential_label,rate,theta_lower_list,theta_upper_list,timeseries_like=True)
-            #fig.savefig(join(savedir,"fluxdens_J-leadtime_d-uref"))
-            #plt.close(fig)
         if current2d_flag:
-            # ------------- Current plots (both) --------------------
+            # ------------- Zonal wind, lead time. Latter has to be interpolated -----------
+            theta_x = np.array([funlib_Y["uref"](Y.reshape((Ny*Nty,ydim))), lt_mean_Y.reshape((Ny*Nty,ydim))]).T.reshape((Ny,Nty,2))
+            rath = dict({key: dict({}) for key in keys_ra}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
+            for k in keys_ra:
+                rath[k]["theta"] = np.array([
+                    funlib_Y["uref"](ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))),
+                    ra[k]["lt_mean"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))])
+            lab0 = funlib_Y["uref"]["label"]
+            lab1 = r"$\eta_B^+$"
+            # A -> B
+            reactive_code = [0,1]
+            comm_bwd = qm_Y*(reactive_code[0] == 0) + (1-qm_Y)*(reactive_code[0] == 1)
+            comm_fwd = qp_Y*(reactive_code[1] == 1) + (1-qp_Y)*(reactive_code[1] == 0)
+            print(f"shapes: qp_Y: {qp_Y.shape}, pi_Y: {pi_Y.shape}, theta_x: {theta_x.shape}")
+            print(f"idx_winter: 0: min={idx_winter[0].min()}, max={idx_winter[0].max()}")
+            fig,ax = helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$ (winters with SSW)",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrRd)
+            _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
+            self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
+            fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
+            plt.close(fig)
+
+
+
+
+            # ------------- Current plots --------------------
             keypairs = []
             keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
             keypairs += [['time_d','uref']]
@@ -862,20 +861,6 @@ class WinterStratosphereTPT:
                     self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
                     fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
-                    ## A -> A
-                    #fig,ax = helper.plot_field_2d(((1-qp_Y)*qm_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
-                    #_,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],qm_Y.reshape((Ny,Nty))[winter_fully_idx],1-qp_Y.reshape((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-                    #reactive_flag = ((src_tag==0)*(dest_tag==0)*winter_flag_ra).reshape((Nyra,Ntyra))
-                    #self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax)
-                    #fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
-                    #plt.close(fig)
-                    ## A or B -> A or B
-                    #fig,ax = helper.plot_field_2d(np.ones(Ny*Nty)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$\mathrm{Steady-state}$",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrBr)
-                    #_,_,_,_ = self.plot_current_overlay_data(theta_x.reshape((Ny,Nty,2))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],np.ones((Ny,Nty))[winter_fully_idx],pi_Y.reshape((Ny,Nty))[winter_fully_idx],fig,ax)
-                    #reactive_flag = winter_flag_ra.reshape((Nyra,Ntyra))
-                    #self.plot_trajectory_segments(theta_x_ra.reshape((Nyra,Ntyra,2)),reactive_flag,fig,ax,debug=False)
-                    #fig.savefig(join(savedir,"J_%s_%s"%(key0.replace("_",""),key1.replace("_",""))))
-                    #plt.close(fig)
         if spaghetti_flag:
             # ----------- New plot: short histories of zonal wind, colored by committor. Maybe this will inform new coordinates --------------
             fig,ax = plt.subplots()
