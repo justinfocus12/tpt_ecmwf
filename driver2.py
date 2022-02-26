@@ -34,9 +34,9 @@ feat_display_dir = join(featdir,"display1")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-02-24")
+daydir = join(resultsdir,"2022-02-26")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"3")
+expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -138,7 +138,7 @@ for key in sources:
     if not exists(expdirs[key]): mkdir(expdirs[key])
 # ------------------ Algorithmic parameters ---------------------
 multiprocessing_flag = 0
-num_clusters = 170
+num_clusters = 200
 #Npc_per_level_single = 4
 Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
@@ -193,19 +193,19 @@ tpt_featurize_e2 =             0
 tpt_e2_flag =                  0
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             1
-tpt_ei_flag =                  1
+tpt_featurize_ei =             0
+tpt_ei_flag =                  0
 # s2s
 evaluate_database_s2s =        0
 tpt_featurize_s2s =            0
 cluster_flag =                 0
 build_msm_flag =               0
 tpt_s2s_flag =                 0
-transfer_results_flag =        1
-plot_tpt_results_s2s_flag =    1
+transfer_results_flag =        0
+plot_tpt_results_s2s_flag =    0
 # Summary statistic
 plot_rate_flag =               1
-illustrate_dataset_flag =      1
+illustrate_dataset_flag =      0
 
 
 feature_file = join(featdir,"feat_def")
@@ -336,9 +336,6 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
         winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=True,fy_resamp=subsets["s2s"]["all_subsets"][i_subset])
     if cluster_flag:
         tpt.cluster_features(tpt_feat_filename,clust_filename,winstrat,num_clusters=num_clusters,seed=subsets["s2s"]["all_kmeans_seeds"][i_subset])  # In the future, maybe cluster A and B separately, which has to be done at each threshold
-    if i_subset > 0: 
-        print(f"i_subset = {i_subset}, clust_filename = {clust_filename}")
-        print(f"Has it been saved? {os.listdir(subsetdir)}")
     if build_msm_flag:
         tpt.build_msm(tpt_feat_filename,clust_filename,msm_filename,winstrat)
     if tpt_s2s_flag:
@@ -364,7 +361,7 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,spaghetti_flag=(i_uth==1 or i_uth==4),fluxdens_flag=True,current2d_flag=1*(i_uth==1 or i_uth==4))
+            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,spaghetti_flag=(i_uth==1 or i_uth==4),fluxdens_flag=False,verify_leadtime_flag=0*(i_uth==1 or i_uth==4),current2d_flag=1*(i_uth==1 or i_uth==4))
             #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
 
 # =============================================================================
@@ -393,23 +390,26 @@ if plot_rate_flag:
     bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
     handles = []
     # Build this up one curve at a time
-    colors = dict({"ei": "black", "e2": "cyan", "s2s": "red", "s2s_naive": "orange"})
+    colors = dict({"ei": "black", "e2": "lightskyblue", "s2s": "red", "s2s_naive": "cyan"})
     labels = dict({"ei": "ERA-Interim", "e2": "ERA-20C", "s2s": "S2S", "s2s_naive": "S2S unweighted"})
     label_needed = dict({key: True for key in colors.keys()})
     du = np.abs(uthresh_list[1] - uthresh_list[0])/15.0 # How far to offset the x axis positions for the three timeseries
-    errorbar_offsets = dict({"ei": -du, "e2": -du/3, "s2s": du/3, "s2s_naive": du})
+    errorbar_offsets = dict({"ei": -du, "e2": du, "s2s": 0, "s2s_naive": du})
     savefig_suffix = ""
     for key in sources:
         print(f"Starting to plot rate list for {key}")
         # ---------- Plot a single line with error bars ---------
-        h, = ax.plot(uthresh_list,rate_lists[key][np.arange(len(subsets[key]["full_kmeans_seeds"]))].mean(axis=0),color=colors[key],linewidth=1.5,marker='.',linestyle='-',label=labels[key],alpha=1.0)
+        full_rate_mean = rate_lists[key][np.arange(len(subsets[key]["full_kmeans_seeds"]))].mean(axis=0)
+        good_idx = np.where(full_rate_mean > 0)[0]
+        h, = ax.plot(uthresh_list[good_idx],full_rate_mean[good_idx],color=colors[key],linewidth=2,marker='.',linestyle='-',label=labels[key],alpha=1.0)
         handles += [h]
-        for i_uth,uth in enumerate(uthresh_list):
-            ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([rate_lists[key][:,i_uth].min(), rate_lists[key][:,i_uth].max()]), color=colors[key], linewidth=1.5)
-        if key == "s2s":
-            h, = ax.plot(uthresh_list,rate_lists["s2s_naive"][i_ss],color=colors["s2s_naive"],linewidth=1.5,marker='.',label=labels["s2s_naive"],alpha=1.0)
-            for i_uth,uth in enumerate(uthresh_list):
-                ax.plot((uth+errorbar_offsets["s2s_naive"])*np.ones(2), np.array([rate_lists["s2s_naive"][:,i_uth].min(), rate_lists["s2s_naive"][:,i_uth].max()]), color=colors["s2s_naive"], linewidth=1.5)
+        for i_uth,uth in enumerate(uthresh_list[good_idx]):
+            ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([rate_lists[key][:,i_uth].min(), rate_lists[key][:,i_uth].max()]), color=colors[key], linewidth=2)
+        # ------ Don't plot naive --------
+        #if key == "s2s":
+        #    h, = ax.plot(uthresh_list,rate_lists["s2s_naive"][i_ss],color=colors["s2s_naive"],linewidth=1.5,marker='.',label=labels["s2s_naive"],alpha=1.0)
+        #    for i_uth,uth in enumerate(uthresh_list):
+        #        ax.plot((uth+errorbar_offsets["s2s_naive"])*np.ones(2), np.array([rate_lists["s2s_naive"][:,i_uth].min(), rate_lists["s2s_naive"][:,i_uth].max()]), color=colors["s2s_naive"], linewidth=1.5)
         ## --------- Plot all the subsets in dotted lines --------
         #for i_subset,subset in enumerate(subsets[key]["all_subsets"]):
         #    alpha = 1.0 #len(subset)/max(interval_length_lists[key])

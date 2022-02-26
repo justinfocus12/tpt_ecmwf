@@ -86,6 +86,7 @@ class WinterStratosphereFeatures:
         inb = inb.reshape((Nmem,Nt))
         src_tag = 0.5*np.ones((Nmem,Nt))
         dest_tag = 0.5*np.ones((Nmem,Nt))
+        time2dest = 0.0*np.ones((Nmem,Nt))
         # Source: move forward in time
         # Time zero, A is the default src
         src_tag[:,0] = 0*ina[:,0] + 1*inb[:,0] + 0.5*(ina[:,0]==0)*(inb[:,0]==0)*(Y[:,0,0] > tpt_bndy['tthresh'][0]) 
@@ -96,12 +97,13 @@ class WinterStratosphereFeatures:
         dest_tag[:,Nt-1] = 0*ina[:,Nt-1] + 1*inb[:,Nt-1] + 0.5*(ina[:,Nt-1]==0)*(inb[:,Nt-1]==0)*(Y[:,-1,0] < tpt_bndy['tthresh'][1])
         for k in np.arange(Nt-2,-1,-1):
             dest_tag[:,k] = 0*ina[:,k] + 1*inb[:,k] + dest_tag[:,k+1]*(ina[:,k]==0)*(inb[:,k]==0)
+            time2dest[:,k] = 0*ina[:,k] + 0*inb[:,k] + (Y[:,k+1,self.fidx_Y['time_h']] - Y[:,k,self.fidx_Y['time_h']] + time2dest[:,k+1])*(ina[:,k]==0)*(inb[:,k]==0)
         #print("Overall fraction in B = {}".format(np.mean(inb)))
         #print("At time zero: fraction of traj in B = {}, fraction of traj headed to B = {}".format(np.mean(dest_tag[:,0]==1),np.mean((dest_tag[:,0]==1)*(inb[:,0]==0))))
-        result = {'src_tag': src_tag, 'dest_tag': dest_tag}
+        result = {'src_tag': src_tag, 'dest_tag': dest_tag, 'time2dest': time2dest}
         if save_filename is not None:
             pickle.dump(result,open(save_filename,'wb'))
-        return src_tag,dest_tag
+        return src_tag,dest_tag,time2dest
     def ina_test(self,y,feat_def,tpt_bndy):
         Ny,ydim = y.shape
         ina = np.zeros(Ny,dtype=bool)
@@ -1230,7 +1232,7 @@ class WinterStratosphereFeatures:
         rare_event_idx = []
         for i_uth,uthresh_b in enumerate(uthresh_b_list):
             tpt_bndy["uthresh_b"] = uthresh_b
-            src_tag,dest_tag = self.compute_src_dest_tags(Yra,feat_def,tpt_bndy)
+            src_tag,dest_tag,time2dest = self.compute_src_dest_tags(Yra,feat_def,tpt_bndy)
             ab_idx = np.where(np.any((src_tag==0)*(dest_tag==1), axis=1))[0]
             print(f"At threshold {uthresh_b}, ab_idx = {ab_idx}")
             rare_event_idx.append(ab_idx)
@@ -1249,7 +1251,7 @@ class WinterStratosphereFeatures:
         prng = np.random.RandomState(3)
         for i_uth,uthresh_b in enumerate(uthresh_b_list):
             tpt_bndy["uthresh_b"] = uthresh_b
-            src_tag,dest_tag = self.compute_src_dest_tags(Yra,feat_def,tpt_bndy)
+            src_tag,dest_tag,time2dest = self.compute_src_dest_tags(Yra,feat_def,tpt_bndy)
             fig,ax = plt.subplots()
             handles = []
             ax.axhspan(np.min(uref_ra),uthresh_b,color='red')

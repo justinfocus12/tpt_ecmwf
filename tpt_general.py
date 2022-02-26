@@ -59,7 +59,7 @@ class WinterStratosphereTPT:
         #print(f"in DNS pipeline: ydim = {ydim}")
         funlib = winstrat.observable_function_library_Y(algo_params)
         # ---- Plot committor in a few different coordinates -----
-        src_tag,dest_tag = winstrat.compute_src_dest_tags(Y,feat_def,self.tpt_bndy,"src_dest")
+        src_tag,dest_tag,time2dest = winstrat.compute_src_dest_tags(Y,feat_def,self.tpt_bndy,"src_dest")
         #print(f"src_tag[:,0] = {src_tag[:,0]}")
         ina_Y = winstrat.ina_test(Y[:,0,:],feat_def,self.tpt_bndy)
         #print(f"ina_Y = {ina_Y}")
@@ -123,14 +123,16 @@ class WinterStratosphereTPT:
     def transfer_tpt_results(self,
             tpt_feat_filename,clust_filename,feat_def,savedir,winstrat,algo_params,
             tpt_feat_filename_ra,key_ra):
-        tpt_qoi_keys = "qp qm pi ina inb lt_mean".split(" ")
+        tpt_qoi_keys = "qp qm pi ina inb lt_mean lt_std".split(" ")
+        int2b_cond = pickle.load(open(join(savedir,"int2b_cond"),"rb"))
         qtpt = dict()
         for qk in tpt_qoi_keys:
-            if qk != "lt_mean":
-                qtpt[qk] = pickle.load(open(join(savedir,qk),"rb"))
+            if qk == "lt_mean":
+                qtpt[qk] = int2b_cond["time"]["mean"]
+            elif qk == "lt_std":
+                qtpt[qk] = int2b_cond["time"]["std"]
             else:
-                int2b_cond = pickle.load(open(join(savedir,"int2b_cond"),"rb"))
-                qtpt["lt_mean"] = int2b_cond["time"]["mean"]
+                qtpt[qk] = pickle.load(open(join(savedir,qk),"rb"))
         centers = pickle.load(open(join(savedir,"centers"),"rb"))
         # Now load reanalysis results
         print(f"tpt_feat_filename_ra = {tpt_feat_filename_ra}")
@@ -167,6 +169,9 @@ class WinterStratosphereTPT:
             else:
                 print(f"All values were filled for key {qk}")
             pickle.dump(q_Yra[qk],open(join(savedir,f"{qk}_{key_ra}"),"wb"))
+        # Check min and max of each interpolated quantity
+        for qk in tpt_qoi_keys:
+            print(f"interpolated field {qk}: min = {np.nanmin(q_Yra[qk])}, max = {np.nanmax(q_Yra[qk])}")
         return
     def out_of_sample_extension(self,winstrat,clust,f_clust,tpt_feat_test):
         # Given a function defined on cluster centers, evaluate the function on a "test set" tpt_feat_test. 
@@ -562,7 +567,7 @@ class WinterStratosphereTPT:
             lt_Y = self.interpolate_field_clust2data(kmdict,Y_unseasoned,Ny,Nt,int2b_cond['time'][mom_name],density_flag=False,idx_a=idx_a,idx_b=idx_b)
             np.save(join(savedir,"lt_%s_Y"%(mom_name)),lt_Y)
         return summary 
-    def plot_results_data(self,feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,spaghetti_flag=True,fluxdens_flag=True,current2d_flag=True):
+    def plot_results_data(self,feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,spaghetti_flag=True,fluxdens_flag=True,current2d_flag=True,verify_leadtime_flag=True):
         # Get DGA rate 
         rate = pickle.load(open(join(savedir,"summary"),"rb"))["rate_tob"]
         # Load the reanalysis data for comparison
@@ -582,7 +587,7 @@ class WinterStratosphereTPT:
             ra[k]["ina"] = winstrat.ina_test(ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"])),feat_def,self.tpt_bndy).reshape(ra[k]["Ny"],ra[k]["Nty"])
             ra[k]["inb"] = winstrat.inb_test(ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"])),feat_def,self.tpt_bndy).reshape(ra[k]["Ny"],ra[k]["Nty"])
             # Get source and destination
-            ra[k]["src_tag"],ra[k]["dest_tag"] = winstrat.compute_src_dest_tags(ra[k]["Y"],feat_def,self.tpt_bndy)
+            ra[k]["src_tag"],ra[k]["dest_tag"],ra[k]["time2dest"] = winstrat.compute_src_dest_tags(ra[k]["Y"],feat_def,self.tpt_bndy)
             # Restrict reanalysis to the midwinter
             ra[k]["winter_flag"] = ((ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] >= self.tpt_bndy['tthresh'][0])*(ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] <= self.tpt_bndy['tthresh'][1]))#.flatten()
             ra[k]["Y"] = ra[k]["Y"]#.reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))
@@ -619,8 +624,8 @@ class WinterStratosphereTPT:
         lt_skew_Y = np.load(join(savedir,"lt_skew_Y.npy"))#.reshape(Ny*Nty)
         # Now load the same quantities of interest interpolated onto reanalysis
         for k in keys_ra:
-            for qk in "qp qm pi lt_mean".split(" "):
-                ra[k][qk] = pickle.load(open(join(savedir,f"qp_{k}"),"rb"))
+            for qk in "qp qm pi lt_mean lt_std".split(" "):
+                ra[k][qk] = pickle.load(open(join(savedir,f"{qk}_{k}"),"rb"))
         if fluxdens_flag:
             reactive_code = [0,1] #= ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
             # ----------- Plot flux distribution of zonal wind at different times ----------
@@ -780,16 +785,27 @@ class WinterStratosphereTPT:
                     theta_lower_list,theta_upper_list)
             fig.savefig(join(savedir,"fluxdens_J-uref_d-hflev4wn2"))
             plt.close(fig)
+        if verify_leadtime_flag:
+            fig,ax = plt.subplots()
+            for k in keys_ra:
+                good_idx = np.where((np.isnan(ra[k]["lt_mean"].flatten())==0)*(ra[k]["dest_tag"].flatten()==1))[0]
+                ax.scatter(ra[k]["lt_mean"].flatten()[good_idx],ra[k]["time2dest"].flatten()[good_idx]/24.0, color=ra[k]["color"], alpha=0.5, marker='.', s=36*ra[k]["qp"].flatten()[good_idx])
+            ax.set_xlabel(r"$\eta_B^+$")
+            ax.set_ylabel(r"Time to $B$")
+            fig.savefig(join(savedir,"verification_leadtime"))
+            plt.close(fig)
         if current2d_flag:
-            # ------------- Zonal wind, lead time. Latter has to be interpolated -----------
-            theta_x = np.array([funlib_Y["uref"](Y.reshape((Ny*Nty,ydim))), lt_mean_Y.reshape((Ny*Nty,ydim))]).T.reshape((Ny,Nty,2))
+            # ------------- Real time, committor. Latter has to be interpolated -----------
+            theta_x = np.array([funlib_Y["time_d"]["fun"](Y.reshape((Ny*Nty,ydim))), qp_Y.reshape((Ny*Nty))]).T.reshape((Ny,Nty,2))
             rath = dict({key: dict({}) for key in keys_ra}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
             for k in keys_ra:
                 rath[k]["theta"] = np.array([
-                    funlib_Y["uref"](ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))),
-                    ra[k]["lt_mean"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))])
-            lab0 = funlib_Y["uref"]["label"]
-            lab1 = r"$\eta_B^+$"
+                    funlib_Y["time_d"]["fun"](ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))),
+                    ra[k]["qp"].reshape(ra[k]["Ny"]*ra[k]["Nty"])
+                    ]).T.reshape((ra[k]["Ny"],ra[k]["Nty"],2))
+                print(f"For reanalysis {k}, committor ranges from {np.nanmin(ra[k]['qp'])} to {np.nanmax(ra[k]['qp'])}")
+            lab0 = funlib_Y["time_d"]["label"]
+            lab1 = r"$q_B^+$"
             # A -> B
             reactive_code = [0,1]
             comm_bwd = qm_Y*(reactive_code[0] == 0) + (1-qm_Y)*(reactive_code[0] == 1)
@@ -798,13 +814,34 @@ class WinterStratosphereTPT:
             print(f"idx_winter: 0: min={idx_winter[0].min()}, max={idx_winter[0].max()}")
             fig,ax = helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$ (winters with SSW)",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrRd)
             _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
+            print("------------ Before plot_trajectory_segments with leadtime")
             self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
-            fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
+            print("----------- After plot_trajectory_segments with leadtime")
+            fig.savefig(join(savedir,"J_timed_qp_ab"))
             plt.close(fig)
-
-
-
-
+            # ------------- Lead time, zonal wind. Former has to be interpolated -----------
+            theta_x = np.array([-lt_mean_Y.reshape((Ny*Nty)), funlib_Y["uref_dl0"]["fun"](Y.reshape((Ny*Nty,ydim)))]).T.reshape((Ny,Nty,2))
+            rath = dict({key: dict({}) for key in keys_ra}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
+            for k in keys_ra:
+                rath[k]["theta"] = np.array([
+                    -ra[k]["lt_mean"].reshape(ra[k]["Ny"]*ra[k]["Nty"]),
+                    funlib_Y["uref_dl0"]["fun"](ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"])))]).T.reshape((ra[k]["Ny"],ra[k]["Nty"],2))
+                print(f"For reanalysis {k}, lead time ranges from {np.nanmin(ra[k]['lt_mean'])} to {np.nanmax(ra[k]['lt_mean'])}")
+            lab0 = r"$-\eta_B^+$ [days]"
+            lab1 = funlib_Y["uref_dl0"]["label"]
+            # A -> B
+            reactive_code = [0,1]
+            comm_bwd = qm_Y*(reactive_code[0] == 0) + (1-qm_Y)*(reactive_code[0] == 1)
+            comm_fwd = qp_Y*(reactive_code[1] == 1) + (1-qp_Y)*(reactive_code[1] == 0)
+            print(f"shapes: qp_Y: {qp_Y.shape}, pi_Y: {pi_Y.shape}, theta_x: {theta_x.shape}")
+            print(f"idx_winter: 0: min={idx_winter[0].min()}, max={idx_winter[0].max()}")
+            fig,ax = helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$ (winters with SSW)",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrRd)
+            _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
+            print("------------ Before plot_trajectory_segments with leadtime")
+            self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
+            print("----------- After plot_trajectory_segments with leadtime")
+            fig.savefig(join(savedir,"J_lt_uref_ab"))
+            plt.close(fig)
             # ------------- Current plots --------------------
             keypairs = []
             keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
@@ -1195,6 +1232,7 @@ class WinterStratosphereTPT:
             any_rxn_idx = np.where(np.any(reactive_flag, axis=1))[0]
             prng = np.random.RandomState(2)
             ss = prng.choice(any_rxn_idx,size=min(numtraj,len(any_rxn_idx)),replace=False)
+            print(f"For reanalysis {k}, len(ss) = {len(ss)}")
             for i in ss:
                 ridx = np.where(reactive_flag[i])[0]
                 xx = rath[k]["theta"][i,ridx,:]
