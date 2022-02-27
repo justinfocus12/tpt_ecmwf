@@ -12,40 +12,56 @@ s2s subsets:
   2010 2011 2012 2013 2014 2015 2016]
  [1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009
   2010 2011 2012 2013 2014 2015 2016]
- [2011 2006 1999 1999 2012 2012 2005 2016 2016 2001 2012 2013 2005 2008
-  2011 2002 2010 1997 2000 2012 2000]
- [2003 2010 2003 1998 2012 2011 2011 2014 2007 2010 2003 1998 2013 1999
-  2003 2009 2012 2001 2000 2009 2001]
- [2015 2007 2004 1996 2013 2001 2000 1997 2001 2012 2002 2004 2015 2000
-  2016 2006 2006 1999 2001 2005 2004]
- [2013 2015 2004 2006 1997 2010 2001 2012 1999 2003 1997 2004 1996 2001
-  2011 2002 2011 2001 2005 2013 2012]
- [2012 2007 2010 2001 2015 2011 2009 2007 2007 1997 2003 2012 2003 2011
-  1996 2000 2014 1998 2004 2006 2001]
- [2002 2002 2000 1997 2000 2001 2001 2002 1999 2013 2011 2016 2014 2005
-  2000 2013 1998 2015 1999 2009 2007]]
-expdir = /scratch/jf4241/ecmwf_data/results/2022-02-24/3, sources = ['e2', 'ei', 's2s']
-expdirs = {'e2': '/scratch/jf4241/ecmwf_data/results/2022-02-24/3/e2', 'ei': '/scratch/jf4241/ecmwf_data/results/2022-02-24/3/ei', 's2s': '/scratch/jf4241/ecmwf_data/results/2022-02-24/3/s2s'}
-plev = [10.0 50.0 100.0 200.0 300.0 500.0 700.0 850.0 925.0 1000.0] hPa
-Starting TPT on eraint
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-02-24/3/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4-lev2pc4-lev3pc4-lev4pc4_hf-_temp-/full_seed0
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-02-24/3/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4-lev2pc4-lev3pc4-lev4pc4_hf-_temp-/full_seed0/Y, resample_flag = True --------------
-Before resampling: X.shape = (40, 180, 210)
-After resampling: X.shape = (40, 180, 210)
-Nx = 40, Ntx = 180, xdim = 210
-Y[0,0,0] = 360.0
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+ [2003 2013 2010 1999 2006 2016 2006 1997 2016 2012 2006 2014 2016 2012
+  1998 2002 2005 1998 2016 2008 2005]
+ [2000 2000 2005 2006 2008 2004 1997 2001 2003 1996 1997 1999 2014 2014
+  2016 2004 2014 2003 2006 2014 1999]
+ [2008 2015 2009 1996 2006 1999 2002 1999 2002 2015 1998 2014 2014 2002
+  2016 2007 1996 2000 2009 2005 1998]
+ [1997 2008 2011 1997 2008 2001 2002 1997 2006 2002 2002 2002 2002 2007
+  2014 2014 2014 2015 1998 2008 2005]
+ [2015 2004 2001 2016 2007 1997 2007 2011 2008 2011 2008 2014 2009 2008
+  2005 2002 2000 2012 2004 2001 2011]
+ [2001 2001 2013 1996 2012 2012 1996 2006 2008 1996 2003 2015 2001 2000
+  2015 2000 2001 2008 2013 2015 2008]]
+expdir = /scratch/jf4241/ecmwf_data/results/2022-02-27/0, sources = ['e2', 'ei', 's2s']
+expdirs = {'e2': '/scratch/jf4241/ecmwf_data/results/2022-02-27/0/e2', 'ei': '/scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei', 's2s': '/scratch/jf4241/ecmwf_data/results/2022-02-27/0/s2s'}
+Creating features
+Creating features: file 0 out of 15
+Creating features: file 1 out of 15
+Creating features: file 2 out of 15
+Creating features: file 3 out of 15
+Creating features: file 4 out of 15
+Creating features: file 5 out of 15
+Creating features: file 6 out of 15
+Creating features: file 7 out of 15
+Creating features: file 8 out of 15
+Creating features: file 9 out of 15
+Creating features: file 10 out of 15
+Creating features: file 11 out of 15
+Creating features: file 12 out of 15
+Creating features: file 13 out of 15
+Creating features: file 14 out of 15
+Reading duration = 20.949098825454712
+i_lat_max = 21
+qgpv: nanfrac=0.047619047619047616, min=-0.09023765020583688, max=0.10922033613299194
+min diff = 0.0
+qgpv_crit: min=0.0, max=0.0
+q: frac>0 is 0.530086194863205,  min=0.0, max=0.10922033613299194
+Xcent.shape = (3184, 2520), q.shape = (3184, 2520)
+waves.shape = (3184, 4)
+wave_mag.shape = (3184, 2)
+waves_szn_mean.shape = (180, 4), waves_szn_std.shape = (180, 4)
+svd'ing level 0 out of 10
+svd'ing level 1 out of 10
+svd'ing level 2 out of 10
+svd'ing level 3 out of 10
+svd'ing level 4 out of 10
+svd'ing level 5 out of 10
+svd'ing level 6 out of 10
+svd'ing level 7 out of 10
+svd'ing level 8 out of 10
+), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)

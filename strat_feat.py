@@ -228,25 +228,16 @@ class WinterStratosphereFeatures:
         cosine = np.outer(np.cos(lat*np.pi/180), np.ones(Nlon))
         imin,imax = np.argmin(np.abs(lat-75)),np.argmin(np.abs(lat-45))
         _,vmer = self.compute_geostrophic_wind(gh,lat,lon)
-        vT = np.sum((vmer*temperature*cosine)[:,:,imin:imax,:], axis=2)/np.sum(cosine[imin:imax,:], axis=0)
-        #vT = (vmer*temperature)[:,:,(imin+imax)//2,:]
-        vThat = 1/Nlon*np.abs(np.fft.rfft(vT, axis=2)[:,:,:self.heatflux_wavenumbers_per_level_max])
-        vThat[:,:,1:] *= 2 # Account for both halves of the spectrum
-        # ------- Debugging --------
-        #print(f"Level 2 stats:")
-        #print(f"vmer mean = {np.mean(vmer[:,2,(imin+imax)//2,:])}")
-        #print(f"temp mean = {np.mean(temperature[:,2,(imin+imax)//2,:])}")
-        #print(f"vT mean = {np.mean(vT[:,2,:])}")
-        ## Compute v'T' by hand
-        #vprime = np.transpose(np.transpose(vmer, (3,0,1,2)) - np.mean(vmer, axis=3), (1,2,3,0))
-        #Tprime = np.transpose(np.transpose(temperature, (3,0,1,2)) - np.mean(temperature, axis=3), (1,2,3,0))
-        #vpTp = np.mean(vprime*Tprime, axis=3)
-        #print(f"level 0 vpTp  mean = {np.mean(vpTp[:,0,(imin+imax)//2])}")
-        #for i_wn in range(6):
-        #    print(f"level 0 vThat wave {i_wn} mean = {np.mean(vThat[:,0,i_wn])}")
-        #    print(f"level 0 vThat wave {i_wn} std = {np.std(vThat[:,0,i_wn])}")
-        #sys.exit()
-        return vThat
+        T_bandavg = np.sum((temperature*cosine)[:,:,imin:imax,:], axis=2)/np.sum(cosine[imin:imax,:], axis=0)
+        vmer_bandavg = np.sum((vmer*cosine)[:,:,imin:imax,:], axis=2)/np.sum(cosine[imin:imax,:], axis=0) 
+        That = 1/Nlon*np.abs(np.fft.rfft(T_bandavg, axis=2)[:,:,:self.heatflux_wavenumbers_per_level_max])
+        vhat = 1/Nlon*np.abs(np.fft.rfft(vmer_bandavg, axis=2)[:,:,:self.heatflux_wavenumbers_per_level_max])
+        # Now extract wavenumbers one at a time
+        vT_decomp = np.zeros((Nx,Nlev,self.heatflux_wavenumbers_per_level_max))
+        vT_decomp[:,:,0] = That[:,:,0]*vhat[:,:,0]
+        for k in range(1,self.heatflux_wavenumbers_per_level_max):
+            vT_decomp[:,k] = 2*(vhat[:,k]*That[:,k].conjugate()).real
+        return vT_decomp
     def classify_split_displacement(self,gh,lat,lon):
         # Compute the split vs. displacement criterion from cp07
         return
