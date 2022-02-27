@@ -185,27 +185,27 @@ for key in sources:
 
 # Parameters to determine what to do
 # Featurization
-create_features_flag =         1
-display_features_flag =        1
+create_features_flag =         0
+display_features_flag =        0
 # era20c
-evaluate_database_e2 =         1
-tpt_featurize_e2 =             1
-tpt_e2_flag =                  1
+evaluate_database_e2 =         0
+tpt_featurize_e2 =             0
+tpt_e2_flag =                  0
 # eraint
-evaluate_database_ei =         1
-tpt_featurize_ei =             1
-tpt_ei_flag =                  1
+evaluate_database_ei =         0
+tpt_featurize_ei =             0
+tpt_ei_flag =                  0
 # s2s
-evaluate_database_s2s =        1
-tpt_featurize_s2s =            1
-cluster_flag =                 1
-build_msm_flag =               1
-tpt_s2s_flag =                 1
-transfer_results_flag =        1
+evaluate_database_s2s =        0
+tpt_featurize_s2s =            0
+cluster_flag =                 0
+build_msm_flag =               0
+tpt_s2s_flag =                 0
+transfer_results_flag =        0
 plot_tpt_results_s2s_flag =    1
 # Summary statistic
-plot_rate_flag =               1
-illustrate_dataset_flag =      1
+plot_rate_flag =               0
+illustrate_dataset_flag =      0
 
 
 feature_file = join(featdir,"feat_def")

@@ -236,7 +236,7 @@ class WinterStratosphereFeatures:
         vT_decomp = np.zeros((Nx,Nlev,self.heatflux_wavenumbers_per_level_max))
         vT_decomp[:,:,0] = That[:,:,0]*vhat[:,:,0]
         for k in range(1,self.heatflux_wavenumbers_per_level_max):
-            vT_decomp[:,k] = 2*(vhat[:,k]*That[:,k].conjugate()).real
+            vT_decomp[:,:,k] = 2*(vhat[:,:,k]*That[:,:,k].conjugate()).real
         return vT_decomp
     def classify_split_displacement(self,gh,lat,lon):
         # Compute the split vs. displacement criterion from cp07

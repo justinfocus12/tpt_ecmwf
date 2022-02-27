@@ -847,7 +847,8 @@ class WinterStratosphereTPT:
             keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
             keypairs += [['time_d','uref']]
             keypairs += [['time_d','captemp_lev0']]
-            #keypairs += [['time_d','heatflux_lev4_wn%i'%(i_wn)] for i_wn in range(winstrat.heatflux_wavenumbers_per_level_max)]
+            keypairs += [['time_d','heatflux_lev4_wn%i'%(i_wn)] for i_wn in range(winstrat.heatflux_wavenumbers_per_level_max)]
+            keypairs += [['heatflux_lev4_wn1','heatflux_lev4_wn2']]
             #keypairs += [['time_d','pc%i_lev0'%(i_pc)] for i_pc in range(algo_params['Npc_per_level'][0])]
             keypairs += [['uref','pc%i_lev0'%(i_pc)] for i_pc in range(6)]
             #keypairs += [['pc1_lev0','pc%i_lev0'%(i_pc)] for i_pc in range(2,6)]
@@ -886,7 +887,7 @@ class WinterStratosphereTPT:
                     print(f"idx_winter: 0: min={idx_winter[0].min()}, max={idx_winter[0].max()}")
                     fig,ax = helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$ (winters with SSW)",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrRd)
                     _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
-                    self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
+                    #self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
                     fig.savefig(join(savedir,"J_%s_%s_ab"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
                     # A -> A
@@ -895,7 +896,7 @@ class WinterStratosphereTPT:
                     comm_fwd = qp_Y*(reactive_code[1] == 1) + (1-qp_Y)*(reactive_code[1] == 0)
                     fig,ax = helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to A$ (winters without SSW)",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrRd)
                     _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
-                    self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
+                    #self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
                     fig.savefig(join(savedir,"J_%s_%s_aa"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
         if spaghetti_flag:
