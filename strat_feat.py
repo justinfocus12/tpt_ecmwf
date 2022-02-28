@@ -1037,6 +1037,13 @@ class WinterStratosphereFeatures:
                 "fun": lambda X: X[:,self.fidx_X["time_h"]]/24.0, 
                 "label": "Time since Oct. 1 [days]",
                 }
+        for i_lev in range(len(feat_def["plev"])):
+            key = "heatflux_lev%i_total"%(i_lev)
+            idx_ilev = [self.fidx_X["heatflux_lev%i_wn%i"%(i_lev,i_wn)] for i_wn in range(self.heatflux_wavenumbers_per_level_max)]
+            funlib[key] = {
+                    "fun": lambda X,i_lev=i_lev,idx_ilev=idx_ilev: np.sum(X[:,idx_ilev],axis=1),
+                    "label": "Heat flux at %i hPa"%(feat_def["plev"][i_lev]/100.0)
+                    }
         # Nonlinear functions
         for i_wave in range(1,self.num_wavenumbers+1):
             funlib["mag%i"%(i_wave)] = {
@@ -1047,54 +1054,6 @@ class WinterStratosphereFeatures:
                     "fun": lambda X,i_wave=i_wave: np.arctan2(X[:,self.fidx_X["imag%i"%(i_wave)]]**2, X[:,self.fidx_X["real%i"%(i_wave)]]),
                     "label": "Wave %i phase"%(i_wave),
                     }
-        return funlib
-    def old_observable_function_library_X(self):
-        # Build the database of observable functions
-        feat_def = pickle.load(open(self.feature_file,"rb"))
-        # Basic-state observables:
-        funlib = dict()
-        funlib = {
-                "time_h": {"fun": lambda X: X[:,0],
-                    "label": r"Hours since Oct. 1",},
-                "time_d": {"fun": lambda X: X[:,0]/24.0,
-                    "label": r"Days since Oct. 1",},
-                "uref": {"fun": lambda X: X[:,1],
-                    "label": r"$\overline{u}$ (10 hPa, 60$^\circ$N) [m/s]",},
-                "mag1": {"fun": lambda X: np.sqrt(np.sum(X[:,2:4]**2, axis=1)),
-                    "label": "Wave 1 magnitude",},
-                "mag2": {"fun": lambda X: np.sqrt(np.sum(X[:,4:6]**2, axis=1)),
-                    "label": "Wave 2 magnitude",},
-                }
-        if self.num_vortex_moments_max >= 1:
-            funlib["area"] = {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])],
-                    "label": "Vortex area",}
-        if self.num_vortex_moments_max >= 2:
-            funlib["centerlat"] = {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+1],
-                    "label": "Vortex center latitude",}
-        if self.num_vortex_moments_max >= 3:
-            funlib["asprat"] = {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+2],
-                    "label": "Vortex aspect ratio",}
-        if self.num_vortex_moments_max >= 4:
-            funlib["kurt"] = {"fun": lambda X: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+3],
-                    "label": "Vortex excess kurtosis",}
-        for i_lev in range(len(feat_def["plev"])):
-            key = "lev%i_temp"%(i_lev)
-            funlib[key] = {
-                    "fun": lambda X,i_lev=i_lev: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+self.num_vortex_moments_max+i_lev],
-                    "label": "Cap temp. at %i hPa [K]"%(feat_def["plev"][i_lev]/100.0),
-                    }
-            key = "lev%i_vT"%(i_lev)
-            funlib[key] = {
-                    "fun": lambda X,i_lev=i_lev: X[:,2+2*self.num_wavenumbers+self.Npc_per_level_max*len(feat_def['plev'])+self.num_vortex_moments_max+len(feat_def['plev'])+i_lev],
-                    "label": "$\overline{v'T'}$ at 45-75$^\circ$N, %i hPa [Km/s]"%(feat_def["plev"][i_lev]/100.0),
-                    }
-            for i_eof in range(self.Npc_per_level_max):
-                key = "lev%i_pc%i"%(i_lev,i_eof)
-                #print("key = {}".format(key))
-                funlib[key] = {
-                        "fun": lambda X,i_lev=i_lev,i_eof=i_eof: X[:,2+2*self.num_wavenumbers+i_lev*self.Npc_per_level_max+i_eof],
-                        "label": "PC %i at %i hPa"%(i_eof+1, feat_def["plev"][i_lev]/100.0),
-                        }
         return funlib
     def observable_function_library_Y(self,algo_params):
         # Build the database of observable functions
