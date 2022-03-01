@@ -1,4 +1,5 @@
 import pickle
+import pandas
 import numpy as np
 import datetime
 import time as timelib
@@ -202,9 +203,9 @@ cluster_flag =                 0
 build_msm_flag =               0
 tpt_s2s_flag =                 0
 transfer_results_flag =        0
-plot_tpt_results_s2s_flag =    1
+plot_tpt_results_s2s_flag =    0
 # Summary statistic
-plot_rate_flag =               0
+plot_rate_flag =               1
 illustrate_dataset_flag =      0
 
 
@@ -385,7 +386,14 @@ if plot_rate_flag:
                 elif key == "s2s":
                     rate_lists[key][i_subset,i_uth] = summary["rate_tob"]
                     rate_lists["s2s_naive"][i_subset,i_uth] = summary["rate_naive"]
-
+    df = pandas.DataFrame({
+        "Name": uthresh_list
+        })
+    for key in ["ei","e2","s2s"]:
+        df[key+"_mean"] = rate_lists[key][np.arange(len(subsets[key]["full_kmeans_seeds"]))].mean(axis=0)
+        df[key+"_min"] = rate_lists[key].min(axis=0)
+        df[key+"_max"] = rate_lists[key].max(axis=0)
+    # TODO: Plot the bars
     ylim = {'log': [1e-3,1.0], 'linear': [0.0,1.0]}
     loc = {'log': 'lower right', 'linear': 'upper left'}
     bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
