@@ -105,9 +105,9 @@ file_list_climavg = file_lists["ei"][:15]
 
 # Method 2: resample with replacement
 prng = np.random.RandomState(0) # This will be used for subsampling the years. 
-subsets["num_bootstrap"] = 6
+subsets["num_bootstrap"] = 0
 for key in sources:
-    num_full_kmeans_seeds = 6 if key == "s2s" else 1
+    num_full_kmeans_seeds = 1 if key == "s2s" else 1
     subsets[key]["full_kmeans_seeds"] = np.arange(num_full_kmeans_seeds) # random-number generator seeds to use for KMeans. 
     Nyears = len(subsets[key]["full_subset"])
     subsets[key]["resampled_kmeans_seeds"] = num_full_kmeans_seeds + np.arange(subsets["num_bootstrap"])
@@ -308,8 +308,8 @@ if e2_flag:
 # =======================================================================
 # ------------------- DGA from S2S --------------------------------
 feat_filename = join(expdirs["s2s"],"X.npy")
-feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in ["e2","ei"]})
-tpt_feat_filename_ra_dict = dict({key: join(subsets[key]["all_dirs"][0],"Y") for key in ["e2","ei"]})
+feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in ["ei","e2"]})
+tpt_feat_filename_ra_dict = dict({key: join(subsets[key]["all_dirs"][0],"Y") for key in ["ei","e2"]})
 #feat_filename_ra = join(expdirs["e2"],"X.npy")
 #tpt_feat_filename_ra = join(subsetdirs["e2"][-1],"Y")
 ens_start_filename = join(expdirs["s2s"],"ens_start_idx.npy")
@@ -359,7 +359,7 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,spaghetti_flag=(i_uth==1 or i_uth==4),fluxdens_flag=False,verify_leadtime_flag=0*(i_uth==1 or i_uth==4),current2d_flag=1*(i_uth==1 or i_uth==4))
+            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,spaghetti_flag=0*(i_uth==1 or i_uth==4),fluxdens_flag=1*(i_uth==1 or i_uth==4),verify_leadtime_flag=0*(i_uth==1 or i_uth==4),current2d_flag=0*(i_uth==1 or i_uth==4))
             #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
 
 # =============================================================================

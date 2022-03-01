@@ -1,500 +1,17 @@
 file_lists['s2s'][:10] = ['/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-03_rt2016-10-03.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-06_rt2016-10-06.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-10_rt2016-10-10.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-13_rt2016-10-13.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-17_rt2016-10-17.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-20_rt2016-10-20.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-24_rt2016-10-24.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-27_rt2016-10-27.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-31_rt2016-10-31.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-11-03_rt2016-11-03.nc']
 s2s subsets: 
 [[1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009
-  2010 2011 2012 2013 2014 2015 2016]
- [1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009
-  2010 2011 2012 2013 2014 2015 2016]
- [1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009
-  2010 2011 2012 2013 2014 2015 2016]
- [1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009
-  2010 2011 2012 2013 2014 2015 2016]
- [1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009
-  2010 2011 2012 2013 2014 2015 2016]
- [1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009
-  2010 2011 2012 2013 2014 2015 2016]
- [2003 2013 2010 1999 2006 2016 2006 1997 2016 2012 2006 2014 2016 2012
-  1998 2002 2005 1998 2016 2008 2005]
- [2000 2000 2005 2006 2008 2004 1997 2001 2003 1996 1997 1999 2014 2014
-  2016 2004 2014 2003 2006 2014 1999]
- [2008 2015 2009 1996 2006 1999 2002 1999 2002 2015 1998 2014 2014 2002
-  2016 2007 1996 2000 2009 2005 1998]
- [1997 2008 2011 1997 2008 2001 2002 1997 2006 2002 2002 2002 2002 2007
-  2014 2014 2014 2015 1998 2008 2005]
- [2015 2004 2001 2016 2007 1997 2007 2011 2008 2011 2008 2014 2009 2008
-  2005 2002 2000 2012 2004 2001 2011]
- [2001 2001 2013 1996 2012 2012 1996 2006 2008 1996 2003 2015 2001 2000
-  2015 2000 2001 2008 2013 2015 2008]]
+  2010 2011 2012 2013 2014 2015 2016]]
 expdir = /scratch/jf4241/ecmwf_data/results/2022-02-27/0, sources = ['e2', 'ei', 's2s']
 expdirs = {'e2': '/scratch/jf4241/ecmwf_data/results/2022-02-27/0/e2', 'ei': '/scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei', 's2s': '/scratch/jf4241/ecmwf_data/results/2022-02-27/0/s2s'}
-Creating features
-Creating features: file 0 out of 15
-Creating features: file 1 out of 15
-Creating features: file 2 out of 15
-Creating features: file 3 out of 15
-Creating features: file 4 out of 15
-Creating features: file 5 out of 15
-Creating features: file 6 out of 15
-Creating features: file 7 out of 15
-Creating features: file 8 out of 15
-Creating features: file 9 out of 15
-Creating features: file 10 out of 15
-Creating features: file 11 out of 15
-Creating features: file 12 out of 15
-Creating features: file 13 out of 15
-Creating features: file 14 out of 15
-Reading duration = 21.898367643356323
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.09023765020583688, max=0.10922033613299194
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.530086194863205,  min=0.0, max=0.10922033613299194
-Xcent.shape = (3184, 2520), q.shape = (3184, 2520)
-waves.shape = (3184, 4)
-wave_mag.shape = (3184, 2)
-waves_szn_mean.shape = (180, 4), waves_szn_std.shape = (180, 4)
-svd'ing level 0 out of 10
-svd'ing level 1 out of 10
-svd'ing level 2 out of 10
-svd'ing level 3 out of 10
-svd'ing level 4 out of 10
-svd'ing level 5 out of 10
-svd'ing level 6 out of 10
-svd'ing level 7 out of 10
-svd'ing level 8 out of 10
-svd'ing level 9 out of 10
-with multiprocessing = 0, svd_duration = 183.74988102912903
-T: min=185.7528866060366, max=310.57621912331
-temp_capavg: min=195.74783372646993, max=271.57567444030985
-vT_szn_std: shape = (180, 10, 3), min=4.1447575194524156, max=682.8614947327823
 plev = [10.0 50.0 100.0 200.0 300.0 500.0 700.0 850.0 925.0 1000.0] hPa
-Showing EOFs
-self.num_wavenumbers = 2, self.Npc_per_level_max = 15
-uref: min=-11.958292643229166, max=68.49893595377604
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06086197512669742, max=0.0729880067975515
-min diff = 5.833691602702418e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5325713540502273,  min=0.0, max=0.0729880067975515
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=186.53050288548792, max=308.6736565549652
-X.shape = (213, 210)
-uref: min=-11.958292643229166, max=68.49893595377604. decel10: min=-49.315615844726565, max=32.800882975260414
-start = 137
-gh.shape = (213, 10, 61, 120)
-u.shape = (213, 10, 61, 120)
-self.num_wavenumbers = 2, self.Npc_per_level_max = 15
-uref: min=-14.145339965820312, max=39.84511922200521
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06474877322490072, max=0.07178358430510427
-min diff = 4.336808689942018e-19
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.49847072476789456,  min=0.0, max=0.07178358430510427
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.2780976117838, max=308.3366779568007
-X.shape = (212, 210)
-uref: min=-14.145339965820312, max=39.84511922200521. decel10: min=-43.06008707682292, max=23.040305582682286
-start = 83
-gh.shape = (212, 10, 61, 120)
-u.shape = (212, 10, 61, 120)
-Evaluating ERA-Interim database
-file 0 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1979-10-01_to_1980-04-30.nc
-uref: min=-8.723284912109374, max=56.33960978190104
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06077531735623269, max=0.07944465335390463
-min diff = 1.1103914662746739e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.514360235486996,  min=0.0, max=0.07944465335390463
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=188.36256402017122, max=309.4657574357908
-Xnew.shape = (1, 213, 210), fall_year = 1979
-file 1 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1980-10-01_to_1981-04-30.nc
-uref: min=-0.324432373046875, max=65.77174072265625
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.04962669959591396, max=0.08190780523611256
-min diff = 9.463979079582518e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5465090595986822,  min=0.0, max=0.08190780523611256
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.27108950876138, max=309.41172604855916
-Xnew.shape = (1, 212, 210), fall_year = 1980
-file 2 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1981-10-01_to_1982-04-30.nc
-uref: min=-16.99649454752604, max=47.632286580403644
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.07069390787190348, max=0.07933157967125687
-min diff = 6.249886025377904e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5135688080263552,  min=0.0, max=0.07933157967125687
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.15921361040057, max=310.3334296133238
-Xnew.shape = (1, 212, 210), fall_year = 1981
-file 3 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1982-10-01_to_1983-04-30.nc
-uref: min=-2.8894012451171873, max=67.66148579915365
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06386887844331154, max=0.07172593983057449
-min diff = 4.845559717359116e-13
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5306903264450434,  min=0.0, max=0.07172593983057449
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.04136657439565, max=309.9764053943214
-Xnew.shape = (1, 212, 210), fall_year = 1982
-file 4 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1983-10-01_to_1984-04-30.nc
-uref: min=-11.958292643229166, max=68.49893595377604
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06086197512669742, max=0.0729880067975515
-min diff = 5.833691602702418e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5325713540502273,  min=0.0, max=0.0729880067975515
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=186.53050288548792, max=308.6736565549652
-Xnew.shape = (1, 213, 210), fall_year = 1983
-file 5 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1984-10-01_to_1985-04-30.nc
-uref: min=-14.145339965820312, max=39.84511922200521
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06474877322490072, max=0.07178358430510427
-min diff = 4.336808689942018e-19
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.49847072476789456,  min=0.0, max=0.07178358430510427
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.2780976117838, max=308.3366779568007
-Xnew.shape = (1, 212, 210), fall_year = 1984
-file 6 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1985-10-01_to_1986-04-30.nc
-uref: min=-14.438712565104167, max=60.57640889485677
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.05662569123690661, max=0.08466187865232805
-min diff = 5.7954670576454426e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.519496855345912,  min=0.0, max=0.08466187865232805
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.02486301340693, max=310.32389626080555
-Xnew.shape = (1, 212, 210), fall_year = 1985
-file 7 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1986-10-01_to_1987-04-30.nc
-uref: min=-19.33077901204427, max=52.27533467610677
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.09023765020583688, max=0.09711559888874026
-min diff = 2.3244829672197653e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5638776579814315,  min=0.0, max=0.09711559888874026
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.53651517982843, max=309.0555457369021
-Xnew.shape = (1, 212, 210), fall_year = 1986
-file 8 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1987-10-01_to_1988-04-30.nc
-uref: min=-17.685689290364582, max=69.96764628092448
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.059637800608925234, max=0.09150497727034347
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5299891944258142,  min=0.0, max=0.09150497727034347
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=186.37624849634702, max=309.46656330669816
-Xnew.shape = (1, 213, 210), fall_year = 1987
-file 9 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1988-10-01_to_1989-04-30.nc
-uref: min=-13.942929077148438, max=73.51770935058593
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.07723666095587532, max=0.09989234800764166
-min diff = 2.341885192713722e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5514169661575322,  min=0.0, max=0.09989234800764166
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=185.7528866060366, max=309.11797899711564
-Xnew.shape = (1, 212, 210), fall_year = 1988
-file 10 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1989-10-01_to_1990-04-30.nc
-uref: min=2.048777707417806, max=55.24816691080729
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06761676602669078, max=0.10922033613299194
-min diff = 1.1601875710143261e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5351733303384246,  min=0.0, max=0.10922033613299194
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.72833828618445, max=310.52954047214246
-Xnew.shape = (1, 212, 210), fall_year = 1989
-file 11 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1990-10-01_to_1991-04-30.nc
-uref: min=-11.669282023111979, max=61.19261474609375
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06236040224465848, max=0.1035492979403817
-min diff = 8.92783113062845e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5247828691224917,  min=0.0, max=0.1035492979403817
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.70538511889998, max=310.57621912331
-Xnew.shape = (1, 212, 210), fall_year = 1990
-file 12 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1991-10-01_to_1992-04-30.nc
-uref: min=-9.131112670898437, max=55.71297098795573
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.0519953799384643, max=0.07144273366256884
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5384473507712945,  min=0.0, max=0.07144273366256884
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=187.92177795657787, max=308.7124102515666
-Xnew.shape = (1, 213, 210), fall_year = 1991
-file 13 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1992-10-01_to_1993-04-30.nc
-uref: min=-7.301140340169271, max=55.84546712239583
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.04936056327475398, max=0.08521899680751649
-min diff = 2.0900634304862886e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5292527702905061,  min=0.0, max=0.08521899680751649
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.60896398535607, max=309.2298813619083
-Xnew.shape = (1, 212, 210), fall_year = 1992
-file 14 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1993-10-01_to_1994-04-30.nc
-uref: min=-19.278949991861978, max=48.34674580891927
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06661286239553418, max=0.08342939109677167
-min diff = 3.8626263645924475e-13
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5227088948787062,  min=0.0, max=0.08342939109677167
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.62666999861892, max=308.56566985337804
-Xnew.shape = (1, 212, 210), fall_year = 1993
-file 15 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1994-10-01_to_1995-04-30.nc
-uref: min=-7.380098470052084, max=50.05306396484375
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06187797621513266, max=0.08474551607901065
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5090764450434262,  min=0.0, max=0.08474551607901065
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.79870117042856, max=310.3812568813242
-Xnew.shape = (1, 212, 210), fall_year = 1994
-file 16 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1995-10-01_to_1996-04-30.nc
-uref: min=-16.665789794921874, max=56.36590067545573
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06791340530936878, max=0.08186522583421985
-min diff = 1.1326634075103925e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.530782845219465,  min=0.0, max=0.08186522583421985
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=184.58154843817337, max=310.0009741119209
-Xnew.shape = (1, 213, 210), fall_year = 1995
-file 17 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1996-10-01_to_1997-04-30.nc
-uref: min=-1.4318745930989583, max=56.34973958333333
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.05720555918624773, max=0.07138980175272185
-min diff = 1.0848440201716159e-13
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5330806379155436,  min=0.0, max=0.07138980175272185
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.44381204711388, max=309.4329507989767
-Xnew.shape = (1, 212, 210), fall_year = 1996
-file 18 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1997-10-01_to_1998-04-30.nc
-uref: min=-8.98499755859375, max=45.25697733561198
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.05167717031332032, max=0.07391893825387356
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5195998053309374,  min=0.0, max=0.07391893825387356
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.8423704286945, max=310.3379312884651
-Xnew.shape = (1, 212, 210), fall_year = 1997
-file 19 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1998-10-01_to_1999-04-30.nc
-uref: min=-24.857158406575522, max=41.46846313476563
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.08112736371247228, max=0.07882210837304605
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5662174303683738,  min=0.0, max=0.07882210837304605
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=185.82803809019975, max=309.4537630003355
-Xnew.shape = (1, 212, 210), fall_year = 1998
-file 20 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1999-10-01_to_2000-04-30.nc
-uref: min=-11.94376932779948, max=63.422811889648436
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.07864762853607539, max=0.09847929954008201
-min diff = 1.151922307540687e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5480699008868023,  min=0.0, max=0.09847929954008201
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=186.2548768304827, max=310.25837327147
-Xnew.shape = (1, 213, 210), fall_year = 1999
-file 21 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2000-10-01_to_2001-04-30.nc
-uref: min=-11.931493123372396, max=36.95470987955729
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.0626215930337982, max=0.08559530532426204
-min diff = 2.0438928327592976e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5364293201557353,  min=0.0, max=0.08559530532426204
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=184.19670032376033, max=309.3994285755479
-Xnew.shape = (1, 212, 210), fall_year = 2000
-file 22 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2001-10-01_to_2002-04-30.nc
-uref: min=-2.070452880859375, max=38.40045064290364
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.04711227190174478, max=0.07051013369791817
-min diff = 3.3596363538390683e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5367718628331836,  min=0.0, max=0.07051013369791817
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.54216371466867, max=309.44915014175996
-Xnew.shape = (1, 212, 210), fall_year = 2001
-file 23 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2002-10-01_to_2003-04-30.nc
-uref: min=-20.663066609700522, max=45.8699462890625
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.0573582560014354, max=0.0777524370403604
-min diff = 1.147714865853966e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5274951332734351,  min=0.0, max=0.0777524370403604
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=185.4491464446235, max=310.94429104664476
-Xnew.shape = (1, 212, 210), fall_year = 2002
-file 24 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2003-10-01_to_2004-04-30.nc
-uref: min=-13.69099833170573, max=45.27039286295573
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.041886777391826925, max=0.07335844920641507
-min diff = 4.336808689942018e-19
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5418865042104478,  min=0.0, max=0.07335844920641507
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=187.707912511238, max=311.0143002457566
-Xnew.shape = (1, 213, 210), fall_year = 2003
-file 25 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2004-10-01_to_2005-04-30.nc
-uref: min=-12.835265096028646, max=72.21057434082032
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.08352290577044798, max=0.07444074698060217
-min diff = 3.562435069159875e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5343927822701408,  min=0.0, max=0.07444074698060217
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.10331712745383, max=310.04070452991374
-Xnew.shape = (1, 212, 210), fall_year = 2004
-file 26 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2005-10-01_to_2006-04-30.nc
-uref: min=-23.223940022786458, max=40.46869710286458
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.0534541743577143, max=0.08749951784781315
-min diff = 5.597307535000484e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5521151542377958,  min=0.0, max=0.08749951784781315
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=185.8296406045043, max=309.9041060672523
-Xnew.shape = (1, 212, 210), fall_year = 2005
-file 27 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2006-10-01_to_2007-04-30.nc
-uref: min=-10.477554321289062, max=52.78103332519531
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06570301948690027, max=0.0948075919284757
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5312032045522611,  min=0.0, max=0.0948075919284757
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.9116684744909, max=310.11242704066944
-Xnew.shape = (1, 212, 210), fall_year = 2006
-file 28 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2007-10-01_to_2008-04-30.nc
-uref: min=-14.299261474609375, max=58.275290934244794
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.07171205651726642, max=0.09450015796446838
-min diff = 2.0845894455057135e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5325191892093301,  min=0.0, max=0.09450015796446838
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=186.2513522006233, max=309.9282370523271
-Xnew.shape = (1, 213, 210), fall_year = 2007
-file 29 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2008-10-01_to_2009-04-30.nc
-uref: min=-31.572458902994793, max=67.93491007486979
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.05367548482263486, max=0.08905903975069346
-min diff = 1.2792718273590964e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5820848307876609,  min=0.0, max=0.08905903975069346
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.4112456880019, max=309.5173214703429
-Xnew.shape = (1, 212, 210), fall_year = 2008
-file 30 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2009-10-01_to_2010-04-30.nc
-uref: min=-7.5873362223307295, max=55.074965413411455
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.05342966683701536, max=0.09312038479283131
-min diff = 2.8544007435460372e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5117100928421683,  min=0.0, max=0.09312038479283131
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=184.45366657362752, max=311.5342123758592
-Xnew.shape = (1, 212, 210), fall_year = 2009
-file 31 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2010-10-01_to_2011-04-30.nc
-uref: min=-21.475220743815104, max=53.431165568033855
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06917280405090383, max=0.10202597746097936
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5235250074872716,  min=0.0, max=0.10202597746097936
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=185.87073364204156, max=310.33915597817395
-Xnew.shape = (1, 212, 210), fall_year = 2010
-file 32 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2011-10-01_to_2012-04-30.nc
-uref: min=-3.991815185546875, max=48.31429850260417
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.062142747046231316, max=0.06180946208140189
-min diff = 1.0518030890693808e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5559803264028617,  min=0.0, max=0.06180946208140189
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=185.24163492696675, max=310.4939174669809
-Xnew.shape = (1, 213, 210), fall_year = 2011
-file 33 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2012-10-01_to_2013-04-30.nc
-uref: min=-12.91437479654948, max=44.04053853352865
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06979499286081649, max=0.09986994181708916
-min diff = 3.737836581051146e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5649801587301587,  min=0.0, max=0.09986994181708916
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.36165238210575, max=311.0176085799017
-Xnew.shape = (1, 212, 210), fall_year = 2012
-file 34 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2013-10-01_to_2014-04-30.nc
-uref: min=-13.924695841471355, max=58.171488444010414
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.07371402249055219, max=0.09315740666563556
-min diff = 2.125235751271326e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5102800239592692,  min=0.0, max=0.09315740666563556
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.06927396870995, max=310.39310585875256
-Xnew.shape = (1, 212, 210), fall_year = 2013
-file 35 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2014-10-01_to_2015-04-30.nc
-uref: min=-17.266420491536458, max=47.63770243326823
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.0580899629767432, max=0.08644726678189608
-min diff = 2.342744054306678e-13
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5361185983827493,  min=0.0, max=0.08644726678189608
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.26773074383652, max=312.21417723948684
-Xnew.shape = (1, 212, 210), fall_year = 2014
-file 36 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2015-10-01_to_2016-04-30.nc
-uref: min=-30.257811482747396, max=73.70959777832032
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.07027750240308712, max=0.10098812784576229
-min diff = 1.1090524549076108e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.521411804158283,  min=0.0, max=0.10098812784576229
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=183.96243741827064, max=310.2197984715224
-Xnew.shape = (1, 213, 210), fall_year = 2015
-file 37 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2016-10-01_to_2017-04-30.nc
-uref: min=-8.766883341471354, max=55.66113077799479
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06478211574580989, max=0.10054634453718272
-min diff = 8.107917115474095e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.526568583408206,  min=0.0, max=0.10054634453718272
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.90137687916425, max=310.1284692219063
-Xnew.shape = (1, 212, 210), fall_year = 2016
-file 38 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2017-10-01_to_2018-04-30.nc
-uref: min=-24.849651082356772, max=57.173403930664065
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.08258454327116989, max=0.09923334585815094
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5347091194968554,  min=0.0, max=0.09923334585815094
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=184.51088997605078, max=310.62917420473957
-Xnew.shape = (1, 212, 210), fall_year = 2017
-eval_dur = 118.48545479774475
 Starting TPT on eraint
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/full_seed0
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/full_seed0/Y, resample_flag = True --------------
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y, resample_flag = True --------------
 Before resampling: X.shape = (39, 180, 210)
 After resampling: X.shape = (21, 180, 210)
 Nx = 21, Ntx = 180, xdim = 210
-Y[0,0,0] = 360.0
+Y[0,0,0] = 600.0
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
@@ -511,34 +28,45 @@ t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-Y.shape = (21, 165, 25)
-ab_tag.shape = (21, 165)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+Y.shape = (21, 155, 27)
+ab_tag.shape = (21, 155)
 absum = [1. 1. 1. 0. 1. 1. 1. 1. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 0. 1.]
 rate = 0.6666666666666666
-ab_tag.shape = (21, 165)
+ab_tag.shape = (21, 155)
 absum = [0. 0. 1. 0. 1. 1. 1. 1. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 0. 0.]
 rate = 0.5238095238095238
-ab_tag.shape = (21, 165)
+ab_tag.shape = (21, 155)
 absum = [0. 0. 1. 0. 1. 0. 0. 1. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 0. 0.]
 rate = 0.42857142857142855
-ab_tag.shape = (21, 165)
+ab_tag.shape = (21, 155)
 absum = [0. 0. 1. 0. 1. 0. 0. 1. 0. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 0. 0.]
 rate = 0.3333333333333333
-ab_tag.shape = (21, 165)
+ab_tag.shape = (21, 155)
 absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
 rate = 0.14285714285714285
-ab_tag.shape = (21, 165)
+ab_tag.shape = (21, 155)
 absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
 rate = 0.14285714285714285
-ab_tag.shape = (21, 165)
+ab_tag.shape = (21, 155)
 absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
 rate = 0.047619047619047616
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/resampled_0
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/resampled_0/Y, resample_flag = True --------------
-Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
-Y[0,0,0] = 360.0
+Starting TPT on era20c
+	subsetdir = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/e2/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/e2/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y, resample_flag = True --------------
+Before resampling: X.shape = (108, 180, 210)
+After resampling: X.shape = (108, 180, 210)
+Nx = 108, Ntx = 180, xdim = 210
+Y[0,0,0] = 600.0
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
@@ -555,34 +83,6 @@ t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-Y.shape = (21, 165, 25)
-ab_tag.shape = (21, 165)
-absum = [0. 1. 1. 1. 0. 1. 1. 1. 1. 0. 0. 1. 1. 0. 0. 0. 1. 1. 1. 1. 1.]
-rate = 0.6666666666666666
-ab_tag.shape = (21, 165)
-absum = [0. 1. 1. 1. 0. 1. 0. 1. 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 0. 1. 1.]
-rate = 0.5238095238095238
-ab_tag.shape = (21, 165)
-absum = [0. 1. 0. 1. 0. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 1. 1.]
-rate = 0.42857142857142855
-ab_tag.shape = (21, 165)
-absum = [0. 1. 0. 1. 0. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 1. 1.]
-rate = 0.42857142857142855
-ab_tag.shape = (21, 165)
-absum = [0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0.]
-rate = 0.23809523809523808
-ab_tag.shape = (21, 165)
-absum = [0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0.]
-rate = 0.23809523809523808
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]
-rate = 0.047619047619047616
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/resampled_1
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/resampled_1/Y, resample_flag = True --------------
-Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
-Y[0,0,0] = 360.0
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
@@ -593,188 +93,700 @@ t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
 t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-Y.shape = (21, 165, 25)
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0. 1. 1. 0. 1. 1. 1. 0. 1. 1.]
-rate = 0.6666666666666666
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 1. 1. 0. 0. 1. 1. 0. 0. 0. 1. 1. 0. 1. 0. 1. 0. 1. 1.]
-rate = 0.5238095238095238
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 1. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1.]
-rate = 0.2857142857142857
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1.]
-rate = 0.23809523809523808
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
-rate = 0.14285714285714285
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
-rate = 0.14285714285714285
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+Y.shape = (108, 155, 27)
+ab_tag.shape = (108, 155)
+absum = [0. 1. 1. 0. 0. 0. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 0. 0. 1. 0. 1. 1. 0. 0.
+ 1. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1. 1. 1. 1. 0. 0. 0. 0. 0.
+ 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1. 1. 0.
+ 1. 0. 0. 0. 0. 1. 1. 0. 1. 0. 0. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0. 0. 1. 0.
+ 1. 1. 1. 0. 1. 1. 0. 1. 0. 0. 1. 1.]
+rate = 0.49074074074074076
+ab_tag.shape = (108, 155)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 1. 1. 1. 1. 1. 1. 0. 0. 0. 0. 1. 0. 1. 1. 0. 0.
+ 1. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 1. 0. 0. 0. 0. 0.
+ 0. 0. 0. 1. 1. 1. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 1. 0.
+ 1. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0. 0. 1. 0.
+ 1. 1. 0. 0. 1. 1. 0. 1. 0. 0. 1. 1.]
+rate = 0.42592592592592593
+ab_tag.shape = (108, 155)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 1. 1. 1. 1. 1. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 1. 1. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 1. 0. 0. 1. 1. 0. 0. 1. 1. 0. 0. 1. 0.
+ 1. 1. 0. 0. 1. 1. 0. 0. 0. 0. 1. 1.]
+rate = 0.3425925925925926
+ab_tag.shape = (108, 155)
+absum = [0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 1. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 1. 0. 0. 0. 0.
+ 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1. 0.]
+rate = 0.23148148148148148
+ab_tag.shape = (108, 155)
+absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 1. 0.
+ 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.12037037037037036
+ab_tag.shape = (108, 155)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.018518518518518517
+ab_tag.shape = (108, 155)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
 rate = 0.0
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/resampled_2
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/resampled_2/Y, resample_flag = True --------------
-Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
-Y[0,0,0] = 360.0
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-Y.shape = (21, 165, 25)
-ab_tag.shape = (21, 165)
-absum = [1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 1. 1. 0. 1. 1. 1. 1. 1.]
-rate = 0.7619047619047619
-ab_tag.shape = (21, 165)
-absum = [1. 1. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 1. 1. 0. 1. 0. 1. 1. 1.]
-rate = 0.7142857142857143
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 1. 1. 1. 1. 0. 0. 1. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1.]
-rate = 0.38095238095238093
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 1.]
-rate = 0.19047619047619047
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
-rate = 0.09523809523809523
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
-rate = 0.09523809523809523
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
-rate = 0.047619047619047616
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/resampled_3
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/resampled_3/Y, resample_flag = True --------------
-Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
-Y[0,0,0] = 360.0
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-Y.shape = (21, 165, 25)
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 1. 1. 1. 0. 1. 0. 1. 0. 0. 0. 0. 1. 1. 0. 1. 0. 1. 0.]
-rate = 0.47619047619047616
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 1. 1. 1. 0. 1. 0. 1. 0. 0. 0. 0. 1. 1. 0. 1. 0. 1. 0.]
-rate = 0.47619047619047616
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 1. 1. 0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0.]
-rate = 0.2857142857142857
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0.]
-rate = 0.09523809523809523
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.0
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.0
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.0
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/resampled_4
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/resampled_4/Y, resample_flag = True --------------
-Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
-Y[0,0,0] = 360.0
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-Y.shape = (21, 165, 25)
-ab_tag.shape = (21, 165)
-absum = [1. 0. 1. 0. 1. 0. 0. 1. 1. 0. 1. 1. 1. 0. 1. 0. 1. 1. 0. 0. 0.]
-rate = 0.5238095238095238
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0.]
-rate = 0.2857142857142857
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0.]
-rate = 0.2857142857142857
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0.]
-rate = 0.2857142857142857
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0.]
-rate = 0.09523809523809523
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0.]
-rate = 0.09523809523809523
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0.]
-rate = 0.047619047619047616
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/resampled_5
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay15_nwaves0_vxm0_pc-lev0pc4-lev1pc4_hf-_temp-/resampled_5/Y, resample_flag = True --------------
-Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
-Y[0,0,0] = 360.0
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
-t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+Starting TPT on S2S
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/s2s/delay25_nwaves0_vxm0_pc-_hf-_temp-_nclust170/full_seed0/Y, resample_flag = True --------------
+Before resampling: X.shape = (12000, 47, 210)
+After resampling: X.shape = (12000, 47, 210)
+Nx = 12000, Ntx = 47, xdim = 210
+Y[0,0,0] = 648.0
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_szn_mean.shape = (180,)
+t_szn.shape = (3184,), uref_sMSM timestep 150 out of 180
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.022152029410671174
+Rate: froma=0.4854603157412839, tob=0.4854603157412838, naive=0.23091666666666666
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.024023023763781577
+Rate: froma=0.3768518891611783, tob=0.3768518891611784, naive=0.16491666666666666
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.016489363347807463
+Rate: froma=0.27683050514285223, tob=0.27683050514285223, naive=0.11266666666666666
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.01215614869989139
+Rate: froma=0.16127240729466014, tob=0.16127240729466014, naive=0.07241666666666667
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.009575137607541511
+Rate: froma=0.09721177407467364, tob=0.09721177407467359, naive=0.0435
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.0062300502455364054
+Rate: froma=0.050985602931195674, tob=0.05098560293119563, naive=0.023666666666666666
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.00782221948967957
+Rate: froma=0.02442989610507401, toina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.020388590755925806
+Rate: froma=0.5327481203789565, tob=0.5327481203789561, naive=0.20633333333333334
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.014667581558855202
+Rate: froma=0.41691311739938886, tob=0.4169131173993885, naive=0.14675
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.01467595115493542
+Rate: froma=0.3061593552215528, tob=0.30615935522155274, naive=0.10033333333333333
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.013781058509563175
+Rate: froma=0.2048644695962666, tob=0.20486446959626647, naive=0.06608333333333333
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.007510243432374521
+Rate: froma=0.10816060123633991, tob=0.10816060123633986, naive=0.03891666666666667
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.010237087387308465
+Rate: froma=0.05645156456992664, tob=0.056451564569926616, naive=0.020583333333333332
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.0024440386179967783
+Rate: froma=0.015194419292293196, tob=0.015194419292293187, naive=0.00825
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/e2/delay10_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (108, 170, 12), centers[0][0].shape = (12,)
+WARNING: key qp has a nan fraction of 0.011764705882352941
+WARNING: key qm has a nan fraction of 0.011764705882352941
+WARNING: key pi has a nan fraction of 0.011764705882352941
+WARNING: key ina has a nan fraction of 0.011764705882352941
+WARNING: key inb has a nan fraction of 0.011764705882352941
+WARNING: key lt_mean has a nan fraction of 0.3227668845315904
+WARNING: key lt_std has a nan fraction of 0.3244553376906318
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000004
+interpolated field pi: min = 2.936988987162829e-09, max = 0.10998040243996432
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpoRate: froma=0.12368919872992523, tob=0.12368919872992519, naive=0.034083333333333334
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.00309739725196736
+Rate: froma=0.04258312733846706, tob=0.04258312733846704, naive=0.017666666666666667
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.0024688984406772MSM timestep 120 out of 180
+MSM timestep 150 out of 180
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.01822721347072976
+Rate: froma=0.632072000199459, tob=0.632072000199459, naive=0.16383333333333333
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.01512055245219032
+Rate: froma=0.5147858787754723, tob=0.514785878775472, naive=0.11725
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.016727233190250174
+Rate: froma=0.3839986148127811, tob=0.3839986148127809, naive=0.08041666666666666
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.012879888497849233
+Rate: froma=0.26048965844435606, tob=0.2604896584443561, naive=0.051833333333333335
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.00919618509722232
+Rate: froma=0.132312197274279, tob=0.13231219727427895, naive=0.030166666666666668
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.005354952620624399
+Rate: froma=0.05806872242084458, tob=0.058068722420844564, naive=0.015583333333333333
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.0033550715806954547
+Rate: froma=0.025582794158466947, tob=0.025582794158466943, naive=0.00625
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/e2/delay20_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (108, 160, 22), centers[0][0].shape = (22,)
+WARNING: key qp has a nan fraction of 0.0125
+WARNING: key qm has a nan fraction of 0.0125
+WARNING: key pi has a nan fraction of 0.0125
+WARNING: key ina has a nan fraction of 0.0125
+WARNING: key inb has a nan fraction of 0.0125
+WARNING: key lt_mean has a nan fraction of 0.274537037037037
+WARNING: key lt_std has a nan fraction of 0.2750578703703704
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000004
+interpolated field pi: min = 2.499797516401171e-07, max = 0.06827553838175333
+interpolated field ina: min = 0.0, max = 1.0
+interpolatedina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.005664069923953281
+Rate: froma=0.12814735160805205, tob=0.12814735160805196, naive=0.025916666666666668
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.004611184825972339
+Rate: froma=0.054757512026209564, tob=0.054757512026209536, naive=0.013083333333333334
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.002843028943087404
+Rate: froma=0.017389451881635563, tob=0.017389451881635563, naive=0.005
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/e2/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (108, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.24850657108721624
+WARNING: key lt_std has a nan fraction of 0.24994026284348864
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000004
+interpolated field pi: min = 8.275067662469916e-07, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 85.8018793840855
+interpolated field lt_std: min = 0.0, max = 36.62379307510441
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (21, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.24208909370199694
+WARNING: key lt_std has a nan fraction of 0.24208909370199694
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000002
+interpolated field pi: min = 2.999712027645346e-06, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 84.74207588668641
+interpolated field lt_std: min = 0.0, max = 35.97479767695114
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/e2/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (108, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.2521505376344086
+WARNING: key lt_std has a nan fraction of 0.2537634408602151
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000004
+interpolated field pi: min = 8.275067662469916e-07, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 88.44870383345054
+interpolated field lt_std: min = 0.0, max = 34.21608637192814
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (21, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.24792626728110598
+WARNING: key lt_std has a nan fraction of 0.24854070660522273
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000002
+interpolated field pi: min = 2.999712027645346e-06, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 87.5426448593525
+interpolated field lt_std: min = 0.0, max = 34.52010520914648
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/e2/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (108, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.2577060931899642
+WARNING: key lt_std has a nan fraction of 0.2584826762246117
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000004
+interpolated field pi: min = 8.275067662469916e-07, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 91.22780165572114
+interpolated field lt_std: min = 0.0, max = 32.71394014954521
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (21, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.2500768049155146
+WARNING: key lt_std has a nan fraction of 0.2500768049155146
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000002
+interpolated field pi: min = 2.999712027645346e-06, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 90.600810333041
+interpolated field lt_std: min = 0.0, max = 33.3032405101612
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/e2/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (108, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.2600358422939068
+WARNING: key lt_std has a nan fraction of 0.26081242532855436
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000004
+interpolated field pi: min = 8.275067662469916e-07, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 91.92618405912417
+interpolated field lt_std: min = 0.0, max = 30.58543892259526
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (21, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.2519201228878648
+WARNING: key lt_std has a nan fraction of 0.25253456221198156
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000002
+interpolated field pi: min = 2.999712027645346e-06, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 91.21198166931717
+interpolated field lt_std: min = 0.0, max = 30.354743229302223
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/e2/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (108, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.26583034647550774
+WARNING: key lt_std has a nan fraction of 0.26690561529271206
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000004
+interpolated field pi: min = 8.275067662469916e-07, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 93.09553620582088
+interpolated field lt_std: min = 0.0, max = 28.343178482113423
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (21, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.258678955453149
+WARNING: key lt_std has a nan fraction of 0.26144393241167435
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000002
+interpolated field pi: min = 2.999712027645346e-06, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 92.58745587840116
+interpolated field lt_std: min = 0.0, max = 28.544312180861127
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/e2/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (108, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.2673237753882915
+WARNING: key lt_std has a nan fraction of 0.27162485065710873
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000004
+interpolated field pi: min = 8.275067662469916e-07, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 93.69345979305912
+interpolated field lt_std: min = 0.0, max = 26.40060592974514
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (21, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.2629800307219662
+WARNING: key lt_std has a nan fraction of 0.26881720430107525
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000002
+interpolated field pi: min = 2.999712027645346e-06, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 93.34629390214938
+interpolated field lt_std: min = 0.0, max = 26.218682690992022
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/e2/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (108, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.27485065710872164
+WARNING: key lt_std has a nan fraction of 0.27951015531660695
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000004
+interpolated field pi: min = 8.275067662469916e-07, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 97.90229026432235
+interpolated field lt_std: min = 0.0, max = 30.43296211502303
+tpt_feat_filename_ra = /scratch/jf4241/ecmwf_data/results/2022-02-27/0/ei/delay25_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y
+Yra.shape = (21, 155, 27), centers[0][0].shape = (27,)
+WARNING: key qp has a nan fraction of 0.012903225806451613
+WARNING: key qm has a nan fraction of 0.012903225806451613
+WARNING: key pi has a nan fraction of 0.012903225806451613
+WARNING: key ina has a nan fraction of 0.012903225806451613
+WARNING: key inb has a nan fraction of 0.012903225806451613
+WARNING: key lt_mean has a nan fraction of 0.2749615975422427
+WARNING: key lt_std has a nan fraction of 0.27926267281105993
+interpolated field qp: min = 0.0, max = 1.0
+interpolated field qm: min = 0.0, max = 1.0000000000000002
+interpolated field pi: min = 2.999712027645346e-06, max = 0.06522878161191009
+interpolated field ina: min = 0.0, max = 1.0
+interpolated field inb: min = 0.0, max = 1.0
+interpolated field lt_mean: min = 0.0, max = 97.3472507576227
+interpolated field lt_std: min = 0.0, max = 30.61716122088293
+keys_ra = ['e2', 'ei']
+ra.keys() = dict_keys(['e2', 'ei'])
+idx_ilev: min=180, max=182
+idx_ilev: min=183, max=185
+idx_ilev: min=186, max=188
+idx_ilev: min=189, max=191
+idx_ilev: min=192, max=194
+idx_ilev: min=195, max=197
+idx_ilev: min=198, max=200
+idx_ilev: min=201, max=203
+idx_ilev: min=204, max=206
+idx_ilev: min=207, max=209
+X.shape = (12000, 22, 210)
+fidx_X[heatflux_lev9_wn0] = 207
+winter_fully_idx.shape = (5600,)
+keys_ra = ['e2', 'ei']
+ra.keys() = dict_keys(['e2', 'eiJth.idx_ilev: min=180, mPlotting current on key pair uref_dl0,uref_dl15
+y_flag = True, x_flag = False
+shapes: qp_Y: (12000, 27), pi_Y: (12000, 27), theta_x: (12000, 27, 2)
+idx_winter: 0: min=0, max=11779
+Jth.shape = (140400, 2)
+For reanalysis e2, len(ss) = 2
+For reanalysis ei, len(ss) = 2
+Jth.shape = (140400, 2)
+Plotting current on key pair uref_dl0,uref_dl20
+y_flag = True, x_flag = False
+shapes: qp_Y: (12000, 27), pi_Y: (12000, 27), theta_x: (12000, 27, 2)
+idx_winter: 0: min=0, max=11779
+Jth.shape = (140400, 2)
+For reanalysis e2, len(ss) = 2
+For reanalysis ei, len(ss) = 2
+Jth.shape = (140400, 2)
+Y.shape = (12000, 27, 22)
+uref.shape = (12000, 27, 21)
+saved spaghetti, now moving on...
+vT.shape = (179400, 10); X.shape = (12000, 27, 210); max(ss) = 172160
+keys_ra = ['e2', 'ei']
+ra.keys() = dict_keys(['e2', 'ei'])
+idx_ilev: min=180, max=182
+idx_ilev: min=183, max=185
+idx_ilev: min=186, max=188
+idx_ilev: min=189, max=191
+idx_ilev: min=192, max=194
+idx_ilev: min=195, max=197
+idx_ilev: min=198, max=200
+idx_ilev: min=201, max=203
+idx_ilev: min=204, max=206
+idx_ilev: min=207, max=209
+X.shape = (12000, 27, 210)
+fidx_X[heatflux_lev9_wn0] = 207
+winter_fully_idx.shape = (5400,)
+keys_ra = ['e2', 'ei']
+ra.keys() = dict_keys(['e2', 'ei'])
+idx_ilev: min=180, max=182
+idx_ilev: min=183, max=185
+idx_ilev: min=186, max=188
+idx_ilev: min=189, max=191
+idx_ilev: min=192, max=194
+idx_ilev: min=195, max=197
+idx_ilev: min=198, max=200
+idx_ilev: min=201, max=203
+idx_ilev: min=204, max=206
+idx_ilev: min=207, max=209
+X.shape = (12000, 27, 210)
+fidx_X[heatflux_lev9_wn0] = 207
+winter_fully_idx.shape = (5400,)
+keys_ra = ['e2', 'ei']
+ra.keys() = dict_keys(['e2', 'ei'])
+idx_ilev: min=180, max=182
+idx_ilev: min=183, max=185
+idx_ilev: min=186, max=188
+idx_ilev: min=189, max=191
+idx_ilev: min=192, max=194
+idx_ilev: min=195, max=197
+idx_ilev: min=198, max=200
+idx_ilev: min=201, max=203
+idx_ilev: min=204, max=206
+idx_ilev: min=207, max=209
+X.shape = (12000, 27, 210)
+fidx_X[heatflux_lev9_wn0] = 207
+winter_fully_idx.shape = (5400,)
+For reanalysis e2, committor ranges from 0.0 to 1.0
+For reanalysis ei, committor ranges from 0.0 to 1.0
+shapes: qp_Y: (12000, 27), pi_Y: (12000, 27), theta_x: (12000, 27, 2)
+idx_winter: 0: min=0, max=11779
+Jth.shape = (140400, 2)
+------------ Before plot_trajectory_segments with leadtime
+For reanalysis e2, len(ss) = 2
+For reanalysis ei, len(ss) = 2
+----------- After plot_trajectory_segments with leadtime
+For reanalysis e2, lead time ranges from 0.0 to 97.45119650093346
+For reanalysis ei, lead time ranges from 0.0 to 97.10853375803003
+shapes: qp_Y: (12000, 27), pi_Y: (12000, 27), theta_x: (12000, 2Jth.shape = (117600, 2)
+Plotting current on key pair uref_dl0,uref_dl20
+y_flag = True, x_flag = False
+shapes: qp_Y: (12000, 22), pi_Y: (12000, 22), theta_x: (12000, 22, 2)
+idx_winter: 0: min=0, max=11759
+Jth.shape = (117600, 2)
+For reanalysis e2, len(ss) = 2
+For reanalysis ei, len(ss) = 2
+Jth.shape = (117600, 2)
+Plotting current on key pair uref_dl0,uref_dl25
+y_flag = True, x_flag = False
+shapes: qp_Y: (12000, 22), pi_Y: (12000, 22), theta_x: (12000, 22, 2)
+idx_winter: 0: min=0, max=11759
+Jth.shape = (117600, 2)
+For reanalysis e2, len(ss) = 2
+For reanalysis ei, len(ss) = 2
+Jth.shape = (117600, 2)
+Y.shape = (12000, 22, 27)
+uref.shape = (12000, 22, 26)
+saved spaghetti, now moving on...
+vT.shape = (144800, 10); X.shape = (12000, 22, 210); max(ss) = 142214
+keys_ra = ['e2', 'ei']
+ra.keys() = dict_keys(['e2', 'ei'])
+idx_ilev: min=180, max=182
+idx_ilev: min=183, max=185
+idx_ilev: min=186, max=188
+idx_ilev: min=189, max=191
+idx_ilev: min=192, max=194
+idx_ilev: min=195, max=197
+idx_ilev: min=198, max=200
+idx_ilev: min=201, max=203
+idx_ilev: min=204, max=206
+idx_ilev: min=207, max=209
+X.shape = (12000, 22, 210)
+fidx_X[heatflux_lev9_wn0] = 207
+winter_fully_idx.shape = (5600,)
+keys_ra = ['e2', 'ei']
+ra.keys() = dict_keys(['e2', 'ei'])
+idx_ilev: min=180, max=182
+idx_ilev: min=183, max=185
+idx_ilev: min=186, max=188
+idx_ilev: min=189, max=191
+idx_ilev: min=192, max=194
+idx_ilev: min=195, max=197
+idx_ilev: min=198, max=200
+idx_ilev: min=201, max=203
+idx_ilev: min=204, max=206
+idx_ilev: min=207, max=209
+X.shape = (12000, 22, 210)
+fidx_X[heatflux_lev9_wn0] = 207
+winter_fully_idx.shape = (5For reanalysis e2, len(ss) = 2
+For reanalysis ei, len(ss) = 2
+Jthidx_ilev: min=180, maPlotting current on key pair uref_dl0,uref_dl20
+y_flag = True, x_flag = False
+shapes: qp_Y: (12000, 27), pi_Y: (12000, 27), theta_x: (12000, 27, 2)
+idx_winter: 0: min=0, max=11779
+Jth.shape = (140400, 2)
+For reanalysis e2, len(ss) = 2
+For reanalysis ei, len(ss) = 2
+Jth.shape = (140400, 2)
+Y.shape = (12000, 27, 22)
+uref.shape = (12000, 27, 21)
+saved spaghetti, now moving on...
+vT.shape = (179400, 10); X.shape = (12000, 27, 210); max(ss) = 172160
+keys_ra = ['e2', 'ei']
+ra.keys() = dict_keys(['e2', 'ei'])
+idx_ilev: min=180, max=182
+idx_ilev: min=183, max=185
+idx_ilev: min=186, max=188
+idx_ilev: min=189, max=191
+idx_ilev: min=192, max=194
+idx_ilev: min=195, max=197
+idx_ilev: min=198, max=200
+idx_ilev: min=201, max=203
+idx_ilev: min=204, max=206
+idx_ilev: min=207, max=209
+X.shape = (12000, 27, 210)
+fidx_X[heatflux_lev9_wn0] = 207
+winter_fully_idx.shape = (5400,)
+keys_ra = ['e2', 'ei']
+ra.keys() = dict_keys(['e2', 'ei'])
+idx_ilev: min=180, max=182
+idx_ilev: min=183, max=185
+idx_ilev: min=186, max=188
+idx_ilev: min=189, max=191
+idx_ilev: min=192, max=194
+idx_ilev: min=195, max=197
+idx_ilev: min=198, max=200
+idx_ilev: min=201, max=203
+idx_ilev: min=204, max=206
+idx_ilev: min=207, max=209
+X.shape = (12000, 27, 210)
+fidx_X[heatflux_lev9_wn0] = 207
+winter_fully_idx.shape = (5400,)
+Starting to plot rate list for ei
+Starting to plot rate list for e2
+Starting to plot rate list for s2s
+Starting to plot rate list for ei
+Starting to plot rate list for e2
+Starting to plot rate list for s2s
+Nxhc,Nthc,_ = (12000, 47, 210)
+fy_hc.shape = (1200,)
+fy_hc[:4] = [1996 1996 1996 1996]
+enst_hc[:4] = [ 0 10 20 30]
+At threshold 0, ab_idx = [ 2  4  5  6  7  9 10 11 12 13 16]
+At threshold -10, ab_idx = [ 2  4  7  9 11 12 16]
+At threshold -15, ab_idx = [ 2  9 12]
+idx_ilev: min=180, max=182
+idx_ilev: min=183, max=185
+idx_ilev: min=186, max=188
+idx_ilev: min=189, max=191
+idx_ilev: min=192, max=194
+idx_ilev: min=195, max=197
+idx_ilev: min=198, max=200
+idx_ilev: min=201, max=203
+idx_ilev: min=204, max=206
+idx_ilev: min=207, max=209
+WARNING: no common RA and HC years
+WARNING: no common RA and HC years
+WARNING: no common RA and HC years
+ qp_Y: (12000, 22), pi_Y: (12000, 22), theta_x: (12000, 22, 2)
+idx_winter: 0: min=0, max=11759
+Jth.shape = (117600, 2)
+For reanalysis e2, len(ss) = 2
+For reanalysis ei, len(ss) = 2
+Jth.shape = (117600, 2)
+Plotting current on key pair uref_dl0,uref_dl15
+y_flag = True, x_flag = False
+shapes: qp_Y: (12000, 22), pi_Y: (12000, 22), theta_x: (12000, 22, 2)
+idx_winter: 0: min=0, max=11759
+Jth.shape = (117600, 2)
+For reanalysis e2, len(ss) = 2
+For reanalysis ei, len(ss) = 2
+Jth.shape = (117600, 2)
+Plotting current on key pair uref_dl0,uref_dl20
+y_flag = True, x_flag = False
+shapes: qp_Y: (12000, 22), pi_Y: (12000, 22), theta_x: (12000, 22, 2)
+idx_winter: 0: min=0, max=11759
+Jth.shape = (117600, 2)
+For reanalysis e2, len(ss) = 2
+For reanalysis ei, len(ss) = 2
+Jth.shape = (117600, 2)
+Plotting current on key pair uref_dl0,uref_dl25
+y_flag = True, x_flag = False
+shapes: qp_Y: (12000, 22), pi_Y: (12000, 22), theta_x: (12000, 22, 2)
+idx_winter: 0: min=0, max=11759
+Jth.shape = (117600, 2)
+For reanalysis e2, len(ss) = 2
+For reanalysis ei, len(ss) = 2
+Jth.shape = (117600, 2)
+Y.shape = (12000, 22, 27)
+uref.shape = (12000, 22, 26)
+saved spaghetti, now moving on...
+vT.shape = (144800, 10); X.shape = (12000, 22, 210); max(ss) = 142214
+keys_ra = ['e2', 'ei']
+ra.keys() = dict_keys(['e2', 'ei'])
+idx_ilev: min=180, max=182
+idx_ilev: min=183, max=185
+idx_ilev: min=186, max=188
+idx_ilev: min=189, max=191
+idx_ilev: min=192, max=194
+idx_ilev: min=195, max=197
+idx_ilev: min=198, max=200
+idx_ilev: min=201, max=203
+idx_ilev: min=204, max=206
+idx_ilev: min=207, max=209
+X.shape = (12000, 22, 210)
+fidx_X[heatflux_lev9_wn0] = 207
+winter_fully_idx.shape = (5600,)
+keys_ra = ['e2', 'ei']
+ra.keys() = dict_keys(['e2', 'ei'])
+idx_ilev: min=180, max=182
+idx_ilev: min=183, max=185
+idx_ilev: min=186, max=188
+idx_ilev: min=189, max=191
+idx_ilev: min=192, max=194
+idx_ilev: min=195, max=197
+idx_ilev: min=198, max=200
+idx_ilev: min=201, max=203
+idx_ilev: min=204, max=206
+idx_ilev: min=207, max=209
+X.shape = (12000, 22, 210)
+fidx_X[heatflux_lev9_wn0] = 207
+winter_fully_idx.shape = (5600,)
+Starting to plot rate list for ei
+Starting to plot rate list for e2
+Starting to plot rate list for s2s
+Starting to plot rate list for ei
+Starting to plot rate list for e2
+Starting to plot rate list for s2s
+Nxhc,Nthc,_ = (12000, 47, 210)
+fy_hc.shape = (1200,)
+fy_hc[:4] = [1996 1996 1996 1996]
+enst_hc[:4] = [ 0 10 20 30]
+At threshold 0, ab_idx = [ 2  4  5  6  7  9 10 11 12 13 16]
+At threshold -10, ab_idx = [ 2  4  7  9 11 12 16]
+At threshold -15, ab_idx = [ 2  9 12]
+idx_ilev: min=180, max=182
+idx_ilev: min=183, max=185
+idx_ilev: min=186, max=188
+idx_ilev: min=189, max=191
+idx_ilev: min=192, max=194
+idx_ilev: min=195, max=197
+idx_ilev: min=198, max=200
+idx_ilev: min=201, max=203
+idx_ilev: min=204, max=206
+idx_ilev: min=207, max=209
+WARNING: no common RA and HC years
+WARNING: no common RA and HC years
+WARNING: no common RA and HC years
+hape = (3184,), uref_szn_mean.shape = (180,)
 Y.shape = (21, 165, 25)
 ab_tag.shape = (21, 165)
 absum = [1. 1. 1. 0. 1. 1. 1. 0. 1. 1. 0. 1. 1. 1. 1. 1. 1. 1. 0. 0. 0.]

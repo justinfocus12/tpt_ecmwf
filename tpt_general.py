@@ -588,6 +588,7 @@ class WinterStratosphereTPT:
             ra[k]["inb"] = winstrat.inb_test(ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"])),feat_def,self.tpt_bndy).reshape(ra[k]["Ny"],ra[k]["Nty"])
             # Get source and destination
             ra[k]["src_tag"],ra[k]["dest_tag"],ra[k]["time2dest"] = winstrat.compute_src_dest_tags(ra[k]["Y"],feat_def,self.tpt_bndy)
+            ra[k]["rate"] = np.mean(np.any((ra[k]["src_tag"]==0)*(ra[k]["dest_tag"]==1), axis=1))
             # Restrict reanalysis to the midwinter
             ra[k]["winter_flag"] = ((ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] >= self.tpt_bndy['tthresh'][0])*(ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] <= self.tpt_bndy['tthresh'][1]))#.flatten()
             ra[k]["Y"] = ra[k]["Y"]#.reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))
@@ -602,6 +603,8 @@ class WinterStratosphereTPT:
         tpt_feat = pickle.load(open(tpt_feat_filename, "rb"))
         Y,szn_mean_Y,szn_std_Y,idx_resamp = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y","idx_resamp"]]
         X = np.load(feat_filename)[:,winstrat.ndelay-1:,:][idx_resamp]
+        print(f"X.shape = {X.shape}")
+        print(f"fidx_X[heatflux_lev9_wn0] = {winstrat.fidx_X['heatflux_lev9_wn0']}")
         Ny,Nty,ydim = Y.shape
         Nx,Ntx,xdim = X.shape
         if not (Ntx==Nty and Nx==Ny):
@@ -633,10 +636,10 @@ class WinterStratosphereTPT:
             theta_normal_label = r"$-\eta_B^+$"
             theta_tangential = funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
             theta_tangential_label = funlib_X['uref']['label']
-            theta_mid_list = np.linspace(-100.0,0.0,11)
-            theta_lower_list = theta_mid_list - 1.5
-            theta_upper_list = theta_mid_list + 1.5
-            fig,ax = self.plot_flux_distributions_1d(
+            theta_mid_list = np.linspace(-100.0,0.0,25)
+            theta_lower_list = theta_mid_list - 0.5*np.abs(np.diff(theta_mid_list)[1])
+            theta_upper_list = theta_mid_list + 1.5*np.abs(np.diff(theta_mid_list)[1])
+            fig,ax,_ = self.plot_flux_distributions_1d(
                     qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
                     theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
                     dict(),dict(),
@@ -645,7 +648,7 @@ class WinterStratosphereTPT:
                     theta_lower_list,theta_upper_list,
                     timeseries_like=True,invert_flag=False)
             alt_reactive_code = [0,0]
-            _,_ = self.plot_flux_distributions_1d(
+            _,_,_ = self.plot_flux_distributions_1d(
                     qm_Y[winter_fully_idx],1-qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
                     theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
                     dict(),dict(),
@@ -670,7 +673,7 @@ class WinterStratosphereTPT:
             theta_mid_list = np.linspace(self.tpt_bndy['tthresh'][0],self.tpt_bndy['tthresh'][1],8)/24.0
             theta_lower_list = theta_mid_list - 1.5
             theta_upper_list = theta_mid_list + 1.5
-            fig,ax = self.plot_flux_distributions_1d(
+            fig,ax,_ = self.plot_flux_distributions_1d(
                     qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
                     theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
                     #ra,rath,
@@ -680,7 +683,7 @@ class WinterStratosphereTPT:
                     theta_lower_list,theta_upper_list,
                     timeseries_like=True,invert_flag=False)
             alt_reactive_code = [0,0]
-            _,_ = self.plot_flux_distributions_1d(
+            _,_,_ = self.plot_flux_distributions_1d(
                     qm_Y[winter_fully_idx],1-qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
                     theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
                     #ra,rath,
@@ -706,7 +709,7 @@ class WinterStratosphereTPT:
             theta_mid_list = np.linspace(self.tpt_bndy['tthresh'][0],self.tpt_bndy['tthresh'][1],8)/24.0
             theta_lower_list = theta_mid_list - 1.5
             theta_upper_list = theta_mid_list + 1.5
-            fig,ax = self.plot_flux_distributions_1d(
+            fig,ax,_ = self.plot_flux_distributions_1d(
                     qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
                     theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
                     #ra,rath,
@@ -716,7 +719,7 @@ class WinterStratosphereTPT:
                     theta_lower_list,theta_upper_list,
                     timeseries_like=True,invert_flag=False)
             alt_reactive_code = [0,0]
-            _,_ = self.plot_flux_distributions_1d(
+            _,_,_ = self.plot_flux_distributions_1d(
                     qm_Y[winter_fully_idx],1-qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
                     theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
                     #ra,rath,
@@ -741,15 +744,15 @@ class WinterStratosphereTPT:
             theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
             theta_lower_list = theta_mid_list - 1.0
             theta_upper_list = theta_mid_list + 1.0
-            fig,ax = self.plot_flux_distributions_1d(
+            fig,ax,bins = self.plot_flux_distributions_1d(
                     qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
                     theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
                     ra,rath,
                     theta_normal_label,theta_tangential_label,
                     reactive_code,rate,
                     theta_lower_list,theta_upper_list,
-                    timeseries_like=False,invert_flag=True)
-            fig.savefig(join(savedir,"fluxdens_J-uref_d-timed"))
+                    timeseries_like=False,invert_flag=True,desired_bins=12)
+            fig.savefig(join(savedir,"fluxdens_J-uref_d-timed_bins%i"%(bins)))
             plt.close(fig)
             # ----------- Plot flux distribution of wavenumber 0  ---------
             theta_normal = funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
@@ -763,7 +766,7 @@ class WinterStratosphereTPT:
             theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
             theta_lower_list = theta_mid_list - 5.0
             theta_upper_list = theta_mid_list + 5.0
-            fig,ax = self.plot_flux_distributions_1d(
+            fig,ax,bins = self.plot_flux_distributions_1d(
                     qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
                     theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
                     ra,rath,
@@ -784,7 +787,7 @@ class WinterStratosphereTPT:
             theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
             theta_lower_list = theta_mid_list - 5.0
             theta_upper_list = theta_mid_list + 5.0
-            fig,ax = self.plot_flux_distributions_1d(
+            fig,ax,_ = self.plot_flux_distributions_1d(
                     qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
                     theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
                     ra,rath,
@@ -805,7 +808,7 @@ class WinterStratosphereTPT:
             theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
             theta_lower_list = theta_mid_list - 5.0
             theta_upper_list = theta_mid_list + 5.0
-            fig,ax = self.plot_flux_distributions_1d(
+            fig,ax,_ = self.plot_flux_distributions_1d(
                     qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
                     theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
                     ra,rath,
@@ -873,9 +876,10 @@ class WinterStratosphereTPT:
             plt.close(fig)
             # ------------- Current plots --------------------
             keypairs = []
+            keypairs += [['uref_inc_0','uref_inc_2']]
             keypairs += [['time_d','uref']]
-            keypairs += [['heatflux_lev1_total','heatflux_lev4_total']]
-            #keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
+            keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
+            #keypairs += [['heatflux_lev1_total','heatflux_lev4_total']]
             #keypairs += [['time_d','captemp_lev0']]
             #keypairs += [['time_d','heatflux_lev4_wn%i'%(i_wn)] for i_wn in range(winstrat.heatflux_wavenumbers_per_level_max)]
             #keypairs += [['heatflux_lev4_wn1','heatflux_lev4_wn2']]
@@ -922,7 +926,7 @@ class WinterStratosphereTPT:
                     fig,ax = plt.subplots()
                     ax.set_xlim(xlim)
                     ax.set_ylim(ylim)
-                    self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
+                    #self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
                     ax.set_xlabel(lab0,fontdict=font)
                     ax.set_ylabel(lab1,fontdict=font)
                     ax.set_title(fieldname,fontdict=font)
@@ -982,19 +986,19 @@ class WinterStratosphereTPT:
             #ax.set_ylabel(r"Pseudo-height [km]")
             #fig.savefig(join(savedir,"qp_uprofile_spaghetti"))
             #plt.close(fig)
-            ## ------------ New plot: vertical profiles of heat flux colored by committor. -------------
-            #Nlev = len(feat_def['plev'])
-            #fig,ax = plt.subplots()
-            #prng = np.random.RandomState(1)
-            #ss = prng.choice(winter_starts,size=min(len(winter_starts),1000)) # The Nty makes sure it's always at the beginning
-            #vT_idx = np.array([winstrat.fidx_X["heatflux_lev%i"%(i_lev)] for i_lev in range(Nlev)])
-            #vT = X[:,vT_idx]
-            #for i_x in ss:
-            #    ax.plot(vT[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[i_x]),alpha=0.1,linewidth=2)
-            #ax.set_xlabel(r"$\overline{v'T'}$ [K$\cdot$m/s]")
-            #ax.set_ylabel(r"Pseudo-height [km]")
-            #fig.savefig(join(savedir,"qp_vTprofile_spaghetti"))
-            #plt.close(fig)
+            # ------------ New plot: vertical profiles of heat flux colored by committor. -------------
+            Nlev = len(feat_def['plev'])
+            fig,ax = plt.subplots()
+            prng = np.random.RandomState(1)
+            ss = prng.choice(np.arange(len(idx_winter[0])),size=min(len(idx_winter[0]),100),replace=False) 
+            vT = np.array([funlib_X["heatflux_lev%i_total"%(i_lev)]["fun"](X[idx_winter[0],idx_winter[1],:]) for i_lev in range(Nlev)]).T
+            print(f"vT.shape = {vT.shape}; X.shape = {X.shape}; max(ss) = {ss.max()}")
+            for i_x in ss:
+                ax.plot(vT[i_x],-7*np.log(feat_def["plev"]/feat_def["plev"][-1]),color=plt.cm.coolwarm(qp_Y[idx_winter[0][i_y],idx_winter[1][i_y]]),alpha=0.1,linewidth=2)
+            ax.set_xlabel(r"$\overline{v'T'}$ [K$\cdot$m/s]")
+            ax.set_ylabel(r"Pseudo-height [km]")
+            fig.savefig(join(savedir,"qp_vTprofile_spaghetti"))
+            plt.close(fig)
         return
     def plot_results_clust(self,feat_def,savedir,winstrat,algo_params):
         qp = pickle.load(open(join(savedir,"qp"),"rb"))
@@ -1021,7 +1025,7 @@ class WinterStratosphereTPT:
         theta_upper_list = [0.3,0.55,0.8]
         theta_tangential_flat = funlib["uref_dl0"]["fun"](np.concatenate(centers,axis=0))
         theta_tangential_label = funlib["uref_dl0"]["label"]
-        fig,ax = self.plot_flux_distributions_1d(centers,theta_normal_flat,theta_tangential_flat,theta_normal_label,theta_tangential_label,kmtime,flux,theta_lower_list=theta_lower_list,theta_upper_list=theta_upper_list)
+        fig,ax,_ = self.plot_flux_distributions_1d(centers,theta_normal_flat,theta_tangential_flat,theta_normal_label,theta_tangential_label,kmtime,flux,theta_lower_list=theta_lower_list,theta_upper_list=theta_upper_list)
         fig.savefig(join(savedir,"Jab-qp_d-uref"))
         plt.close(fig)
         # Jab dot grad (qp) d(time)
@@ -1031,7 +1035,7 @@ class WinterStratosphereTPT:
         theta_upper_list = [0.3,0.55,0.8]
         theta_tangential_flat = funlib["time_d"]["fun"](np.concatenate(centers,axis=0))
         theta_tangential_label = funlib["time_d"]["label"]
-        fig,ax = self.plot_flux_distributions_1d(centers,theta_normal_flat,theta_tangential_flat,theta_normal_label,theta_tangential_label,kmtime,flux,theta_lower_list=theta_lower_list,theta_upper_list=theta_upper_list)
+        fig,ax,_ = self.plot_flux_distributions_1d(centers,theta_normal_flat,theta_tangential_flat,theta_normal_label,theta_tangential_label,kmtime,flux,theta_lower_list=theta_lower_list,theta_upper_list=theta_upper_list)
         fig.savefig(join(savedir,"Jab-qp_d-timed"))
         plt.close(fig)
         # Jab dot grad (-leadtime) d(time)
@@ -1147,9 +1151,9 @@ class WinterStratosphereTPT:
             reactive_code,rate,
             theta_lower_list=None,theta_upper_list=None,
             timeseries_like=False,invert_flag=False,
-            fig=None,ax=None,dashed_flag=False):
+            fig=None,ax=None,dashed_flag=False,desired_bins=10):
         # theta_normal and theta_tangential are scalar fields. 
-        dth_tangential = (np.nanmax(theta_tangential) - np.nanmin(theta_tangential))/8
+        dth_tangential = (np.nanmax(theta_tangential) - np.nanmin(theta_tangential))/desired_bins
         theta_vec = np.transpose(np.array([theta_normal,theta_tangential]), (1,2,0))
         print(f"shapes: theta_vec->{theta_vec.shape}, qm->{qm.shape}, qp->{qp.shape}, pi->{pi.shape}")
         Jth,thmid,Jweight = self.project_current_data(theta_vec,qm,qp,pi)
@@ -1173,7 +1177,7 @@ class WinterStratosphereTPT:
             fig,ax = plt.subplots()
         linestyle = '--' if dashed_flag else '-'
         handles = []
-        bins = max(int((np.nanmax(thmid[:,1]) - np.nanmin(thmid[:,1]))/dth_tangential), 3)
+        bins = max(int(round((np.nanmax(thmid[:,1]) - np.nanmin(thmid[:,1]))/dth_tangential)), 3)
         dth_tangential = (np.nanmax(thmid[:,1]) - np.nanmin(thmid[:,1]))/bins
         for i_thlev in range(num_levels):
             # Make a histogram of the reactive flux density distribution
@@ -1185,7 +1189,7 @@ class WinterStratosphereTPT:
                 #print(f"weights.shape = {weights.shape}, x.shape = {x.shape}")
                 hist,bin_edges = np.histogram(thmid[idx,1],weights=reactive_flux[i_thlev][:,0],bins=bins,range=(np.nanmin(thmid[:,1]),np.nanmax(thmid[:,1])))
                 bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
-                hist *= 1.0/(np.sum(np.abs(hist))*dth_tangential)
+                hist *= 1.0*rate/(np.sum(np.abs(hist))) #*dth_tangential)
                 if invert_flag: hist *= -1
                 # Naive histogram
                 hist_nv,bin_edges_nv = np.histogram(thmid[idx,1],bins=bins,weights=np.ones(len(idx)),range=(np.nanmin(thmid[:,1]),np.nanmax(thmid[:,1])))
@@ -1213,7 +1217,7 @@ class WinterStratosphereTPT:
                             hist_ra *= -1
                         #hist_ra *= num_rxn_ra/(Nxra*dth_tan_ra*np.sum(hist_ra))
                         rath[k]["bin_centers"] = (bin_edges_ra[1:] + bin_edges_ra[:-1])/2
-                        rath[k]["hist"] = hist_ra*1.0/(np.abs(np.sum(hist_ra))*dth_tangential)
+                        rath[k]["hist"] = hist_ra*ra[k]["rate"]/(np.abs(np.sum(hist_ra))) #*dth_tangential)
                         print(f"Just made bins and hist for {k}")
                 # ---------------------------------------------
                 if timeseries_like:
@@ -1250,7 +1254,7 @@ class WinterStratosphereTPT:
             ax.set_ylabel(r"Probability density",fontdict=font)
             ax.axhline(y=0,color='black')
         #ax.set_ylim([-0.005,0.03])
-        return fig,ax
+        return fig,ax,bins
     def project_current(self,theta_flat,time,centers,flux):
         # For a given vector-valued observable theta, evaluate the current operator J dot grad(theta)
         # theta is a list of (Mt x d) arrays, where d is the dimensionality of theta and Mt is the number of clusters at time step t

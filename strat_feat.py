@@ -1039,7 +1039,8 @@ class WinterStratosphereFeatures:
                 }
         for i_lev in range(len(feat_def["plev"])):
             key = "heatflux_lev%i_total"%(i_lev)
-            idx_ilev = [self.fidx_X["heatflux_lev%i_wn%i"%(i_lev,i_wn)] for i_wn in range(self.heatflux_wavenumbers_per_level_max)]
+            idx_ilev = np.array([self.fidx_X["heatflux_lev%i_wn%i"%(i_lev,i_wn)] for i_wn in range(self.heatflux_wavenumbers_per_level_max)])
+            print(f"idx_ilev: min={idx_ilev.min()}, max={idx_ilev.max()}")
             funlib[key] = {
                     "fun": lambda X,i_lev=i_lev,idx_ilev=idx_ilev: np.sum(X[:,idx_ilev],axis=1),
                     "label": "Heat flux at %i hPa"%(feat_def["plev"][i_lev]/100.0)
@@ -1075,6 +1076,11 @@ class WinterStratosphereFeatures:
             funlib["windfall"] = {
                     "fun": lambda Y: self.windfall(Y[:,uref_idx]),
                     "label": r"Max. decel. $\Delta\overline{u}/\Delta t$ [m/s/day]",
+                    }
+        for i_dl in range(self.ndelay-2):
+            funlib["uref_inc_%i"%(i_dl)] = {
+                    "fun": lambda Y,i_dl=i_dl: Y[:,self.fidx_Y["uref_dl%i"%(i_dl)]] - Y[:,self.fidx_Y["uref_dl%i"%(i_dl+2)]],
+                    "label": r"$\Delta\overline{u}(t-%i,t-%i)$"%(i_dl,i_dl+2),
                     }
         # Nonlinear functions
         for i_wave in range(1,self.num_wavenumbers+1):
