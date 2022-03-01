@@ -567,7 +567,13 @@ class WinterStratosphereTPT:
             lt_Y = self.interpolate_field_clust2data(kmdict,Y_unseasoned,Ny,Nt,int2b_cond['time'][mom_name],density_flag=False,idx_a=idx_a,idx_b=idx_b)
             np.save(join(savedir,"lt_%s_Y"%(mom_name)),lt_Y)
         return summary 
-    def plot_results_data(self,feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,spaghetti_flag=True,fluxdens_flag=True,current2d_flag=True,verify_leadtime_flag=True):
+    def plot_results_data(self,
+            feat_filename,tpt_feat_filename,
+            feat_filename_ra_dict,tpt_feat_filename_ra_dict,
+            feat_def,savedir,winstrat,algo_params,
+            spaghetti_flag=True,fluxdens_flag=True,
+            current2d_flag=True,verify_leadtime_flag=True,
+            comm_corr_flag=True):
         # Get DGA rate 
         rate = pickle.load(open(join(savedir,"summary"),"rb"))["rate_tob"]
         # Load the reanalysis data for comparison
@@ -629,6 +635,28 @@ class WinterStratosphereTPT:
         for k in keys_ra:
             for qk in "qp qm pi lt_mean lt_std".split(" "):
                 ra[k][qk] = pickle.load(open(join(savedir,f"{qk}_{k}"),"rb"))
+        if comm_corr_flag:
+            Nlev = len(feat_def['plev'])
+            qp_range = np.array([0.25,0.75])
+            u_qp_corr = np.nan*np.ones((winstrat.Ntwint, Nlev))
+            U = np.array([X[:,:,winstrat.fidx_X["ubar_60N_lev%i"%(i_lev)]] for i_lev in range(Nlev)])
+            for i_time in range(winstrat.Ntwint):
+                idx_Y = np.where(np.abs(Y[:,:,winstrat.fidx_Y['time_h']] - winstrat.wtime[i_time]) < 0.5*winstrat.dtwint)
+                for i_lev in range(Nlev):
+                    Ui = U[i_lev,idx_Y[0],idx_Y[1]]
+                    qpi = qp_Y[idx_Y[0],idx_Y[1]]
+                    pii = pi_Y[idx_Y[0],idx_Y[1]]
+                    u_qp_corr[i_time,i_lev] = (np.sum(Ui*qpi*pii) - np.sum(Ui*pii)*np.sum(qpi*pii))/(np.sqrt(np.sum(Ui**2*pii)*np.sum(qpi**2*pii)))
+            fig,ax = plt.subplots()
+            handles = []
+            for i_lev in range(Nlev):
+                h, = ax.plot(winstrat.wtime/24.0,u_qp_corr[:,i_lev],color=plt.cm.coolwarm(i_lev/(Nlev-1)),label=r"$\overline{u}(%i hPa, 60^\circ N)$"%(feat_def["plev"][i_lev]/100))
+                handles += [h]
+            ax.legend(handles=handles)
+            ax.set_title("Time since Oct. 1 [days]")
+            ax.set_ylabel("Correlation coefficient")
+            fig.savefig(join(savedir,"corr_u_qp"))
+            plt.close(fig)
         if fluxdens_flag:
             reactive_code = [0,1] #= ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
             # ----------- Plot flux distribution of zonal wind at different LEAD times ----------

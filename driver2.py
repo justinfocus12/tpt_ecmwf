@@ -105,9 +105,9 @@ file_list_climavg = file_lists["ei"][:15]
 
 # Method 2: resample with replacement
 prng = np.random.RandomState(0) # This will be used for subsampling the years. 
-subsets["num_bootstrap"] = 0
+subsets["num_bootstrap"] = 6
 for key in sources:
-    num_full_kmeans_seeds = 1 if key == "s2s" else 1
+    num_full_kmeans_seeds = 6 if key == "s2s" else 1
     subsets[key]["full_kmeans_seeds"] = np.arange(num_full_kmeans_seeds) # random-number generator seeds to use for KMeans. 
     Nyears = len(subsets[key]["full_subset"])
     subsets[key]["resampled_kmeans_seeds"] = num_full_kmeans_seeds + np.arange(subsets["num_bootstrap"])
@@ -129,7 +129,7 @@ Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 15.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -140,7 +140,7 @@ for key in sources:
 multiprocessing_flag = 0
 num_clusters = 170
 #Npc_per_level_single = 4
-Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level = np.array([0,0,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 heatflux_wavenumbers = np.array([0,0,0,0,0,0,0,0,0,0], dtype=int)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
@@ -359,7 +359,13 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,spaghetti_flag=0*(i_uth==1 or i_uth==4),fluxdens_flag=1*(i_uth==1 or i_uth==4),verify_leadtime_flag=0*(i_uth==1 or i_uth==4),current2d_flag=0*(i_uth==1 or i_uth==4))
+            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,
+                    spaghetti_flag=0*(i_uth==1 or i_uth==4),
+                    fluxdens_flag=0*(i_uth==1 or i_uth==4),
+                    verify_leadtime_flag=0*(i_uth==1 or i_uth==4),
+                    current2d_flag=0*(i_uth==1 or i_uth==4),
+                    comm_corr_flag=1*(i_uth==1 or i_uth==4),
+                    )
             #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
 
 # =============================================================================
