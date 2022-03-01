@@ -637,8 +637,37 @@ class WinterStratosphereTPT:
                 ra[k][qk] = pickle.load(open(join(savedir,f"{qk}_{k}"),"rb"))
         if comm_corr_flag:
             Nlev = len(feat_def['plev'])
-            qp_range = np.array([0.4,0.6])
-            lt_range = np.array([15.0,45.0])
+            qp_range = np.array([0.25,0.75])
+            lt_range = np.array([0.0,180.0])
+            # -------- Perform sparse regression over time-lagged zonal wind ------------
+            delay_idx = np.arange(0,winstrat.ndelay,10)
+            lasso_coeffs = np.nan*np.ones((winstrat.Ntwint, len(delay_idx)))
+            lasso_scores = np.nan*np.ones(winstrat.Ntwint)
+            U = np.array([funlib_Y["uref_dl%i"%(i_dl)]["fun"](Y.reshape((Ny*Nty,ydim))) for i_dl in delay_idx]).reshape((len(delay_idx),Ny,Nty))
+            print(f"U.shape = {U.shape}")
+            for i_time in range(winstrat.Ntwint):
+                idx_Y = np.where(
+                        (np.abs(Y[:,:,winstrat.fidx_Y['time_h']] - winstrat.wtime[i_time]) < 3*winstrat.dtwint) * 
+                        (qp_Y >= qp_range[0]) * (qp_Y <= qp_range[1]) * 
+                        (lt_mean_Y >= lt_range[0]) * (lt_mean_Y <= lt_range[1])
+                        )
+                if len(idx_Y[0]) > 15:
+                    #lm = linear_model.Lasso(alpha=0.25)
+                    lm = linear_model.LinearRegression()
+                    lm.fit(U[:,idx_Y[0],idx_Y[1]].T,qp_Y[idx_Y[0],idx_Y[1]],sample_weight=pi_Y[idx_Y[0],idx_Y[1]]/np.sum(pi_Y[idx_Y[0],idx_Y[1]]))
+                    lasso_coeffs[i_time,:] = lm.coef_
+                    lasso_scores[i_time] = lm.score(U[:,idx_Y[0],idx_Y[1]].T,qp_Y[idx_Y[0],idx_Y[1]],sample_weight=pi_Y[idx_Y[0],idx_Y[1]]/np.sum(pi_Y[idx_Y[0],idx_Y[1]]))
+            fig,ax = plt.subplots(nrows=2,figsize=(6,12),sharex=True)
+            handles = []
+            for i_dl in range(len(delay_idx)):
+                h, = ax[0].plot(winstrat.wtime/24.0,lasso_coeffs[:,i_dl],color=plt.cm.coolwarm(i_dl/len(delay_idx)),label=r"$t-%i$ days"%(delay_idx[i_dl]))
+                handles += [h]
+            ax[0].axhline(0,color='black',linestyle='--')
+            ax[0].legend(handles=handles)
+            ax[1].plot(winstrat.wtime/24.0,lasso_scores,color='black')
+            ax[1].set_xlabel(funlib_Y["time_d"]["label"])
+            fig.savefig((join(savedir,"corr_lasso_u_qp%.2f-%.2f_lt%i-%i"%(qp_range[0],qp_range[1],lt_range[0],lt_range[1]))).replace(".","p"))
+            plt.close(fig)
             # --------- Correlate committor (within a certain mid-range) with zonal wind profile ------
             u_qp_corr = np.nan*np.ones((winstrat.Ntwint, Nlev))
             U = np.array([X[:,:,winstrat.fidx_X["ubar_60N_lev%i"%(i_lev)]] for i_lev in range(Nlev)])
