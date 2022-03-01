@@ -600,7 +600,7 @@ class WinterStratosphereTPT:
             ra[k]["Y"] = ra[k]["Y"]#.reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))
             ra[k]["X"] = ra[k]["X"]#.reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))
         ra["ei"]["color"] = "black"
-        ra["e2"]["color"] = "lightskyblue"
+        ra["e2"]["color"] = "deepskyblue"
         ra["ei"]["label"] = "ERA-Interim"
         ra["e2"]["label"] = "ERA-20C"
         # Plot fields using the data points rather than the clusters
@@ -637,26 +637,113 @@ class WinterStratosphereTPT:
                 ra[k][qk] = pickle.load(open(join(savedir,f"{qk}_{k}"),"rb"))
         if comm_corr_flag:
             Nlev = len(feat_def['plev'])
-            qp_range = np.array([0.25,0.75])
+            qp_range = np.array([0.4,0.6])
+            lt_range = np.array([15.0,45.0])
+            # --------- Correlate committor (within a certain mid-range) with zonal wind profile ------
             u_qp_corr = np.nan*np.ones((winstrat.Ntwint, Nlev))
             U = np.array([X[:,:,winstrat.fidx_X["ubar_60N_lev%i"%(i_lev)]] for i_lev in range(Nlev)])
             for i_time in range(winstrat.Ntwint):
-                idx_Y = np.where(np.abs(Y[:,:,winstrat.fidx_Y['time_h']] - winstrat.wtime[i_time]) < 0.5*winstrat.dtwint)
-                for i_lev in range(Nlev):
-                    Ui = U[i_lev,idx_Y[0],idx_Y[1]]
-                    qpi = qp_Y[idx_Y[0],idx_Y[1]]
-                    pii = pi_Y[idx_Y[0],idx_Y[1]]
-                    u_qp_corr[i_time,i_lev] = (np.sum(Ui*qpi*pii) - np.sum(Ui*pii)*np.sum(qpi*pii))/(np.sqrt(np.sum(Ui**2*pii)*np.sum(qpi**2*pii)))
+                idx_Y = np.where(
+                        (np.abs(Y[:,:,winstrat.fidx_Y['time_h']] - winstrat.wtime[i_time]) < 3*winstrat.dtwint) * 
+                        (qp_Y >= qp_range[0]) * (qp_Y <= qp_range[1]) * 
+                        (lt_mean_Y >= lt_range[0]) * (lt_mean_Y <= lt_range[1])
+                        )
+                if len(idx_Y[0]) > 15:
+                    for i_lev in range(Nlev):
+                        Ui = U[i_lev,idx_Y[0],idx_Y[1]]
+                        qpi = qp_Y[idx_Y[0],idx_Y[1]]
+                        pii = pi_Y[idx_Y[0],idx_Y[1]]
+                        Ui_mean = np.sum(Ui*pii)/np.sum(pii)
+                        qpi_mean = np.sum(qpi*pii)/np.sum(pii)
+                        u_qp_corr[i_time,i_lev] = (np.sum((Ui-Ui_mean)*(qpi-qpi_mean)*pii))/(np.sqrt(np.sum((Ui-Ui_mean)**2*pii)*np.sum((qpi-qpi_mean)**2*pii)))
             fig,ax = plt.subplots()
+            ax.set_title(r"Corr($q_B^+, \overline{u}(z)$)")
             handles = []
             for i_lev in range(Nlev):
-                h, = ax.plot(winstrat.wtime/24.0,u_qp_corr[:,i_lev],color=plt.cm.coolwarm(i_lev/(Nlev-1)),label=r"$\overline{u}(%i hPa, 60^\circ N)$"%(feat_def["plev"][i_lev]/100))
+                h, = ax.plot(winstrat.wtime/24.0,u_qp_corr[:,i_lev],color=plt.cm.coolwarm(i_lev/(Nlev-1)),label=r"%i hPa"%(feat_def["plev"][i_lev]/100))
                 handles += [h]
-            ax.legend(handles=handles)
-            ax.set_title("Time since Oct. 1 [days]")
+            xlim = ax.get_xlim()
+            ax.set_xlim([xlim[0],xlim[1]+0.25*(xlim[1]-xlim[0])])
+            ax.set_ylim([-1,1])
+            ax.axhline(0,linestyle='--',color='black')
+            ax.legend(handles=handles,loc='lower right')
+            ax.set_xlabel(funlib_X['time_d']['label'])
             ax.set_ylabel("Correlation coefficient")
-            fig.savefig(join(savedir,"corr_u_qp"))
+            fig.savefig((join(savedir,"corr_u_qp%.2f-%.2f_lt%i-%i"%(qp_range[0],qp_range[1],lt_range[0],lt_range[1]))).replace(".","p"))
             plt.close(fig)
+            # ---------- Correlate committor with zonal wind time delays -------------
+            u_qp_corr = np.nan*np.ones((winstrat.Ntwint, winstrat.ndelay))
+            U = np.array([funlib_Y["uref_dl%i"%(i_dl)]["fun"](Y.reshape((Ny*Nty,ydim))) for i_dl in range(winstrat.ndelay)]).reshape((winstrat.ndelay,Ny,Nty))
+            for i_time in range(winstrat.Ntwint):
+                idx_Y = np.where(
+                        (np.abs(Y[:,:,winstrat.fidx_Y['time_h']] - winstrat.wtime[i_time]) < 3*winstrat.dtwint) * 
+                        (qp_Y >= qp_range[0]) * (qp_Y <= qp_range[1]) *
+                        (lt_mean_Y >= lt_range[0]) * (lt_mean_Y <= lt_range[1])
+                        )
+                if len(idx_Y[0]) > 15:
+                    for i_dl in range(winstrat.ndelay):
+                        Ui = U[i_dl,idx_Y[0],idx_Y[1]]
+                        qpi = qp_Y[idx_Y[0],idx_Y[1]]
+                        pii = pi_Y[idx_Y[0],idx_Y[1]]
+                        Ui_mean = np.sum(Ui*pii)/np.sum(pii)
+                        qpi_mean = np.sum(qpi*pii)/np.sum(pii)
+                        u_qp_corr[i_time,i_dl] = (np.sum((Ui-Ui_mean)*(qpi-qpi_mean)*pii))/(np.sqrt(np.sum((Ui-Ui_mean)**2*pii)*np.sum((qpi-qpi_mean)**2*pii)))
+            fig,ax = plt.subplots()
+            ax.set_title(r"Corr($q_B^+, \overline{u}(t-\Delta t)$)")
+            handles = []
+            for i_dl in np.arange(0,winstrat.ndelay,5):
+                h, = ax.plot(winstrat.wtime/24.0,u_qp_corr[:,i_dl],color=plt.cm.coolwarm(i_dl/(winstrat.ndelay-1)),label=r"$t-%i$ days"%(i_dl))
+                handles += [h]
+            xlim = ax.get_xlim()
+            ax.set_xlim([xlim[0],xlim[1]+0.25*(xlim[1]-xlim[0])])
+            ax.set_ylim([-1,1])
+            ax.axhline(0,linestyle='--',color='black')
+            ax.legend(handles=handles,loc='lower right')
+            ax.set_xlabel(funlib_X['time_d']['label'])
+            ax.set_ylabel("Correlation coefficient")
+            fig.savefig((join(savedir,"corr_udelays_qp%.2f-%.2f_lt%i-%i"%(qp_range[0],qp_range[1],lt_range[0],lt_range[1]))).replace(".","p"))
+            plt.close(fig)
+            # ------------ Correlate committor with DIFFERENCES in zonal wind -----------
+            u_qp_corr = np.nan*np.ones((winstrat.Ntwint, winstrat.ndelay))
+            U = np.array([funlib_Y["uref_dl%i"%(i_dl)]["fun"](Y.reshape((Ny*Nty,ydim))) for i_dl in range(winstrat.ndelay)]).reshape((winstrat.ndelay,Ny,Nty))
+            for i_time in range(winstrat.Ntwint):
+                idx_Y = np.where(
+                        (np.abs(Y[:,:,winstrat.fidx_Y['time_h']] - winstrat.wtime[i_time]) < 3*winstrat.dtwint) * 
+                        (qp_Y >= qp_range[0]) * (qp_Y <= qp_range[1]) *
+                        (lt_mean_Y >= lt_range[0]) * (lt_mean_Y <= lt_range[1])
+                        )
+                if len(idx_Y[0]) > 15:
+                    for i_dl in range(1,winstrat.ndelay):
+                        Ui = (U[0,idx_Y[0],idx_Y[1]] - U[i_dl,idx_Y[0],idx_Y[1]])/(i_dl*winstrat.dtwint)
+                        qpi = qp_Y[idx_Y[0],idx_Y[1]]
+                        pii = pi_Y[idx_Y[0],idx_Y[1]]
+                        Ui_mean = np.sum(Ui*pii)/np.sum(pii)
+                        qpi_mean = np.sum(qpi*pii)/np.sum(pii)
+                        u_qp_corr[i_time,i_dl] = (np.sum((Ui-Ui_mean)*(qpi-qpi_mean)*pii))/(np.sqrt(np.sum((Ui-Ui_mean)**2*pii)*np.sum((qpi-qpi_mean)**2*pii)))
+            fig,ax = plt.subplots()
+            ax.set_title(r"Corr($q_B^+,\Delta\overline{u}/\Delta t$)")
+            handles = []
+            for i_dl in np.arange(0,winstrat.ndelay,5):
+                h, = ax.plot(winstrat.wtime/24.0,u_qp_corr[:,i_dl],color=plt.cm.coolwarm(i_dl/(winstrat.ndelay-1)),label=r"$t-%i$ days"%(i_dl))
+                handles += [h]
+            xlim = ax.get_xlim()
+            ax.set_xlim([xlim[0],xlim[1]+0.25*(xlim[1]-xlim[0])])
+            ax.set_ylim([-1,1])
+            ax.axhline(0,linestyle='--',color='black')
+            ax.legend(handles=handles,loc='lower right')
+            ax.set_xlabel(funlib_X['time_d']['label'])
+            ax.set_ylabel("Correlation coefficient")
+            fig.savefig((join(savedir,"corr_dudt_qp%.2f-%.2f_lt%i-%i"%(qp_range[0],qp_range[1],lt_range[0],lt_range[1]))).replace(".","p"))
+            plt.close(fig)
+            ## ------------- Fixed-effect correlation, fixing the zonal wind strength of the endpoint ------
+            #U = np.array([funlib_Y["uref_dl%i"%(i_dl)]["fun"](Y.reshape((Ny*Nty,ydim))) for i_dl in range(winstrat.ndelay)]).reshape((winstrat.ndelay,Ny,Nty))
+            #Uend_midpoints = np.linspace(self.tpt_bndy['uthresh_b'], np.quantile(U.flatten(), 0.95), 6)
+            #Uend_lower = Uend_midpoints - 5.0
+            #Uend_upper = Uend_midpoints + 5.0
+            #for i_time in linspace(0,winstrat.Ntwint,10).astype(int):
+            #    for i_Ulev in range(len(Uend_midpoints)):
+            
+
         if fluxdens_flag:
             reactive_code = [0,1] #= ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
             # ----------- Plot flux distribution of zonal wind at different LEAD times ----------
@@ -772,16 +859,17 @@ class WinterStratosphereTPT:
             theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
             theta_lower_list = theta_mid_list - 1.0
             theta_upper_list = theta_mid_list + 1.0
-            fig,ax,bins = self.plot_flux_distributions_1d(
-                    qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
-                    theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
-                    ra,rath,
-                    theta_normal_label,theta_tangential_label,
-                    reactive_code,rate,
-                    theta_lower_list,theta_upper_list,
-                    timeseries_like=False,invert_flag=True,desired_bins=12)
-            fig.savefig(join(savedir,"fluxdens_J-uref_d-timed_bins%i"%(bins)))
-            plt.close(fig)
+            for desired_bins in [4,12]:
+                fig,ax,bins = self.plot_flux_distributions_1d(
+                        qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
+                        theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
+                        ra,rath,
+                        theta_normal_label,theta_tangential_label,
+                        reactive_code,rate,
+                        theta_lower_list,theta_upper_list,
+                        timeseries_like=False,invert_flag=True,desired_bins=desired_bins)
+                fig.savefig(join(savedir,"fluxdens_J-uref_d-timed_bins%i"%(bins)))
+                plt.close(fig)
             # ----------- Plot flux distribution of wavenumber 0  ---------
             theta_normal = funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
             theta_normal_label = funlib_X['uref']['label']
@@ -954,7 +1042,9 @@ class WinterStratosphereTPT:
                     fig,ax = plt.subplots()
                     ax.set_xlim(xlim)
                     ax.set_ylim(ylim)
-                    #self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
+                    if key0 == "time_d" and key1 == "uref":
+                        self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
+                        ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
                     ax.set_xlabel(lab0,fontdict=font)
                     ax.set_ylabel(lab1,fontdict=font)
                     ax.set_title(fieldname,fontdict=font)
@@ -972,7 +1062,9 @@ class WinterStratosphereTPT:
                     fig,ax = plt.subplots()
                     ax.set_xlim(xlim)
                     ax.set_ylim(ylim)
-                    self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
+                    if key0 == "time_d" and key1 == "uref":
+                        self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
+                        ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
                     ax.set_xlabel(lab0,fontdict=font)
                     ax.set_ylabel(lab1,fontdict=font)
                     ax.set_title(fieldname,fontdict=font)
@@ -1320,7 +1412,7 @@ class WinterStratosphereTPT:
             for i in ss:
                 ridx = np.where(reactive_flag[i])[0]
                 xx = rath[k]["theta"][i,ridx,:]
-                ax.plot(xx[:,0],xx[:,1],color=ra[k]["color"],linewidth=0.75,zorder=zorder)
+                ax.plot(xx[:,0],xx[:,1],color=ra[k]["color"],linewidth=1.0,zorder=zorder)
         return
     def project_current_data(self,theta_x,qm,qp,pi):
         Nx,Nt,thdim = theta_x.shape

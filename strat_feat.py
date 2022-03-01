@@ -1040,7 +1040,6 @@ class WinterStratosphereFeatures:
         for i_lev in range(len(feat_def["plev"])):
             key = "heatflux_lev%i_total"%(i_lev)
             idx_ilev = np.array([self.fidx_X["heatflux_lev%i_wn%i"%(i_lev,i_wn)] for i_wn in range(self.heatflux_wavenumbers_per_level_max)])
-            print(f"idx_ilev: min={idx_ilev.min()}, max={idx_ilev.max()}")
             funlib[key] = {
                     "fun": lambda X,i_lev=i_lev,idx_ilev=idx_ilev: np.sum(X[:,idx_ilev],axis=1),
                     "label": "Heat flux at %i hPa"%(feat_def["plev"][i_lev]/100.0)
