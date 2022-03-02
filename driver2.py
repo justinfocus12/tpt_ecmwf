@@ -203,7 +203,7 @@ cluster_flag =                 0
 build_msm_flag =               0
 tpt_s2s_flag =                 0
 transfer_results_flag =        0
-plot_tpt_results_s2s_flag =    1
+plot_tpt_results_s2s_flag =    0
 # Summary statistic
 plot_rate_flag =               1
 illustrate_dataset_flag =      0
@@ -425,12 +425,15 @@ if plot_rate_flag:
         for key in ['ei','e2','s2s']:
             print(f"Starting to plot rate list for {key}")
             # ---------- Plot a single line with error bars ---------
-            full_rate_mean = rate_lists[key][np.arange(len(subsets[key]["full_kmeans_seeds"]))].mean(axis=0)
+            full_rate = rate_lists[key][np.arange(len(subsets[key]["full_kmeans_seeds"]))]
+            full_rate_mean = full_rate.mean(axis=0)
             good_idx = np.where(full_rate_mean > 0)[0] if scale == 'log' else np.arange(len(uthresh_list))
-            h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[key],full_rate_mean[good_idx],color=colors[key],linewidth=2,marker='o',linestyle='-',label=labels[key],alpha=1.0)
+            h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[key],full_rate_mean[good_idx],color=colors[key],linewidth=2,marker='o',linestyle='-',label=labels[key],alpha=1.0,s=9)
             handles += [h]
             for i_uth,uth in enumerate(uthresh_list[good_idx]):
-                ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([rate_lists[key][:,i_uth].min(), rate_lists[key][:,i_uth].max()]), color=colors[key], linewidth=2)
+                # First plot thick error bars around min and max of full-KMeans
+                ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([full_rate[:,i_uth].min(),full_rate[:,i_uth].max()]), color=colors[key], linewidth=2.5)
+                ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([rate_lists[key][:,i_uth].min(), rate_lists[key][:,i_uth].max()]), color=colors[key], linewidth=1)
             savefig_suffix += key
             ax.legend(handles=handles,loc=loc[scale])
             ax.set_ylim(ylim[scale])
