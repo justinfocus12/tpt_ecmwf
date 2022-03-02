@@ -24,8 +24,8 @@ from os.path import join,exists
 codedir = "/home/jf4241/ecmwf/s2s"
 os.chdir(codedir)
 datadirs = dict({
-    "e2": "/scratch/jf4241/ecmwf_data/era20c_data/2022-02-10",
     "ei": "/scratch/jf4241/ecmwf_data/eraint_data/2022-02-10",
+    "e2": "/scratch/jf4241/ecmwf_data/era20c_data/2022-02-10",
     "s2s": "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23",
     })
 sources = list(datadirs.keys())
@@ -203,7 +203,7 @@ cluster_flag =                 0
 build_msm_flag =               0
 tpt_s2s_flag =                 0
 transfer_results_flag =        0
-plot_tpt_results_s2s_flag =    0
+plot_tpt_results_s2s_flag =    1
 # Summary statistic
 plot_rate_flag =               1
 illustrate_dataset_flag =      0
@@ -362,10 +362,10 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
             tpt.set_boundaries(tpt_bndy)
             tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,
                     spaghetti_flag=0*(i_uth==1 or i_uth==4),
-                    fluxdens_flag=0*(i_uth==1 or i_uth==4),
+                    fluxdens_flag=1*(i_uth==1 or i_uth==4),
                     verify_leadtime_flag=0*(i_uth==1 or i_uth==4),
                     current2d_flag=0*(i_uth==1 or i_uth==4),
-                    comm_corr_flag=1*(i_uth==1 or i_uth==4),
+                    comm_corr_flag=0*(i_uth==1 or i_uth==4),
                     )
             #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
 
@@ -386,22 +386,35 @@ if plot_rate_flag:
                 elif key == "s2s":
                     rate_lists[key][i_subset,i_uth] = summary["rate_tob"]
                     rate_lists["s2s_naive"][i_subset,i_uth] = summary["rate_naive"]
+    # ------------ Bar plot -------------------
+    colors = dict({"ei": "black", "e2": "dodgerblue", "s2s": "red"}) #, "s2s_naive": "cyan"})
+    labels = dict({"ei": "ERA-Interim", "e2": "ERA-20C", "s2s": "S2S"}) #, "s2s_naive": "S2S unweighted"})
     df = pandas.DataFrame({
-        "Name": uthresh_list
+        "uthresh": uthresh_list,
         })
-    for key in ["ei","e2","s2s"]:
-        df[key+"_mean"] = rate_lists[key][np.arange(len(subsets[key]["full_kmeans_seeds"]))].mean(axis=0)
+    for key in sources:
+        df[key] = rate_lists[key][np.arange(len(subsets[key]["full_kmeans_seeds"]))].mean(axis=0)
         df[key+"_min"] = rate_lists[key].min(axis=0)
         df[key+"_max"] = rate_lists[key].max(axis=0)
-    # TODO: Plot the bars
+    df.sort_values(by=["uthresh"],inplace=True)
+    print(f"df = \n{df}")
+    fig,ax = plt.subplots()
+    yerrlo = np.array([df[key]-df[key+'_min'] for key in sources]) # 3xN
+    yerrhi = np.array([df[key+'_max']-df[key] for key in sources]) # 3xN
+    yerr = np.array([yerrlo,yerrhi]) #2x3xN
+    yerr = np.transpose(yerr,(1,0,2)) #3x2xN
+    # Build it up from ei to e2 to s2s
+    df.plot(x="uthresh", xlabel="Zonal wind threshold", ylabel="SSW Rate", y=[key for key in sources], color=colors, kind="bar", ax=ax, rot=0, width=0.75, yerr=yerr, error_kw={"ecolor": "silver", "capsize": 2, "lw": 2, "capthick": 2})
+    ax.legend([labels[key] for key in sources])
+    fig.savefig(join(join(paramdirs["s2s"],"rate_bar")))
+    plt.close(fig)
+    # ------------ Line plot -------------------
     ylim = {'log': [1e-3,1.0], 'linear': [0.0,1.0]}
     loc = {'log': 'lower right', 'linear': 'upper left'}
     bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
     # Build this up one curve at a time
-    colors = dict({"ei": "black", "e2": "lightskyblue", "s2s": "red", "s2s_naive": "cyan"})
-    labels = dict({"ei": "ERA-Interim", "e2": "ERA-20C", "s2s": "S2S", "s2s_naive": "S2S unweighted"})
     label_needed = dict({key: True for key in colors.keys()})
-    du = np.abs(uthresh_list[1] - uthresh_list[0])/15.0 # How far to offset the x axis positions for the three timeseries
+    du = np.abs(uthresh_list[1] - uthresh_list[0])/10.0 # How far to offset the x axis positions for the three timeseries
     errorbar_offsets = dict({"ei": -du, "e2": du, "s2s": 0, "s2s_naive": du})
     for scale in ['linear','log']:
         fig,ax = plt.subplots()
@@ -414,7 +427,7 @@ if plot_rate_flag:
             # ---------- Plot a single line with error bars ---------
             full_rate_mean = rate_lists[key][np.arange(len(subsets[key]["full_kmeans_seeds"]))].mean(axis=0)
             good_idx = np.where(full_rate_mean > 0)[0] if scale == 'log' else np.arange(len(uthresh_list))
-            h, = ax.plot(uthresh_list[good_idx],full_rate_mean[good_idx],color=colors[key],linewidth=2,marker='.',linestyle='-',label=labels[key],alpha=1.0)
+            h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[key],full_rate_mean[good_idx],color=colors[key],linewidth=2,marker='o',linestyle='-',label=labels[key],alpha=1.0)
             handles += [h]
             for i_uth,uth in enumerate(uthresh_list[good_idx]):
                 ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([rate_lists[key][:,i_uth].min(), rate_lists[key][:,i_uth].max()]), color=colors[key], linewidth=2)

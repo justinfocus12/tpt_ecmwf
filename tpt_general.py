@@ -1,6 +1,7 @@
 # TPT class for GENERAL stratosphere data: hindcasts or reanalysis. No explicit feature-handling here, just take in numpy arrays and do the magic. Except for time and the feature that gives distances to A and B. 
 
 import numpy as np
+import pandas
 import netCDF4 as nc
 import datetime
 import matplotlib
@@ -1386,21 +1387,32 @@ class WinterStratosphereTPT:
                     ax.plot(x1, bin_centers, color='black', linestyle=linestyle)
                     #ax.fill_betweenx(bin_centers, x1, x2, facecolor='red', edgecolor='black',alpha=0.5)
                 else:
+                    # Make a bar plot
+                    df = pandas.DataFrame({
+                        "Time": bin_centers.astype(int),
+                        })
                     for k in keys_ra:
-                        if rath[k]["num_rxn"] != 0:
-                            hra, = ax.plot(rath[k]["bin_centers"],rath[k]["hist"],color=ra[k]["color"],label=ra[k]["label"],marker='.', linestyle=linestyle)
-                            handles.append(hra)
-                    h, = ax.plot(bin_centers,hist,color='red',label="S2S",marker='.',linestyle=linestyle)
-                    handles.append(h)
+                        df[k] = rath[k]["hist"]
+                    df["s2s"] = hist
+                    color = {k: ra[k]["color"] for k in keys_ra}
+                    color["s2s"] = "red"
+                    df.plot(ax=ax, x="Time", y=keys_ra+["s2s"], kind="bar", color=color, rot=0, fontsize=12)
+                    ax.legend(["ERA-Interim","ERA-20C","S2S"])
+                    #for k in keys_ra:
+                    #    if rath[k]["num_rxn"] != 0:
+                    #        hra, = ax.plot(rath[k]["bin_centers"],rath[k]["hist"],color=ra[k]["color"],label=ra[k]["label"],marker='.', linestyle=linestyle)
+                    #        handles.append(hra)
+                    #h, = ax.plot(bin_centers,hist,color='red',label="S2S",marker='.',linestyle=linestyle)
+                    #handles.append(h)
                     #hnv, = ax.plot(bin_centers_nv,hist_nv,color='orange',label="S2S unweighted",marker='.',linestyle=linestyle)
                     #handles.append(hnv)
-        ax.legend(handles=handles)
+        #ax.legend(handles=handles)
         if timeseries_like:
             ax.set_xlabel(theta_normal_label,fontdict=font)
             ax.set_ylabel(theta_tangential_label,fontdict=font)
         else:
             ax.set_xlabel(theta_tangential_label,fontdict=font)
-            ax.set_ylabel(r"Probability density",fontdict=font)
+            ax.set_ylabel(r"SSW frequency",fontdict=font)
             ax.axhline(y=0,color='black')
         #ax.set_ylim([-0.005,0.03])
         return fig,ax,bins
