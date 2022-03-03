@@ -203,9 +203,9 @@ cluster_flag =                 0
 build_msm_flag =               0
 tpt_s2s_flag =                 0
 transfer_results_flag =        0
-plot_tpt_results_s2s_flag =    1
+plot_tpt_results_s2s_flag =    0
 # Summary statistic
-plot_rate_flag =               0
+plot_rate_flag =               1
 illustrate_dataset_flag =      0
 
 
@@ -362,9 +362,9 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
             tpt.set_boundaries(tpt_bndy)
             tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,
                     spaghetti_flag=0*(i_uth==1 or i_uth==4),
-                    fluxdens_flag=0*(i_uth==1 or i_uth==4),
+                    fluxdens_flag=1*(i_uth==1 or i_uth==4),
                     verify_leadtime_flag=0*(i_uth==1 or i_uth==4),
-                    current2d_flag=1*(i_uth==1 or i_uth==4),
+                    current2d_flag=0*(i_uth==1 or i_uth==4),
                     comm_corr_flag=0*(i_uth==1 or i_uth==4),
                     )
             #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
@@ -428,12 +428,11 @@ if plot_rate_flag:
             full_rate = rate_lists[key][np.arange(len(subsets[key]["full_kmeans_seeds"]))]
             full_rate_mean = full_rate.mean(axis=0)
             good_idx = np.where(full_rate_mean > 0)[0] if scale == 'log' else np.arange(len(uthresh_list))
-            h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[key],full_rate_mean[good_idx],color=colors[key],linewidth=2,marker='o',linestyle='-',label=labels[key],alpha=1.0,s=9)
+            h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[key],full_rate_mean[good_idx],color=colors[key],linewidth=2,marker='o',linestyle='-',label=labels[key],alpha=1.0,s=36)
             handles += [h]
             for i_uth,uth in enumerate(uthresh_list[good_idx]):
-                # First plot thick error bars around min and max of full-KMeans
-                ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([full_rate[:,i_uth].min(),full_rate[:,i_uth].max()]), color=colors[key], linewidth=2.5)
-                ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([rate_lists[key][:,i_uth].min(), rate_lists[key][:,i_uth].max()]), color=colors[key], linewidth=1)
+                #ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([full_rate[:,i_uth].min(),full_rate[:,i_uth].max()]), color=colors[key], linewidth=2.5)
+                ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([rate_lists[key][:,i_uth].min(), rate_lists[key][:,i_uth].max()]), color=colors[key], linewidth=2)
             savefig_suffix += key
             ax.legend(handles=handles,loc=loc[scale])
             ax.set_ylim(ylim[scale])

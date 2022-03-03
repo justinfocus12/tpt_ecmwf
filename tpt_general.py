@@ -891,16 +891,17 @@ class WinterStratosphereTPT:
             theta_upper_list = theta_mid_list + 1.0
             # TODO: repeat this three times building up the dataset
             for desired_bins in [4,12]:
-                fig,ax,bins = self.plot_flux_distributions_1d(
-                        qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
-                        theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
-                        ra,rath,
-                        theta_normal_label,theta_tangential_label,
-                        reactive_code,rate,
-                        theta_lower_list,theta_upper_list,
-                        timeseries_like=False,invert_flag=True,desired_bins=desired_bins)
-                fig.savefig(join(savedir,"fluxdens_J-uref_d-timed_bins%i"%(bins)))
-                plt.close(fig)
+                for dga_flag in [0,1]:
+                    fig,ax,bins = self.plot_flux_distributions_1d(
+                            qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
+                            theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
+                            ra,rath,
+                            theta_normal_label,theta_tangential_label,
+                            reactive_code,rate,
+                            theta_lower_list,theta_upper_list,
+                            timeseries_like=False,invert_flag=True,desired_bins=desired_bins,dga_flag=dga_flag)
+                    fig.savefig(join(savedir,"fluxdens_J-uref_d-timed_bins%i_dga%i"%(bins,dga_flag)))
+                    plt.close(fig)
             # ----------- Plot flux distribution of wavenumber 0  ---------
             theta_normal = funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
             theta_normal_label = funlib_X['uref']['label']
@@ -1325,7 +1326,8 @@ class WinterStratosphereTPT:
             reactive_code,rate,
             theta_lower_list=None,theta_upper_list=None,
             timeseries_like=False,invert_flag=False,
-            fig=None,ax=None,dashed_flag=False,desired_bins=10):
+            fig=None,ax=None,dashed_flag=False,desired_bins=10,
+            dga_flag=True):
         # theta_normal and theta_tangential are scalar fields. 
         dth_tangential = (np.nanmax(theta_tangential) - np.nanmin(theta_tangential))/desired_bins
         theta_vec = np.transpose(np.array([theta_normal,theta_tangential]), (1,2,0))
@@ -1426,8 +1428,14 @@ class WinterStratosphereTPT:
                     df["s2s"] = hist
                     color = {k: ra[k]["color"] for k in keys_ra}
                     color["s2s"] = "red"
-                    df.plot(ax=ax, x="Time", y=keys_ra+["s2s"], kind="bar", color=color, rot=0, fontsize=12)
-                    ax.legend(["ERA-Interim","ERA-20C","S2S"])
+                    # Plot a subset according to the input specs
+                    bars2plot = [key for key in keys_ra if rath[key]]
+                    if dga_flag: bars2plot += ["s2s"]
+                    df.plot(ax=ax, x="Time", y=bars2plot, kind="bar", color=color, rot=0, fontsize=12)
+                    leg = [ra[k]["label"] for k in keys_ra]
+                    if dga_flag:
+                        leg += ["S2S"]
+                    ax.legend(leg) #["ERA-Interim","ERA-20C","S2S"])
                     #for k in keys_ra:
                     #    if rath[k]["num_rxn"] != 0:
                     #        hra, = ax.plot(rath[k]["bin_centers"],rath[k]["hist"],color=ra[k]["color"],label=ra[k]["label"],marker='.', linestyle=linestyle)
