@@ -889,6 +889,7 @@ class WinterStratosphereTPT:
             theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
             theta_lower_list = theta_mid_list - 1.0
             theta_upper_list = theta_mid_list + 1.0
+            # TODO: repeat this three times building up the dataset
             for desired_bins in [4,12]:
                 fig,ax,bins = self.plot_flux_distributions_1d(
                         qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
@@ -1064,11 +1065,34 @@ class WinterStratosphereTPT:
                     ylim[1] += 0.15*(ylim[1] - ylim[0])
                     # A -> B
                     reactive_code = [0,1]
-                    fieldname = r"$A\to B$ (winters with SSW)"
                     comm_bwd = qm_Y*(reactive_code[0] == 0) + (1-qm_Y)*(reactive_code[0] == 1)
                     comm_fwd = qp_Y*(reactive_code[1] == 1) + (1-qp_Y)*(reactive_code[1] == 0)
                     print(f"shapes: qp_Y: {qp_Y.shape}, pi_Y: {pi_Y.shape}, theta_x: {theta_x.shape}")
                     print(f"idx_winter: 0: min={idx_winter[0].min()}, max={idx_winter[0].max()}")
+                    # Plot the committor
+                    fieldname = r"Committor probability"
+                    fig,ax = plt.subplots()
+                    if key0 == "time_d" and key1 == "uref":
+                        ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
+                    helper.plot_field_2d((comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=True,logscale=False,cmap=plt.cm.coolwarm,contourflag=True,fig=fig,ax=ax)
+                    fig.savefig(join(savedir,"qp_lin_%s_%s_ab_build1"%(key0.replace("_",""),key1.replace("_",""))))
+                    plt.close(fig)
+                    fig,ax = plt.subplots()
+                    if key0 == "time_d" and key1 == "uref":
+                        ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
+                    helper.plot_field_2d((comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=True,logscale=True,cmap=plt.cm.coolwarm,contourflag=True,fig=fig,ax=ax)
+                    fig.savefig(join(savedir,"qp_log_%s_%s_ab_build1"%(key0.replace("_",""),key1.replace("_",""))))
+                    plt.close(fig)
+                    # Plot the lead time 
+                    fig,ax = plt.subplots()
+                    fieldname = r"Lead time [days]"
+                    if key0 == "time_d" and key1 == "uref":
+                        ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
+                    helper.plot_field_2d((-lt_mean_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=True,logscale=False,cmap=plt.cm.coolwarm,contourflag=True,fig=fig,ax=ax)
+                    fig.savefig(join(savedir,"lt_%s_%s_ab_build1"%(key0.replace("_",""),key1.replace("_",""))))
+                    plt.close(fig)
+                    # Plot the A->B density and current
+                    fieldname = r"$A\to B$ (winters with SSW)"
                     fig,ax = plt.subplots()
                     ax.set_xlim(xlim)
                     ax.set_ylim(ylim)
@@ -1084,7 +1108,7 @@ class WinterStratosphereTPT:
                     _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
                     fig.savefig(join(savedir,"J_%s_%s_ab_build2"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
-                    # A -> A
+                    # Plot the A -> A density and current
                     fieldname = r"$A\to A$ (winters without SSW)"
                     reactive_code = [0,0]
                     comm_bwd = qm_Y*(reactive_code[0] == 0) + (1-qm_Y)*(reactive_code[0] == 1)
@@ -1370,6 +1394,12 @@ class WinterStratosphereTPT:
                         rath[k]["hist"] = hist_ra*ra[k]["rate"]/(np.abs(np.sum(hist_ra))) #*dth_tangential)
                         print(f"Just made bins and hist for {k}")
                 # ---------------------------------------------
+                # Store all the needed info in a Pandas dataframe
+                df = pandas.DataFrame({
+                    "Time": bin_centers.astype(int),
+                    })
+                for k in keys_ra:
+                    df[k] = rath[k]["hist"]
                 if timeseries_like:
                     max_bin_height = 0.6*np.min(np.diff(theta_lower_list))
                     offset_horz = (theta_lower_list[i_thlev] + theta_upper_list[i_thlev])/2

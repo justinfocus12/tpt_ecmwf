@@ -203,9 +203,9 @@ cluster_flag =                 0
 build_msm_flag =               0
 tpt_s2s_flag =                 0
 transfer_results_flag =        0
-plot_tpt_results_s2s_flag =    0
+plot_tpt_results_s2s_flag =    1
 # Summary statistic
-plot_rate_flag =               1
+plot_rate_flag =               0
 illustrate_dataset_flag =      0
 
 
@@ -362,9 +362,9 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
             tpt.set_boundaries(tpt_bndy)
             tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,
                     spaghetti_flag=0*(i_uth==1 or i_uth==4),
-                    fluxdens_flag=1*(i_uth==1 or i_uth==4),
+                    fluxdens_flag=0*(i_uth==1 or i_uth==4),
                     verify_leadtime_flag=0*(i_uth==1 or i_uth==4),
-                    current2d_flag=0*(i_uth==1 or i_uth==4),
+                    current2d_flag=1*(i_uth==1 or i_uth==4),
                     comm_corr_flag=0*(i_uth==1 or i_uth==4),
                     )
             #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
