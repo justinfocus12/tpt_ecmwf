@@ -35,7 +35,7 @@ feat_display_dir = join(featdir,"display1")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-02-27")
+daydir = join(resultsdir,"2022-03-04")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -51,9 +51,9 @@ fall_years = dict({
     })
 # Listing of years that we will consider in DGA (must be a subset of the above)
 subsets = dict({
-    "e2": dict({"full_subset": fall_years["e2"]}),
-    "ei": dict({"full_subset": fall_years["s2s"]}),
-    "s2s": dict({"full_subset": fall_years["s2s"]}),
+    "e2": dict({"full_subset": fall_years["e2"], "num_bootstrap": 20}),
+    "ei": dict({"full_subset": fall_years["s2s"], "num_bootstrap": 20}),
+    "s2s": dict({"full_subset": fall_years["s2s"], "num_bootstrap": 20}),
     }) 
 
 file_lists = dict()
@@ -106,14 +106,13 @@ file_list_climavg = file_lists["ei"][:15]
 
 # Method 2: resample with replacement
 prng = np.random.RandomState(0) # This will be used for subsampling the years. 
-subsets["num_bootstrap"] = 6
 for key in sources:
     num_full_kmeans_seeds = 6 if key == "s2s" else 1
     subsets[key]["full_kmeans_seeds"] = np.arange(num_full_kmeans_seeds) # random-number generator seeds to use for KMeans. 
     Nyears = len(subsets[key]["full_subset"])
-    subsets[key]["resampled_kmeans_seeds"] = num_full_kmeans_seeds + np.arange(subsets["num_bootstrap"])
-    subsets[key]["resampled_subsets"] = np.zeros((subsets["num_bootstrap"],Nyears), dtype=int)
-    for i_ss in range(subsets["num_bootstrap"]):
+    subsets[key]["resampled_kmeans_seeds"] = num_full_kmeans_seeds + np.arange(subsets[key]["num_bootstrap"])
+    subsets[key]["resampled_subsets"] = np.zeros((subsets[key]["num_bootstrap"],Nyears), dtype=int)
+    for i_ss in range(subsets[key]["num_bootstrap"]):
         subsets[key]["resampled_subsets"][i_ss] = prng.choice(subsets[key]["full_subset"], size=Nyears, replace=True)
     # Concatenate these
     subsets[key]["all_kmeans_seeds"] = np.concatenate((subsets[key]["full_kmeans_seeds"], subsets[key]["resampled_kmeans_seeds"]))
@@ -130,7 +129,7 @@ Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 15.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -141,7 +140,7 @@ for key in sources:
 multiprocessing_flag = 0
 num_clusters = 170
 #Npc_per_level_single = 4
-Npc_per_level = np.array([0,0,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
+Npc_per_level = np.array([4,4,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
 heatflux_wavenumbers = np.array([0,0,0,0,0,0,0,0,0,0], dtype=int)
 num_vortex_moments = 0 # must be <= num_vortex_moments_max
@@ -179,7 +178,7 @@ ei_flag = True
 #subsetdirs = dict({key: [join(paramdirs[key],"%i-%i"%(subset[0],subset[-1]+1)) for subset in subset_lists[key]] for key in sources})
 for key in sources:
     subsets[key]["full_dirs"] = [join(paramdirs[key],"full_seed%i"%(seed)) for seed in subsets[key]["full_kmeans_seeds"]]
-    subsets[key]["resampled_dirs"] = [join(paramdirs[key],"resampled_%i"%(i_ss)) for i_ss in range(subsets["num_bootstrap"])]
+    subsets[key]["resampled_dirs"] = [join(paramdirs[key],"resampled_%i"%(i_ss)) for i_ss in range(subsets[key]["num_bootstrap"])]
     subsets[key]["all_dirs"] = np.concatenate((subsets[key]["full_dirs"],subsets[key]["resampled_dirs"]))
 
     
@@ -190,20 +189,20 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             0
-tpt_e2_flag =                  0
+tpt_featurize_e2 =             1
+tpt_e2_flag =                  1
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             0
-tpt_ei_flag =                  0
+tpt_featurize_ei =             1
+tpt_ei_flag =                  1
 # s2s
 evaluate_database_s2s =        0
-tpt_featurize_s2s =            0
-cluster_flag =                 0
-build_msm_flag =               0
-tpt_s2s_flag =                 0
-transfer_results_flag =        0
-plot_tpt_results_s2s_flag =    0
+tpt_featurize_s2s =            1
+cluster_flag =                 1
+build_msm_flag =               1
+tpt_s2s_flag =                 1
+transfer_results_flag =        1
+plot_tpt_results_s2s_flag =    1
 # Summary statistic
 plot_rate_flag =               1
 illustrate_dataset_flag =      0
@@ -361,10 +360,10 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
             tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,
-                    spaghetti_flag=0*(i_uth==1 or i_uth==4),
+                    spaghetti_flag=1*(i_uth==1 or i_uth==4),
                     fluxdens_flag=1*(i_uth==1 or i_uth==4),
                     verify_leadtime_flag=0*(i_uth==1 or i_uth==4),
-                    current2d_flag=0*(i_uth==1 or i_uth==4),
+                    current2d_flag=1*(i_uth==1 or i_uth==4),
                     comm_corr_flag=0*(i_uth==1 or i_uth==4),
                     )
             #tpt.plot_results_clust(feat_def,savedir,winstrat,algo_params)
@@ -419,7 +418,7 @@ if plot_rate_flag:
     for scale in ['linear','log']:
         fig,ax = plt.subplots()
         savefig_suffix = ""
-        ax.set_xlabel("Zonal wind threshold",fontdict=font)
+        ax.set_xlabel("Zonal wind threshold [m/s]",fontdict=font)
         ax.set_ylabel("Rate",fontdict=font)
         handles = []
         for key in ['ei','e2','s2s']:
@@ -431,8 +430,11 @@ if plot_rate_flag:
             h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[key],full_rate_mean[good_idx],color=colors[key],linewidth=2,marker='o',linestyle='-',label=labels[key],alpha=1.0,s=36)
             handles += [h]
             for i_uth,uth in enumerate(uthresh_list[good_idx]):
+                # Plot thicker line around full rates
                 #ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([full_rate[:,i_uth].min(),full_rate[:,i_uth].max()]), color=colors[key], linewidth=2.5)
+                # Plot thinner line around resampled rates
                 ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([rate_lists[key][:,i_uth].min(), rate_lists[key][:,i_uth].max()]), color=colors[key], linewidth=2)
+                #ax.scatter((uth+errorbar_offsets[key])*np.ones(len(rate_lists[key][:,i_uth])), rate_lists[key][:,i_uth], color=colors[key], marker='.')
             savefig_suffix += key
             ax.legend(handles=handles,loc=loc[scale])
             ax.set_ylim(ylim[scale])

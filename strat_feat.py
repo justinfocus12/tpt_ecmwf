@@ -463,9 +463,6 @@ class WinterStratosphereFeatures:
                 gh = np.concatenate((gh,res[0].reshape((res[0].shape[0]*res[0].shape[1],Nlev,Nlat,Nlon))),axis=0)
                 u = np.concatenate((u,res[1].reshape((res[1].shape[0]*res[1].shape[1],Nlev,Nlat,Nlon))),axis=0)
                 t_szn = np.concatenate((t_szn,res[2]))
-            print(f"gh.shape = {gh.shape}")
-            print(f"u.shape = {u.shape}")
-            print(f"t_szn.shape = {t_szn.shape}")
         else:
             gh = np.zeros((0,Nlev,Nlat,Nlon)) # First dimension will have both time and ensemble members
             u = np.zeros((0,Nlev,Nlat,Nlon)) 
@@ -617,6 +614,7 @@ class WinterStratosphereFeatures:
         return X
     def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=False,fy_resamp=None):
         print(f" -------------- Inside evaluate_tpt_features: tpt_feat_filename = {tpt_feat_filename}, resample_flag = {resample_flag} --------------")
+        print(f"fy_resamp = {fy_resamp}")
         # Evaluate a subset of the full features to use for clustering TPT.
         # A normalized version of these will be used for clustering.
         # The data set for clustering will have fewer time steps, due to time-delay embedding.
@@ -660,7 +658,6 @@ class WinterStratosphereFeatures:
             i_feat_y = self.fidx_Y["uref_dl%i"%(i_dl)]
             #Y[:,:,i_feat_y] = X[:,i_dl:i_dl+Nty,i_feat_x]
             Y[:,:,i_feat_y] = X[:,self.ndelay-1-i_dl:self.ndelay-1-i_dl+Nty,i_feat_x]
-            print(f"t_szn.shape = {feat_def['t_szn'].shape}, uref_szn_mean.shape = {feat_def['uref_szn_mean'].shape}")
             szn_mean_Y[:,i_feat_y-1] = feat_def["uref_szn_mean"] 
             szn_std_Y[:,i_feat_y-1] = feat_def["uref_szn_std"]
             #offset_Y[i_feat_y-1] = feat_def["uref_mean"]
@@ -1166,6 +1163,7 @@ class WinterStratosphereFeatures:
         tpt_feat_ra = pickle.load(open(tpt_feat_filename_ra,"rb"))
         Yra = tpt_feat_ra["Y"]
         idx_resamp_ra = tpt_feat_ra["idx_resamp"]
+        print(f"idx_resamp_ra = {idx_resamp_ra}")
         tpt_feat_hc = pickle.load(open(tpt_feat_filename_hc,"rb"))
         Yhc = tpt_feat_hc["Y"]
         idx_resamp_hc = tpt_feat_hc["idx_resamp"]
@@ -1174,8 +1172,7 @@ class WinterStratosphereFeatures:
         Xhc = np.load(feat_filename_hc)[idx_resamp_hc]#[:,self.ndelay-1:]
         Nxhc,Nthc,_ = Xhc.shape
         print(f"Nxhc,Nthc,_ = {Xhc.shape}")
-        fy_ra = np.load(fall_year_filename_ra)
-        enst_ra = np.load(ens_start_filename_ra)
+        fy_ra = np.load(fall_year_filename_ra)[idx_resamp_ra]
         fy_hc = np.load(fall_year_filename_hc)
         print(f"fy_hc.shape = {fy_hc.shape}")
         enst_hc = np.load(ens_start_filename_hc)
@@ -1189,7 +1186,7 @@ class WinterStratosphereFeatures:
             tpt_bndy["uthresh_b"] = uthresh_b
             src_tag,dest_tag,time2dest = self.compute_src_dest_tags(Yra,feat_def,tpt_bndy)
             ab_idx = np.where(np.any((src_tag==0)*(dest_tag==1), axis=1))[0]
-            print(f"At threshold {uthresh_b}, ab_idx = {ab_idx}")
+            print(f"At threshold {uthresh_b}, ab_idx = {ab_idx}, corresponding to years {fy_ra[ab_idx]}")
             rare_event_idx.append(ab_idx)
             if i_uth > 0:
                 if not all(i_y in rare_event_idx[i_uth-1] for i_y in rare_event_idx[i_uth]):
@@ -1202,7 +1199,9 @@ class WinterStratosphereFeatures:
         time_d_hc = funlib_X["time_d"]["fun"](Xhc.reshape((Nxhc*Nthc,xdim))).reshape((Nxhc,Nthc))
         uref_hc = funlib_X["uref"]["fun"](Xhc.reshape((Nxhc*Nthc,xdim))).reshape((Nxhc,Nthc))
         # Before randomly sampling a reanalysis year, make sure there are corresponding hindcasts 
+        print(f"fy_ra = {fy_ra}\n fy_hc = {fy_hc}")
         common_years_hc_ra = np.intersect1d(fy_ra,fy_hc)
+        print(f"common_years_hc_ra = {common_years_hc_ra}")
         prng = np.random.RandomState(3)
         for i_uth,uthresh_b in enumerate(uthresh_b_list):
             tpt_bndy["uthresh_b"] = uthresh_b
@@ -1212,6 +1211,7 @@ class WinterStratosphereFeatures:
             ax.axhspan(np.min(uref_ra),uthresh_b,color='red')
             ax.axvspan(np.min(time_d_ra),tthresh[0]/24.0,color='lightskyblue')
             ax.axvspan(tthresh[1]/24.0,np.max(time_d_ra),color='lightskyblue')
+            print(f"For uthresh = {uthresh_b}, rare event idx = {rare_event_idx[i_uth]}, corresponding to years {fy_ra[rare_event_idx[i_uth]]}")
             admissible_idx = np.intersect1d(rare_event_idx[i_uth], np.where(np.in1d(fy_ra, fy_hc))[0])
             if len(admissible_idx) == 0:
                 print("WARNING: no common RA and HC years")
@@ -1245,9 +1245,10 @@ class WinterStratosphereFeatures:
                     handles += [h]
                 ax.set_xlabel(funlib_X["time_d"]["label"])
                 ax.set_ylabel(funlib_X["uref"]["label"])
-                ax.legend(handles=handles)
+                ax.legend(handles=handles,loc='upper left')
                 ax.set_ylim([np.min(uref_ra),np.max(uref_ra)])
                 ax.set_xlim([np.min(time_d_ra),np.max(time_d_ra)])
                 fig.savefig(join(feat_display_dir,"illustration_uth%i"%(uthresh_b)))
                 plt.close(fig)
+                print(f"Saved an illustration in directory {feat_display_dir}")
         return
