@@ -1151,9 +1151,57 @@ class WinterStratosphereFeatures:
         ax.add_feature(cartopy.feature.COASTLINE, zorder=3, edgecolor='black')
         fig.colorbar(im,ax=ax)
         return fig,ax,data_crs
+    def plot_zonal_wind_every_year(self,
+            feat_filename_ra_dict,fall_year_filename_ra_dict,
+            feat_def,savedir,colors,labels,
+            uthresh_a,uthresh_list,tthresh):
+        # Every year in which we have data, plot it. Plot both datasets if they both have data.
+        keys_ra = list(feat_filename_ra_dict.keys())
+        all_years = []
+        uref = dict({})
+        time_d = dict({})
+        years = dict({})
+        rates = dict({})
+        timespan = np.array([np.inf,-np.inf])
+        funlib_X = self.observable_function_library_X()
+        for k in keys_ra:
+            years[k] = np.load(fall_year_filename_ra_dict[k]).astype(int)
+            all_years = np.union1d(all_years, years[k])
+            X = np.load(feat_filename_ra_dict[k])
+            Nx,Nt,xdim = X.shape
+            uref[k] = funlib_X["uref"]["fun"](X.reshape((Nx*Nt,xdim))).reshape((Nx,Nt))
+            time_d[k] = funlib_X["time_h"]["fun"](X.reshape((Nx*Nt,xdim))).reshape((Nx,Nt))/24.0
+            timespan[0] = min(timespan[0],np.min(time_d[k]))
+            timespan[1] = max(timespan[0],np.max(time_d[k]))
+        common_years = all_years.copy()
+        for k in keys_ra:
+            years[k] = np.load(fall_year_filename_ra_dict[k]).astype(int)
+            common_years = np.intersect1d(common_years,years[k])
+        sswflags = dict({k: np.zeros((len(uthresh_list),len(common_years),dtype=bool) for k in keys_ra})
+        for i_yr,yr in enumerate(common_years):
+            print(f"yr = {yr}")
+            fig,ax = plt.subplots()
+            handles = []
+            ax.axvspan(timespan[0],tthresh[0]/24.0,color='lightskyblue')
+            ax.axvspan(tthresh[1]/24.0,timespan[1],color='lightskyblue')
+            for i_uth,uth in enumerate(uthresh_list):
+                ax.plot(tthresh/24.0,uth*np.ones(2),color='purple',linestyle='--')
+            for k in keys_ra:
+                if yr in years[k]:
+                    idx_yr = np.where(years[k] == yr)[0][0]
+                    print(f"idx_yr = {idx_yr}")
+                    h, = ax.plot(time_d[k][idx_yr],uref[k][idx_yr],color=colors[k],label=labels[k])
+                    handles += [h]
+            ax.legend(handles=handles)
+            ax.set_title(f"{int(yr)}-{int(yr)+1}")
+            ax.set_xlabel("Time since October 1 [days]")
+            ax.set_ylabel(funlib_X["uref"]["label"])
+            fig.savefig(join(savedir,f"uref_{int(yr)}-{int(yr)+1}"))
+            plt.close(fig)
+            # TODO: Finish computing rates independently 
+        return
     def illustrate_dataset(self,
             uthresh_a,uthresh_b_list,tthresh,sswbuffer,
-            file_list_ra,file_list_hc,
             feat_filename_ra,feat_filename_hc,
             tpt_feat_filename_ra,tpt_feat_filename_hc,
             ens_start_filename_ra,ens_start_filename_hc,

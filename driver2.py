@@ -37,7 +37,7 @@ resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
 daydir = join(resultsdir,"2022-03-04")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"0")
+expdir = join(daydir,"1")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -50,11 +50,22 @@ fall_years = dict({
     "s2s": np.arange(1996,2017),
     })
 # Listing of years that we will consider in DGA (must be a subset of the above)
+# Best estimates
+#subsets = dict({
+#    "e2": dict({"full_subset": fall_years["e2"], "num_bootstrap": 20}),
+#    "ei": dict({"full_subset": fall_years["s2s"], "num_bootstrap": 20}),
+#    "s2s": dict({"full_subset": fall_years["s2s"], "num_bootstrap": 20}),
+#    }) 
+# Fully overlapping estimates
+intersection = np.intersect1d(np.intersect1d(fall_years["e2"],fall_years["ei"]),fall_years["s2s"])
+print(f"intersection = {intersection}")
 subsets = dict({
-    "e2": dict({"full_subset": fall_years["e2"], "num_bootstrap": 20}),
-    "ei": dict({"full_subset": fall_years["s2s"], "num_bootstrap": 20}),
-    "s2s": dict({"full_subset": fall_years["s2s"], "num_bootstrap": 20}),
-    }) 
+    k: dict({
+        "full_subset": intersection,
+        "num_bootstrap": 1,
+        })
+    for k in sources
+    })
 
 file_lists = dict()
 for key in ["e2","ei"]:
@@ -107,7 +118,7 @@ file_list_climavg = file_lists["ei"][:15]
 # Method 2: resample with replacement
 prng = np.random.RandomState(0) # This will be used for subsampling the years. 
 for key in sources:
-    num_full_kmeans_seeds = 6 if key == "s2s" else 1
+    num_full_kmeans_seeds = 1 if key == "s2s" else 1
     subsets[key]["full_kmeans_seeds"] = np.arange(num_full_kmeans_seeds) # random-number generator seeds to use for KMeans. 
     Nyears = len(subsets[key]["full_subset"])
     subsets[key]["resampled_kmeans_seeds"] = num_full_kmeans_seeds + np.arange(subsets[key]["num_bootstrap"])
@@ -189,23 +200,23 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             1
-tpt_e2_flag =                  1
+tpt_featurize_e2 =             0
+tpt_e2_flag =                  0
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             1
-tpt_ei_flag =                  1
+tpt_featurize_ei =             0
+tpt_ei_flag =                  0
 # s2s
 evaluate_database_s2s =        0
-tpt_featurize_s2s =            1
-cluster_flag =                 1
-build_msm_flag =               1
-tpt_s2s_flag =                 1
-transfer_results_flag =        1
-plot_tpt_results_s2s_flag =    1
+tpt_featurize_s2s =            0
+cluster_flag =                 0
+build_msm_flag =               0
+tpt_s2s_flag =                 0
+transfer_results_flag =        0
+plot_tpt_results_s2s_flag =    0
 # Summary statistic
-plot_rate_flag =               1
-illustrate_dataset_flag =      0
+plot_rate_flag =               0
+illustrate_dataset_flag =      1
 
 
 feature_file = join(featdir,"feat_def")
@@ -371,6 +382,8 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
 # =============================================================================
 
 # ------------- Compare rates ---------------------
+colors = dict({"ei": "black", "e2": "dodgerblue", "s2s": "red"}) #, "s2s_naive": "cyan"})
+labels = dict({"ei": "ERA-Interim", "e2": "ERA-20C", "s2s": "S2S"}) #, "s2s_naive": "S2S unweighted"})
 if plot_rate_flag:
     rate_lists = dict({key: np.zeros((len(subsets[key]["all_subsets"]),len(uthresh_list))) for key in sources})
     rate_lists["s2s_naive"] = np.zeros((len(subsets["s2s"]["all_subsets"]),len(uthresh_list)))
@@ -386,8 +399,6 @@ if plot_rate_flag:
                     rate_lists[key][i_subset,i_uth] = summary["rate_tob"]
                     rate_lists["s2s_naive"][i_subset,i_uth] = summary["rate_naive"]
     # ------------ Bar plot -------------------
-    colors = dict({"ei": "black", "e2": "dodgerblue", "s2s": "red"}) #, "s2s_naive": "cyan"})
-    labels = dict({"ei": "ERA-Interim", "e2": "ERA-20C", "s2s": "S2S"}) #, "s2s_naive": "S2S unweighted"})
     df = pandas.DataFrame({
         "uthresh": uthresh_list,
         })
@@ -455,10 +466,15 @@ if illustrate_dataset_flag:
     tthresh = np.array([tthresh0,tthresh1])*24.0
     winstrat.illustrate_dataset(
             uthresh_a,uthresh_list[[1,3,4]],tthresh,sswbuffer,
-            file_lists["e2"],file_lists["s2s"],
             feat_filename_ra,feat_filename_hc,
             tpt_feat_filename_ra,tpt_feat_filename_hc,
             ens_start_filename_ra,ens_start_filename_hc,
             fall_year_filename_ra,fall_year_filename_hc,
             feat_def,feat_display_dir
+            )
+    fall_year_filename_ra_dict = dict({k: join(expdirs[k],"fall_year_list.npy") for k in ["ei","e2"]})
+    winstrat.plot_zonal_wind_every_year(
+            feat_filename_ra_dict,fall_year_filename_ra_dict,
+            feat_def,feat_display_dir,colors,labels,
+            uthresh_a,uthresh_list,tthresh,
             )
