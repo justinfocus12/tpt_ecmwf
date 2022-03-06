@@ -1177,7 +1177,6 @@ class WinterStratosphereFeatures:
         for k in keys_ra:
             years[k] = np.load(fall_year_filename_ra_dict[k]).astype(int)
             common_years = np.intersect1d(common_years,years[k])
-        sswflags = dict({k: np.zeros((len(uthresh_list),len(common_years),dtype=bool) for k in keys_ra})
         for i_yr,yr in enumerate(common_years):
             print(f"yr = {yr}")
             fig,ax = plt.subplots()

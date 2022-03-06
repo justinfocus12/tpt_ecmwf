@@ -35,9 +35,9 @@ feat_display_dir = join(featdir,"display1")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-03-04")
+daydir = join(resultsdir,"2022-03-05")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"1")
+expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -45,8 +45,8 @@ import tpt_general
 
 # COMPLETE listing of possible years to use for each dataset
 fall_years = dict({
-    "e2": np.arange(1900,2008),
     "ei": np.arange(1979,2018),
+    "e2": np.arange(1900,2008),
     "s2s": np.arange(1996,2017),
     })
 # Listing of years that we will consider in DGA (must be a subset of the above)
@@ -60,11 +60,21 @@ fall_years = dict({
 intersection = np.intersect1d(np.intersect1d(fall_years["e2"],fall_years["ei"]),fall_years["s2s"])
 print(f"intersection = {intersection}")
 subsets = dict({
-    k: dict({
-        "full_subset": intersection,
-        "num_bootstrap": 1,
-        })
-    for k in sources
+    "ei": dict({
+        "full_subset": fall_years["s2s"], #np.intersect1d(fall_years["e2"],fall_years["ei"]),
+        "num_bootstrap": 40, 
+        "num_full_kmeans_seeds": 1,
+        }),
+    "e2": dict({
+        "full_subset": fall_years["e2"], #np.intersect1d(fall_years["e2"],fall_years["ei"]),
+        "num_bootstrap": 40, 
+        "num_full_kmeans_seeds": 1,
+        }),
+    "s2s": dict({
+        "full_subset": fall_years["s2s"],
+        "num_bootstrap": 40, 
+        "num_full_kmeans_seeds": 6,
+        }),
     })
 
 file_lists = dict()
@@ -118,17 +128,16 @@ file_list_climavg = file_lists["ei"][:15]
 # Method 2: resample with replacement
 prng = np.random.RandomState(0) # This will be used for subsampling the years. 
 for key in sources:
-    num_full_kmeans_seeds = 1 if key == "s2s" else 1
-    subsets[key]["full_kmeans_seeds"] = np.arange(num_full_kmeans_seeds) # random-number generator seeds to use for KMeans. 
+    subsets[key]["full_kmeans_seeds"] = np.arange(subsets[key]["num_full_kmeans_seeds"]) # random-number generator seeds to use for KMeans. 
     Nyears = len(subsets[key]["full_subset"])
-    subsets[key]["resampled_kmeans_seeds"] = num_full_kmeans_seeds + np.arange(subsets[key]["num_bootstrap"])
+    subsets[key]["resampled_kmeans_seeds"] = subsets[key]["num_full_kmeans_seeds"] + np.arange(subsets[key]["num_bootstrap"])
     subsets[key]["resampled_subsets"] = np.zeros((subsets[key]["num_bootstrap"],Nyears), dtype=int)
     for i_ss in range(subsets[key]["num_bootstrap"]):
         subsets[key]["resampled_subsets"][i_ss] = prng.choice(subsets[key]["full_subset"], size=Nyears, replace=True)
     # Concatenate these
     subsets[key]["all_kmeans_seeds"] = np.concatenate((subsets[key]["full_kmeans_seeds"], subsets[key]["resampled_kmeans_seeds"]))
     subsets[key]["all_subsets"] = np.concatenate((
-        np.outer(np.ones(num_full_kmeans_seeds, dtype=int),subsets[key]["full_subset"]),
+        np.outer(np.ones(subsets[key]["num_full_kmeans_seeds"], dtype=int),subsets[key]["full_subset"]),
         subsets[key]["resampled_subsets"]), axis=0)
 
 print(f"s2s subsets: \n{subsets['s2s']['all_subsets']}")
@@ -200,22 +209,22 @@ create_features_flag =         0
 display_features_flag =        0
 # era20c
 evaluate_database_e2 =         0
-tpt_featurize_e2 =             0
-tpt_e2_flag =                  0
+tpt_featurize_e2 =             1
+tpt_e2_flag =                  1
 # eraint
 evaluate_database_ei =         0
-tpt_featurize_ei =             0
-tpt_ei_flag =                  0
+tpt_featurize_ei =             1
+tpt_ei_flag =                  1
 # s2s
 evaluate_database_s2s =        0
-tpt_featurize_s2s =            0
-cluster_flag =                 0
-build_msm_flag =               0
-tpt_s2s_flag =                 0
-transfer_results_flag =        0
-plot_tpt_results_s2s_flag =    0
+tpt_featurize_s2s =            1
+cluster_flag =                 1
+build_msm_flag =               1
+tpt_s2s_flag =                 1
+transfer_results_flag =        1
+plot_tpt_results_s2s_flag =    1
 # Summary statistic
-plot_rate_flag =               0
+plot_rate_flag =               1
 illustrate_dataset_flag =      1
 
 
@@ -245,7 +254,7 @@ tthresh0 = 31 # First day that SSW could happen
 tthresh1 = 31 + 30 + 31 + 31 + 28  # Last day that SSW could happen: end of February or March
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
-uthresh_list = np.arange(5,-26,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
+uthresh_list = np.arange(5,-31,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 
 # =============================================================
 if ei_flag:
@@ -424,8 +433,9 @@ if plot_rate_flag:
     bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
     # Build this up one curve at a time
     label_needed = dict({key: True for key in colors.keys()})
-    du = np.abs(uthresh_list[1] - uthresh_list[0])/10.0 # How far to offset the x axis positions for the three timeseries
+    du = np.abs(uthresh_list[1] - uthresh_list[0])/8.0 # How far to offset the x axis positions for the three timeseries
     errorbar_offsets = dict({"ei": -du, "e2": du, "s2s": 0, "s2s_naive": du})
+    quantiles = np.array([0.05,0.25,0.75,0.95])
     for scale in ['linear','log']:
         fig,ax = plt.subplots()
         savefig_suffix = ""
@@ -438,14 +448,20 @@ if plot_rate_flag:
             full_rate = rate_lists[key][np.arange(len(subsets[key]["full_kmeans_seeds"]))]
             full_rate_mean = full_rate.mean(axis=0)
             good_idx = np.where(full_rate_mean > 0)[0] if scale == 'log' else np.arange(len(uthresh_list))
-            h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[key],full_rate_mean[good_idx],color=colors[key],linewidth=2,marker='o',linestyle='-',label=labels[key],alpha=1.0,s=36)
-            handles += [h]
-            for i_uth,uth in enumerate(uthresh_list[good_idx]):
-                # Plot thicker line around full rates
-                #ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([full_rate[:,i_uth].min(),full_rate[:,i_uth].max()]), color=colors[key], linewidth=2.5)
-                # Plot thinner line around resampled rates
-                ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([rate_lists[key][:,i_uth].min(), rate_lists[key][:,i_uth].max()]), color=colors[key], linewidth=2)
-                #ax.scatter((uth+errorbar_offsets[key])*np.ones(len(rate_lists[key][:,i_uth])), rate_lists[key][:,i_uth], color=colors[key], marker='.')
+            # Plot the estimate from full dataset (mean of full kmeans seeds)
+            h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[key],full_rate_mean[good_idx],color=colors[key],linewidth=2,marker='o',linestyle='-',label=labels[key],alpha=1.0,s=16, zorder=1)
+            #handles += [h]
+            # ---- box-and-whisker plot -------
+            print(f"key = {key}, colors[key] = {colors[key]}")
+            xlabels = None if key == "s2s" else ['']*len(good_idx)
+            bplot = ax.boxplot(2*full_rate_mean[good_idx]-rate_lists[key][:,good_idx], positions=uthresh_list[good_idx]+errorbar_offsets[key], whis=(5,95), patch_artist=True, labels=xlabels, manage_ticks=False, widths=du, sym='.',showmeans=False,boxprops={"color": colors[key], "facecolor": "white"},whiskerprops={"color": colors[key]},medianprops={"color": colors[key]}, capprops={"color": colors[key]}, flierprops={"markerfacecolor": colors[key], "markeredgecolor": colors[key]}, zorder=0, showfliers=False)
+            #for box in bplot['boxes']:
+            #    box.set_facecolor(colors[key])
+
+            # ---- manual line plot -----------
+            #for i_uth in good_idx: 
+            #    uth = uthresh_list[i_uth]
+            #    ax.plot((uth+errorbar_offsets[key])*np.ones(2), np.array([rate_lists[key][:,i_uth].min(), rate_lists[key][:,i_uth].max()]), color=colors[key], linewidth=2)
             savefig_suffix += key
             ax.legend(handles=handles,loc=loc[scale])
             ax.set_ylim(ylim[scale])
