@@ -598,8 +598,8 @@ class WinterStratosphereTPT:
             ra[k]["rate"] = np.mean(np.any((ra[k]["src_tag"]==0)*(ra[k]["dest_tag"]==1), axis=1))
             # Restrict reanalysis to the midwinter
             ra[k]["winter_flag"] = ((ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] >= self.tpt_bndy['tthresh'][0])*(ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] <= self.tpt_bndy['tthresh'][1]))#.flatten()
-            ra[k]["Y"] = ra[k]["Y"]#.reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))
-            ra[k]["X"] = ra[k]["X"]#.reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))
+            #ra[k]["Y"] = ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))
+            #ra[k]["X"] = ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))
         ra["ei"]["color"] = "black"
         ra["e2"]["color"] = "deepskyblue"
         ra["ei"]["label"] = "ERA-Interim"
@@ -979,6 +979,8 @@ class WinterStratosphereTPT:
             theta_x = np.array([funlib_Y["time_d"]["fun"](Y.reshape((Ny*Nty,ydim))), qp_Y.reshape((Ny*Nty))]).T.reshape((Ny,Nty,2))
             rath = dict({key: dict({}) for key in keys_ra}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
             for k in keys_ra:
+                raqp = ra[k]["qp"]
+                print(f"raqp.shape = {raqp.shape}. ra[{k}][Ny,Nty] = {ra[k]['Ny']},{ra[k]['Nty']}")
                 rath[k]["theta"] = np.array([
                     funlib_Y["time_d"]["fun"](ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))),
                     ra[k]["qp"].reshape(ra[k]["Ny"]*ra[k]["Nty"])
@@ -1485,13 +1487,17 @@ class WinterStratosphereTPT:
                 raise Exception(f"ERROR: you gave me a data set of shape {theta_x.shape}, but I need dimension 2 to have size 2")
             reactive_flag = (ra[k]["src_tag"] == reactive_code[0])*(ra[k]["dest_tag"] == reactive_code[1])*(ra[k]["ina"] == 0)*(ra[k]["inb"] == 0)
             any_rxn_idx = np.where(np.any(reactive_flag, axis=1))[0]
-            prng = np.random.RandomState(2)
+            prng = np.random.RandomState(6)
             ss = prng.choice(any_rxn_idx,size=min(numtraj,len(any_rxn_idx)),replace=False)
             print(f"For reanalysis {k}, len(ss) = {len(ss)}")
             for i in ss:
-                ridx = np.where(reactive_flag[i])[0]
-                xx = rath[k]["theta"][i,ridx,:]
-                ax.plot(xx[:,0],xx[:,1],color=ra[k]["color"],linewidth=1.0,zorder=zorder)
+                # Plot a dotted line underneath, and a heavy line where reactive.
+                xx = rath[k]["theta"][i,:,:]
+                ax.plot(xx[:,0],xx[:,1],color=ra[k]["color"],linewidth=0.7,zorder=zorder,linestyle='--')
+                ridx = np.sort(np.where(reactive_flag[i])[0])
+                if ridx[-1] < len(xx)-1:
+                    ridx = np.concatenate((ridx,[ridx[-1]+1]))
+                ax.plot(xx[ridx,0],xx[ridx,1],color=ra[k]["color"],linewidth=1.5,zorder=zorder)
         return
     def project_current_data(self,theta_x,qm,qp,pi):
         Nx,Nt,thdim = theta_x.shape
