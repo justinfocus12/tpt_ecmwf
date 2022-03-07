@@ -61,11 +61,13 @@ intersection = np.intersect1d(np.intersect1d(fall_years["e2"],fall_years["ei"]),
 print(f"intersection = {intersection}")
 subsets = dict({
     "ei": dict({
+        "ra_overlap_full_subset": np.intersect1d(fall_years["ei"],fall_years["e2"]),
         "full_subset": fall_years["s2s"], #np.intersect1d(fall_years["e2"],fall_years["ei"]),
         "num_bootstrap": 40, 
         "num_full_kmeans_seeds": 1,
         }),
     "e2": dict({
+        "ra_overlap_full_subset": np.intersect1d(fall_years["ei"],fall_years["e2"]),
         "full_subset": fall_years["e2"], #np.intersect1d(fall_years["e2"],fall_years["ei"]),
         "num_bootstrap": 40, 
         "num_full_kmeans_seeds": 1,
@@ -139,6 +141,14 @@ for key in sources:
     subsets[key]["all_subsets"] = np.concatenate((
         np.outer(np.ones(subsets[key]["num_full_kmeans_seeds"], dtype=int),subsets[key]["full_subset"]),
         subsets[key]["resampled_subsets"]), axis=0)
+    # Do a separate resampling for reanalysis for the period of overlap. 
+    if key in ["ei","e2"]:
+        prng_ra = np.random.RandomState(10)
+        subsets[key]["ra_overlap_resampled_subsets"] = np.zeros((subsets[key]["num_bootstrap"],Nyears), dtype=int)
+        for i_ss in range(subsets[key]["num_bootstrap"]):
+            subsets[key]["ra_overlap_resampled_subsets"][i_ss] = prng_ra.choice(subsets[key]["ra_overlap_full_subset"], size=Nyears, replace=True)
+        subsets[key]["ra_overlap_all_subsets"] = np.concatenate((subsets[key]["ra_overlap_full_subset"].reshape((1,Nyears)), subsets[key]["ra_overlap_resampled_subsets"], axis=0))
+    
 
 print(f"s2s subsets: \n{subsets['s2s']['all_subsets']}")
 
@@ -200,6 +210,11 @@ for key in sources:
     subsets[key]["full_dirs"] = [join(paramdirs[key],"full_seed%i"%(seed)) for seed in subsets[key]["full_kmeans_seeds"]]
     subsets[key]["resampled_dirs"] = [join(paramdirs[key],"resampled_%i"%(i_ss)) for i_ss in range(subsets[key]["num_bootstrap"])]
     subsets[key]["all_dirs"] = np.concatenate((subsets[key]["full_dirs"],subsets[key]["resampled_dirs"]))
+    if key in ["ei","e2"]:
+        subsets[key]["ra_overlap_full_dirs"] = [join(paramdirs[key],"ra_overlap_full")]
+        subsets[key]["ra_overlap_resampled_dirs"] = [join(paramdirs[key], "ra_overlap_resampled_%i"%(i_ss)) for i_ss in range(subsets[key]["num_bootstrap"])]
+        subsets[key]["ra_overlap_all_dirs"] = np.concatenate((subsets[key]["ra_overlap_full_dirs"],subsets[key]["ra_overlap_resampled_dirs"]))
+
 
     
 
@@ -273,7 +288,6 @@ if ei_flag:
         print(f"eval_dur = {eval_dur}")
     if tpt_ei_flag: 
         print("Starting TPT on eraint")
-        #for i_subset,subset in enumerate(subsets["ei"]):
         for i_subset,subset in enumerate(subsets["ei"]["all_subsets"]):
             subsetdir = subsets["ei"]["all_dirs"][i_subset]
             print(f"subsetdir = {subsetdir}")
