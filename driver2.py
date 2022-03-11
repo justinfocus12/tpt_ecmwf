@@ -245,7 +245,7 @@ tthresh0 = 31 # First day that SSW could happen
 tthresh1 = 31 + 30 + 31 + 31 + 28  # Last day that SSW could happen: end of February or March
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
-uthresh_list = np.arange(5,-36,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
+uthresh_list = np.arange(0,-36,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 plottable_uthresh_list = [0,-15]
 uthresh_dirname_fun = lambda uthresh_b: "tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer)
 
@@ -338,7 +338,7 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
                     spaghetti_flag=0*(uthresh_b in plottable_uthresh_list),
                     fluxdens_flag=1*(uthresh_b in plottable_uthresh_list),
                     verify_leadtime_flag=0*(uthresh_b in plottable_uthresh_list),
-                    current2d_flag=0*(uthresh_b in plottable_uthresh_list),
+                    current2d_flag=1*(uthresh_b in plottable_uthresh_list),
                     comm_corr_flag=0*(uthresh_b in plottable_uthresh_list),
                     )
 
@@ -360,8 +360,8 @@ if task_list["comparison"]["plot_rate_flag"]:
                 elif key == "s2s":
                     rate_lists[key][i_subset,i_uth] = summary["rate_tob"]
     # ------------ Line plot -------------------
-    ylim = {'log': [1e-3,1.0], 'linear': [0.0,1.0]}
-    loc = {'log': 'lower right', 'linear': 'upper left'}
+    ylim = {'log': [1e-3,1.0], 'logit': [1e-3,0.8], 'linear': [0.0,1.0]}
+    loc = {'log': 'lower right', 'logit': 'lower right', 'linear': 'upper left'}
     bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
     # Build this up one curve at a time
     label_needed = dict({key: True for key in colors.keys()})
@@ -369,7 +369,14 @@ if task_list["comparison"]["plot_rate_flag"]:
     errorbar_offsets = dict({"ei": -du, "e2": du, "s2s": 0})
     quantiles = np.array([0.05,0.25,0.75,0.95])
     # Plot rates for full ranges 
-    for scale in ['linear','log']:
+    # Design custom logit function
+    myscale = 10.0
+    def mylogit(x):
+        #print(f"x = {x}, type(x) = {type(x)}")
+        return 1.0/(1 + np.exp(-x/myscale))
+    def myinvlogit(x):
+        return -myscale*np.log(1.0/x - 1)
+    for scale in ['linear','log','logit']:
         fig,ax = plt.subplots()
         savefig_suffix = ""
         ax.set_xlabel("Zonal wind threshold [m/s]",fontdict=font)
@@ -380,7 +387,7 @@ if task_list["comparison"]["plot_rate_flag"]:
             # ---------- Plot a single line with error bars ---------
             full_rate = rate_lists[key][np.arange(len(subsets[key]["full_kmeans_seeds"]))]
             full_rate_mean = full_rate.mean(axis=0)
-            good_idx = np.where(full_rate_mean > 0)[0] if scale == 'log' else np.arange(len(uthresh_list))
+            good_idx = np.where(full_rate_mean > 0)[0] if (scale == 'log' or scale == 'logit') else np.arange(len(uthresh_list))
             # Plot the estimate from full dataset (mean of full kmeans seeds)
             h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[key],full_rate_mean[good_idx],color=colors[key],linewidth=2,marker='o',linestyle='-',label=f"{labels[key]} {subsets[key]['full_subset'][0]}-{subsets[key]['full_subset'][-1]}",alpha=1.0,s=16, zorder=1)
             handles += [h]
@@ -389,8 +396,14 @@ if task_list["comparison"]["plot_rate_flag"]:
             print(f"key = {key}, resamp_idx_range = {resamp_idx_range}, num_bootstrap = {subsets[key]['num_bootstrap']}, rate lists shape = {rate_lists[key].shape}")
             print(f"key = {key}, colors[key] = {colors[key]}")
             xlabels = None if key == "s2s" else ['']*len(good_idx)
+            # Mask the resampled values appropriately
+            bootstraps = 2*full_rate_mean[good_idx] - rate_lists[key][resamp_idx_range,:][:,good_idx]
+            if scale == 'log' or scale == 'logit':
+                bootstraps = np.maximum(0.5*ylim[scale][0], np.minimum(0.5*(ylim[scale][1]+1), bootstraps))
+                print(f"bootstraps: min = {bootstraps.min()}, max = {bootstraps.max()}")
+                print(f"full_rate_mean[good_idx]: min={full_rate_mean[good_idx].min()}, max={full_rate_mean[good_idx].max()}")
             bplot = ax.boxplot(
-                    2*full_rate_mean[good_idx]-rate_lists[key][resamp_idx_range,:][:,good_idx], 
+                    bootstraps, 
                     positions=uthresh_list[good_idx]+errorbar_offsets[key], whis=(5,95), 
                     patch_artist=True, labels=xlabels, manage_ticks=False, widths=du, sym='x', showmeans=False, zorder=0, showfliers=False,
                     boxprops={"color": colors[key], "facecolor": "white"},
@@ -408,7 +421,14 @@ if task_list["comparison"]["plot_rate_flag"]:
             savefig_suffix += key
             ax.legend(handles=handles,loc=loc[scale])
             ax.set_ylim(ylim[scale])
-            ax.set_yscale(scale)
+            uthresh_list_sorted = np.sort(uthresh_list)
+            xlim = [1.5*uthresh_list_sorted[0]-0.5*uthresh_list_sorted[1], 1.5*uthresh_list_sorted[-1]-0.5*uthresh_list_sorted[-2]]
+            ax.set_xlim(xlim)
+            print(f"xlim = {xlim}; ax xlim = {ax.get_xlim()}")
+            if scale == 'logit':
+                ax.set_yscale('function',functions=(myinvlogit,mylogit))
+            else:
+                ax.set_yscale(scale)
             fig.savefig(join(paramdirs["s2s"],"rate_%s_%s_%s"%(bndy_suffix,savefig_suffix,scale)))
             plt.close(fig)
     # Plot rates for overlapping ranges for reanalysis
@@ -448,6 +468,9 @@ if task_list["comparison"]["plot_rate_flag"]:
             savefig_suffix += key
             ax.legend(handles=handles,loc=loc[scale])
             ax.set_ylim(ylim[scale])
+            uthresh_list_sorted = np.sort(uthresh_list)
+            xlim = [1.5*uthresh_list_sorted[0]-0.5*uthresh_list_sorted[1], 1.5*uthresh_list_sorted[-1]-0.5*uthresh_list_sorted[-2]]
+            ax.set_xlim(xlim)
             ax.set_yscale(scale)
             fig.savefig(join(paramdirs["s2s"],"rate_ra_overlap_%s_%s_%s"%(bndy_suffix,savefig_suffix,scale)))
             plt.close(fig)
