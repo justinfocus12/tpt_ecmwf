@@ -139,12 +139,12 @@ class WinterStratosphereFeatures:
         date = nc.num2date(dstime[:],dstime.units,dstime.calendar)
         year = np.array([date[i].year for i in range(Nt)])
         month = np.array([date[i].month for i in range(Nt)])
-        nov1_year = year*(month >= 10) + (year-1)*(month < 10)
-        nov1_date = np.array([datetime.datetime(nov1_year[i], 10, 1) for i in range(Nt)])
-        nov1_time = np.array([nc.date2num(nov1_date[i],dstime.units,dstime.calendar) for i in range(Nt)])
+        oct1_year = year*(month >= 10) + (year-1)*(month < 10)
+        oct1_date = np.array([datetime.datetime(oct1_year[i], 10, 1) for i in range(Nt)])
+        oct1_time = np.array([nc.date2num(oct1_date[i],dstime.units,dstime.calendar) for i in range(Nt)])
         #ensemble_size = ds['number'].size
-        #dstime_adj = np.outer(np.ones(ensemble_size), (dstime - nov1_time)/24.0)
-        dstime_adj = dstime - nov1_time 
+        #dstime_adj = np.outer(np.ones(ensemble_size), (dstime - oct1_time)/24.0)
+        dstime_adj = dstime - oct1_time 
         return dstime_adj # This is just one-dimensional. 
     def get_ilev_ilat(self,ds):
         # Get the latitude and longitude indices
@@ -156,8 +156,8 @@ class WinterStratosphereFeatures:
         return i_lev,i_lat
     def get_ensemble_source_size(self,ds):
         vbls = list(ds.variables.keys())
-        if 'var129' in vbls: # This means it's from era20c OR eraint
-            dssource = 'era20c'
+        if 'var131' in vbls: # This means it's from era20c OR eraint OR era5
+            dssource = 'era'
             Nmem = 1
         elif 'gh' in vbls:
             dssource = 's2s'
@@ -184,13 +184,20 @@ class WinterStratosphereFeatures:
                 gh[i_mem] = ds[memkey_gh][:]
                 memkey_u = 'u' if i_mem==0 else 'u_%i'%(i_mem+1)
                 u[i_mem] = ds[memkey_u][:]
-            elif dssource in ['era20c','eraint']:
-                gh[i_mem] = ds['var129'][:]/grav_accel
+            elif dssource == 'era': 
                 u[i_mem] = ds['var131'][:]
+                if 'var129' in ds.variables.keys():
+                    gh[i_mem] = ds['var129'][:]/grav_accel
+                    ghflag = True
+                else:
+                    gh[i_mem] = np.nan*np.ones((Nt,Nlev,Nlat,Nlon)) # This is for ERA5
+                    ghflag = False
             else:
                 raise Exception("The dssource you gave me, %s, is not recognized"%(dssource))
         time,fall_year = self.time_since_oct1(ds['time'])
-        return gh,u,time,ds['plev'][:],ds['lat'][:],ds['lon'][:],fall_year
+        #print(f"dstime = {ds['time'][:]}")
+        #print(f"time = {time}")
+        return gh,u,time,ds['plev'][:],ds['lat'][:],ds['lon'][:],fall_year,ghflag
     def compute_geostrophic_wind(self,gh,lat,lon):
         # gh shape should be (Nx,Nlev,Nlat,Nlon). 
         Omega = 2*np.pi/(3600*24*365)
@@ -431,12 +438,19 @@ class WinterStratosphereFeatures:
     def time_since_oct1(self,dstime):
         Nt = dstime.size
         date = nc.num2date(dstime[0],dstime.units,dstime.calendar)
+        #print(f"dstime.units = {dstime.units}, dstime.calendar = {dstime.calendar}")
         year = date.year 
         month = date.month
         oct1_year = year*(month >= 10) + (year-1)*(month < 10)
+        #print(f"oct1_year = {oct1_year}")
         oct1_date = datetime.datetime(oct1_year, 10, 1)
+        #print(f"oct1_date = {oct1_date}")
         oct1_time = nc.date2num(oct1_date,dstime.units,dstime.calendar)
-        dstime_adj = nc.date2num(date,dstime.units,dstime.calendar) - oct1_time + dstime
+        #print(f"oct1_time = {oct1_time}")
+        dstime_adj = dstime - oct1_time
+        #print(f"dstime_adj before adding date = {dstime_adj}")
+        #dstime_adj += nc.date2num(date,dstime.units,dstime.calendar)  
+        #print(f"dstime_adj after adding date = {dstime_adj}")
         return dstime_adj,oct1_year # This is just one-dimensional. 
     def create_features(self,data_file_list,multiprocessing_flag=False):
         # Use data in data_file_list as training, and dump the results into feature_file. Note this is NOT a DGA basis yet, just a set of features.
@@ -595,8 +609,9 @@ class WinterStratosphereFeatures:
             Xnew,fall_year = self.evaluate_features(ds,feat_def)
             print(f"Xnew.shape = {Xnew.shape}, fall_year = {fall_year}")
             fall_year_list[i] = fall_year
-            ti_initial = np.where(ds['time'][:] >= tmin)[0][0]
-            ti_final = np.where(ds['time'][:] <= tmax)[0][-1]
+            # New: we subtract off the first time, assuming all time arrays start at zero
+            ti_initial = np.where(ds['time'][:]-ds['time'][0] >= tmin)[0][0]
+            ti_final = np.where(ds['time'][:]-ds['time'][0] <= tmax)[0][-1]
             #print(f"ds['time'][:] = {ds['time'][:]}")
             #print(f"Xnew[0,:,0] = {Xnew[0,:,0]}")
             #print(f"ti_initial = {ti_initial}, ti_final = {ti_final}")
@@ -856,7 +871,7 @@ class WinterStratosphereFeatures:
         # Given a single ensemble in ds, evaluate the features and return a big matrix
         i_lev_uref,i_lat_uref = self.get_ilev_ilat(ds)
         trun = timelib.time()
-        gh,u,time,plev,lat,lon,fall_year = self.get_u_gh(ds)
+        gh,u,time,plev,lat,lon,fall_year,ghflag = self.get_u_gh(ds)
         time_ugh = timelib.time() - trun
         Nmem,Nt,Nlev,Nlat,Nlon = gh.shape
         Nlat_nh = feat_def["Nlat_nh"]
@@ -889,50 +904,50 @@ class WinterStratosphereFeatures:
         for i_lev in range(Nlev):
             i_feat = self.fidx_X["ubar_60N_lev%i"%(i_lev)]
             X[:,i_feat] = np.mean(u[:,i_lev,i_lat_uref,:],axis=1)
-        # ---------- Waves ---------------------
-        trun = timelib.time()
-        waves = self.get_wavenumbers(gh,i_lev_uref,self.lat_range_uref,lat,lon)
-        time_waves = timelib.time() - trun
-        for i_wave in range(1,self.num_wavenumbers+1):
-            i_feat = self.fidx_X['real%i'%(i_wave)]
-            X[:,i_feat] = waves[:,2*(i_wave-1)]
-            i_feat = self.fidx_X['imag%i'%(i_wave)]
-            X[:,i_feat] = waves[:,2*(i_wave-1)+1]
-        # -------- EOFs ----------------------
-        gh_unseasoned = self.unseason(X[:,0],gh,feat_def["gh_szn_mean"],feat_def["gh_szn_std"],normalize=False)
-        for i_lev in range(Nlev):
-            for i_pc in range(self.Npc_per_level_max):
-                i_feat = self.fidx_X["pc%i_lev%i"%(i_pc,i_lev)]
-                X[:,i_feat] = (gh_unseasoned[:,i_lev,:Nlat_nh,:].reshape((Nmem*Nt,Nlat_nh*Nlon)) @ (feat_def["eofs"][i_lev,:,i_pc])) / feat_def["singvals"][i_lev,i_pc] 
-        # ---------- Vortex moments ------------
-        vtx_moments = self.compute_vortex_moments_sphere(gh,lat,lon,i_lev_subset=[i_lev_uref])
-        moment_names = ["area","centerlat","aspect_ratio","excess_kurtosis"]
-        for i_mom in range(self.num_vortex_moments_max):
-            i_feat = self.fidx_X["vxmom%i"%(i_mom)]
-            X[:,i_feat] = vtx_moments[moment_names[i_mom]]
-        # --------- Temperature ---------------
-        trun = timelib.time()
-        temperature = self.get_temperature(gh,plev,lat,lon)
-        i_lat_cap = np.argmin(np.abs(lat - 60))
-        temp_capavg = np.sum((temperature*area_factor)[:,:,:i_lat_cap,:], axis=(2,3))/np.sum(area_factor[:i_lat_cap,:])
-        #print(f"temp_capavg.shape = {temp_capavg.shape}")
-        time_temperature = timelib.time() - trun
-        for i_lev in range(Nlev):
-            i_feat = self.fidx_X["captemp_lev%i"%(i_lev)]
-            X[:,i_feat] = temp_capavg[:,i_lev]
-        # ---------- Heat flux ----------------
-        trun = timelib.time()
-        vT = self.get_meridional_heat_flux(gh,temperature,plev,lat,lon)
-        time_vT = timelib.time() - trun
-        #print(f"Nlev = {Nlev}, vT.shape = {vT.shape}, i_feat = {i_feat}, X.shape = {X.shape}")
-        for i_lev in range(Nlev):
-            for i_wn in range(self.heatflux_wavenumbers_per_level_max):
-                i_feat = self.fidx_X["heatflux_lev%i_wn%i"%(i_lev,i_wn)]
-                X[:,i_feat] = vT[:,i_lev,i_wn]
+        if ghflag:
+            # ---------- Waves ---------------------
+            trun = timelib.time()
+            waves = self.get_wavenumbers(gh,i_lev_uref,self.lat_range_uref,lat,lon)
+            time_waves = timelib.time() - trun
+            for i_wave in range(1,self.num_wavenumbers+1):
+                i_feat = self.fidx_X['real%i'%(i_wave)]
+                X[:,i_feat] = waves[:,2*(i_wave-1)]
+                i_feat = self.fidx_X['imag%i'%(i_wave)]
+                X[:,i_feat] = waves[:,2*(i_wave-1)+1]
+            # -------- EOFs ----------------------
+            gh_unseasoned = self.unseason(X[:,0],gh,feat_def["gh_szn_mean"],feat_def["gh_szn_std"],normalize=False)
+            for i_lev in range(Nlev):
+                for i_pc in range(self.Npc_per_level_max):
+                    i_feat = self.fidx_X["pc%i_lev%i"%(i_pc,i_lev)]
+                    X[:,i_feat] = (gh_unseasoned[:,i_lev,:Nlat_nh,:].reshape((Nmem*Nt,Nlat_nh*Nlon)) @ (feat_def["eofs"][i_lev,:,i_pc])) / feat_def["singvals"][i_lev,i_pc] 
+            # ---------- Vortex moments ------------
+            vtx_moments = self.compute_vortex_moments_sphere(gh,lat,lon,i_lev_subset=[i_lev_uref])
+            moment_names = ["area","centerlat","aspect_ratio","excess_kurtosis"]
+            for i_mom in range(self.num_vortex_moments_max):
+                i_feat = self.fidx_X["vxmom%i"%(i_mom)]
+                X[:,i_feat] = vtx_moments[moment_names[i_mom]]
+            # --------- Temperature ---------------
+            trun = timelib.time()
+            temperature = self.get_temperature(gh,plev,lat,lon)
+            i_lat_cap = np.argmin(np.abs(lat - 60))
+            temp_capavg = np.sum((temperature*area_factor)[:,:,:i_lat_cap,:], axis=(2,3))/np.sum(area_factor[:i_lat_cap,:])
+            #print(f"temp_capavg.shape = {temp_capavg.shape}")
+            time_temperature = timelib.time() - trun
+            for i_lev in range(Nlev):
+                i_feat = self.fidx_X["captemp_lev%i"%(i_lev)]
+                X[:,i_feat] = temp_capavg[:,i_lev]
+            # ---------- Heat flux ----------------
+            trun = timelib.time()
+            vT = self.get_meridional_heat_flux(gh,temperature,plev,lat,lon)
+            time_vT = timelib.time() - trun
+            #print(f"Nlev = {Nlev}, vT.shape = {vT.shape}, i_feat = {i_feat}, X.shape = {X.shape}")
+            for i_lev in range(Nlev):
+                for i_wn in range(self.heatflux_wavenumbers_per_level_max):
+                    i_feat = self.fidx_X["heatflux_lev%i_wn%i"%(i_lev,i_wn)]
+                    X[:,i_feat] = vT[:,i_lev,i_wn]
         # ------------ Unroll X -------------------
         X = X.reshape((Nmem,Nt,Nfeat))
         return X,fall_year
-
     def plot_vortex_evolution(self,dsfile,savedir,save_suffix,i_mem=0):
         # Plot the holistic information about a single member of a single ensemble. Include some timeseries and some snapshots, perhaps along the region of maximum deceleration in zonal wind. 
         ds = nc.Dataset(dsfile,"r")

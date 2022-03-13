@@ -2,6 +2,7 @@ import pickle
 import pandas
 import numpy as np
 import datetime
+from calendar import monthrange
 import time as timelib
 import matplotlib
 matplotlib.use('AGG')
@@ -26,6 +27,7 @@ os.chdir(codedir)
 datadirs = dict({
     "ei": "/scratch/jf4241/ecmwf_data/eraint_data/2022-02-10",
     "e2": "/scratch/jf4241/ecmwf_data/era20c_data/2022-02-10",
+    "e5": "/scratch/jf4241/ecmwf_data/era5_data/2022-03-10",
     "s2s": "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23",
     })
 sources = list(datadirs.keys())
@@ -35,9 +37,9 @@ feat_display_dir = join(featdir,"display2")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-03-07")
+daydir = join(resultsdir,"2022-03-12")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"1")
+expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -47,33 +49,39 @@ import tpt_general
 fall_years = dict({
     "ei": np.arange(1979,2018),
     "e2": np.arange(1900,2008),
+    "e5": np.arange(1950,2020),
     "s2s": np.arange(1996,2017),
     })
 # Fully overlapping estimates
-intersection = np.intersect1d(np.intersect1d(fall_years["e2"],fall_years["ei"]),fall_years["s2s"])
-print(f"intersection = {intersection}")
+intersection = np.intersect1d(np.intersect1d(fall_years["e2"],fall_years["ei"]),fall_years["e5"])
 subsets = dict({
     "ei": dict({
-        "ra_overlap_full_subset": np.intersect1d(fall_years["ei"],fall_years["e2"]),
-        "full_subset": fall_years["s2s"], #np.intersect1d(fall_years["e2"],fall_years["ei"]),
-        "num_bootstrap": 20, 
+        "ra_overlap_full_subset": intersection,
+        "full_subset": fall_years["s2s"], 
+        "num_bootstrap": 2, 
         "num_full_kmeans_seeds": 1,
         }),
     "e2": dict({
-        "ra_overlap_full_subset": np.intersect1d(fall_years["ei"],fall_years["e2"]),
-        "full_subset": fall_years["e2"], #np.intersect1d(fall_years["e2"],fall_years["ei"]),
-        "num_bootstrap": 20, 
+        "ra_overlap_full_subset": intersection,
+        "full_subset": fall_years["e2"], 
+        "num_bootstrap": 2, 
+        "num_full_kmeans_seeds": 1,
+        }),
+    "e5": dict({
+        "ra_overlap_full_subset": intersection,
+        "full_subset": fall_years["e5"], 
+        "num_bootstrap": 2, 
         "num_full_kmeans_seeds": 1,
         }),
     "s2s": dict({
         "full_subset": fall_years["s2s"],
-        "num_bootstrap": 20, 
-        "num_full_kmeans_seeds": 5,
+        "num_bootstrap": 2, 
+        "num_full_kmeans_seeds": 1,
         }),
     })
 
 file_lists = dict()
-for key in ["e2","ei"]:
+for key in ["e2","ei","e5"]: # TODO: get ERA5 data into this same common format
     file_lists[key] = [join(datadirs[key],"%s-10-01_to_%s-04-30.nc"%(fall_year,fall_year+1)) for fall_year in fall_years[key]]
 
 # Build the s2s database, in an orderly fashion
@@ -108,9 +116,10 @@ for key in sources:
     # Concatenate these
     subsets[key]["all_kmeans_seeds"] = np.concatenate((subsets[key]["full_kmeans_seeds"], subsets[key]["resampled_kmeans_seeds"]))
     subsets[key]["all_subsets"] = [subsets[key]["full_subset"] for i_ss in range(subsets[key]["num_full_kmeans_seeds"])] + subsets[key]["resampled_subsets"]
+    print(f"for key {key}, len(all_subsets) = {len(subsets[key]['all_subsets'])}. full = {subsets[key]['num_full_kmeans_seeds']}, resamp = {len(subsets[key]['resampled_subsets'])}")
     # Do a separate resampling for reanalysis for the period of overlap. 
     print(f"Before overlapping for key {key}, len(all_subsets) = {len(subsets[key]['all_subsets'])}")
-    if key in ["ei","e2"]:
+    if key in ["ei","e2","e5"]:
         Nyears_overlap = len(subsets[key]["ra_overlap_full_subset"])
         subsets[key]["ra_overlap_resampled_subsets"] = [] #((subsets[key]["num_bootstrap"],Nyears), dtype=int)
         for i_ss in range(subsets[key]["num_bootstrap"]):
@@ -118,6 +127,8 @@ for key in sources:
         subsets[key]["ra_overlap_all_subsets"] = [subsets[key]["ra_overlap_full_subset"]] + subsets[key]["ra_overlap_resampled_subsets"]
         subsets[key]["all_subsets"] += subsets[key]["ra_overlap_all_subsets"]
         print(f"For {key}, num ra overlap resampled subsets = {len(subsets[key]['ra_overlap_all_subsets'])}. And len(all_subsets) = {len(subsets[key]['all_subsets'])}")
+sys.exit()
+# TODO: finish out kinks for comparing e5
 # ----------------- Constant parameters ---------------------
 winter_day0 = 0.0
 spring_day0 = 180.0
@@ -160,8 +171,7 @@ paramdirs = dict({
     "s2s": join(expdir, "s2s", f"delay{int(delaytime_days)}_nwaves{Nwaves}_vxm{num_vortex_moments}_pc-{pcstr}_hf-{hfstr}_temp-{tempstr}_nclust{num_clusters}"),
     "e2": join(expdir, "e2", f"delay{int(delaytime_days)}_nwaves{Nwaves}_vxm{num_vortex_moments}_pc-{pcstr}_hf-{hfstr}_temp-{tempstr}"),
     "ei": join(expdir, "ei", f"delay{int(delaytime_days)}_nwaves{Nwaves}_vxm{num_vortex_moments}_pc-{pcstr}_hf-{hfstr}_temp-{tempstr}"),
-    #"e2": join(expdir, "e2", f"delay{int(delaytime_days)}"),
-    #"ei": join(expdir, "ei", f"delay{int(delaytime_days)}"),
+    "e5": join(expdir, "e5", f"delay{int(delaytime_days)}_nwaves{Nwaves}_vxm{num_vortex_moments}_pc-{pcstr}_hf-{hfstr}_temp-{tempstr}"),
     })
 for key in sources:
     if not exists(paramdirs[key]): mkdir(paramdirs[key])
@@ -171,21 +181,18 @@ for key in sources:
 ra_flags = dict({
     "ei": True,
     "e2": True,
+    "e5": True,
     })
 
-#subsetdirs = dict({key: [join(paramdirs[key],"%i-%i"%(subset[0],subset[-1]+1)) for subset in subset_lists[key]] for key in sources})
 for key in sources:
     subsets[key]["full_dirs"] = [join(paramdirs[key],"full_seed%i"%(seed)) for seed in subsets[key]["full_kmeans_seeds"]]
     subsets[key]["resampled_dirs"] = [join(paramdirs[key],"resampled_%i"%(i_ss)) for i_ss in range(subsets[key]["num_bootstrap"])]
     subsets[key]["all_dirs"] = np.concatenate((subsets[key]["full_dirs"],subsets[key]["resampled_dirs"]))
-    if key in ["ei","e2"]:
+    if key in ["ei","e2","e5"]:
         subsets[key]["ra_overlap_full_dirs"] = [join(paramdirs[key],"ra_overlap_full")]
         subsets[key]["ra_overlap_resampled_dirs"] = [join(paramdirs[key], "ra_overlap_resampled_%i"%(i_ss)) for i_ss in range(subsets[key]["num_bootstrap"])]
         subsets[key]["ra_overlap_all_dirs"] = np.concatenate((subsets[key]["ra_overlap_full_dirs"],subsets[key]["ra_overlap_resampled_dirs"]))
         subsets[key]["all_dirs"] = np.concatenate((subsets[key]["all_dirs"],subsets[key]["ra_overlap_all_dirs"]),axis=0)
-
-
-    
 
 # Parameters to determine what to do
 task_list = dict({
@@ -203,6 +210,11 @@ task_list = dict({
         "tpt_featurize_flag":                 0, 
         "tpt_flag":                           0,
         }),
+    "e5": dict({
+        "evaluate_database_flag":             0,
+        "tpt_featurize_flag":                 0, 
+        "tpt_flag":                           0,
+        }),
     "s2s": dict({
         "evaluate_database_flag":             0,
         "tpt_featurize_flag":                 0,
@@ -214,7 +226,7 @@ task_list = dict({
         }),
     "comparison": dict({
         "plot_rate_flag":                     1,
-        "illustrate_dataset_flag":            0,
+        "illustrate_dataset_flag":            1,
         }),
     })
 
@@ -241,8 +253,8 @@ if task_list["featurization"]["display_features_flag"]:
         winstrat.plot_vortex_evolution(file_lists["ei"][display_idx],feat_display_dir,"fy{}".format(fall_years["ei"][display_idx]))
 
 # ----------------- Determine list of SSW definitions to consider --------------
-tthresh0 = 31 # First day that SSW could happen
-tthresh1 = 31 + 30 + 31 + 31 + 28  # Last day that SSW could happen: end of February or March
+tthresh0 = monthrange(1901,10)[1] # First day that SSW could happen is Nov. 1
+tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(1902,i)[1] for i in [1,2]]) #31 + 30 + 31 + 31 + 28  # Last day that SSW could happen: February 28
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(0,-36,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
@@ -250,8 +262,8 @@ plottable_uthresh_list = [0,-15]
 uthresh_dirname_fun = lambda uthresh_b: "tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer)
 
 # =============================================================
-# TPT direct estimates from ERA-Interim and ERA-20C 
-for key in ["ei","e2"]:
+# TPT direct estimates from ERA-Interim, ERA-20C, and ERA5
+for key in ["ei","e2","e5"]:
     feat_filename = join(expdirs[key],"X.npy")
     ens_start_filename = join(expdirs[key],"ens_start_idx.npy")
     fall_year_filename = join(expdirs[key],"fall_year_list.npy")
@@ -345,17 +357,18 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
 # =============================================================================
 
 # ------------- Compare rates ---------------------
-colors = dict({"ei": "black", "e2": "dodgerblue", "s2s": "red"}) #, "s2s_naive": "cyan"})
-labels = dict({"ei": "ERA-Interim", "e2": "ERA-20C", "s2s": "S2S"}) 
+colors = dict({"ei": "black", "e2": "dodgerblue", "e5": "orange", "s2s": "red"}) #, "s2s_naive": "cyan"})
+labels = dict({"ei": "ERA-Interim", "e2": "ERA-20C", "e5": "ERA5", "s2s": "S2S"}) 
 if task_list["comparison"]["plot_rate_flag"]:
     rate_lists = dict({key: np.zeros((len(subsets[key]["all_subsets"]),len(uthresh_list))) for key in sources})
+    print(f"rate lists sizes = {[rate_lists[key].shape for key in sources]}")
     for i_uth in range(len(uthresh_list)):
         uthresh_b = uthresh_list[i_uth]
-        for key in ["ei","e2","s2s"]:
+        for key in ["ei","e2","e5","s2s"]:
             for i_subset,subset in enumerate(subsets[key]["all_subsets"]):
                 savedir = join(subsets[key]["all_dirs"][i_subset],uthresh_dirname_fun(uthresh_b))
                 summary = pickle.load(open(join(savedir,"summary"),"rb"))
-                if key in ["e2","ei"]:
+                if key in ["e2","ei","e5"]:
                     rate_lists[key][i_subset,i_uth] = summary["rate"]
                 elif key == "s2s":
                     rate_lists[key][i_subset,i_uth] = summary["rate_tob"]
@@ -366,7 +379,7 @@ if task_list["comparison"]["plot_rate_flag"]:
     # Build this up one curve at a time
     label_needed = dict({key: True for key in colors.keys()})
     du = np.abs(uthresh_list[1] - uthresh_list[0])/8.0 # How far to offset the x axis positions for the three timeseries
-    errorbar_offsets = dict({"ei": -du, "e2": du, "s2s": 0})
+    errorbar_offsets = dict({"ei": -du, "e2": du, "e5": 2*du, "s2s": 0})
     quantiles = np.array([0.05,0.25,0.75,0.95])
     # Plot rates for full ranges 
     # Design custom logit function
@@ -382,7 +395,7 @@ if task_list["comparison"]["plot_rate_flag"]:
         ax.set_xlabel("Zonal wind threshold [m/s]",fontdict=font)
         ax.set_ylabel("Rate",fontdict=font)
         handles = []
-        for key in ['ei','e2','s2s']:
+        for key in sources:
             print(f"Starting to plot rate list for {key}")
             # ---------- Plot a single line with error bars ---------
             full_rate = rate_lists[key][np.arange(len(subsets[key]["full_kmeans_seeds"]))]
@@ -438,9 +451,10 @@ if task_list["comparison"]["plot_rate_flag"]:
         ax.set_xlabel("Zonal wind threshold [m/s]",fontdict=font)
         ax.set_ylabel("Rate",fontdict=font)
         handles = []
-        for key in ['ei','e2']:
+        for key in ['ei','e2','e5']:
             print(f"Starting to plot overlapping rate list for {key}")
             # ---------- Plot a single line with error bars ---------
+            print(f"rate_lists[key].shape = {rate_lists[key].shape}")
             full_rate_mean = rate_lists[key][subsets[key]["num_full_kmeans_seeds"]+subsets[key]["num_bootstrap"]] #+np.arange(len(subsets[key]["ra_overlap_resampled_subsets"]))]
             good_idx = np.where(full_rate_mean > 0)[0] if scale == 'log' else np.arange(len(uthresh_list))
             # Plot the estimate from full dataset (mean of full kmeans seeds)
@@ -494,7 +508,7 @@ if task_list["comparison"]["illustrate_dataset_flag"]:
             fall_year_filename_ra,fall_year_filename_hc,
             feat_def,feat_display_dir
             )
-    fall_year_filename_ra_dict = dict({k: join(expdirs[k],"fall_year_list.npy") for k in ["ei","e2"]})
+    fall_year_filename_ra_dict = dict({k: join(expdirs[k],"fall_year_list.npy") for k in ["ei","e2","e5"]})
     winstrat.plot_zonal_wind_every_year(
             feat_filename_ra_dict,fall_year_filename_ra_dict,
             feat_def,feat_display_dir,colors,labels,
