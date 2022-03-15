@@ -184,6 +184,7 @@ class WinterStratosphereFeatures:
                 gh[i_mem] = ds[memkey_gh][:]
                 memkey_u = 'u' if i_mem==0 else 'u_%i'%(i_mem+1)
                 u[i_mem] = ds[memkey_u][:]
+                ghflag = True
             elif dssource == 'era': 
                 u[i_mem] = ds['var131'][:]
                 if 'var129' in ds.variables.keys():
@@ -485,7 +486,7 @@ class WinterStratosphereFeatures:
             for i_file in range(len(data_file_list)):
                 print("Creating features: file {} out of {}".format(i_file,len(data_file_list)))
                 ds = nc.Dataset(data_file_list[i_file],"r")
-                gh_new,u_new,time,_,_,_,_ = self.get_u_gh(ds)
+                gh_new,u_new,time,_,_,_,_,_ = self.get_u_gh(ds)
                 Nmem,Nt = gh_new.shape[:2]
                 shp_new = np.array(gh_new.shape)
                 if np.any(shp_new[2:5] != grid_shp):
@@ -992,7 +993,7 @@ class WinterStratosphereFeatures:
         num_snapshots = 30
         i_lev_ref,i_lat_ref = self.get_ilev_ilat(ds)
         tidx = np.round(np.linspace(decel_time_range[0],decel_time_range[1],min(num_snapshots,decel_time_range[1]-decel_time_range[0]+2))).astype(int)
-        gh,u,_,plev,lat,lon,fall_year = self.get_u_gh(ds)
+        gh,u,_,plev,lat,lon,fall_year,_ = self.get_u_gh(ds)
         gh = gh[i_mem]
         u = u[i_mem]
         print("gh.shape = {}".format(gh.shape))

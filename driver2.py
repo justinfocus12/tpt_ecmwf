@@ -31,13 +31,13 @@ datadirs = dict({
     "s2s": "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23",
     })
 sources = list(datadirs.keys())
-featdir = "/scratch/jf4241/ecmwf_data/features/2022-02-27"
+featdir = "/scratch/jf4241/ecmwf_data/features/2022-03-13"
 if not exists(featdir): mkdir(featdir)
-feat_display_dir = join(featdir,"display2")
+feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-03-12")
+daydir = join(resultsdir,"2022-03-13")
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
@@ -58,25 +58,25 @@ subsets = dict({
     "ei": dict({
         "ra_overlap_full_subset": intersection,
         "full_subset": fall_years["s2s"], 
-        "num_bootstrap": 2, 
+        "num_bootstrap": 20, 
         "num_full_kmeans_seeds": 1,
         }),
     "e2": dict({
         "ra_overlap_full_subset": intersection,
         "full_subset": fall_years["e2"], 
-        "num_bootstrap": 2, 
+        "num_bootstrap": 20, 
         "num_full_kmeans_seeds": 1,
         }),
     "e5": dict({
         "ra_overlap_full_subset": intersection,
         "full_subset": fall_years["e5"], 
-        "num_bootstrap": 2, 
+        "num_bootstrap": 20, 
         "num_full_kmeans_seeds": 1,
         }),
     "s2s": dict({
         "full_subset": fall_years["s2s"],
-        "num_bootstrap": 2, 
-        "num_full_kmeans_seeds": 1,
+        "num_bootstrap": 20, 
+        "num_full_kmeans_seeds": 5,
         }),
     })
 
@@ -127,8 +127,6 @@ for key in sources:
         subsets[key]["ra_overlap_all_subsets"] = [subsets[key]["ra_overlap_full_subset"]] + subsets[key]["ra_overlap_resampled_subsets"]
         subsets[key]["all_subsets"] += subsets[key]["ra_overlap_all_subsets"]
         print(f"For {key}, num ra overlap resampled subsets = {len(subsets[key]['ra_overlap_all_subsets'])}. And len(all_subsets) = {len(subsets[key]['all_subsets'])}")
-sys.exit()
-# TODO: finish out kinks for comparing e5
 # ----------------- Constant parameters ---------------------
 winter_day0 = 0.0
 spring_day0 = 180.0
@@ -201,28 +199,28 @@ task_list = dict({
         "display_features_flag":              0,
         }),
     "ei": dict({
-        "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 0,
-        "tpt_flag":                           0,
+        "evaluate_database_flag":             1,
+        "tpt_featurize_flag":                 1,
+        "tpt_flag":                           1,
         }),
     "e2": dict({
-        "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 0, 
-        "tpt_flag":                           0,
+        "evaluate_database_flag":             1,
+        "tpt_featurize_flag":                 1, 
+        "tpt_flag":                           1,
         }),
     "e5": dict({
-        "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 0, 
-        "tpt_flag":                           0,
+        "evaluate_database_flag":             1,
+        "tpt_featurize_flag":                 1, 
+        "tpt_flag":                           1,
         }),
     "s2s": dict({
-        "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 0,
-        "cluster_flag":                       0,
-        "build_msm_flag":                     0,
-        "tpt_s2s_flag":                       0,
-        "transfer_results_flag":              0,
-        "plot_tpt_results_flag":              0,
+        "evaluate_database_flag":             1,
+        "tpt_featurize_flag":                 1,
+        "cluster_flag":                       1,
+        "build_msm_flag":                     1,
+        "tpt_s2s_flag":                       1,
+        "transfer_results_flag":              1,
+        "plot_tpt_results_flag":              1,
         }),
     "comparison": dict({
         "plot_rate_flag":                     1,
