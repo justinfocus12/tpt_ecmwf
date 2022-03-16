@@ -1,672 +1,1157 @@
 file_lists['s2s'][:10] = ['/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-03_rt2016-10-03.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-06_rt2016-10-06.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-10_rt2016-10-10.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-13_rt2016-10-13.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-17_rt2016-10-17.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-20_rt2016-10-20.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-24_rt2016-10-24.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-27_rt2016-10-27.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-10-31_rt2016-10-31.nc', '/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23/hc1996-11-03_rt2016-11-03.nc']
-for key ei, len(all_subsets) = 21. full = 1, resamp = 20
-Before overlapping for key ei, len(all_subsets) = 21
-For ei, num ra overlap resampled subsets = 21. And len(all_subsets) = 42
-for key e2, len(all_subsets) = 21. full = 1, resamp = 20
-Before overlapping for key e2, len(all_subsets) = 21
-For e2, num ra overlap resampled subsets = 21. And len(all_subsets) = 42
-for key e5, len(all_subsets) = 21. full = 1, resamp = 20
-Before overlapping for key e5, len(all_subsets) = 21
-For e5, num ra overlap resampled subsets = 21. And len(all_subsets) = 42
-for key s2s, len(all_subsets) = 25. full = 5, resamp = 20
-Before overlapping for key s2s, len(all_subsets) = 25
-expdir = /scratch/jf4241/ecmwf_data/results/2022-03-13/0, sources = ['ei', 'e2', 'e5', 's2s']
-expdirs = {'ei': '/scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei', 'e2': '/scratch/jf4241/ecmwf_data/results/2022-03-13/0/e2', 'e5': '/scratch/jf4241/ecmwf_data/results/2022-03-13/0/e5', 's2s': '/scratch/jf4241/ecmwf_data/results/2022-03-13/0/s2s'}
+expdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0, sources = ['ei', 'e2', 'e5', 's2s']
+expdirs = {'ei': '/scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei', 'e2': '/scratch/jf4241/ecmwf_data/results/2022-03-16/0/e2', 'e5': '/scratch/jf4241/ecmwf_data/results/2022-03-16/0/e5', 's2s': '/scratch/jf4241/ecmwf_data/results/2022-03-16/0/s2s'}
 plev = [10.0 50.0 100.0 200.0 300.0 500.0 700.0 850.0 925.0 1000.0] hPa
-Evaluating ei database
-file 0 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1979-10-01_to_1980-04-30.nc
-uref: min=-8.723284912109374, max=56.33960978190104
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06077531735623269, max=0.07944465335390463
-min diff = 1.1103914662746739e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.514360235486996,  min=0.0, max=0.07944465335390463
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=188.36256402017122, max=309.4657574357908
-Xnew.shape = (1, 213, 210), fall_year = 1979
-file 1 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1980-10-01_to_1981-04-30.nc
-uref: min=-0.324432373046875, max=65.77174072265625
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.04962669959591396, max=0.08190780523611256
-min diff = 9.463979079582518e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5465090595986822,  min=0.0, max=0.08190780523611256
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.27108950876138, max=309.41172604855916
-Xnew.shape = (1, 212, 210), fall_year = 1980
-file 2 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1981-10-01_to_1982-04-30.nc
-uref: min=-16.99649454752604, max=47.632286580403644
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.07069390787190348, max=0.07933157967125687
-min diff = 6.249886025377904e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5135688080263552,  min=0.0, max=0.07933157967125687
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.15921361040057, max=310.3334296133238
-Xnew.shape = (1, 212, 210), fall_year = 1981
-file 3 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1982-10-01_to_1983-04-30.nc
-uref: min=-2.8894012451171873, max=67.66148579915365
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06386887844331154, max=0.07172593983057449
-min diff = 4.845559717359116e-13
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5306903264450434,  min=0.0, max=0.07172593983057449
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.04136657439565, max=309.9764053943214
-Xnew.shape = (1, 212, 210), fall_year = 1982
-file 4 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1983-10-01_to_1984-04-30.nc
-uref: min=-11.958292643229166, max=68.49893595377604
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06086197512669742, max=0.0729880067975515
-min diff = 5.833691602702418e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5325713540502273,  min=0.0, max=0.0729880067975515
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=186.53050288548792, max=308.6736565549652
-Xnew.shape = (1, 213, 210), fall_year = 1983
-file 5 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1984-10-01_to_1985-04-30.nc
-uref: min=-14.145339965820312, max=39.84511922200521
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06474877322490072, max=0.07178358430510427
-min diff = 4.336808689942018e-19
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.49847072476789456,  min=0.0, max=0.07178358430510427
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.2780976117838, max=308.3366779568007
-Xnew.shape = (1, 212, 210), fall_year = 1984
-file 6 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1985-10-01_to_1986-04-30.nc
-uref: min=-14.438712565104167, max=60.57640889485677
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.05662569123690661, max=0.08466187865232805
-min diff = 5.7954670576454426e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.519496855345912,  min=0.0, max=0.08466187865232805
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.02486301340693, max=310.32389626080555
-Xnew.shape = (1, 212, 210), fall_year = 1985
-file 7 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1986-10-01_to_1987-04-30.nc
-uref: min=-19.33077901204427, max=52.27533467610677
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.09023765020583688, max=0.09711559888874026
-min diff = 2.3244829672197653e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5638776579814315,  min=0.0, max=0.09711559888874026
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.53651517982843, max=309.0555457369021
-Xnew.shape = (1, 212, 210), fall_year = 1986
-file 8 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1987-10-01_to_1988-04-30.nc
-uref: min=-17.685689290364582, max=69.96764628092448
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.059637800608925234, max=0.09150497727034347
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5299891944258142,  min=0.0, max=0.09150497727034347
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=186.37624849634702, max=309.46656330669816
-Xnew.shape = (1, 213, 210), fall_year = 1987
-file 9 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1988-10-01_to_1989-04-30.nc
-uref: min=-13.942929077148438, max=73.51770935058593
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.07723666095587532, max=0.09989234800764166
-min diff = 2.341885192713722e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5514169661575322,  min=0.0, max=0.09989234800764166
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=185.7528866060366, max=309.11797899711564
-Xnew.shape = (1, 212, 210), fall_year = 1988
-file 10 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1989-10-01_to_1990-04-30.nc
-uref: min=2.048777707417806, max=55.24816691080729
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06761676602669078, max=0.10922033613299194
-min diff = 1.1601875710143261e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5351733303384246,  min=0.0, max=0.10922033613299194
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.72833828618445, max=310.52954047214246
-Xnew.shape = (1, 212, 210), fall_year = 1989
-file 11 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1990-10-01_to_1991-04-30.nc
-uref: min=-11.669282023111979, max=61.19261474609375
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06236040224465848, max=0.1035492979403817
-min diff = 8.92783113062845e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5247828691224917,  min=0.0, max=0.1035492979403817
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.70538511889998, max=310.57621912331
-Xnew.shape = (1, 212, 210), fall_year = 1990
-file 12 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1991-10-01_to_1992-04-30.nc
-uref: min=-9.131112670898437, max=55.71297098795573
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.0519953799384643, max=0.07144273366256884
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5384473507712945,  min=0.0, max=0.07144273366256884
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=187.92177795657787, max=308.7124102515666
-Xnew.shape = (1, 213, 210), fall_year = 1991
-file 13 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1992-10-01_to_1993-04-30.nc
-uref: min=-7.301140340169271, max=55.84546712239583
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.04936056327475398, max=0.08521899680751649
-min diff = 2.0900634304862886e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5292527702905061,  min=0.0, max=0.08521899680751649
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.60896398535607, max=309.2298813619083
-Xnew.shape = (1, 212, 210), fall_year = 1992
-file 14 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1993-10-01_to_1994-04-30.nc
-uref: min=-19.278949991861978, max=48.34674580891927
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06661286239553418, max=0.08342939109677167
-min diff = 3.8626263645924475e-13
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5227088948787062,  min=0.0, max=0.08342939109677167
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.62666999861892, max=308.56566985337804
-Xnew.shape = (1, 212, 210), fall_year = 1993
-file 15 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1994-10-01_to_1995-04-30.nc
-uref: min=-7.380098470052084, max=50.05306396484375
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06187797621513266, max=0.08474551607901065
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5090764450434262,  min=0.0, max=0.08474551607901065
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.79870117042856, max=310.3812568813242
-Xnew.shape = (1, 212, 210), fall_year = 1994
-file 16 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1995-10-01_to_1996-04-30.nc
-uref: min=-16.665789794921874, max=56.36590067545573
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06791340530936878, max=0.08186522583421985
-min diff = 1.1326634075103925e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.530782845219465,  min=0.0, max=0.08186522583421985
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=184.58154843817337, max=310.0009741119209
-Xnew.shape = (1, 213, 210), fall_year = 1995
-file 17 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1996-10-01_to_1997-04-30.nc
-uref: min=-1.4318745930989583, max=56.34973958333333
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.05720555918624773, max=0.07138980175272185
-min diff = 1.0848440201716159e-13
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5330806379155436,  min=0.0, max=0.07138980175272185
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.44381204711388, max=309.4329507989767
-Xnew.shape = (1, 212, 210), fall_year = 1996
-file 18 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1997-10-01_to_1998-04-30.nc
-uref: min=-8.98499755859375, max=45.25697733561198
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.05167717031332032, max=0.07391893825387356
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5195998053309374,  min=0.0, max=0.07391893825387356
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.8423704286945, max=310.3379312884651
-Xnew.shape = (1, 212, 210), fall_year = 1997
-file 19 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1998-10-01_to_1999-04-30.nc
-uref: min=-24.857158406575522, max=41.46846313476563
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.08112736371247228, max=0.07882210837304605
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5662174303683738,  min=0.0, max=0.07882210837304605
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=185.82803809019975, max=309.4537630003355
-Xnew.shape = (1, 212, 210), fall_year = 1998
-file 20 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/1999-10-01_to_2000-04-30.nc
-uref: min=-11.94376932779948, max=63.422811889648436
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.07864762853607539, max=0.09847929954008201
-min diff = 1.151922307540687e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5480699008868023,  min=0.0, max=0.09847929954008201
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=186.2548768304827, max=310.25837327147
-Xnew.shape = (1, 213, 210), fall_year = 1999
-file 21 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2000-10-01_to_2001-04-30.nc
-uref: min=-11.931493123372396, max=36.95470987955729
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.0626215930337982, max=0.08559530532426204
-min diff = 2.0438928327592976e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5364293201557353,  min=0.0, max=0.08559530532426204
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=184.19670032376033, max=309.3994285755479
-Xnew.shape = (1, 212, 210), fall_year = 2000
-file 22 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2001-10-01_to_2002-04-30.nc
-uref: min=-2.070452880859375, max=38.40045064290364
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.04711227190174478, max=0.07051013369791817
-min diff = 3.3596363538390683e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5367718628331836,  min=0.0, max=0.07051013369791817
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.54216371466867, max=309.44915014175996
-Xnew.shape = (1, 212, 210), fall_year = 2001
-file 23 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2002-10-01_to_2003-04-30.nc
-uref: min=-20.663066609700522, max=45.8699462890625
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.0573582560014354, max=0.0777524370403604
-min diff = 1.147714865853966e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5274951332734351,  min=0.0, max=0.0777524370403604
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=185.4491464446235, max=310.94429104664476
-Xnew.shape = (1, 212, 210), fall_year = 2002
-file 24 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2003-10-01_to_2004-04-30.nc
-uref: min=-13.69099833170573, max=45.27039286295573
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.041886777391826925, max=0.07335844920641507
-min diff = 4.336808689942018e-19
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5418865042104478,  min=0.0, max=0.07335844920641507
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=187.707912511238, max=311.0143002457566
-Xnew.shape = (1, 213, 210), fall_year = 2003
-file 25 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2004-10-01_to_2005-04-30.nc
-uref: min=-12.835265096028646, max=72.21057434082032
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.08352290577044798, max=0.07444074698060217
-min diff = 3.562435069159875e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5343927822701408,  min=0.0, max=0.07444074698060217
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.10331712745383, max=310.04070452991374
-Xnew.shape = (1, 212, 210), fall_year = 2004
-file 26 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2005-10-01_to_2006-04-30.nc
-uref: min=-23.223940022786458, max=40.46869710286458
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.0534541743577143, max=0.08749951784781315
-min diff = 5.597307535000484e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5521151542377958,  min=0.0, max=0.08749951784781315
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=185.8296406045043, max=309.9041060672523
-Xnew.shape = (1, 212, 210), fall_year = 2005
-file 27 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2006-10-01_to_2007-04-30.nc
-uref: min=-10.477554321289062, max=52.78103332519531
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06570301948690027, max=0.0948075919284757
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5312032045522611,  min=0.0, max=0.0948075919284757
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.9116684744909, max=310.11242704066944
-Xnew.shape = (1, 212, 210), fall_year = 2006
-file 28 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2007-10-01_to_2008-04-30.nc
-uref: min=-14.299261474609375, max=58.275290934244794
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.07171205651726642, max=0.09450015796446838
-min diff = 2.0845894455057135e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5325191892093301,  min=0.0, max=0.09450015796446838
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=186.2513522006233, max=309.9282370523271
-Xnew.shape = (1, 213, 210), fall_year = 2007
-file 29 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2008-10-01_to_2009-04-30.nc
-uref: min=-31.572458902994793, max=67.93491007486979
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.05367548482263486, max=0.08905903975069346
-min diff = 1.2792718273590964e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5820848307876609,  min=0.0, max=0.08905903975069346
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=187.4112456880019, max=309.5173214703429
-Xnew.shape = (1, 212, 210), fall_year = 2008
-file 30 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2009-10-01_to_2010-04-30.nc
-uref: min=-7.5873362223307295, max=55.074965413411455
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.05342966683701536, max=0.09312038479283131
-min diff = 2.8544007435460372e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5117100928421683,  min=0.0, max=0.09312038479283131
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=184.45366657362752, max=311.5342123758592
-Xnew.shape = (1, 212, 210), fall_year = 2009
-file 31 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2010-10-01_to_2011-04-30.nc
-uref: min=-21.475220743815104, max=53.431165568033855
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06917280405090383, max=0.10202597746097936
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5235250074872716,  min=0.0, max=0.10202597746097936
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=185.87073364204156, max=310.33915597817395
-Xnew.shape = (1, 212, 210), fall_year = 2010
-file 32 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2011-10-01_to_2012-04-30.nc
-uref: min=-3.991815185546875, max=48.31429850260417
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.062142747046231316, max=0.06180946208140189
-min diff = 1.0518030890693808e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5559803264028617,  min=0.0, max=0.06180946208140189
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=185.24163492696675, max=310.4939174669809
-Xnew.shape = (1, 213, 210), fall_year = 2011
-file 33 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2012-10-01_to_2013-04-30.nc
-uref: min=-12.91437479654948, max=44.04053853352865
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06979499286081649, max=0.09986994181708916
-min diff = 3.737836581051146e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5649801587301587,  min=0.0, max=0.09986994181708916
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.36165238210575, max=311.0176085799017
-Xnew.shape = (1, 212, 210), fall_year = 2012
-file 34 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2013-10-01_to_2014-04-30.nc
-uref: min=-13.924695841471355, max=58.171488444010414
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.07371402249055219, max=0.09315740666563556
-min diff = 2.125235751271326e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5102800239592692,  min=0.0, max=0.09315740666563556
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.06927396870995, max=310.39310585875256
-Xnew.shape = (1, 212, 210), fall_year = 2013
-file 35 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2014-10-01_to_2015-04-30.nc
-uref: min=-17.266420491536458, max=47.63770243326823
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.0580899629767432, max=0.08644726678189608
-min diff = 2.342744054306678e-13
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5361185983827493,  min=0.0, max=0.08644726678189608
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=188.26773074383652, max=312.21417723948684
-Xnew.shape = (1, 212, 210), fall_year = 2014
-file 36 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2015-10-01_to_2016-04-30.nc
-uref: min=-30.257811482747396, max=73.70959777832032
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.07027750240308712, max=0.10098812784576229
-min diff = 1.1090524549076108e-11
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.521411804158283,  min=0.0, max=0.10098812784576229
-Xcent.shape = (213, 2520), q.shape = (213, 2520)
-T: min=183.96243741827064, max=310.2197984715224
-Xnew.shape = (1, 213, 210), fall_year = 2015
-file 37 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2016-10-01_to_2017-04-30.nc
-uref: min=-8.766883341471354, max=55.66113077799479
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.06478211574580989, max=0.10054634453718272
-min diff = 8.107917115474095e-12
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.526568583408206,  min=0.0, max=0.10054634453718272
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=186.90137687916425, max=310.1284692219063
-Xnew.shape = (1, 212, 210), fall_year = 2016
-file 38 out of 39: /scratch/jf4241/ecmwf_data/eraint_data/2022-02-10/2017-10-01_to_2018-04-30.nc
-uref: min=-24.849651082356772, max=57.173403930664065
-i_lat_max = 21
-qgpv: nanfrac=0.047619047619047616, min=-0.08258454327116989, max=0.09923334585815094
-min diff = 0.0
-qgpv_crit: min=0.0, max=0.0
-q: frac>0 is 0.5347091194968554,  min=0.0, max=0.09923334585815094
-Xcent.shape = (212, 2520), q.shape = (212, 2520)
-T: min=184.51088997605078, max=310.62917420473957
-Xnew.shape = (1, 212, 210), fall_year = 2017
-eval_dur = 112.61427021026611
 Starting TPT on ei
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/full_seed0
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y, resample_flag = True --------------
-fy_resamp = [1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009
- 2010 2011 2012 2013 2014 2015 2016]
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/full_seed0
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y, resample_flag = True --------------
+fy_resamp = [1979 1980 1981 1982 1983 1984 1985 1986 1987 1988 1989 1990 1991 1992
+ 1993 1994 1995 1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006
+ 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017]
 Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
+After resampling: X.shape = (39, 180, 210)
+Nx = 39, Ntx = 180, xdim = 210
 Y[0,0,0] = 360.0
-Y.shape = (21, 165, 17)
-ab_tag.shape = (21, 165)
-absum = [0. 0. 1. 0. 1. 1. 1. 1. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 0. 0.]
-rate = 0.5238095238095238
-ab_tag.shape = (21, 165)
-absum = [0. 0. 1. 0. 1. 0. 0. 1. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 0. 0.]
-rate = 0.42857142857142855
-ab_tag.shape = (21, 165)
-absum = [0. 0. 1. 0. 1. 0. 0. 1. 0. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 0. 0.]
+Y.shape = (39, 165, 17)
+ab_tag.shape = (39, 165)
+absum = [0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 1. 1. 1.
+ 1. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 0. 0. 1.]
+rate = 0.48717948717948717
+ab_tag.shape = (39, 165)
+absum = [0. 0. 0. 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0.
+ 1. 0. 1. 1. 1. 1. 1. 0. 0. 1. 0. 0. 0. 0. 1.]
+rate = 0.38461538461538464
+ab_tag.shape = (39, 165)
+absum = [0. 0. 0. 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0.
+ 1. 0. 1. 0. 1. 1. 0. 0. 0. 1. 0. 0. 0. 0. 1.]
 rate = 0.3333333333333333
-ab_tag.shape = (21, 165)
-absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.14285714285714285
-ab_tag.shape = (21, 165)
-absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.14285714285714285
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.047619047619047616
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.047619047619047616
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ab_tag.shape = (39, 165)
+absum = [0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.
+ 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.15384615384615385
+ab_tag.shape = (39, 165)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.
+ 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+rate = 0.10256410256410256
+ab_tag.shape = (39, 165)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.02564102564102564
+ab_tag.shape = (39, 165)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+rate = 0.02564102564102564
+ab_tag.shape = (39, 165)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
 rate = 0.0
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_0
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_0/Y, resample_flag = True --------------
-fy_resamp = [2008 2011 1996 1999 1999 2003 2005 2015 2014 2000 2002 2008 1997 2002
- 2003 2010 2013 2001 2009 2004 2005]
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap0
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap0/Y, resample_flag = True --------------
+fy_resamp = [1979]
 Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
 Y[0,0,0] = 360.0
-Y.shape = (21, 165, 17)
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 1. 1. 0. 0. 1. 1. 1. 0. 1. 1. 0. 0. 1. 1. 0. 1.]
-rate = 0.5238095238095238
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 1. 0. 1.]
-rate = 0.38095238095238093
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 1.]
-rate = 0.3333333333333333
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
-rate = 0.19047619047619047
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
-rate = 0.19047619047619047
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.09523809523809523
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.09523809523809523
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_1
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_1/Y, resample_flag = True --------------
-fy_resamp = [2016 2015 2012 2015 2001 2011 2011 1996 2014 1999 2013 2015 2015 2015
- 2010 2003 1996 1997 2005 1996 2006]
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap1
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap1/Y, resample_flag = True --------------
+fy_resamp = [1982]
 Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
 Y[0,0,0] = 360.0
-Y.shape = (21, 165, 17)
-ab_tag.shape = (21, 165)
-absum = [0. 0. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 1.]
-rate = 0.23809523809523808
-ab_tag.shape = (21, 165)
-absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 1.]
-rate = 0.19047619047619047
-ab_tag.shape = (21, 165)
-absum = [0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0.]
-rate = 0.14285714285714285
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
-rate = 0.047619047619047616
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
-rate = 0.047619047619047616
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_2
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_2/Y, resample_flag = True --------------
-fy_resamp = [2016 1999 2007 2014 1998 1996 1996 2000 2001 2002 2004 2016 2013 2011
- 2000 2005 2006 1997 1997 2003 2005]
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap2
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap2/Y, resample_flag = True --------------
+fy_resamp = [1982]
 Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
 Y[0,0,0] = 360.0
-Y.shape = (21, 165, 17)
-ab_tag.shape = (21, 165)
-absum = [0. 0. 1. 0. 1. 0. 0. 1. 1. 1. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 1.]
-rate = 0.47619047619047616
-ab_tag.shape = (21, 165)
-absum = [0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0. 0. 1. 1.]
-rate = 0.38095238095238093
-ab_tag.shape = (21, 165)
-absum = [0. 0. 1. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 1. 1.]
-rate = 0.3333333333333333
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1.]
-rate = 0.14285714285714285
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1.]
-rate = 0.14285714285714285
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_3
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_3/Y, resample_flag = True --------------
-fy_resamp = [1999 2002 2007 2010 2014 1996 2010 1999 2008 2006 2016 2007 2000 2002
- 2000 2011 2016 1999 2008 2000 2016]
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap3
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap3/Y, resample_flag = True --------------
+fy_resamp = [1988]
 Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
 Y[0,0,0] = 360.0
-Y.shape = (21, 165, 17)
-ab_tag.shape = (21, 165)
-absum = [0. 1. 1. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1. 1. 1. 0. 0. 0. 1. 1. 0.]
-rate = 0.47619047619047616
-ab_tag.shape = (21, 165)
-absum = [0. 0. 1. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1. 0. 1. 0. 0. 0. 1. 1. 0.]
-rate = 0.38095238095238093
-ab_tag.shape = (21, 165)
-absum = [0. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1. 0. 1. 0. 0. 0. 1. 1. 0.]
-rate = 0.3333333333333333
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
-rate = 0.09523809523809523
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
-rate = 0.09523809523809523
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
-rate = 0.09523809523809523
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
-rate = 0.09523809523809523
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_4
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_4/Y, resample_flag = True --------------
-fy_resamp = [2004 2010 2011 2016 1999 2011 2009 2012 2013 2001 2005 1999 1996 2001
- 1996 2013 2014 2000 1998 2012 1999]
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap4
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap4/Y, resample_flag = True --------------
+fy_resamp = [1998]
 Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
 Y[0,0,0] = 360.0
-Y.shape = (21, 165, 17)
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 1. 1. 0. 1. 1. 0. 0. 1. 0. 0. 0. 1. 1. 1. 0.]
-rate = 0.38095238095238093
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0.]
-rate = 0.2857142857142857
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 1. 1. 1. 0.]
-rate = 0.23809523809523808
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
-rate = 0.09523809523809523
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
-rate = 0.09523809523809523
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_5
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_5/Y, resample_flag = True --------------
-fy_resamp = [1998 2006 2009 2012 2003 2005 1996 2006 2014 2007 1998 1998 1999 1999
- 2014 2010 1999 2016 2013 2014 2010]
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap5
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap5/Y, resample_flag = True --------------
+fy_resamp = [2000]
 Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
 Y[0,0,0] = 360.0
-Y.shape = (21, 165, 17)
-ab_tag.shape = (21, 165)
-absum = [1. 1. 1. 1. 1. 1. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.47619047619047616
-ab_tag.shape = (21, 165)
-absum = [1. 1. 1. 1. 1. 1. 0. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.47619047619047616
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 1. 1. 1. 0. 0. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.3333333333333333
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.19047619047619047
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 1. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
-rate = 0.19047619047619047
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_6
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-13/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/resampled_6/Y, resample_flag = True --------------
-fy_resamp = [2005 1997 2000 2006 2007 2004 2007 1998 2015 2012 1996 1996 2002 2015
- 2010 2006 2015 2004 2009 1998 1999]
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap6
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap6/Y, resample_flag = True --------------
+fy_resamp = [2015]
 Before resampling: X.shape = (39, 180, 210)
-After resampling: X.shape = (21, 180, 210)
-Nx = 21, Ntx = 180, xdim = 210
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
 Y[0,0,0] = 360.0
-Y.shape = (21, 165, 17)
-ab_tag.shape = (21, 165)
-absum = [1. 0. 1. 1. 1. 0. 1. 1. 0. 1. 0. 0. 1. 0. 0. 1. 0. 0. 1. 1. 0.]
-rate = 0.5238095238095238
-ab_tag.shape = (21, 165)
-absum = [1. 0. 1. 1. 1. 0. 1. 1. 0. 1. 0. 0. 0. 0. 0. 1. 0. 0. 1. 1. 0.]
-rate = 0.47619047619047616
-ab_tag.shape = (21, 165)
-absum = [1. 0. 1. 0. 1. 0. 1. 1. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0.]
-rate = 0.3333333333333333
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0.]
-rate = 0.14285714285714285
-ab_tag.shape = (21, 165)
-absum = [1. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0.]
-rate = 0.14285714285714285
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
-ab_tag.shape = (21, 165)
-absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ab_tag.shape = (1, 165)
+absum = [0.]
 rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap7
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap7/Y, resample_flag = True --------------
+fy_resamp = [2002]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap8
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap8/Y, resample_flag = True --------------
+fy_resamp = [1985]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap9
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap9/Y, resample_flag = True --------------
+fy_resamp = [2003]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap10
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap10/Y, resample_flag = True --------------
+fy_resamp = [2003]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap11
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap11/Y, resample_flag = True --------------
+fy_resamp = [1991]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap12
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap12/Y, resample_flag = True --------------
+fy_resamp = [1980]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap13
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap13/Y, resample_flag = True --------------
+fy_resamp = [2017]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap14
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap14/Y, resample_flag = True --------------
+fy_resamp = [2002]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap15
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap15/Y, resample_flag = True --------------
+fy_resamp = [2003]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap16
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap16/Y, resample_flag = True --------------
+fy_resamp = [1996]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap17
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap17/Y, resample_flag = True --------------
+fy_resamp = [2016]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap18
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap18/Y, resample_flag = True --------------
+fy_resamp = [2004]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap19
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap19/Y, resample_flag = True --------------
+fy_resamp = [1992]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap20
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap20/Y, resample_flag = True --------------
+fy_resamp = [1987]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap21
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap21/Y, resample_flag = True --------------
+fy_resamp = [1988]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap22
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap22/Y, resample_flag = True --------------
+fy_resamp = [1999]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap23
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap23/Y, resample_flag = True --------------
+fy_resamp = [1995]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap24
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap24/Y, resample_flag = True --------------
+fy_resamp = [1984]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap25
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap25/Y, resample_flag = True --------------
+fy_resamp = [1994]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap26
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap26/Y, resample_flag = True --------------
+fy_resamp = [1979]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap27
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap27/Y, resample_flag = True --------------
+fy_resamp = [1997]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap28
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap28/Y, resample_flag = True --------------
+fy_resamp = [2014]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap29
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap29/Y, resample_flag = True --------------
+fy_resamp = [2003]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/full_seed0
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/full_seed0/Y, resample_flag = True --------------
+fy_resamp = [1950 1951 1952 1953 1954 1955 1956 1957 1958 1959 1960 1961 1962 1963
+ 1964 1965 1966 1967 1968 1969 1970 1971 1972 1973 1974 1975 1976 1977
+ 1978 1979 1980 1981 1982 1983 1984 1985 1986 1987 1988 1989 1990 1991
+ 1992 1993 1994 1995 1996 1997 1998 1999 2000 2001 2002 2003 2004 2005
+ 2006 2007]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (29, 180, 210)
+Nx = 29, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (29, 165, 17)
+ab_tag.shape = (29, 165)
+absum = [0. 0. 1. 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 1. 0. 0. 0. 1. 0. 1. 1. 1.
+ 1. 0. 1. 1. 1.]
+rate = 0.5172413793103449
+ab_tag.shape = (29, 165)
+absum = [0. 0. 0. 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0.
+ 1. 0. 1. 1. 1.]
+rate = 0.3793103448275862
+ab_tag.shape = (29, 165)
+absum = [0. 0. 0. 0. 1. 1. 0. 1. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 1. 0. 0.
+ 1. 0. 1. 0. 1.]
+rate = 0.3448275862068966
+ab_tag.shape = (29, 165)
+absum = [0. 0. 0. 0. 0. 0. 0. 1. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.
+ 0. 0. 1. 0. 0.]
+rate = 0.13793103448275862
+ab_tag.shape = (29, 165)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 1. 0. 0. 0. 0.
+ 0. 0. 1. 0. 0.]
+rate = 0.06896551724137931
+ab_tag.shape = (29, 165)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0.]
+rate = 0.0
+ab_tag.shape = (29, 165)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0.]
+rate = 0.0
+ab_tag.shape = (29, 165)
+absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
+ 0. 0. 0. 0. 0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap0
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap0/Y, resample_flag = True --------------
+fy_resamp = [1994]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap1
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap1/Y, resample_flag = True --------------
+fy_resamp = [1997]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap2
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap2/Y, resample_flag = True --------------
+fy_resamp = [2003]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (1, 180, 210)
+Nx = 1, Ntx = 180, xdim = 210
+Y[0,0,0] = 360.0
+Y.shape = (1, 165, 17)
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [1.]
+rate = 1.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+ab_tag.shape = (1, 165)
+absum = [0.]
+rate = 0.0
+subsetdir = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap3
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/0/ei/delay15_nwaves0_vxm0_pc-_hf-_temp-/bootstrap3/Y, resample_flag = True --------------
+fy_resamp = [1950]
+Before resampling: X.shape = (39, 180, 210)
+After resampling: X.shape = (0, 180, 210)
+Nx = 0, Ntx = 180, xdim = 210
+ate = 0.0
 ab_tag.shape = (21, 165)
 absum = [0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
 rate = 0.0

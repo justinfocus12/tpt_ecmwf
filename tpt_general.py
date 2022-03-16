@@ -1026,9 +1026,9 @@ class WinterStratosphereTPT:
             plt.close(fig)
             # ------------- Current plots --------------------
             keypairs = []
-            keypairs += [['uref_inc_0','uref_inc_2']]
+            #keypairs += [['uref_inc_0','uref_inc_2']]
             keypairs += [['time_d','uref']]
-            keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
+            #keypairs += [['uref_dl0','uref_dl%i'%(i_dl)] for i_dl in np.arange(5,winstrat.ndelay,5)]
             #keypairs += [['heatflux_lev1_total','heatflux_lev4_total']]
             #keypairs += [['time_d','captemp_lev0']]
             #keypairs += [['time_d','heatflux_lev4_wn%i'%(i_wn)] for i_wn in range(winstrat.heatflux_wavenumbers_per_level_max)]
