@@ -39,7 +39,7 @@ resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
 daydir = join(resultsdir,"2022-03-16")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"0")
+expdir = join(daydir,"1")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -54,6 +54,7 @@ fall_years = dict({
     })
 # Fully overlapping estimates
 intersection = np.intersect1d(fall_years["e2"],fall_years["e5"])
+print(f"intersection = {intersection}")
 subsets = dict({
     "ei": dict({
         "overlaps": dict({
@@ -69,7 +70,7 @@ subsets = dict({
         "overlaps": dict({
             "self": dict({"full": fall_years["e2"], 
                 "color": "dodgerblue", 
-                "label": f"ERA-20C {fall_years['ei'][0]}-{fall_years['ei'][-1]'}"
+                "label": f"ERA-20C {fall_years['ei'][0]}-{fall_years['ei'][-1]}",
                 }),
             "ra": dict({"full": intersection, 
                 "color": "dodgerblue", 
@@ -117,34 +118,11 @@ subsets = dict({
 # Resample with replacement
 for src in sources:
     for ovl in subsets[src]["overlaps"].keys():
-        Nyears = len(subsets[src]["overlaps"][ovl])
+        Nyears = len(subsets[src]["overlaps"][ovl]['full'])
         subsets[src]["overlaps"][ovl]["bootstrap"] = []
         prng = np.random.RandomState(0)
         for i_ss in range(subsets[src]["num_bootstrap"]):
             subsets[src]["overlaps"][ovl]["bootstrap"] += [prng.choice(subsets[src]["overlaps"][ovl]["full"], size=Nyears, replace=True)]
-
-    #prng = np.random.RandomState(0) # This will be used for subsampling the years. 
-    #prng_overlap = np.random.RandomState(1) # This will be used for subsampling the years for the intersection of reanalysis datasets. 
-    #subsets[key]["full_kmeans_seeds"] = np.arange(subsets[key]["num_full_kmeans_seeds"]) # random-number generator seeds to use for KMeans. 
-    #Nyears = len(subsets[key]["full_subset"])
-    #subsets[key]["resampled_kmeans_seeds"] = subsets[key]["num_full_kmeans_seeds"] + np.arange(subsets[key]["num_bootstrap"])
-    #subsets[key]["resampled_subsets"] = [] #[np.zeros(Nyears,dtype=int) for i_boot in range(subsets[key]["num_bootstrap"])] #np.zeros((subsets[key]["num_bootstrap"],Nyears), dtype=int)
-    #for i_ss in range(subsets[key]["num_bootstrap"]):
-    #    subsets[key]["resampled_subsets"] += [prng.choice(subsets[key]["full_subset"], size=Nyears, replace=True)]
-    ## Concatenate these
-    #subsets[key]["all_kmeans_seeds"] = np.concatenate((subsets[key]["full_kmeans_seeds"], subsets[key]["resampled_kmeans_seeds"]))
-    #subsets[key]["all_subsets"] = [subsets[key]["full_subset"] for i_ss in range(subsets[key]["num_full_kmeans_seeds"])] + subsets[key]["resampled_subsets"]
-    #print(f"for key {key}, len(all_subsets) = {len(subsets[key]['all_subsets'])}. full = {subsets[key]['num_full_kmeans_seeds']}, resamp = {len(subsets[key]['resampled_subsets'])}")
-    ## Do a separate resampling for reanalysis for the period of overlap. 
-    #print(f"Before overlapping for key {key}, len(all_subsets) = {len(subsets[key]['all_subsets'])}")
-    #if key in ["e2","e5"]:
-    #    Nyears_overlap = len(subsets[key]["ra_overlap_full_subset"])
-    #    subsets[key]["ra_overlap_resampled_subsets"] = []
-    #    for i_ss in range(subsets[key]["num_bootstrap"]):
-    #        subsets[key]["ra_overlap_resampled_subsets"] += [prng_overlap.choice(subsets[key]["ra_overlap_full_subset"], size=Nyears_overlap, replace=True)]
-    #    subsets[key]["ra_overlap_all_subsets"] = [subsets[key]["ra_overlap_full_subset"]] + subsets[key]["ra_overlap_resampled_subsets"]
-    #    subsets[key]["all_subsets"] += subsets[key]["ra_overlap_all_subsets"]
-    #    print(f"For {key}, num ra overlap resampled subsets = {len(subsets[key]['ra_overlap_all_subsets'])}. And len(all_subsets) = {len(subsets[key]['all_subsets'])}")
 
 
 file_lists = dict()
@@ -243,15 +221,8 @@ for src in sources:
         subsets[src]["all_subsets"] += subsets[src]["overlaps"][ovl]["bootstrap"]
         subsets[src]["all_kmeans_seeds"] += [subsets[src]["num_full_kmeans_seeds"]+seed for seed in range(subsets[src]["num_bootstrap"])]
 
-#for key in sources:
-#    subsets[key]["full_dirs"] = [join(paramdirs[key],"full_seed%i"%(seed)) for seed in subsets[key]["full_kmeans_seeds"]]
-#    subsets[key]["resampled_dirs"] = [join(paramdirs[key],"resampled_%i"%(i_ss)) for i_ss in range(subsets[key]["num_bootstrap"])]
-#    subsets[key]["all_dirs"] = np.concatenate((subsets[key]["full_dirs"],subsets[key]["resampled_dirs"]))
-#    if key in ["e2","e5"]:
-#        subsets[key]["ra_overlap_full_dirs"] = [join(paramdirs[key],"ra_overlap_full")]
-#        subsets[key]["ra_overlap_resampled_dirs"] = [join(paramdirs[key], "ra_overlap_resampled_%i"%(i_ss)) for i_ss in range(subsets[key]["num_bootstrap"])]
-#        subsets[key]["ra_overlap_all_dirs"] = np.concatenate((subsets[key]["ra_overlap_full_dirs"],subsets[key]["ra_overlap_resampled_dirs"]))
-#        subsets[key]["all_dirs"] = np.concatenate((subsets[key]["all_dirs"],subsets[key]["ra_overlap_all_dirs"]),axis=0)
+print(f"S2S subsets:\n{subsets['s2s']['overlaps']['self']}")
+
 
 # Parameters to determine what to do
 task_list = dict({
@@ -285,7 +256,7 @@ task_list = dict({
         }),
     "comparison": dict({
         "plot_rate_flag":                     1,
-        "illustrate_dataset_flag":            1,
+        "illustrate_dataset_flag":            0,
         }),
     })
 
@@ -428,31 +399,73 @@ boxplot_keys = dict({
     })
 
 if task_list["comparison"]["plot_rate_flag"]:
-    rate_dict = dict({})
-    for src in boxplot_keys:
-        for ovl in boxplot_keys[src].keys():
-            rate_dict[f"{src}-{ovl}"] = np.zeros((1+subsets[src]['num_bootstrap'], len(uthresh_list))) # First entry for mean of full kmeans, rest of them for bootstrap
-            # First row
-            for i_km,dir_km in enumerate(subsets[src]["overlaps"][ovl]["full_dirs"]):
-                for i_uth,uthresh_b in enumerate(uthresh_list):
-                    savedir = join(dir_km,uthresh_dirname_fun(uthresh_b))
-                    summary = pickle.load(open(join(savedir,"summary"),"rb"))
-                    if key == "s2s":
-                        rate_dict[f"{src}-{ovl}"][0,i_uth] += summary["rate_tob"]/subsets[src]["num_full_kmeans_seeds"]
-                    else:
-                        rate_dict[f"{src}-{ovl}"][0,i_uth] += summary["rate"]/subsets[src]["num_full_kmeans_seeds"]
-            # Bootstraps
-            for i_bs,dir_bs in enumerate(subsets[src]["overlaps"][ovl]["bootstrap_dirs"]):
-                for i_uth,uthresh_b in enumerate(uthresh_list):
-                    savedir = join(dir_bs,uthresh_dirname_fun(uthresh_b))
-                    summary = pickle.load(open(join(savedir,"summary"),"rb"))
-                    if key == "s2s":
-                        rate_dict[f"{src}-{ovl}"][1+i_bs,i_uth] = summary["rate_tob"]
-                    else:
-                        rate_dict[f"{src}-{ovl}"][1+i_bs,i_uth] = summary["rate"]
-    # Now plot them all 
+    ylim = {'log': [1e-3,1.0], 'logit': [1e-3,0.8], 'linear': [0.0,1.0]}
+    loc = {'log': 'lower right', 'logit': 'lower right', 'linear': 'upper left'}
+    bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
+    du = np.abs(uthresh_list[1] - uthresh_list[0])/8.0 # How far to offset the x axis positions for the three timeseries
+    errorbar_offsets = dict({"e5-self": -du*2/3, "e5-hc": -du/3, "e2-self": du/3, "s2s-self": 2*du/3})
+    quantiles = np.array([0.05,0.25,0.75,0.95])
+    for scale in ['linear','log']:
+        fig,ax = plt.subplots()
+        savefig_suffix = ""
+        ax.set_xlabel("Zonal wind threshold [m/s]",fontdict=font)
+        ax.set_ylabel("Rate",fontdict=font)
+        handles = []
+        # Build the rate dictionary
+        rate_dict = dict({})
+        for src in boxplot_keys:
+            for ovl in boxplot_keys[src]:
+                rate_dict[f"{src}-{ovl}"] = np.zeros((1+subsets[src]['num_bootstrap'], len(uthresh_list))) # First entry for mean of full kmeans, rest of them for bootstrap
+                # First row
+                for i_km,dir_km in enumerate(subsets[src]["overlaps"][ovl]["full_dirs"]):
+                    for i_uth,uthresh_b in enumerate(uthresh_list):
+                        savedir = join(dir_km,uthresh_dirname_fun(uthresh_b))
+                        summary = pickle.load(open(join(savedir,"summary"),"rb"))
+                        if src == "s2s":
+                            rate_dict[f"{src}-{ovl}"][0,i_uth] += summary["rate_tob"]/subsets[src]["num_full_kmeans_seeds"]
+                        else:
+                            print(f"summary = {summary}")
+                            rate_dict[f"{src}-{ovl}"][0,i_uth] += summary["rate"]/subsets[src]["num_full_kmeans_seeds"]
+                # Bootstraps
+                for i_bs,dir_bs in enumerate(subsets[src]["overlaps"][ovl]["bootstrap_dirs"]):
+                    for i_uth,uthresh_b in enumerate(uthresh_list):
+                        savedir = join(dir_bs,uthresh_dirname_fun(uthresh_b))
+                        summary = pickle.load(open(join(savedir,"summary"),"rb"))
+                        if src == "s2s":
+                            rate_dict[f"{src}-{ovl}"][1+i_bs,i_uth] = summary["rate_tob"]
+                        else:
+                            rate_dict[f"{src}-{ovl}"][1+i_bs,i_uth] = summary["rate"]
+                # Now plot them all 
+                good_idx = np.where(rate_dict[f"{src}-{ovl}"] > 0)[0] if scale == 'log' else np.arange(len(uthresh_list))
+                xlabels = None if src == "s2s" else ['']*len(good_idx)
+                bootstraps = 2*rate_dict[f"{src}-{ovl}"][0,good_idx] - rate_dict[f"{src}-{ovl}"][1:,:][:,good_idx]
+                if scale == 'log' or scale == 'logit':
+                    bootstraps = np.maximum(0.5*ylim[scale][0], np.minimum(0.5*(ylim[scale][1]+1), bootstraps))
+                bplot = ax.boxplot(
+                        bootstraps, 
+                        positions=uthresh_list[good_idx]+errorbar_offsets[f"{src}-{ovl}"], whis=(5,95), 
+                        patch_artist=True, labels=xlabels, manage_ticks=False, widths=du, sym='x', showmeans=False, zorder=0, showfliers=False,
+                        boxprops={"color": subsets[src]["overlaps"][ovl]["color"], "facecolor": "white"},
+                        whiskerprops={"color": subsets[src]["overlaps"][ovl]["color"]},
+                        medianprops={"color": subsets[src]["overlaps"][ovl]["color"]}, 
+                        capprops={"color": subsets[src]["overlaps"][ovl]["color"]}, 
+                        flierprops={"markerfacecolor": None, "markeredgecolor": subsets[src]["overlaps"][ovl]["color"]},
+                        )
+                savefig_suffix += f"{src}{ovl}_"
+                ax.legend(handles=handles,loc=loc[scale])
+                ax.set_ylim(ylim[scale])
+                uthresh_list_sorted = np.sort(uthresh_list)
+                xlim = [1.5*uthresh_list_sorted[0]-0.5*uthresh_list_sorted[1], 1.5*uthresh_list_sorted[-1]-0.5*uthresh_list_sorted[-2]]
+                ax.set_xlim(xlim)
+                print(f"xlim = {xlim}; ax xlim = {ax.get_xlim()}")
+                if scale == 'logit':
+                    ax.set_yscale('function',functions=(myinvlogit,mylogit))
+                else:
+                    ax.set_yscale(scale)
+                fig.savefig(join(paramdirs["s2s"],"rate_%s_%s_%s"%(bndy_suffix,savefig_suffix,scale)))
+                plt.close(fig)
 
-
+sys.exit()
 
 colors = dict({"ei": "black", "e2": "dodgerblue", "e5": "orange", "s2s": "red"}) #, "s2s_naive": "cyan"})
 labels = dict({"ei": "ERA-Interim", "e2": "ERA-20C", "e5": "ERA5", "s2s": "S2S"}) 
