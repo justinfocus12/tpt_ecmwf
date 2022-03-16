@@ -39,7 +39,7 @@ resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
 daydir = join(resultsdir,"2022-03-16")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"1")
+expdir = join(daydir,"2")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -62,7 +62,7 @@ subsets = dict({
             "ra": dict({"full": intersection,}),
             "hc": dict({"full": np.intersect1d(fall_years["ei"],fall_years["s2s"])}),
             }),
-        "num_bootstrap": 3, 
+        "num_bootstrap": 30, 
         "num_full_kmeans_seeds": 1,
         "rank": 0,
         }),
@@ -70,7 +70,7 @@ subsets = dict({
         "overlaps": dict({
             "self": dict({"full": fall_years["e2"], 
                 "color": "dodgerblue", 
-                "label": f"ERA-20C {fall_years['ei'][0]}-{fall_years['ei'][-1]}",
+                "label": f"ERA-20C {fall_years['e2'][0]}-{fall_years['e2'][-1]}",
                 }),
             "ra": dict({"full": intersection, 
                 "color": "dodgerblue", 
@@ -81,7 +81,7 @@ subsets = dict({
                 "label": f"ERA-20C {max(fall_years['e2'][0],fall_years['s2s'][0])}-{min(fall_years['e2'][-1],fall_years['s2s'][-1])}"
                 }),
             }),
-        "num_bootstrap": 3, 
+        "num_bootstrap": 30, 
         "num_full_kmeans_seeds": 1,
         "rank": 1,
         }),
@@ -89,16 +89,16 @@ subsets = dict({
         "overlaps": dict({
             "self": dict({"full": fall_years["e5"], 
                 "color": "black", 
-                "label": "ERA5 {fall_years['e5'][0]}-{fall_years['e5'][-1]}"
+                "label": f"ERA5 {fall_years['e5'][0]}-{fall_years['e5'][-1]}"
                 }),
             "ra": dict({"full": intersection, "color": "black", "label": "ERA5 {intersection[0]}-{intersection[-1]}"
                 }),
-            "hc": dict({"full": np.intersect1d(fall_years["e2"],fall_years["s2s"]), 
+            "hc": dict({"full": np.intersect1d(fall_years["e5"],fall_years["s2s"]), 
                 "color": "orange", 
-                "label": f"ERA5 {max(fall_years['e5'][0],fall_years['e2'][0])}-{min(fall_years['e5'][-1],fall_years['e2'][-1])}"
+                "label": f"ERA5 {max(fall_years['e5'][0],fall_years['s2s'][0])}-{min(fall_years['e5'][-1],fall_years['s2s'][-1])}"
                 }),
             }),
-        "num_bootstrap": 3, 
+        "num_bootstrap": 30, 
         "num_full_kmeans_seeds": 1,
         "rank": 2,
         }),
@@ -106,11 +106,11 @@ subsets = dict({
         "overlaps": dict({
             "self": dict({"full": fall_years["s2s"],
                 "color": "red",
-                "label": "S2S {fall_years['s2s'][0]}-{fall_years['s2s'][-1]}"
+                "label": f"S2S {fall_years['s2s'][0]}-{fall_years['s2s'][-1]}"
                 }),
             }),
-        "num_bootstrap": 3, 
-        "num_full_kmeans_seeds": 2,
+        "num_bootstrap": 30, 
+        "num_full_kmeans_seeds": 5,
         "rank": 3,
         }),
     })
@@ -123,6 +123,8 @@ for src in sources:
         prng = np.random.RandomState(0)
         for i_ss in range(subsets[src]["num_bootstrap"]):
             subsets[src]["overlaps"][ovl]["bootstrap"] += [prng.choice(subsets[src]["overlaps"][ovl]["full"], size=Nyears, replace=True)]
+
+print(f"era5 subsets: \nself:\n\t{subsets['e5']['overlaps']['self']}\nra:\n\t{subsets['e5']['overlaps']['ra']}\nhc:\n\t{subsets['e5']['overlaps']['hc']}")
 
 
 file_lists = dict()
@@ -211,12 +213,12 @@ for src in sources:
     subsets[src]["all_kmeans_seeds"] = []
     for ovl in subsets[src]["overlaps"].keys():
         # Full samples, varying KMeans seed
-        subsets[src]["overlaps"][ovl]["full_dirs"] = [join(paramdirs[src],"full_seed%i"%(seed)) for seed in range(subsets[src]["num_full_kmeans_seeds"])]
+        subsets[src]["overlaps"][ovl]["full_dirs"] = [join(paramdirs[src],"overlap%s_full_seed%i"%(ovl,seed)) for seed in range(subsets[src]["num_full_kmeans_seeds"])]
         subsets[src]["all_dirs"] += subsets[src]["overlaps"][ovl]["full_dirs"]
         subsets[src]["all_subsets"] += [subsets[src]["overlaps"][ovl]["full"] for i_ss in range(subsets[src]["num_full_kmeans_seeds"])]
         subsets[src]["all_kmeans_seeds"] += [seed for seed in range(subsets[src]["num_full_kmeans_seeds"])]
         # Bootstrap samples
-        subsets[src]["overlaps"][ovl]["bootstrap_dirs"] = [join(paramdirs[src],"bootstrap%i"%(i_bs)) for i_bs in range(subsets[src]["num_bootstrap"])]
+        subsets[src]["overlaps"][ovl]["bootstrap_dirs"] = [join(paramdirs[src],"overlap%s_bootstrap%i"%(ovl,i_bs)) for i_bs in range(subsets[src]["num_bootstrap"])]
         subsets[src]["all_dirs"] += subsets[src]["overlaps"][ovl]["bootstrap_dirs"]
         subsets[src]["all_subsets"] += subsets[src]["overlaps"][ovl]["bootstrap"]
         subsets[src]["all_kmeans_seeds"] += [subsets[src]["num_full_kmeans_seeds"]+seed for seed in range(subsets[src]["num_bootstrap"])]
@@ -315,6 +317,8 @@ for key in ["ei","e2","e5"]:
             tpt_feat_filename = join(subsetdir,"Y")
             if task_list[key]["tpt_featurize_flag"]:
                 winstrat.evaluate_tpt_features(feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=True,fy_resamp=subsets[key]["all_subsets"][i_subset])
+                if key == "e5":
+                    print(f"subsetdir = {subsetdir}, fy_resamp = \n{subsets[key]['all_subsets'][i_subset]}")
             for i_uth in range(len(uthresh_list)):
                 uthresh_b = uthresh_list[i_uth]
                 savedir = join(subsetdir,uthresh_dirname_fun(uthresh_b))
@@ -403,7 +407,7 @@ if task_list["comparison"]["plot_rate_flag"]:
     loc = {'log': 'lower right', 'logit': 'lower right', 'linear': 'upper left'}
     bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
     du = np.abs(uthresh_list[1] - uthresh_list[0])/8.0 # How far to offset the x axis positions for the three timeseries
-    errorbar_offsets = dict({"e5-self": -du*2/3, "e5-hc": -du/3, "e2-self": du/3, "s2s-self": 2*du/3})
+    errorbar_offsets = dict({"e5-hc": -3/2**du, "e5-self": -du/2, "e2-self": du/2, "s2s-self": 3*du/2})
     quantiles = np.array([0.05,0.25,0.75,0.95])
     for scale in ['linear','log']:
         fig,ax = plt.subplots()
@@ -436,7 +440,9 @@ if task_list["comparison"]["plot_rate_flag"]:
                         else:
                             rate_dict[f"{src}-{ovl}"][1+i_bs,i_uth] = summary["rate"]
                 # Now plot them all 
-                good_idx = np.where(rate_dict[f"{src}-{ovl}"] > 0)[0] if scale == 'log' else np.arange(len(uthresh_list))
+                good_idx = np.where(rate_dict[f"{src}-{ovl}"][0] > 0)[0] if scale == 'log' else np.arange(len(uthresh_list))
+                h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[f"{src}-{ovl}"],rate_dict[f"{src}-{ovl}"][0,good_idx],color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,marker='o',linestyle='-',label=subsets[src]["overlaps"][ovl]["label"],alpha=1.0,s=16, zorder=1)
+                handles += [h]
                 xlabels = None if src == "s2s" else ['']*len(good_idx)
                 bootstraps = 2*rate_dict[f"{src}-{ovl}"][0,good_idx] - rate_dict[f"{src}-{ovl}"][1:,:][:,good_idx]
                 if scale == 'log' or scale == 'logit':
@@ -464,6 +470,8 @@ if task_list["comparison"]["plot_rate_flag"]:
                     ax.set_yscale(scale)
                 fig.savefig(join(paramdirs["s2s"],"rate_%s_%s_%s"%(bndy_suffix,savefig_suffix,scale)))
                 plt.close(fig)
+
+print(f"s2s rates: \f{rate_dict['s2s-self']}")
 
 sys.exit()
 
