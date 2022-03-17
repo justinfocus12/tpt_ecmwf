@@ -1,6 +1,7 @@
 import pickle
 import pandas
 import numpy as np
+from scipy.stats import binom as scipy_binom
 import datetime
 from calendar import monthrange
 import time as timelib
@@ -225,7 +226,7 @@ for src in sources:
         subsets[src]["all_subsets"] += subsets[src]["overlaps"][ovl]["bootstrap"]
         subsets[src]["all_kmeans_seeds"] += [subsets[src]["num_full_kmeans_seeds"]+seed for seed in range(subsets[src]["num_bootstrap"])]
 
-print(f"S2S subsets:\n{subsets['s2s']['overlaps']['self']}")
+#print(f"S2S subsets:\n{subsets['s2s']['overlaps']['self']}")
 
 
 # Parameters to determine what to do
@@ -259,8 +260,8 @@ task_list = dict({
         "plot_tpt_results_flag":              0,
         }),
     "comparison": dict({
-        "plot_rate_flag":                     0,
-        "illustrate_dataset_flag":            1,
+        "plot_rate_flag":                     1,
+        "illustrate_dataset_flag":            0,
         }),
     })
 
@@ -408,75 +409,99 @@ boxplot_keys_ra = dict({
     "e5": ["ra",],
     })
 
+# Two possibilities for error bars: bootstrap, or binomial confidence intervals.
+binomial_flag = True
+        
+ylim = {'log': [1e-3,1.0], 'logit': [1e-3,0.8], 'linear': [0.0,1.0]}
+loc = {'log': 'lower right', 'logit': 'lower right', 'linear': 'upper left'}
+bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
+du = np.abs(uthresh_list[1] - uthresh_list[0])/8.0 # How far to offset the x axis positions for the three timeseries
+errorbar_offsets = dict({"e5-hc": -3/2*du, "e5-self": -du/2, "e2-self": du/2, "s2s-self": 3*du/2,
+    "e5-ra": -1/2*du, "e2-ra": 1/2*du,})
+quantiles = np.array([0.05,0.25,0.75,0.95])
+
+# Build the rate dictionary as we go
+rate_dict = dict({})
+nyears_dict = dict({})
 if task_list["comparison"]["plot_rate_flag"]:
     for boxplot_keys in [boxplot_keys_hc,boxplot_keys_ra]:
-        ylim = {'log': [1e-3,1.0], 'logit': [1e-3,0.8], 'linear': [0.0,1.0]}
-        loc = {'log': 'lower right', 'logit': 'lower right', 'linear': 'upper left'}
-        bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
-        du = np.abs(uthresh_list[1] - uthresh_list[0])/8.0 # How far to offset the x axis positions for the three timeseries
-        errorbar_offsets = dict({"e5-hc": -3/2*du, "e5-self": -du/2, "e2-self": du/2, "s2s-self": 3*du/2,
-            "e5-ra": -1/2*du, "e2-ra": 1/2*du,})
-        quantiles = np.array([0.05,0.25,0.75,0.95])
         for scale in ['linear','log']:
             fig,ax = plt.subplots()
             savefig_suffix = ""
             ax.set_xlabel("Zonal wind threshold [m/s]",fontdict=font)
             ax.set_ylabel("Rate",fontdict=font)
             handles = []
-            # Build the rate dictionary
-            rate_dict = dict({})
             for src in boxplot_keys:
                 for ovl in boxplot_keys[src]:
-                    rate_dict[f"{src}-{ovl}"] = np.zeros((1+subsets[src]['num_bootstrap'], len(uthresh_list))) # First entry for mean of full kmeans, rest of them for bootstrap
+                    srcovl = f"{src}-{ovl}"
+                    rate_dict[srcovl] = np.zeros((1+subsets[src]['num_bootstrap'], len(uthresh_list))) # First entry for mean of full kmeans, rest of them for bootstrap
+                    nyears_dict[srcovl] = len(subsets[src]["overlaps"][ovl]["full"])
                     # First row
                     for i_km,dir_km in enumerate(subsets[src]["overlaps"][ovl]["full_dirs"]):
                         for i_uth,uthresh_b in enumerate(uthresh_list):
                             savedir = join(dir_km,uthresh_dirname_fun(uthresh_b))
                             summary = pickle.load(open(join(savedir,"summary"),"rb"))
                             if src == "s2s":
-                                rate_dict[f"{src}-{ovl}"][0,i_uth] += summary["rate_tob"]/subsets[src]["num_full_kmeans_seeds"]
+                                rate_dict[srcovl][0,i_uth] += summary["rate_tob"]/subsets[src]["num_full_kmeans_seeds"]
                             else:
                                 print(f"summary = {summary}")
-                                rate_dict[f"{src}-{ovl}"][0,i_uth] += summary["rate"]/subsets[src]["num_full_kmeans_seeds"]
+                                rate_dict[srcovl][0,i_uth] += summary["rate"]/subsets[src]["num_full_kmeans_seeds"]
                     # Bootstraps
                     for i_bs,dir_bs in enumerate(subsets[src]["overlaps"][ovl]["bootstrap_dirs"]):
                         for i_uth,uthresh_b in enumerate(uthresh_list):
                             savedir = join(dir_bs,uthresh_dirname_fun(uthresh_b))
                             summary = pickle.load(open(join(savedir,"summary"),"rb"))
                             if src == "s2s":
-                                rate_dict[f"{src}-{ovl}"][1+i_bs,i_uth] = summary["rate_tob"]
+                                rate_dict[srcovl][1+i_bs,i_uth] = summary["rate_tob"]
                             else:
-                                rate_dict[f"{src}-{ovl}"][1+i_bs,i_uth] = summary["rate"]
+                                rate_dict[srcovl][1+i_bs,i_uth] = summary["rate"]
+            for src in boxplot_keys:
+                for ovl in boxplot_keys[src]:
+                    srcovl = f"{src}-{ovl}"
                     # Now plot them all 
-                    good_idx = np.where(rate_dict[f"{src}-{ovl}"][0] > 0)[0] if scale == 'log' else np.arange(len(uthresh_list))
-                    h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[f"{src}-{ovl}"],rate_dict[f"{src}-{ovl}"][0,good_idx],color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,marker='o',linestyle='-',label=subsets[src]["overlaps"][ovl]["label"],alpha=1.0,s=16, zorder=1)
+                    good_idx = np.where(rate_dict[srcovl][0] > 0)[0] if scale == 'log' else np.arange(len(uthresh_list))
+                    h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[srcovl],rate_dict[srcovl][0,good_idx],color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,marker='o',linestyle='-',label=subsets[src]["overlaps"][ovl]["label"],alpha=1.0,s=16, zorder=1)
                     handles += [h]
                     xlabels = None if src == "s2s" else ['']*len(good_idx)
-                    bootstraps = 2*rate_dict[f"{src}-{ovl}"][0,good_idx] - rate_dict[f"{src}-{ovl}"][1:,:][:,good_idx]
+                    bootstraps = 2*rate_dict[srcovl][0,good_idx] - rate_dict[srcovl][1:,:][:,good_idx]
                     if scale == 'log' or scale == 'logit':
                         bootstraps = np.maximum(0.5*ylim[scale][0], np.minimum(0.5*(ylim[scale][1]+1), bootstraps))
-                    bplot = ax.boxplot(
-                            bootstraps, 
-                            positions=uthresh_list[good_idx]+errorbar_offsets[f"{src}-{ovl}"], whis=(5,95), 
-                            patch_artist=True, labels=xlabels, manage_ticks=False, widths=du, sym='x', showmeans=False, zorder=0, showfliers=False,
-                            boxprops={"color": subsets[src]["overlaps"][ovl]["color"], "facecolor": "white"},
-                            whiskerprops={"color": subsets[src]["overlaps"][ovl]["color"]},
-                            medianprops={"color": subsets[src]["overlaps"][ovl]["color"]}, 
-                            capprops={"color": subsets[src]["overlaps"][ovl]["color"]}, 
-                            flierprops={"markerfacecolor": None, "markeredgecolor": subsets[src]["overlaps"][ovl]["color"]},
-                            )
-                    savefig_suffix += f"{src}{ovl}_"
+                    if binomial_flag and (src != "s2s"):
+                        # Calculate confidence intervals for the binomial distribution coefficients
+                        num_events = rate_dict[srcovl][0,good_idx]*nyears_dict[srcovl]
+                        if (src != "s2s") and np.max(np.abs(num_events - np.round(num_events))) > 1e-10:
+                            raise Exception(f"ERROR: num_events = {num_events}. the number of events given the empirical rate does not seem to be an integer. src = {src}")
+                        conf_lower = scipy_binom.ppf(0.05, nyears_dict[srcovl], rate_dict["s2s-self"][0,good_idx]) / nyears_dict[srcovl]
+                        conf_upper = scipy_binom.ppf(0.95, nyears_dict[srcovl], rate_dict["s2s-self"][0,good_idx]) / nyears_dict[srcovl]
+                        print(f"conf_lower = {conf_lower}")
+                    else:
+                        conf_lower = np.quantile(bootstraps, 0.05, axis=0)
+                        conf_upper = np.quantile(bootstraps, 0.95, axis=0)
+                    # Create fake data points halfway in between lower and upper
+                    conf_mid = 0.5*(conf_lower + conf_upper)
+                    yerr = 0.5*(conf_upper - conf_lower)
+                    ax.errorbar(uthresh_list[good_idx]+errorbar_offsets[srcovl],conf_mid,yerr=yerr,fmt='none',color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,zorder=0,capthick=1,capsize=du)
+                    #bplot = ax.boxplot(
+                    #        bootstraps, 
+                    #        positions=uthresh_list[good_idx]+errorbar_offsets[srcovl], whis=(5,95), 
+                    #        patch_artist=True, labels=xlabels, manage_ticks=False, widths=du, sym='x', showmeans=False, zorder=0, showfliers=False,
+                    #        boxprops={"color": subsets[src]["overlaps"][ovl]["color"], "facecolor": "white"},
+                    #        whiskerprops={"color": subsets[src]["overlaps"][ovl]["color"]},
+                    #        medianprops={"color": subsets[src]["overlaps"][ovl]["color"]}, 
+                    #        capprops={"color": subsets[src]["overlaps"][ovl]["color"]}, 
+                    #        flierprops={"markerfacecolor": None, "markeredgecolor": subsets[src]["overlaps"][ovl]["color"]},
+                    #        )
+                    savefig_suffix += f"{src}{ovl}"
                     ax.legend(handles=handles,loc=loc[scale])
                     ax.set_ylim(ylim[scale])
                     uthresh_list_sorted = np.sort(uthresh_list)
                     xlim = [1.5*uthresh_list_sorted[0]-0.5*uthresh_list_sorted[1], 1.5*uthresh_list_sorted[-1]-0.5*uthresh_list_sorted[-2]]
                     ax.set_xlim(xlim)
-                    print(f"xlim = {xlim}; ax xlim = {ax.get_xlim()}")
                     if scale == 'logit':
                         ax.set_yscale('function',functions=(myinvlogit,mylogit))
                     else:
                         ax.set_yscale(scale)
-                    fig.savefig(join(paramdirs["s2s"],"rate_%s_%s_%s"%(bndy_suffix,savefig_suffix,scale)))
+                    fig.savefig(join(paramdirs["s2s"],"rate_%s_%s_%s_binom%i"%(bndy_suffix,savefig_suffix,scale,binomial_flag)))
                     plt.close(fig)
 
 
