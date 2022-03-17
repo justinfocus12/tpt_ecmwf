@@ -72,3 +72,73 @@ Traceback (most recent call last):
   File "/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py", line 669, in evaluate_tpt_features
     print(f"Y[0,0,0] = {Y[0,0,0]}")
 IndexError: index 0 is out of bounds for axis 0 with size 0
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:413: RuntimeWarning: invalid value encountered in sqrt
+  cond = np.sqrt(cond)

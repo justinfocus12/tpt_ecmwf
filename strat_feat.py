@@ -1173,6 +1173,8 @@ class WinterStratosphereFeatures:
             uthresh_a,uthresh_list,tthresh):
         # Every year in which we have data, plot it. Plot both datasets if they both have data.
         keys_ra = list(feat_filename_ra_dict.keys())
+        print(f"keys_ra = {keys_ra}")
+        sys.exit()
         all_years = []
         uref = dict({})
         time_d = dict({})
