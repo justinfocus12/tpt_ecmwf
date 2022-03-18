@@ -160,7 +160,7 @@ Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 25.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -237,26 +237,26 @@ task_list = dict({
         }),
     "ei": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 1,
-        "tpt_flag":                           1,
+        "tpt_featurize_flag":                 0,
+        "tpt_flag":                           0,
         }),
     "e2": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 1, 
-        "tpt_flag":                           1,
+        "tpt_featurize_flag":                 0, 
+        "tpt_flag":                           0,
         }),
     "e5": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 1, 
-        "tpt_flag":                           1,
+        "tpt_featurize_flag":                 0, 
+        "tpt_flag":                           0,
         }),
     "s2s": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 1,
-        "cluster_flag":                       1,
-        "build_msm_flag":                     1,
-        "tpt_s2s_flag":                       1,
-        "transfer_results_flag":              1,
+        "tpt_featurize_flag":                 0,
+        "cluster_flag":                       0,
+        "build_msm_flag":                     0,
+        "tpt_s2s_flag":                       0,
+        "transfer_results_flag":              0,
         "plot_tpt_results_flag":              1,
         }),
     "comparison": dict({
@@ -334,8 +334,8 @@ for key in ["ei","e2","e5"]:
 # =======================================================================
 #                DGA from S2S 
 feat_filename = join(expdirs["s2s"],"X.npy")
-feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in ["ei","e2"]})
-tpt_feat_filename_ra_dict = dict({key: join(subsets[key]["overlaps"]["self"]["full_dirs"][0],"Y") for key in ["ei","e2"]})
+feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in ["e5","e2"]})
+tpt_feat_filename_ra_dict = dict({key: join(subsets[key]["overlaps"]["self"]["full_dirs"][0],"Y") for key in ["e5","e2"]})
 ens_start_filename = join(expdirs["s2s"],"ens_start_idx.npy")
 fall_year_filename = join(expdirs["s2s"],"fall_year_list.npy")
 if task_list["s2s"]["evaluate_database_flag"]: # Expensive!
@@ -471,15 +471,15 @@ if task_list["comparison"]["plot_rate_flag"]:
                         num_events = rate_dict[srcovl][0,good_idx]*nyears_dict[srcovl]
                         if (src != "s2s") and np.max(np.abs(num_events - np.round(num_events))) > 1e-10:
                             raise Exception(f"ERROR: num_events = {num_events}. the number of events given the empirical rate does not seem to be an integer. src = {src}")
-                        quantile_lower = scipy_binom.ppf(0.025, nyears_dict[srcovl], rate_dict["s2s-self"][0,good_idx]) / nyears_dict[srcovl]
-                        quantile_upper = scipy_binom.ppf(0.975, nyears_dict[srcovl], rate_dict["s2s-self"][0,good_idx]) / nyears_dict[srcovl]
+                        quantile_lower = scipy_binom.ppf(0.05, nyears_dict[srcovl], rate_dict["s2s-self"][0,good_idx]) / nyears_dict[srcovl]
+                        quantile_upper = scipy_binom.ppf(0.95, nyears_dict[srcovl], rate_dict["s2s-self"][0,good_idx]) / nyears_dict[srcovl]
                         # Manipulate so the confidence interval contains the point estimate
                         conf_lower = quantile_lower #rate_dict[srcovl][0,good_idx] - (quantile_upper - rate_dict["s2s-self"][0,good_idx])
                         conf_upper = quantile_upper #rate_dict[srcovl][0,good_idx] + (rate_dict["s2s-self"][0,good_idx] - quantile_lower)
                         print(f"conf_lower = {conf_lower}")
                     else:
-                        conf_lower = np.quantile(bootstraps, 0.025, axis=0)
-                        conf_upper = np.quantile(bootstraps, 0.975, axis=0)
+                        conf_lower = np.quantile(bootstraps, 0.05, axis=0)
+                        conf_upper = np.quantile(bootstraps, 0.95, axis=0)
                     # Create fake data points halfway in between lower and upper
                     conf_mid = 0.5*(conf_lower + conf_upper)
                     yerr = 0.5*(conf_upper - conf_lower)

@@ -6739,17 +6739,331 @@ Y.shape = (12600, 47, 2)
 fidx_Y = {'time_h': 0, 'uref_dl0': 1}
 WARNING, we don't have any data in time slot 0. Y time: min=48.0, max=6120.0. wtime: min=0.0, max=4296.0.
 WARNING, we don't have any data in time slot 1. Y time: min=48.0, max=6120.0. wtime: min=0.0, max=4296.0.
-we don't have any data in time slot 1. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 2. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 3. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 4. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
+ti = 30, km.n_clusters = 170, len(idx) = 1890
+ti = 60, km.n_clusters = 170, len(idx) = 2730
+ti = 90, km.n_clusters = 170, len(idx) = 2940
+ti = 120, km.n_clusters = 170, len(idx) = 2730
+ti = 150, km.n_clusters = 170, len(idx) = 2730
+n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170]
+MSM timestep 0 out of 180
+MSM timestep 30 out of 180
+MSM timestep 60 out of 180
+MSM timestep 90 out of 180
+MSM timestep 120 out of 180
+MSM timestep 150 out of 180
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.009273295158522024
+Rate: froma=0.11945550767512889, tob=0.11945550767512883, naive=0.1895238095238095
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.01599095858304708
+Rate: froma=0.09064465934088832, tob=0.09064465934088832, naive=0.1273015873015873
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.007559032149669777
+Rate: froma=0.05875776117307638, tob=0.05875776117307636, naive=0.08079365079365079
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.008097346128297055
+Rate: froma=0.04182162329969008, tob=0.04182162329969005, naive=0.040634920634920635
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.004761067966686282
+Rate: froma=0.021119241139365908, tob=0.021119241139365894, naive=0.021825396825396824
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.0047009617333339795
+Rate: froma=0.0099266493681777, tob=0.009926649368177692, naive=0.00873015873015873
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.0022737106008633256
+Rate: froma=0.0044582842780686955, tob=0.004458284278068694, naive=0.004285714285714286
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.001607247747479269
+Rate: froma=0.0016512935222336867, tob=0.0016512935222336856, naive=0.0006349206349206349
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay0_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap17/Y, resample_flag = True --------------
+fy_resamp = [2004 1999 2002 2013 2003 2016 1998 2012 2014 2009 2000 2000 2008 2013
+ 2016 1997 2001 1997 2015 2015 2003]
+Before resampling: X.shape = (12000, 47, 210)
+After resampling: X.shape = (11400, 47, 210)
+Nx = 11400, Ntx = 47, xdim = 210
+Y[0,0,0] = 48.0
+Y.shape = (11400, 47, 2)
+min(szn_std_Y) = 2.350136561692542
+which feature has zero szn_std? []
+Y.shape = (11400, 47, 2)
+fidx_Y = {'time_h': 0, 'uref_dl0': 1}
+WARNING, we don't have any data in time slot 0. Y time: min=48.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 1. Y time: min=48.0, max=6120.0. wtime: min=0.0, max=4296.0.
+ti = 30, km.n_clusters = 170, len(idx) = 1710
+ti = 60, km.n_clusters = 170, len(idx) = 2470
+ti = 90, km.n_clusters = 170, len(idx) = 2660
+ti = 120, km.n_clusters = 170, len(idx) = 2470
+ti = 150, km.n_clusters = 170, len(idx) = 2470
+n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170]
+MSM timestep 0 out of 180
+MSM timestep 30 out of 180
+MSM timestep 60 out of 180
+MSM timestep 90 out of 180
+MSM timestep 120 out of 180
+MSM timestep 150 out of 180
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.018728540390795856
+Rate: froma=0.13331265026175534, tob=0.1333126502617553, naive=0.18473684210526317
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.008927969646141117
+Rate: froma=0.05600558417827169, tob=0.05600558417827166, naive=0.12473684210526316
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.0035833046521798516
+Rate: froma=0.03780103075744241, tob=0.03780103075744241, naive=0.08333333333333333
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.0029253675633842367
+Rate: froma=0.02215105261523189, tob=0.022151052615231877, naive=0.0456140350877193
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.002604126638091301
+Rate: froma=0.013307126973251515, tob=0.013307126973251506, naive=0.02666666666666667
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.0031317056439154997
+Rate: froma=0.010173013711664942, tob=0.010173013711664937, naive=0.01043859649122807
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.0037446310760398662
+Rate: froma=0.007233446812103736, tob=0.007233446812103729, naive=0.004210526315789474
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=5.8801194525420736e-05
+Rate: froma=0.00012297269877036544, tob=0.0001229726987703654, naive=0.0005263157894736842
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay0_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap18/Y, resample_flag = True --------------
+fy_resamp = [2005 2013 2005 1996 2015 2000 2013 2016 2012 1999 2006 1997 2016 2000
+ 2000 2012 2012 2011 2006 2009 2004]
+Before resampling: X.shape = (12000, 47, 210)
+After resampling: X.shape = (11400, 47, 210)
+Nx = 11400, Ntx = 47, xdim = 210
+Y[0,0,0] = 48.0
+Y.shape = (11400, 47, 2)
+min(szn_std_Y) = 2.350136561692542
+which feature has zero szn_std? []
+Y.shape = (11400, 47, 2)
+fidx_Y = {'time_h': 0, 'uref_dl0': 1}
+WARNING, we don't have any data in time slot 0. Y time: min=48.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 1. Y time: min=48.0, max=6120.0. wtime: min=0.0, max=4296.0.
+ti = 30, km.n_clusters = 170, len(idx) = 1710
+ti = 60, km.n_clusters = 170, len(idx) = 2470
+ti = 90, km.n_clusters = 170, len(idx) = 2660
+ti = 120, km.n_clusters = 170, len(idx) = 2470
+ti = 150, km.n_clusters = 170, len(idx) = 2470
+n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170]
+MSM timestep 0 out of 180
+MSM timestep 30 out of 180
+MSM timestep 60 out of 180
+MSM timestep 90 out of 180
+MSM timestep 120 out of 180
+MSM timestep 150 out of 180
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.006551597452088569
+Rate: froma=0.08872988769884758, tob=0.08872988769884757, naive=0.1782456140350877
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.011955529309660446
+Rate: froma=0.06860225995851778, tob=0.06860225995851776, naive=0.13
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.005803475416069282
+Rate: froma=0.044424597823864646, tob=0.044424597823864626, naive=0.08771929824561403
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.00579202634569884
+Rate: froma=0.029295864319404015, tob=0.029295864319403998, naive=0.045
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.007317824969513317
+Rate: froma=0.01749731099168286, tob=0.017497310991682852, naive=0.023157894736842106
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.006273421122035981
+Rate: froma=0.010321707577801799, tob=0.010321707577801795, naive=0.0078070175438596495
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.001786937979255921
+Rate: froma=0.00403653639592387, tob=0.0040365363959238695, naive=0.0029824561403508773
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.000966333449747239
+Rate: froma=0.000994718222491299, tob=0.0009947182224912992, naive=0.0007894736842105263
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay0_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap19/Y, resample_flag = True --------------
+fy_resamp = [2007 2016 2002 2005 2011 1999 2015 2008 2014 2013 2006 1998 1997 2007
+ 1999 2008 2000 1997 2013 1996 2003]
+Before resampling: X.shape = (12000, 47, 210)
+After resampling: X.shape = (12000, 47, 210)
+Nx = 12000, Ntx = 47, xdim = 210
+Y[0,0,0] = 48.0
+Y.shape = (12000, 47, 2)
+min(szn_std_Y) = 2.350136561692542
+which feature has zero szn_std? []
+Y.shape = (12000, 47, 2)
+fidx_Y = {'time_h': 0, 'uref_dl0': 1}
+WARNING, we don't have any data in time slot 0. Y time: min=48.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 1. Y time: min=48.0, max=6120.0. wtime: min=0.0, max=4296.0.
+ti = 30, km.n_clusters = 170, len(idx) = 1800
+ti = 60, km.n_clusters = 170, len(idx) = 2600
+ti = 90, km.n_clusters = 170, len(idx) = 2800
+ti = 120, km.n_clusters = 170, len(idx) = 2600
+ti = 150, km.n_clusters = 170, len(idx) = 2600
+n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+ 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170]
+MSM timestep 0 out of 180
+MSM timestep 30 out of 180
+MSM timestep 60 out of 180
+MSM timestep 90 out of 180
+MSM timestep 120 out of 180
+MSM timestep 150 out of 180
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.014981380288404837
+Rate: froma=0.13815815245115812, tob=0.1381581524511581, naive=0.17616666666666667
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.007995212239179242
+Rate: froma=0.061615147381335826, tob=0.0616151473813358, naive=0.12941666666666668
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.006214886493186749
+Rate: froma=0.03396441854289805, tob=0.03396441854289804, naive=0.09216666666666666
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.00367778166589396
+Rate: froma=0.020337405608361666, tob=0.020337405608361656, naive=0.05708333333333333
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.0029565248468150103
+Rate: froma=0.014584426842241765, tob=0.014584426842241755, naive=0.0355
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.003620989481872068
+Rate: froma=0.011230966059144623, tob=0.011230966059144617, naive=0.013416666666666667
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.0020331278754809634
+Rate: froma=0.008084415640591492, tob=0.008084415640591489, naive=0.005333333333333333
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.00015503073332735716
+Rate: froma=0.00025234542937596746, tob=0.0002523454293759674, naive=0.00075
+summary = {'rate': 4.2592592592592593e-01}
+summary = {'rate': 0.3425925925925926}
+summary = {'rate': 0.23148148148148148}
+summary = {'rate': 0.12037037037037036}
+summary = {'rate': 0.018518518518518517}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5}
+summary = {'rate': 0.37142857142857144}
+summary = {'rate': 0.2714285714285714}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.08571428571428572}
+summary = {'rate': 0.05714285714285714}
+summary = {'rate': 0.014285714285714285}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5238095238095238}
+summary = {'rate': 0.42857142857142855}
+summary = {'rate': 0.3333333333333333}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.09523809523809523}
+summary = {'rate': 0.047619047619047616}
+summary = {'rate': 0.0}
+conf_lower = [0.06481481 0.01851852 0.         0.         0.         0.
+ 0.         0.        ]
+conf_lower = [0.05714286 0.01428571 0.         0.         0.         0.
+ 0.         0.        ]
+conf_lower = [0. 0. 0. 0. 0. 0. 0. 0.]
+summary = {'rate': 0.42592592592592593}
+summary = {'rate': 0.3425925925925926}
+summary = {'rate': 0.23148148148148148}
+summary = {'rate': 0.12037037037037036}
+summary = {'rate': 0.018518518518518517}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5}
+summary = {'rate': 0.37142857142857144}
+summary = {'rate': 0.2714285714285714}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.08571428571428572}
+summary = {'rate': 0.05714285714285714}
+summary = {'rate': 0.014285714285714285}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5238095238095238}
+summary = {'rate': 0.42857142857142855}
+summary = {'rate': 0.3333333333333333}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.09523809523809523}
+summary = {'rate': 0.047619047619047616}
+summary = {'rate': 0.0}
+conf_lower = [0.06481481 0.01851852 0.         0.         0.        ]
+conf_lower = [0.05714286 0.01428571 0.         0.         0.         0.
+ 0.        ]
+conf_lower = [0. 0. 0. 0. 0. 0. 0.]
+summary = {'rate': 0.4482758620689655}
+summary = {'rate': 0.3793103448275862}
+summary = {'rate': 0.22413793103448276}
+summary = {'rate': 0.08620689655172414}
+summary = {'rate': 0.017241379310344827}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5172413793103449}
+summary = {'rate': 0.3620689655172414}
+summary = {'rate': 0.25862068965517243}
+summary = {'rate': 0.13793103448275862}
+summary = {'rate': 0.06896551724137931}
+summary = {'rate': 0.05172413793103448}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+conf_lower = [0.05172414 0.         0.         0.         0.         0.
+ 0.         0.        ]
+conf_lower = [0.05172414 0.         0.         0.         0.         0.
+ 0.         0.        ]
+summary = {'rate': 0.4482758620689655}
+summary = {'rate': 0.3793103448275862}
+summary = {'rate': 0.22413793103448276}
+summary = {'rate': 0.08620689655172414}
+summary = {'rate': 0.017241379310344827}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5172413793103449}
+summary = {'rate': 0.3620689655172414}
+summary = {'rate': 0.25862068965517243}
+summary = {'rate': 0.13793103448275862}
+summary = {'rate': 0.06896551724137931}
+summary = {'rate': 0.05172413793103448}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+conf_lower = [0.05172414 0.         0.         0.         0.        ]
+conf_lower = [0.05172414 0.         0.         0.         0.         0.        ]
+max=4296.0.
 WARNING, we don't have any data in time slot 5. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
 WARNING, we don't have any data in time slot 6. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-ti = 30, km.n_clusters = 170, len(idx) = 1400
-ti = 60, km.n_clusters = 170, len(idx) = 2400
-ti = 90, km.n_clusters = 170, len(idx) = 2400
-ti = 120, km.n_clusters = 170, len(idx) = 2400
-ti = 150, km.n_clusters = 170, len(idx) = 2400
+ti = 30, km.n_clusters = 170, len(idx) = 1330
+ti = 60, km.n_clusters = 170, len(idx) = 2280
+ti = 90, km.n_clusters = 170, len(idx) = 2280
+ti = 120, km.n_clusters = 170, len(idx) = 2280
+ti = 150, km.n_clusters = 170, len(idx) = 2280
 n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
  170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
  170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
@@ -6767,32 +7081,32 @@ MSM timestep 90 out of 180
 MSM timestep 120 out of 180
 MSM timestep 150 out of 180
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.02685161426665523
-Rate: froma=0.378633044636192, tob=0.37863304463619185, naive=0.15833333333333333
+flux_dens_tob: min=0.0,max=0.02473675797104593
+Rate: froma=0.3411858195248834, tob=0.34118581952488336, naive=0.17175438596491227
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.014583407768096248
-Rate: froma=0.27972654341495784, tob=0.2797265434149578, naive=0.11375
+flux_dens_tob: min=0.0,max=0.014884542055441395
+Rate: froma=0.2294304935010221, tob=0.22943049350102201, naive=0.11482456140350877
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.018642731168781936
-Rate: froma=0.18900932777590349, tob=0.18900932777590337, naive=0.0805
+flux_dens_tob: min=0.0,max=0.01809895913088975
+Rate: froma=0.143498833107072, tob=0.14349883310707195, naive=0.07333333333333333
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.013653643654959975
-Rate: froma=0.104751106761542, tob=0.10475110676154196, naive=0.04858333333333333
+flux_dens_tob: min=0.0,max=0.010859857248713066
+Rate: froma=0.07701216476751316, tob=0.07701216476751312, naive=0.04298245614035088
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.006689994486820427
-Rate: froma=0.0420956536573777, tob=0.04209565365737769, naive=0.024583333333333332
+flux_dens_tob: min=0.0,max=0.006096837897367681
+Rate: froma=0.04094262288970652, tob=0.040942622889706494, naive=0.02412280701754386
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0016411995759678835
-Rate: froma=0.009724102268337944, tob=0.009724102268337937, naive=0.007333333333333333
+flux_dens_tob: min=0.0,max=0.007070685209210019
+Rate: froma=0.02213862677202827, tob=0.02213862677202826, naive=0.01043859649122807
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0004999773070232297
-Rate: froma=0.0012934765093499632, tob=0.0012934765093499624, naive=0.0028333333333333335
+flux_dens_tob: min=0.0,max=0.0020845070081784533
+Rate: froma=0.006039418649373922, tob=0.00603941864937392, naive=0.00412280701754386
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.00016511994434931525
-Rate: froma=0.0002712207669611447, tob=0.0002712207669611445, naive=0.0008333333333333334
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay5_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap14/Y, resample_flag = True --------------
-fy_resamp = [2010 1996 2015 2004 2003 2009 2013 2016 1996 2007 2000 1996 2006 2010
- 2016 2014 2000 1999 2015 2003 2004]
+flux_dens_tob: min=0.0,max=0.0003107463604457404
+Rate: froma=0.0003992608496093414, tob=0.0003992608496093412, naive=0.0005263157894736842
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay5_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap18/Y, resample_flag = True --------------
+fy_resamp = [2005 2013 2005 1996 2015 2000 2013 2016 2012 1999 2006 1997 2016 2000
+ 2000 2012 2012 2011 2006 2009 2004]
 Before resampling: X.shape = (12000, 47, 210)
 After resampling: X.shape = (11400, 47, 210)
 Nx = 11400, Ntx = 47, xdim = 210
@@ -6831,32 +7145,32 @@ MSM timestep 90 out of 180
 MSM timestep 120 out of 180
 MSM timestep 150 out of 180
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.02002450932679487
-Rate: froma=0.38047781646208917, tob=0.3804778164620891, naive=0.1325438596491228
+flux_dens_tob: min=0.0,max=0.020357691186316328
+Rate: froma=0.3325198215509658, tob=0.3325198215509657, naive=0.1619298245614035
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.018741149262319033
-Rate: froma=0.29535673029318266, tob=0.2953567302931826, naive=0.08921052631578948
+flux_dens_tob: min=0.0,max=0.013675154120580919
+Rate: froma=0.2355364396717303, tob=0.23553643967173024, naive=0.1143859649122807
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.023351358794062874
-Rate: froma=0.19113837661947514, tob=0.19113837661947508, naive=0.05692982456140351
+flux_dens_tob: min=0.0,max=0.0131993891304601
+Rate: froma=0.1522731515157064, tob=0.15227315151570625, naive=0.075
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.011174038087758738
-Rate: froma=0.10716372711971803, tob=0.107163727119718, naive=0.03175438596491228
+flux_dens_tob: min=0.0,max=0.009876210170870259
+Rate: froma=0.0888241776109735, tob=0.08882417761097347, naive=0.041842105263157896
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.00710165303031663
-Rate: froma=0.04861673283793641, tob=0.04861673283793639, naive=0.017719298245614034
+flux_dens_tob: min=0.0,max=0.010838474258708894
+Rate: froma=0.048144278495116294, tob=0.048144278495116266, naive=0.02
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.002864208187433066
-Rate: froma=0.014232021251535502, tob=0.014232021251535498, naive=0.006666666666666667
+flux_dens_tob: min=0.0,max=0.007523985258593883
+Rate: froma=0.01633764889170321, tob=0.016337648891703208, naive=0.006578947368421052
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.002347561317654704
-Rate: froma=0.004442826448863022, tob=0.004442826448863023, naive=0.002631578947368421
+flux_dens_tob: min=0.0,max=0.0014650674892249394
+Rate: froma=0.0029906436384785277, tob=0.002990643638478526, naive=0.0029824561403508773
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0017104846422259297
-Rate: froma=0.0017104846422259304, tob=0.0017104846422259297, naive=0.0007017543859649122
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay5_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap15/Y, resample_flag = True --------------
-fy_resamp = [2009 2001 1996 2004 2011 2011 2007 2000 2003 2009 2006 2016 2010 2013
- 2015 1999 2005 2014 1998 2015 2007]
+flux_dens_tob: min=0.0,max=0.0014650674892249394
+Rate: froma=0.0016239405150003578, tob=0.0016239405150003572, naive=0.0007894736842105263
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay5_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap19/Y, resample_flag = True --------------
+fy_resamp = [2007 2016 2002 2005 2011 1999 2015 2008 2014 2013 2006 1998 1997 2007
+ 1999 2008 2000 1997 2013 1996 2003]
 Before resampling: X.shape = (12000, 47, 210)
 After resampling: X.shape = (12000, 47, 210)
 Nx = 12000, Ntx = 47, xdim = 210
@@ -6895,325 +7209,127 @@ MSM timestep 90 out of 180
 MSM timestep 120 out of 180
 MSM timestep 150 out of 180
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.022559226580712268
-Rate: froma=0.4271833582895573, tob=0.4271833582895572, naive=0.16483333333333333
+flux_dens_tob: min=0.0,max=0.0173315796786694
+Rate: froma=0.35691198136317065, tob=0.3569119813631704, naive=0.16491666666666666
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.022691574671996735
-Rate: froma=0.31255991778488923, tob=0.31255991778488906, naive=0.111
+flux_dens_tob: min=0.0,max=0.017319844749344702
+Rate: froma=0.25634770564024306, tob=0.25634770564024295, naive=0.11733333333333333
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.01724605442231124
-Rate: froma=0.22223980962580514, tob=0.22223980962580503, naive=0.07291666666666667
+flux_dens_tob: min=0.0,max=0.012723317462022375
+Rate: froma=0.1792232760150977, tob=0.1792232760150976, naive=0.08208333333333333
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.015818175061333484
-Rate: froma=0.13311986037356285, tob=0.13311986037356272, naive=0.042
+flux_dens_tob: min=0.0,max=0.013143327246564834
+Rate: froma=0.11417058712580669, tob=0.11417058712580659, naive=0.05225
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.01101741531504416
-Rate: froma=0.07733566023151064, tob=0.07733566023151063, naive=0.022416666666666668
+flux_dens_tob: min=0.0,max=0.0069006698055534485
+Rate: froma=0.0696114012495076, tob=0.06961140124950754, naive=0.03
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.008100511602689651
-Rate: froma=0.027875974243055147, tob=0.02787597424305514, naive=0.007416666666666667
+flux_dens_tob: min=0.0,max=0.0030980175119452833
+Rate: froma=0.015939125050145386, tob=0.015939125050145376, naive=0.012833333333333334
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.00292925439263994
-Rate: froma=0.005436231224024352, tob=0.005436231224024349, naive=0.0025833333333333333
+flux_dens_tob: min=0.0,max=0.00181664234194414
+Rate: froma=0.0045978379820725765, tob=0.004597837982072574, naive=0.005166666666666667
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0004022078954835191
-Rate: froma=0.0004567511921392327, tob=0.00045675119213923256, naive=0.0009166666666666666
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay5_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap16/Y, resample_flag = True --------------
-fy_resamp = [2014 2009 1997 2002 2006 2012 2012 1999 2013 2006 2005 2008 2009 2002
- 2002 2003 2004 2009 2003 2012 2011]
-Before resampling: X.shape = (12000, 47, 210)
-After resampling: X.shape = (12600, 47, 210)
-Nx = 12600, Ntx = 47, xdim = 210
-Y[0,0,0] = 168.0
-Y.shape = (12600, 42, 7)
-min(szn_std_Y) = 2.350136561692542
-which feature has zero szn_std? []
-Y.shape = (12600, 42, 7)
-fidx_Y = {'time_h': 0, 'uref_dl0': 1, 'uref_dl1': 2, 'uref_dl2': 3, 'uref_dl3': 4, 'uref_dl4': 5, 'uref_dl5': 6}
-WARNING, we don't have any data in time slot 0. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 1. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 2. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 3. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 4. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 5. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 6. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-ti = 30, km.n_clusters = 170, len(idx) = 1470
-ti = 60, km.n_clusters = 170, len(idx) = 2520
-ti = 90, km.n_clusters = 170, len(idx) = 2520
-ti = 120, km.n_clusters = 170, len(idx) = 2520
-ti = 150, km.n_clusters = 170, len(idx) = 2520
-n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170]
-MSM timestep 0 out of 180
-MSM timestep 30 out of 180
-MSM timestep 60 out of 180
-MSM timestep 90 out of 180
-MSM timestep 120 out of 180
-MSM timestep 150 out of 180
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.021320785488465145
-Rate: froma=0.34491935183582084, tob=0.34491935183582095, naive=0.1715873015873016
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.02105822107102671
-Rate: froma=0.2497820318061588, tob=0.2497820318061587, naive=0.11571428571428571
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.01627060629365445
-Rate: froma=0.15622632995866964, tob=0.1562263299586696, naive=0.06904761904761905
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.01164433148458426
-Rate: froma=0.07667511937980047, tob=0.07667511937980045, naive=0.03841269841269841
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.012526670876640701
-Rate: froma=0.05012557841131874, tob=0.050125578411318726, naive=0.01888888888888889
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.013086194369620384
-Rate: froma=0.018763080970380368, tob=0.01876308097038036, naive=0.008174603174603175
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0003560519570351208
-Rate: froma=0.001255984497411543, tob=0.0012559844974115429, naive=0.004206349206349207
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.00025152902903384695
-Rate: froma=0.00038402508845571516, tob=0.000384025088455715, naive=0.0006349206349206349
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay5_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap17/Y, resample_flag = True --------------
-fy_resamp = [2004 1999 2002 2013 2003 2016 1998 2012 2014 2009 2000 2000 2008 2013
- 2016 1997 2001 1997 2015 2015 2003]
-Before resampling: X.shape = (12000, 47, 210)
-After resampling: X.shape = (11400, 47, 210)
-Nx = 11400, Ntx = 47, xdim = 210
-Y[0,0,0] = 168.0
-Y.shape = (11400, 42, 7)
-min(szn_std_Y) = 2.350136561692542
-which feature has zero szn_std? []
-Y.shape = (11400, 42, 7)
-fidx_Y = {'time_h': 0, 'uref_dl0': 1, 'uref_dl1': 2, 'uref_dl2': 3, 'uref_dl3': 4, 'uref_dl4': 5, 'uref_dl5': 6}
-WARNING, we don't have any data in time slot 0. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 1. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 2. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 3. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 4. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 5. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 6. Y time: min=168.0, max=6120.0. wtime: min=0.0, max=4296.0.
-ti = 30, km.n_clusters = 170, len(idx) = 1330
-0 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170]
-MSM timestep 0 out of 180
-MSM timestep 30 out of 180
-MSM timestep 60 out of 180
-MSM timestep 90 out of 180
-MSM timestep 120 out of 180
-MSM timestep 150 out of 180
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.022587738491812177
-Rate: froma=0.40937103274372316, tob=0.40937103274372305, naive=0.12166666666666667
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.01700963931944654
-Rate: froma=0.2913025634755479, tob=0.29130256347554795, naive=0.08236842105263158
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0122601700956563
-Rate: froma=0.17929927880798985, tob=0.1792992788079898, naive=0.052982456140350874
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.007874028778928814
-Rate: froma=0.10421245172080311, tob=0.1042124517208031, naive=0.03070175438596491
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.005338098472794161
-Rate: froma=0.05616702924031455, tob=0.05616702924031452, naive=0.017280701754385966
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0035756252408833127
-Rate: froma=0.018153797140281105, tob=0.018153797140281102, naive=0.006666666666666667
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.001555377397236828
-Rate: froma=0.005739426597104789, tob=0.005739426597104783, naive=0.002631578947368421
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0003462532629875587
-Rate: froma=0.00034625326298755885, tob=0.0003462532629875587, naive=0.0007017543859649122
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay10_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap15/Y, resample_flag = True --------------
-fy_resamp = [2009 2001 1996 2004 2011 2011 2007 2000 2003 2009 2006 2016 2010 2013
- 2015 1999 2005 2014 1998 2015 2007]
-Before resampling: X.shape = (12000, 47, 210)
-After resampling: X.shape = (12000, 47, 210)
-Nx = 12000, Ntx = 47, xdim = 210
-Y[0,0,0] = 288.0
-Y.shape = (12000, 37, 12)
-min(szn_std_Y) = 2.350136561692542
-which feature has zero szn_std? []
-Y.shape = (12000, 37, 12)
-fidx_Y = {'time_h': 0, 'uref_dl0': 1, 'uref_dl1': 2, 'uref_dl2': 3, 'uref_dl3': 4, 'uref_dl4': 5, 'uref_dl5': 6, 'uref_dl6': 7, 'uref_dl7': 8, 'uref_dl8': 9, 'uref_dl9': 10, 'uref_dl10': 11}
-WARNING, we don't have any data in time slot 0. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 1. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 2. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 3. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 4. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 5. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 6. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 7. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 8. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 9. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 10. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 11. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-ti = 30, km.n_clusters = 170, len(idx) = 1200
-ti = 60, km.n_clusters = 170, len(idx) = 2000
-ti = 90, km.n_clusters = 170, len(idx) = 2200
-ti = 120, km.n_clusters = 170, len(idx) = 2200
-ti = 150, km.n_clusters = 170, len(idx) = 2000
-n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170]
-MSM timestep 0 out of 180
-MSM timestep 30 out of 180
-MSM timestep 60 out of 180
-MSM timestep 90 out of 180
-MSM timestep 120 out of 180
-MSM timestep 150 out of 180
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.016407822254528342
-Rate: froma=0.42108625903000263, tob=0.42108625903000246, naive=0.14633333333333334
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.01723347467632599
-Rate: froma=0.3094024886442865, tob=0.3094024886442863, naive=0.10066666666666667
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.012863321695718405
-Rate: froma=0.20802398766001723, tob=0.20802398766001717, naive=0.06666666666666667
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.008377421417111546
-Rate: froma=0.10594254723937438, tob=0.10594254723937434, naive=0.03816666666666667
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.008345622655444848
-Rate: froma=0.04862867099159879, tob=0.04862867099159877, naive=0.019916666666666666
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0032832156579557176
-Rate: froma=0.01783698394502705, tob=0.01783698394502705, naive=0.007333333333333333
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0006883089664852023
-Rate: froma=0.0022594272264294026, tob=0.0022594272264294013, naive=0.0025833333333333333
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0004059241386206659
-Rate: froma=0.0006034853545567999, tob=0.0006034853545567997, naive=0.0009166666666666666
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay10_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap16/Y, resample_flag = True --------------
-fy_resamp = [2014 2009 1997 2002 2006 2012 2012 1999 2013 2006 2005 2008 2009 2002
- 2002 2003 2004 2009 2003 2012 2011]
-Before resampling: X.shape = (12000, 47, 210)
-After resampling: X.shape = (12600, 47, 210)
-Nx = 12600, Ntx = 47, xdim = 210
-Y[0,0,0] = 288.0
-Y.shape = (12600, 37, 12)
-min(szn_std_Y) = 2.350136561692542
-which feature has zero szn_std? []
-Y.shape = (12600, 37, 12)
-fidx_Y = {'time_h': 0, 'uref_dl0': 1, 'uref_dl1': 2, 'uref_dl2': 3, 'uref_dl3': 4, 'uref_dl4': 5, 'uref_dl5': 6, 'uref_dl6': 7, 'uref_dl7': 8, 'uref_dl8': 9, 'uref_dl9': 10, 'uref_dl10': 11}
-WARNING, we don't have any data in time slot 0. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 1. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 2. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 3. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 4. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 5. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 6. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 7. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 8. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 9. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 10. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 11. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-ti = 30, km.n_clusters = 170, len(idx) = 1260
-ti = 60, km.n_clusters = 170, len(idx) = 2100
-ti = 90, km.n_clusters = 170, len(idx) = 2310
-ti = 120, km.n_clusters = 170, len(idx) = 2310
-ti = 150, km.n_clusters = 170, len(idx) = 2100
-n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170]
-MSM timestep 0 out of 180
-MSM timestep 30 out of 180
-MSM timestep 60 out of 180
-MSM timestep 90 out of 180
-MSM timestep 120 out of 180
-MSM timestep 150 out of 180
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.012065376426882369
-Rate: froma=0.34594906911801915, tob=0.3459490691180193, naive=0.15444444444444444
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.011072427019274305
-Rate: froma=0.24431597255716042, tob=0.24431597255716037, naive=0.10341269841269841
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.010345763235551505
-Rate: froma=0.15883785895821095, tob=0.15883785895821095, naive=0.065
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.006375288294557215
-Rate: froma=0.06776033535872902, tob=0.067760335358729, naive=0.035555555555555556
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.006226304955212487
-Rate: froma=0.03366246844971819, tob=0.03366246844971817, naive=0.016904761904761905
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0010252571112571963
-Rate: froma=0.006098883060829596, tob=0.006098883060829592, naive=0.006746031746031746
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.00039129954094050106
-Rate: froma=0.00211011188910582, tob=0.0021101118891058185, naive=0.0031746031746031746
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.00039188558793034413
-Rate: froma=0.0009506621148790012, tob=0.0009506621148790004, naive=0.0006349206349206349
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay10_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap17/Y, resample_flag = True --------------
-fy_resamp = [2004 1999 2002 2013 2003 2016 1998 2012 2014 2009 2000 2000 2008 2013
- 2016 1997 2001 1997 2015 2015 2003]
-Before resampling: X.shape = (12000, 47, 210)
-After resampling: X.shape = (11400, 47, 210)
-Nx = 11400, Ntx = 47, xdim = 210
-Y[0,0,0] = 288.0
-Y.shape = (11400, 37, 12)
-min(szn_std_Y) = 2.350136561692542
-which feature has zero szn_std? []
-Y.shape = (11400, 37, 12)
-fidx_Y = {'time_h': 0, 'uref_dl0': 1, 'uref_dl1': 2, 'uref_dl2': 3, 'uref_dl3': 4, 'uref_dl4': 5, 'uref_dl5': 6, 'uref_dl6': 7, 'uref_dl7': 8, 'uref_dl8': 9, 'uref_dl9': 10, 'uref_dl10': 11}
-WARNING, we don't have any data in time slot 0. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 1. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 2. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 3. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 4. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 5. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 6. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 7. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 8. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 9. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 10. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 11. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
-ti = 30, km.n_clusters = 170, len(idx) = 1140
-ti = 60, km.n_clusters = 170, len(idx) = 1900
-ti = 90, km.n_clusters = 170, len(idx) = 2090
-ti = 120, km.n_clusters = 170, len(idx) = 2090
-ti = 150, km.n_clusters = 170, len(idx) = 1900
-n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
+flux_dens_tob: min=0.0,max=9.250864374649508e-05
+Rate: froma=0.0001902837160784551, tob=0.00019028371607845496, naive=0.00075
+summary = {'rate': 4.2592592592592593e-01}
+summary = {'rate': 0.3425925925925926}
+summary = {'rate': 0.23148148148148148}
+summary = {'rate': 0.12037037037037036}
+summary = {'rate': 0.018518518518518517}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5}
+summary = {'rate': 0.37142857142857144}
+summary = {'rate': 0.2714285714285714}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.08571428571428572}
+summary = {'rate': 0.05714285714285714}
+summary = {'rate': 0.014285714285714285}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5238095238095238}
+summary = {'rate': 0.42857142857142855}
+summary = {'rate': 0.3333333333333333}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.09523809523809523}
+summary = {'rate': 0.047619047619047616}
+summary = {'rate': 0.0}
+conf_lower = [0.2962963  0.2037037  0.11111111 0.05555556 0.01851852 0.
+ 0.         0.        ]
+conf_lower = [0.27142857 0.18571429 0.1        0.04285714 0.01428571 0.
+ 0.         0.        ]
+conf_lower = [0.19047619 0.0952381  0.04761905 0.         0.         0.
+ 0.         0.        ]
+summary = {'rate': 0.42592592592592593}
+summary = {'rate': 0.3425925925925926}
+summary = {'rate': 0.23148148148148148}
+summary = {'rate': 0.12037037037037036}
+summary = {'rate': 0.018518518518518517}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5}
+summary = {'rate': 0.37142857142857144}
+summary = {'rate': 0.2714285714285714}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.08571428571428572}
+summary = {'rate': 0.05714285714285714}
+summary = {'rate': 0.014285714285714285}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5238095238095238}
+summary = {'rate': 0.42857142857142855}
+summary = {'rate': 0.3333333333333333}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.09523809523809523}
+summary = {'rate': 0.047619047619047616}
+summary = {'rate': 0.0}
+conf_lower = [0.2962963  0.2037037  0.11111111 0.05555556 0.01851852]
+conf_lower = [0.27142857 0.18571429 0.1        0.04285714 0.01428571 0.
+ 0.        ]
+conf_lower = [0.19047619 0.0952381  0.04761905 0.         0.         0.
+ 0.        ]
+summary = {'rate': 0.4482758620689655}
+summary = {'rate': 0.3793103448275862}
+summary = {'rate': 0.22413793103448276}
+summary = {'rate': 0.08620689655172414}
+summary = {'rate': 0.017241379310344827}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5172413793103449}
+summary = {'rate': 0.3620689655172414}
+summary = {'rate': 0.25862068965517243}
+summary = {'rate': 0.13793103448275862}
+summary = {'rate': 0.06896551724137931}
+summary = {'rate': 0.05172413793103448}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+conf_lower = [0.25862069 0.17241379 0.0862069  0.03448276 0.01724138 0.
+ 0.         0.        ]
+conf_lower = [0.25862069 0.17241379 0.0862069  0.03448276 0.01724138 0.
+ 0.         0.        ]
+summary = {'rate': 0.4482758620689655}
+summary = {'rate': 0.3793103448275862}
+summary = {'rate': 0.22413793103448276}
+summary = {'rate': 0.08620689655172414}
+summary = {'rate': 0.017241379310344827}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5172413793103449}
+summary = {'rate': 0.3620689655172414}
+summary = {'rate': 0.25862068965517243}
+summary = {'rate': 0.13793103448275862}
+summary = {'rate': 0.06896551724137931}
+summary = {'rate': 0.05172413793103448}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+conf_lower = [0.25862069 0.17241379 0.0862069  0.03448276 0.01724138]
+conf_lower = [0.25862069 0.17241379 0.0862069  0.03448276 0.01724138 0.        ]
+70 170 170 170 170
  170 170 170 170 170 170]
 MSM timestep 0 out of 180
 MSM timestep 30 out of 180
@@ -7289,40 +7405,60 @@ MSM timestep 30 out of 180
 MSM timestep 60 out of 180
 MSM timestep 90 out of 180
 MSM timestep 120 out of 180
-ootstrap16/Y, resample_flag = True --------------
-fy_resamp = [2014 2009 1997 2002 2006 2012 2012 1999 2013 2006 2005 2008 2009 2002
- 2002 2003 2004 2009 2003 2012 2011]
+MSM timestep 150 out of 180
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.015767592263523013
+Rate: froma=0.3461966583857775, tob=0.34619665838577734, naive=0.145
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.012359115320239535
+Rate: froma=0.25015820191385535, tob=0.25015820191385535, naive=0.09956140350877193
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.010827844068883066
+Rate: froma=0.17386364143930721, tob=0.17386364143930708, naive=0.06771929824561404
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.008382146486783384
+Rate: froma=0.11009831560002332, tob=0.11009831560002327, naive=0.03736842105263158
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.00766701067109846
+Rate: froma=0.05830070346863215, tob=0.05830070346863213, naive=0.017719298245614034
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.001428904102483168
+Rate: froma=0.0070785246317730975, tob=0.007078524631773094, naive=0.006403508771929824
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.000705022786343504
+Rate: froma=0.0021100562921635706, tob=0.0021100562921635693, naive=0.0029824561403508773
+ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
+flux_dens_tob: min=0.0,max=0.00016726833458865709
+Rate: froma=0.00016726833458865714, tob=0.00016726833458865709, naive=0.0007894736842105263
+ -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay10_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap19/Y, resample_flag = True --------------
+fy_resamp = [2007 2016 2002 2005 2011 1999 2015 2008 2014 2013 2006 1998 1997 2007
+ 1999 2008 2000 1997 2013 1996 2003]
 Before resampling: X.shape = (12000, 47, 210)
-After resampling: X.shape = (12600, 47, 210)
-Nx = 12600, Ntx = 47, xdim = 210
-Y[0,0,0] = 408.0
-Y.shape = (12600, 32, 17)
+After resampling: X.shape = (12000, 47, 210)
+Nx = 12000, Ntx = 47, xdim = 210
+Y[0,0,0] = 288.0
+Y.shape = (12000, 37, 12)
 min(szn_std_Y) = 2.350136561692542
 which feature has zero szn_std? []
-Y.shape = (12600, 32, 17)
-fidx_Y = {'time_h': 0, 'uref_dl0': 1, 'uref_dl1': 2, 'uref_dl2': 3, 'uref_dl3': 4, 'uref_dl4': 5, 'uref_dl5': 6, 'uref_dl6': 7, 'uref_dl7': 8, 'uref_dl8': 9, 'uref_dl9': 10, 'uref_dl10': 11, 'uref_dl11': 12, 'uref_dl12': 13, 'uref_dl13': 14, 'uref_dl14': 15, 'uref_dl15': 16}
-WARNING, we don't have any data in time slot 0. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 1. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 2. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 3. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 4. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 5. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 6. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 7. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 8. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 9. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 10. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 11. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 12. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 13. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 14. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 15. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 16. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-ti = 30, km.n_clusters = 170, len(idx) = 840
-ti = 60, km.n_clusters = 170, len(idx) = 1890
-ti = 90, km.n_clusters = 170, len(idx) = 2100
-ti = 120, km.n_clusters = 170, len(idx) = 1890
-ti = 150, km.n_clusters = 170, len(idx) = 1890
+Y.shape = (12000, 37, 12)
+fidx_Y = {'time_h': 0, 'uref_dl0': 1, 'uref_dl1': 2, 'uref_dl2': 3, 'uref_dl3': 4, 'uref_dl4': 5, 'uref_dl5': 6, 'uref_dl6': 7, 'uref_dl7': 8, 'uref_dl8': 9, 'uref_dl9': 10, 'uref_dl10': 11}
+WARNING, we don't have any data in time slot 0. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 1. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 2. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 3. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 4. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 5. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 6. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 7. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 8. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 9. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 10. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
+WARNING, we don't have any data in time slot 11. Y time: min=288.0, max=6120.0. wtime: min=0.0, max=4296.0.
+ti = 30, km.n_clusters = 170, len(idx) = 1200
+ti = 60, km.n_clusters = 170, len(idx) = 2000
+ti = 90, km.n_clusters = 170, len(idx) = 2200
+ti = 120, km.n_clusters = 170, len(idx) = 2200
+ti = 150, km.n_clusters = 170, len(idx) = 2000
 n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
  170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
  170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
@@ -7332,7 +7468,7 @@ n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
  170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
  170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
  170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170]
+ 170 170 170 170 170 170]
 MSM timestep 0 out of 180
 MSM timestep 30 out of 180
 MSM timestep 60 out of 180
@@ -7340,97 +7476,127 @@ MSM timestep 90 out of 180
 MSM timestep 120 out of 180
 MSM timestep 150 out of 180
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.017443830381407312
-Rate: froma=0.4253865018539577, tob=0.42538650185395777, naive=0.1415873015873016
+flux_dens_tob: min=0.0,max=0.017604063448231334
+Rate: froma=0.42730024859762195, tob=0.4273002485976219, naive=0.14916666666666667
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.01585294923129239
-Rate: froma=0.3109400734357134, tob=0.3109400734357133, naive=0.09492063492063492
+flux_dens_tob: min=0.0,max=0.011865894498681178
+Rate: froma=0.3138344313444577, tob=0.3138344313444576, naive=0.10525
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.014941136753763563
-Rate: froma=0.19448201135303586, tob=0.1944820113530358, naive=0.060238095238095236
+flux_dens_tob: min=0.0,max=0.008900268690793862
+Rate: froma=0.20284066076345558, tob=0.20284066076345544, naive=0.07433333333333333
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.017812940847272193
-Rate: froma=0.09446389391473133, tob=0.0944638939147313, naive=0.03214285714285714
+flux_dens_tob: min=0.0,max=0.012953090150777507
+Rate: froma=0.12330067653451648, tob=0.12330067653451643, naive=0.04591666666666667
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.005031600813976034
-Rate: froma=0.029693488751708495, tob=0.02969348875170848, naive=0.015476190476190477
+flux_dens_tob: min=0.0,max=0.010798756337127003
+Rate: froma=0.05277802306216671, tob=0.05277802306216668, naive=0.0255
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.001731270105856594
-Rate: froma=0.009970597415435389, tob=0.009970597415435383, naive=0.005952380952380952
+flux_dens_tob: min=0.0,max=0.0018872978620064005
+Rate: froma=0.01505521315686393, tob=0.015055213156863922, naive=0.009916666666666667
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.001288469930115585
-Rate: froma=0.003412867360593788, tob=0.0034128673605937866, naive=0.003015873015873016
+flux_dens_tob: min=0.0,max=0.0006253642956493584
+Rate: froma=0.001554554713136885, tob=0.0015545547131368843, naive=0.003
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0012885072473970013
-Rate: froma=0.0017318357923606933, tob=0.001731835792360692, naive=0.0006349206349206349
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay15_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap17/Y, resample_flag = True --------------
-fy_resamp = [2004 1999 2002 2013 2003 2016 1998 2012 2014 2009 2000 2000 2008 2013
- 2016 1997 2001 1997 2015 2015 2003]
-Before resampling: X.shape = (12000, 47, 210)
-After resampling: X.shape = (11400, 47, 210)
-Nx = 11400, Ntx = 47, xdim = 210
-Y[0,0,0] = 408.0
-Y.shape = (11400, 32, 17)
-min(szn_std_Y) = 2.350136561692542
-which feature has zero szn_std? []
-Y.shape = (11400, 32, 17)
-fidx_Y = {'time_h': 0, 'uref_dl0': 1, 'uref_dl1': 2, 'uref_dl2': 3, 'uref_dl3': 4, 'uref_dl4': 5, 'uref_dl5': 6, 'uref_dl6': 7, 'uref_dl7': 8, 'uref_dl8': 9, 'uref_dl9': 10, 'uref_dl10': 11, 'uref_dl11': 12, 'uref_dl12': 13, 'uref_dl13': 14, 'uref_dl14': 15, 'uref_dl15': 16}
-WARNING, we don't have any data in time slot 0. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 1. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 2. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 3. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 4. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 5. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 6. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 7. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 8. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 9. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 10. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 11. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 12. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 13. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 14. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 15. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 16. Y time: min=408.0, max=6120.0. wtime: min=0.0, max=4296.0.
-ti = 30, km.n_clusters = 170, len(idx) = 760
-ti = 60, km.n_clusters = 170, len(idx) = 1710
-ti = 90, km.n_clusters = 170, len(idx) = 1900
-ti = 120, km.n_clusters = 170, len(idx) = 1710
-ti = 150, km.n_clusters = 170, len(idx) = 1710
-n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170]
-MSM timestep 0 out of 180
-MSM timestep 30 out of 180
-MSM timestep 60 out of 180
-MSM timestep 90 out of 180
-MSM timestep 120 out of 180
-MSM timestep 150 out of 180
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.015497041779084297
-Rate: froma=0.4562384291141902, tob=0.4562384291141901, naive=0.14342105263157895
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.014309091306187145
-Rate: froma=0.3183784094721665, tob=0.31837840947216633, naive=0.09342105263157895
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.01279854813577943
-Rate: froma=0.21416200840977137, tob=0.21416200840977126, naive=0.061754385964912284
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.012645831255340838
-Rate: froma=0.11555027789357657, tob=0.11555027789357651, naive=0.03614035087719298
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.006299322419093632
-Rate: froma=0.04445769220162035, tob=0.04445769220162034, naive=0.02
-ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0016305787037505183
-Rate: froma=0.012820621216396814, tob=0.012820621216396806, naive=0.008070175438596491
+flux_dens_tob: min=0.0,max=0.0006253642956493584
+Rate: froma=0.0012119647302836953, tob=0.0012119647302836951, naive=0.00075
+summary = {'rate': 4.2592592592592593e-01}
+summary = {'rate': 0.3425925925925926}
+summary = {'rate': 0.23148148148148148}
+summary = {'rate': 0.12037037037037036}
+summary = {'rate': 0.018518518518518517}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5}
+summary = {'rate': 0.37142857142857144}
+summary = {'rate': 0.2714285714285714}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.08571428571428572}
+summary = {'rate': 0.05714285714285714}
+summary = {'rate': 0.014285714285714285}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5238095238095238}
+summary = {'rate': 0.42857142857142855}
+summary = {'rate': 0.3333333333333333}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.09523809523809523}
+summary = {'rate': 0.047619047619047616}
+summary = {'rate': 0.0}
+conf_lower = [0.33333333 0.23148148 0.13888889 0.06481481 0.01851852 0.
+ 0.         0.        ]
+conf_lower = [0.31428571 0.2        0.11428571 0.04285714 0.01428571 0.
+ 0.         0.        ]
+conf_lower = [0.23809524 0.14285714 0.04761905 0.         0.         0.
+ 0.         0.        ]
+summary = {'rate': 0.42592592592592593}
+summary = {'rate': 0.3425925925925926}
+summary = {'rate': 0.23148148148148148}
+summary = {'rate': 0.12037037037037036}
+summary = {'rate': 0.018518518518518517}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5}
+summary = {'rate': 0.37142857142857144}
+summary = {'rate': 0.2714285714285714}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.08571428571428572}
+summary = {'rate': 0.05714285714285714}
+summary = {'rate': 0.014285714285714285}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5238095238095238}
+summary = {'rate': 0.42857142857142855}
+summary = {'rate': 0.3333333333333333}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.09523809523809523}
+summary = {'rate': 0.047619047619047616}
+summary = {'rate': 0.0}
+conf_lower = [0.33333333 0.23148148 0.13888889 0.06481481 0.01851852]
+conf_lower = [0.31428571 0.2        0.11428571 0.04285714 0.01428571 0.
+ 0.        ]
+conf_lower = [0.23809524 0.14285714 0.04761905 0.         0.         0.
+ 0.        ]
+summary = {'rate': 0.4482758620689655}
+summary = {'rate': 0.3793103448275862}
+summary = {'rate': 0.22413793103448276}
+summary = {'rate': 0.08620689655172414}
+summary = {'rate': 0.017241379310344827}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5172413793103449}
+summary = {'rate': 0.3620689655172414}
+summary = {'rate': 0.25862068965517243}
+summary = {'rate': 0.13793103448275862}
+summary = {'rate': 0.06896551724137931}
+summary = {'rate': 0.05172413793103448}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+conf_lower = [0.29310345 0.18965517 0.12068966 0.03448276 0.         0.
+ 0.         0.        ]
+conf_lower = [0.29310345 0.18965517 0.12068966 0.03448276 0.         0.
+ 0.         0.        ]
+summary = {'rate': 0.4482758620689655}
+summary = {'rate': 0.3793103448275862}
+summary = {'rate': 0.22413793103448276}
+summary = {'rate': 0.08620689655172414}
+summary = {'rate': 0.017241379310344827}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5172413793103449}
+summary = {'rate': 0.3620689655172414}
+summary = {'rate': 0.25862068965517243}
+summary = {'rate': 0.13793103448275862}
+summary = {'rate': 0.06896551724137931}
+summary = {'rate': 0.05172413793103448}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+conf_lower = [0.29310345 0.18965517 0.12068966 0.03448276 0.        ]
+conf_lower = [0.29310345 0.18965517 0.12068966 0.03448276 0.         0.        ]
+e: froma=0.012820621216396814, tob=0.012820621216396806, naive=0.008070175438596491
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
 flux_dens_tob: min=0.0,max=0.0008926008648155544
 Rate: froma=0.0033685698494879605, tob=0.00336856984948796, naive=0.002807017543859649
@@ -7557,79 +7723,131 @@ n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
  170]
 MSM timestep 0 out of 180
 MSM timestep 30 out of 180
- min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 15. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 16. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 17. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 18. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 19. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 20. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 21. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-ti = 30, km.n_clusters = 170, len(idx) = 570
-ti = 60, km.n_clusters = 170, len(idx) = 1520
-ti = 90, km.n_clusters = 170, len(idx) = 1520
-ti = 120, km.n_clusters = 170, len(idx) = 1520
-ti = 150, km.n_clusters = 170, len(idx) = 1330
-n_clusters: [170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170 170
- 170 170 170 170 170 170 170 170 170 170 170 170 170 170]
-MSM timestep 0 out of 180
-MSM timestep 30 out of 180
 MSM timestep 60 out of 180
 MSM timestep 90 out of 180
 MSM timestep 120 out of 180
 MSM timestep 150 out of 180
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.016961445544367976
-Rate: froma=0.5263855046538317, tob=0.5263855046538316, naive=0.12543859649122807
+flux_dens_tob: min=0.0,max=0.013329165296532879
+Rate: froma=0.4593767330477352, tob=0.4593767330477352, naive=0.1375
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.016978891792657307
-Rate: froma=0.38619184720463684, tob=0.38619184720463673, naive=0.08368421052631579
+flux_dens_tob: min=0.0,max=0.015006624434781414
+Rate: froma=0.3402148845448368, tob=0.34021488454483667, naive=0.09616666666666666
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.010945989846049275
-Rate: froma=0.26273955512075675, tob=0.2627395551207567, naive=0.054649122807017544
+flux_dens_tob: min=0.0,max=0.017319872135265625
+Rate: froma=0.2468490117480574, tob=0.24684901174805726, naive=0.06625
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.010694251589461183
-Rate: froma=0.1388434911536569, tob=0.13884349115365685, naive=0.032543859649122805
+flux_dens_tob: min=0.0,max=0.010967006413888446
+Rate: froma=0.13100526288985612, tob=0.13100526288985603, naive=0.03933333333333333
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.005285791084294782
-Rate: froma=0.06614199073180439, tob=0.06614199073180435, naive=0.01780701754385965
+flux_dens_tob: min=0.0,max=0.004951265325733489
+Rate: froma=0.05738627132983318, tob=0.057386271329833136, naive=0.021
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.003435548791905599
-Rate: froma=0.02585397697213731, tob=0.0258539769721373, naive=0.006929824561403509
+flux_dens_tob: min=0.0,max=0.00257157092294703
+Rate: froma=0.012158614450939338, tob=0.012158614450939334, naive=0.00825
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.0029059121715416217
-Rate: froma=0.009193699361093372, tob=0.009193699361093365, naive=0.002631578947368421
+flux_dens_tob: min=0.0,max=0.0007124898635116454
+Rate: froma=0.002636329447263927, tob=0.0026363294472639257, naive=0.0026666666666666666
 ina[0].shape = (170,), inb[0].shape = (170,), P_list[0].shape = (170, 170)
-flux_dens_tob: min=0.0,max=0.00023015959594014187
-Rate: froma=0.00046100166063122166, tob=0.0004610016606312214, naive=0.0005263157894736842
- -------------- Inside evaluate_tpt_features: tpt_feat_filename = /scratch/jf4241/ecmwf_data/results/2022-03-16/3/s2s/delay20_nwaves0_vxm0_pc-_hf-_temp-_nclust170/overlapself_bootstrap18/Y, resample_flag = True --------------
-fy_resamp = [2005 2013 2005 1996 2015 2000 2013 2016 2012 1999 2006 1997 2016 2000
- 2000 2012 2012 2011 2006 2009 2004]
-Before resampling: X.shape = (12000, 47, 210)
-After resampling: X.shape = (11400, 47, 210)
-Nx = 11400, Ntx = 47, xdim = 210
-Y[0,0,0] = 528.0
-Y.shape = (11400, 27, 22)
-min(szn_std_Y) = 2.350136561692542
-which feature has zero szn_std? []
-Y.shape = (11400, 27, 22)
-fidx_Y = {'time_h': 0, 'uref_dl0': 1, 'uref_dl1': 2, 'uref_dl2': 3, 'uref_dl3': 4, 'uref_dl4': 5, 'uref_dl5': 6, 'uref_dl6': 7, 'uref_dl7': 8, 'uref_dl8': 9, 'uref_dl9': 10, 'uref_dl10': 11, 'uref_dl11': 12, 'uref_dl12': 13, 'uref_dl13': 14, 'uref_dl14': 15, 'uref_dl15': 16, 'uref_dl16': 17, 'uref_dl17': 18, 'uref_dl18': 19, 'uref_dl19': 20, 'uref_dl20': 21}
-WARNING, we don't have any data in time slot 0. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 1. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 2. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 3. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 4. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 5. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 6. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 7. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
-WARNING, we don't have any data in time slot 8. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
+flux_dens_tob: min=0.0,max=0.0007124898635116454
+Rate: froma=0.0018259085272867431, tob=0.0018259085272867423, naive=0.00075
+summary = {'rate': 4.2592592592592593e-01}
+summary = {'rate': 0.3425925925925926}
+summary = {'rate': 0.23148148148148148}
+summary = {'rate': 0.12037037037037036}
+summary = {'rate': 0.018518518518518517}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5}
+summary = {'rate': 0.37142857142857144}
+summary = {'rate': 0.2714285714285714}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.08571428571428572}
+summary = {'rate': 0.05714285714285714}
+summary = {'rate': 0.014285714285714285}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5238095238095238}
+summary = {'rate': 0.42857142857142855}
+summary = {'rate': 0.3333333333333333}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.09523809523809523}
+summary = {'rate': 0.047619047619047616}
+summary = {'rate': 0.0}
+conf_lower = [0.36111111 0.24074074 0.15740741 0.06481481 0.00925926 0.
+ 0.         0.        ]
+conf_lower = [0.34285714 0.22857143 0.12857143 0.05714286 0.         0.
+ 0.         0.        ]
+conf_lower = [0.23809524 0.14285714 0.04761905 0.         0.         0.
+ 0.         0.        ]
+summary = {'rate': 0.42592592592592593}
+summary = {'rate': 0.3425925925925926}
+summary = {'rate': 0.23148148148148148}
+summary = {'rate': 0.12037037037037036}
+summary = {'rate': 0.018518518518518517}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5}
+summary = {'rate': 0.37142857142857144}
+summary = {'rate': 0.2714285714285714}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.08571428571428572}
+summary = {'rate': 0.05714285714285714}
+summary = {'rate': 0.014285714285714285}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5238095238095238}
+summary = {'rate': 0.42857142857142855}
+summary = {'rate': 0.3333333333333333}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.14285714285714285}
+summary = {'rate': 0.09523809523809523}
+summary = {'rate': 0.047619047619047616}
+summary = {'rate': 0.0}
+conf_lower = [0.36111111 0.24074074 0.15740741 0.06481481 0.00925926]
+conf_lower = [0.34285714 0.22857143 0.12857143 0.05714286 0.         0.
+ 0.        ]
+conf_lower = [0.23809524 0.14285714 0.04761905 0.         0.         0.
+ 0.        ]
+summary = {'rate': 0.4482758620689655}
+summary = {'rate': 0.3793103448275862}
+summary = {'rate': 0.22413793103448276}
+summary = {'rate': 0.08620689655172414}
+summary = {'rate': 0.017241379310344827}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5172413793103449}
+summary = {'rate': 0.3620689655172414}
+summary = {'rate': 0.25862068965517243}
+summary = {'rate': 0.13793103448275862}
+summary = {'rate': 0.06896551724137931}
+summary = {'rate': 0.05172413793103448}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+conf_lower = [0.32758621 0.20689655 0.12068966 0.05172414 0.         0.
+ 0.         0.        ]
+conf_lower = [0.32758621 0.20689655 0.12068966 0.05172414 0.         0.
+ 0.         0.        ]
+summary = {'rate': 0.4482758620689655}
+summary = {'rate': 0.3793103448275862}
+summary = {'rate': 0.22413793103448276}
+summary = {'rate': 0.08620689655172414}
+summary = {'rate': 0.017241379310344827}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+summary = {'rate': 0.5172413793103449}
+summary = {'rate': 0.3620689655172414}
+summary = {'rate': 0.25862068965517243}
+summary = {'rate': 0.13793103448275862}
+summary = {'rate': 0.06896551724137931}
+summary = {'rate': 0.05172413793103448}
+summary = {'rate': 0.0}
+summary = {'rate': 0.0}
+conf_lower = [0.32758621 0.20689655 0.12068966 0.05172414 0.        ]
+conf_lower = [0.32758621 0.20689655 0.12068966 0.05172414 0.         0.        ]
 WARNING, we don't have any data in time slot 9. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
 WARNING, we don't have any data in time slot 10. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
 WARNING, we don't have any data in time slot 11. Y time: min=528.0, max=6120.0. wtime: min=0.0, max=4296.0.
