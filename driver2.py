@@ -257,7 +257,7 @@ task_list = dict({
         "build_msm_flag":                     0,
         "tpt_s2s_flag":                       0,
         "transfer_results_flag":              0,
-        "plot_tpt_results_flag":              1,
+        "plot_tpt_results_flag":              0,
         }),
     "comparison": dict({
         "plot_rate_flag":                     1,
@@ -423,6 +423,7 @@ quantiles = np.array([0.05,0.25,0.75,0.95])
 # Build the rate dictionary as we go
 rate_dict = dict({})
 nyears_dict = dict({})
+conf_levels = [0.5,0.95]
 if task_list["comparison"]["plot_rate_flag"]:
     for boxplot_keys in [boxplot_keys_hc,boxplot_keys_ra]:
         for scale in ['linear','log']:
@@ -460,30 +461,33 @@ if task_list["comparison"]["plot_rate_flag"]:
                     srcovl = f"{src}-{ovl}"
                     # Now plot them all 
                     good_idx = np.where(rate_dict[srcovl][0] > 0)[0] if scale == 'log' else np.arange(len(uthresh_list))
-                    h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[srcovl],rate_dict[srcovl][0,good_idx],color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,marker='o',linestyle='-',label=subsets[src]["overlaps"][ovl]["label"],alpha=1.0,s=16, zorder=1)
+                    h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[srcovl],rate_dict[srcovl][0,good_idx],color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,marker='o',linestyle='-',label=subsets[src]["overlaps"][ovl]["label"],alpha=1.0,s=32, zorder=1)
                     handles += [h]
                     xlabels = None if src == "s2s" else ['']*len(good_idx)
                     bootstraps = 2*rate_dict[srcovl][0,good_idx] - rate_dict[srcovl][1:,:][:,good_idx]
                     if scale == 'log' or scale == 'logit':
                         bootstraps = np.maximum(0.5*ylim[scale][0], np.minimum(0.5*(ylim[scale][1]+1), bootstraps))
-                    if binomial_flag and (src != "s2s"):
-                        # Calculate confidence intervals for the binomial distribution coefficients
-                        num_events = rate_dict[srcovl][0,good_idx]*nyears_dict[srcovl]
-                        if (src != "s2s") and np.max(np.abs(num_events - np.round(num_events))) > 1e-10:
-                            raise Exception(f"ERROR: num_events = {num_events}. the number of events given the empirical rate does not seem to be an integer. src = {src}")
-                        quantile_lower = scipy_binom.ppf(0.05, nyears_dict[srcovl], rate_dict["s2s-self"][0,good_idx]) / nyears_dict[srcovl]
-                        quantile_upper = scipy_binom.ppf(0.95, nyears_dict[srcovl], rate_dict["s2s-self"][0,good_idx]) / nyears_dict[srcovl]
-                        # Manipulate so the confidence interval contains the point estimate
-                        conf_lower = quantile_lower #rate_dict[srcovl][0,good_idx] - (quantile_upper - rate_dict["s2s-self"][0,good_idx])
-                        conf_upper = quantile_upper #rate_dict[srcovl][0,good_idx] + (rate_dict["s2s-self"][0,good_idx] - quantile_lower)
-                        print(f"conf_lower = {conf_lower}")
-                    else:
-                        conf_lower = np.quantile(bootstraps, 0.05, axis=0)
-                        conf_upper = np.quantile(bootstraps, 0.95, axis=0)
-                    # Create fake data points halfway in between lower and upper
-                    conf_mid = 0.5*(conf_lower + conf_upper)
-                    yerr = 0.5*(conf_upper - conf_lower)
-                    ax.errorbar(uthresh_list[good_idx]+errorbar_offsets[srcovl],conf_mid,yerr=yerr,fmt='none',color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,zorder=0,capthick=1,capsize=du)
+                    for i_conf in range(len(conf_levels)):
+                        if binomial_flag and (src != "s2s"):
+                            # Calculate confidence intervals for the binomial distribution coefficients
+                            num_events = rate_dict[srcovl][0,good_idx]*nyears_dict[srcovl]
+                            if (src != "s2s") and np.max(np.abs(num_events - np.round(num_events))) > 1e-10:
+                                raise Exception(f"ERROR: num_events = {num_events}. the number of events given the empirical rate does not seem to be an integer. src = {src}")
+                            quantile_lower = scipy_binom.ppf((1-conf_levels[i_conf])/2, nyears_dict[srcovl], rate_dict["s2s-self"][0,good_idx]) / nyears_dict[srcovl]
+                            quantile_upper = scipy_binom.ppf((1+conf_levels[i_conf])/2, nyears_dict[srcovl], rate_dict["s2s-self"][0,good_idx]) / nyears_dict[srcovl]
+                            # Manipulate so the confidence interval contains the point estimate
+                            conf_lower = quantile_lower 
+                            conf_upper = quantile_upper 
+                            #conf_lower = rate_dict[srcovl][0,good_idx] - (quantile_upper - rate_dict["s2s-self"][0,good_idx])
+                            #conf_upper = rate_dict[srcovl][0,good_idx] + (rate_dict["s2s-self"][0,good_idx] - quantile_lower)
+                            print(f"conf_lower = {conf_lower}")
+                        else:
+                            conf_lower = np.quantile(bootstraps, (1-conf_levels[i_conf])/2, axis=0)
+                            conf_upper = np.quantile(bootstraps, (1+conf_levels[i_conf])/2, axis=0)
+                        # Create fake data points halfway in between lower and upper
+                        conf_mid = 0.5*(conf_lower + conf_upper)
+                        yerr = 0.5*(conf_upper - conf_lower)
+                        ax.errorbar(uthresh_list[good_idx]+errorbar_offsets[srcovl],conf_mid,yerr=yerr,fmt='none',color=subsets[src]["overlaps"][ovl]["color"],linewidth=4/(2**i_conf),zorder=0,capthick=1)
                     #bplot = ax.boxplot(
                     #        bootstraps, 
                     #        positions=uthresh_list[good_idx]+errorbar_offsets[srcovl], whis=(5,95), 
