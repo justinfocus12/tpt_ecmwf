@@ -59,9 +59,14 @@ print(f"intersection = {intersection}")
 subsets = dict({
     "ei": dict({
         "overlaps": dict({
-            "self": dict({"full": fall_years["ei"],}),
-            "ra": dict({"full": intersection,}),
-            "hc": dict({"full": np.intersect1d(fall_years["ei"],fall_years["s2s"])}),
+            "self": dict({"full": fall_years["ei"],
+                "color": "red",
+                "label": f"ERA-I {fall_years['ei'][0]}-{fall_years['ei'][-1]}",
+                }),
+            "hc": dict({"full": np.intersect1d(fall_years["ei"],fall_years["s2s"]),
+                "color": "red",
+                "label": f"ERA-I {max(fall_years['ei'][0],fall_years['s2s'][0])}-{min(fall_years['ei'][-1],fall_years['s2s'][-1])}",
+                }),
             }),
         "num_bootstrap": 10, 
         "num_full_kmeans_seeds": 1,
@@ -87,18 +92,23 @@ subsets = dict({
         "rank": 1,
         }),
     "e5": dict({
+        "generic_label": "ERA-5",
         "overlaps": dict({
             "self": dict({"full": fall_years["e5"], 
                 "color": "black", 
-                "label": f"ERA5 {fall_years['e5'][0]}-{fall_years['e5'][-1]}"
+                "label": f"ERA-5 {fall_years['e5'][0]}-{fall_years['e5'][-1]}"
                 }),
             "ra": dict({"full": intersection, 
                 "color": "black", 
-                "label": f"ERA5 {intersection[0]}-{intersection[-1]}"
+                "label": f"ERA-5 {intersection[0]}-{intersection[-1]}"
+                }),
+            "ei": dict({"full": np.intersect1d(fall_years["e5"],fall_years["ei"]), 
+                "color": "black", 
+                "label": f"ERA-5 {fall_years['ei'][0]}-{fall_years['ei'][-1]}"
                 }),
             "hc": dict({"full": np.intersect1d(fall_years["e5"],fall_years["s2s"]), 
                 "color": "orange", 
-                "label": f"ERA5 {max(fall_years['e5'][0],fall_years['s2s'][0])}-{min(fall_years['e5'][-1],fall_years['s2s'][-1])}"
+                "label": f"ERA-5 {max(fall_years['e5'][0],fall_years['s2s'][0])}-{min(fall_years['e5'][-1],fall_years['s2s'][-1])}"
                 }),
             }),
         "num_bootstrap": 10, 
@@ -106,6 +116,7 @@ subsets = dict({
         "rank": 2,
         }),
     "s2s": dict({
+        "generic_label": "S2S",
         "overlaps": dict({
             "self": dict({"full": fall_years["s2s"],
                 "color": "red",
@@ -408,6 +419,10 @@ boxplot_keys_ra = dict({
     "e2": ["ra",],
     "e5": ["ra",],
     })
+boxplot_keys_ei = dict({
+    "e5": ["ei",],
+    "ei": ["self",],
+    })
 
 # Two possibilities for error bars: bootstrap, or binomial confidence intervals.
 binomial_flag = True
@@ -417,16 +432,26 @@ loc = {'log': 'lower right', 'logit': 'lower right', 'linear': 'upper left'}
 bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
 du = np.abs(uthresh_list[1] - uthresh_list[0])/8.0 # How far to offset the x axis positions for the three timeseries
 errorbar_offsets = dict({"e5-hc": -3/2*du, "e5-self": -du/2, "e2-self": du/2, "s2s-self": 3*du/2,
-    "e5-ra": -1/2*du, "e2-ra": 1/2*du,})
+    "e5-ra": -1/2*du, "e5-ei": -1/2*du, "e2-ra": 1/2*du, "ei-self": du/2})
 quantiles = np.array([0.05,0.25,0.75,0.95])
+
+y0 = 0.9
+base = 10
+def mylogit(y):
+    z = (y < y0)*np.log(y)/np.log(base) + (y >= y0)*(y/y0 + np.log(y0) - 1)/np.log(base)
+    return z
+def myinvlogit(z):
+    y = (z < np.log(y0)/np.log(base))*np.exp(z*np.log(base)) + (z >= np.log(y0)/np.log(base))*y0*(z*np.log(base) + 1 - np.log(y0))
+    return y
+
 
 # Build the rate dictionary as we go
 rate_dict = dict({})
 nyears_dict = dict({})
 conf_levels = [0.5,0.95]
 if task_list["comparison"]["plot_rate_flag"]:
-    for boxplot_keys in [boxplot_keys_hc,boxplot_keys_ra]:
-        for scale in ['linear','log']:
+    for boxplot_keys in [boxplot_keys_hc,boxplot_keys_ra,boxplot_keys_ei]:
+        for scale in ['logit','linear','log']:
             fig,ax = plt.subplots()
             savefig_suffix = ""
             ax.set_xlabel("Zonal wind threshold [m/s]",fontdict=font)
@@ -460,7 +485,8 @@ if task_list["comparison"]["plot_rate_flag"]:
                 for ovl in boxplot_keys[src]:
                     srcovl = f"{src}-{ovl}"
                     # Now plot them all 
-                    good_idx = np.where(rate_dict[srcovl][0] > 0)[0] if scale == 'log' else np.arange(len(uthresh_list))
+                    good_idx = np.where(rate_dict[srcovl][0] > 0)[0] if (scale == 'log' or scale == 'logit') else np.arange(len(uthresh_list))
+                    print(f"scale = {scale}, good_idx = {good_idx}")
                     h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[srcovl],rate_dict[srcovl][0,good_idx],color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,marker='o',linestyle='-',label=subsets[src]["overlaps"][ovl]["label"],alpha=1.0,s=32, zorder=1)
                     handles += [h]
                     xlabels = None if src == "s2s" else ['']*len(good_idx)
@@ -473,8 +499,12 @@ if task_list["comparison"]["plot_rate_flag"]:
                             num_events = rate_dict[srcovl][0,good_idx]*nyears_dict[srcovl]
                             if (src != "s2s") and np.max(np.abs(num_events - np.round(num_events))) > 1e-10:
                                 raise Exception(f"ERROR: num_events = {num_events}. the number of events given the empirical rate does not seem to be an integer. src = {src}")
-                            quantile_lower = scipy_binom.ppf((1-conf_levels[i_conf])/2, nyears_dict[srcovl], rate_dict["s2s-self"][0,good_idx]) / nyears_dict[srcovl]
-                            quantile_upper = scipy_binom.ppf((1+conf_levels[i_conf])/2, nyears_dict[srcovl], rate_dict["s2s-self"][0,good_idx]) / nyears_dict[srcovl]
+                            if "s2s" in boxplot_keys:
+                                truth_prob = rate_dict["s2s-self"][0,good_idx]
+                            else:
+                                truth_prob = rate_dict[srcovl][0,good_idx]
+                            quantile_lower = scipy_binom.ppf((1-conf_levels[i_conf])/2, nyears_dict[srcovl], truth_prob) / nyears_dict[srcovl]
+                            quantile_upper = scipy_binom.ppf((1+conf_levels[i_conf])/2, nyears_dict[srcovl], truth_prob) / nyears_dict[srcovl]
                             # Manipulate so the confidence interval contains the point estimate
                             conf_lower = quantile_lower 
                             conf_upper = quantile_upper 
@@ -487,17 +517,9 @@ if task_list["comparison"]["plot_rate_flag"]:
                         # Create fake data points halfway in between lower and upper
                         conf_mid = 0.5*(conf_lower + conf_upper)
                         yerr = 0.5*(conf_upper - conf_lower)
-                        ax.errorbar(uthresh_list[good_idx]+errorbar_offsets[srcovl],conf_mid,yerr=yerr,fmt='none',color=subsets[src]["overlaps"][ovl]["color"],linewidth=4/(2**i_conf),zorder=0,capthick=1)
-                    #bplot = ax.boxplot(
-                    #        bootstraps, 
-                    #        positions=uthresh_list[good_idx]+errorbar_offsets[srcovl], whis=(5,95), 
-                    #        patch_artist=True, labels=xlabels, manage_ticks=False, widths=du, sym='x', showmeans=False, zorder=0, showfliers=False,
-                    #        boxprops={"color": subsets[src]["overlaps"][ovl]["color"], "facecolor": "white"},
-                    #        whiskerprops={"color": subsets[src]["overlaps"][ovl]["color"]},
-                    #        medianprops={"color": subsets[src]["overlaps"][ovl]["color"]}, 
-                    #        capprops={"color": subsets[src]["overlaps"][ovl]["color"]}, 
-                    #        flierprops={"markerfacecolor": None, "markeredgecolor": subsets[src]["overlaps"][ovl]["color"]},
-                    #        )
+                        for i_uth in good_idx:
+                            ax.plot(np.ones(2)*(uthresh_list[i_uth]+errorbar_offsets[srcovl]), [conf_lower[i_uth],conf_upper[i_uth]], color=subsets[src]["overlaps"][ovl]["color"],linewidth=4/(2**i_conf),zorder=0) #, marker='x')
+                        #ax.errorbar(uthresh_list[good_idx]+errorbar_offsets[srcovl],conf_mid,yerr=yerr,fmt='none',color=subsets[src]["overlaps"][ovl]["color"],linewidth=4/(2**i_conf),zorder=0,capthick=1)
                     savefig_suffix += f"{src}{ovl}"
                     ax.legend(handles=handles,loc=loc[scale])
                     ax.set_ylim(ylim[scale])
@@ -505,7 +527,7 @@ if task_list["comparison"]["plot_rate_flag"]:
                     xlim = [1.5*uthresh_list_sorted[0]-0.5*uthresh_list_sorted[1], 1.5*uthresh_list_sorted[-1]-0.5*uthresh_list_sorted[-2]]
                     ax.set_xlim(xlim)
                     if scale == 'logit':
-                        ax.set_yscale('function',functions=(myinvlogit,mylogit))
+                        ax.set_yscale('function',functions=(mylogit,myinvlogit))
                     else:
                         ax.set_yscale(scale)
                     fig.savefig(join(paramdirs["s2s"],"rate_%s_%s_%s_binom%i"%(bndy_suffix,savefig_suffix,scale,binomial_flag)))
@@ -521,19 +543,22 @@ if task_list["comparison"]["illustrate_dataset_flag"]:
     fall_year_filename_hc = join(expdirs["s2s"],"fall_year_list.npy")
     tpt_feat_filename_ra = join(subsets["e5"]["overlaps"]["self"]["full_dirs"][0],"Y")
     tpt_feat_filename_hc = join(subsets["s2s"]["overlaps"]["self"]["full_dirs"][0],"Y")
+    label_ra = subsets["e5"]["generic_label"]
+    label_hc = subsets["s2s"]["generic_label"]
     tthresh = np.array([tthresh0,tthresh1])*24.0
     winstrat.illustrate_dataset(
-            uthresh_a,uthresh_list[[1,3,4]],tthresh,sswbuffer,
+            uthresh_a,uthresh_list[[0,2,3]],tthresh,sswbuffer,
             feat_filename_ra,feat_filename_hc,
+            label_ra,label_hc,
             tpt_feat_filename_ra,tpt_feat_filename_hc,
             ens_start_filename_ra,ens_start_filename_hc,
             fall_year_filename_ra,fall_year_filename_hc,
             feat_def,feat_display_dir
             )
-    fall_year_filename_ra_dict = dict({k: join(expdirs[k],"fall_year_list.npy") for k in ["e2","e5"]})
-    feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in ["e2","e5"]})
-    colors = {src: subsets[src]["overlaps"]["self"]["color"] for src in ["e2","e5"]}
-    labels = {src: subsets[src]["overlaps"]["self"]["label"] for src in ["e2","e5"]}
+    fall_year_filename_ra_dict = dict({k: join(expdirs[k],"fall_year_list.npy") for k in ["e2","e5","ei"]})
+    feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in ["e2","e5","ei"]})
+    colors = {src: subsets[src]["overlaps"]["self"]["color"] for src in ["e2","e5","ei"]}
+    labels = {src: subsets[src]["overlaps"]["self"]["label"] for src in ["e2","e5","ei"]}
     winstrat.plot_zonal_wind_every_year(
             feat_filename_ra_dict,fall_year_filename_ra_dict,
             feat_def,feat_display_dir,colors,labels,

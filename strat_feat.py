@@ -1050,6 +1050,10 @@ class WinterStratosphereFeatures:
                 "fun": lambda X: X[:,self.fidx_X["time_h"]]/24.0, 
                 "label": "Time since Oct. 1 [days]",
                 }
+        funlib["time_d_nov1"] = {
+                "fun": lambda X: X[:,self.fidx_X["time_h"]]/24.0 - 30.0,
+                "label": "Time since Nov. 1 [days]",
+                }
         for i_lev in range(len(feat_def["plev"])):
             key = "heatflux_lev%i_total"%(i_lev)
             idx_ilev = np.array([self.fidx_X["heatflux_lev%i_wn%i"%(i_lev,i_wn)] for i_wn in range(self.heatflux_wavenumbers_per_level_max)])
@@ -1174,7 +1178,6 @@ class WinterStratosphereFeatures:
         # Every year in which we have data, plot it. Plot both datasets if they both have data.
         keys_ra = list(feat_filename_ra_dict.keys())
         print(f"keys_ra = {keys_ra}")
-        sys.exit()
         all_years = []
         uref = dict({})
         time_d = dict({})
@@ -1220,6 +1223,7 @@ class WinterStratosphereFeatures:
     def illustrate_dataset(self,
             uthresh_a,uthresh_b_list,tthresh,sswbuffer,
             feat_filename_ra,feat_filename_hc,
+            label_ra,label_hc,
             tpt_feat_filename_ra,tpt_feat_filename_hc,
             ens_start_filename_ra,ens_start_filename_hc,
             fall_year_filename_ra,fall_year_filename_hc,
@@ -1289,7 +1293,7 @@ class WinterStratosphereFeatures:
                     i0,i1 = rxn_idx[0],rxn_idx[-1]+1
                     i0 += self.ndelay-1
                     i1 += self.ndelay-1
-                    h, = ax.plot(time_d_ra[i_y,i0:i1+1],uref_ra[i_y,i0:i1+1],color='black',label=r"ERA-Interim %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1),zorder=2,linewidth=2)
+                    h, = ax.plot(time_d_ra[i_y,i0:i1+1],uref_ra[i_y,i0:i1+1],color='black',label=r"%s %s-%s"%(label_ra,fy_ra[i_y],fy_ra[i_y]+1),zorder=2,linewidth=2)
                     handles += [h]
                     ax.plot(time_d_ra[i_y,:i0+1],uref_ra[i_y,:i0+1],color='black',linewidth=1.0,zorder=2,linestyle='--')
                     ax.plot(time_d_ra[i_y,i1:],uref_ra[i_y,i1:],color='black',linewidth=1.0,zorder=2,linestyle='--')
@@ -1305,14 +1309,14 @@ class WinterStratosphereFeatures:
                     i_col = 0
                     for i_ens in idx_hc_ss:
                         for i_mem in range(Nmem_hc):
-                            h, = ax.plot(time_d_hc[enst_hc[i_ens]+i_mem],uref_hc[enst_hc[i_ens]+i_mem],color=colorlist[i_col],zorder=1,linewidth=0.75,label=r"S2S")
+                            h, = ax.plot(time_d_hc[enst_hc[i_ens]+i_mem],uref_hc[enst_hc[i_ens]+i_mem],color=colorlist[i_col],zorder=1,linewidth=0.75,label=label_hc)
                         i_col += 1
                     handles += [h]
                 ax.set_xlabel(funlib_X["time_d"]["label"])
                 ax.set_ylabel(funlib_X["uref"]["label"])
                 ax.legend(handles=handles,loc='upper left')
                 ax.set_ylim([np.min(uref_ra),np.max(uref_ra)])
-                ax.set_xlim([np.min(time_d_ra),np.max(time_d_ra)])
+                ax.set_xlim([tthresh[0]/24.0,np.max(time_d_ra)])
                 fig.savefig(join(feat_display_dir,"illustration_uth%i"%(uthresh_b)))
                 plt.close(fig)
                 print(f"Saved an illustration in directory {feat_display_dir}")
