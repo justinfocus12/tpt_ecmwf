@@ -268,10 +268,10 @@ task_list = dict({
         "build_msm_flag":                     0,
         "tpt_s2s_flag":                       0,
         "transfer_results_flag":              0,
-        "plot_tpt_results_flag":              0,
+        "plot_tpt_results_flag":              1,
         }),
     "comparison": dict({
-        "plot_rate_flag":                     1,
+        "plot_rate_flag":                     0,
         "illustrate_dataset_flag":            0,
         }),
     })
@@ -435,20 +435,28 @@ errorbar_offsets = dict({"e5-hc": -3/2*du, "e5-self": -du/2, "e2-self": du/2, "s
     "e5-ra": -1/2*du, "e5-ei": -1/2*du, "e2-ra": 1/2*du, "ei-self": du/2})
 quantiles = np.array([0.05,0.25,0.75,0.95])
 
-y0 = 0.9
+y0 = 0.1
 base = 10
 def mylogit(y):
-    z = (y < y0)*np.log(y)/np.log(base) + (y >= y0)*(y/y0 + np.log(y0) - 1)/np.log(base)
+    ilo = np.where(y < y0)
+    iup = np.where(y >= y0)
+    z = np.zeros_like(y)
+    z[ilo] = np.log(y[ilo])/np.log(base)
+    z[iup] = (y[iup]/y0 + np.log(y0) - 1)/np.log(base)
     return z
 def myinvlogit(z):
-    y = (z < np.log(y0)/np.log(base))*np.exp(z*np.log(base)) + (z >= np.log(y0)/np.log(base))*y0*(z*np.log(base) + 1 - np.log(y0))
+    ilo = np.where(z < np.log(y0)/np.log(base))
+    iup = np.where(z >= np.log(y0)/np.log(base))
+    y = np.zeros_like(z)
+    y[ilo] = np.exp(z[ilo]*np.log(base)) 
+    y[iup] = y0*(z[iup]*np.log(base) + 1 - np.log(y0))
     return y
 
 
 # Build the rate dictionary as we go
 rate_dict = dict({})
 nyears_dict = dict({})
-conf_levels = [0.5,0.95]
+conf_levels = [0.95]
 if task_list["comparison"]["plot_rate_flag"]:
     for boxplot_keys in [boxplot_keys_hc,boxplot_keys_ra,boxplot_keys_ei]:
         for scale in ['logit','linear','log']:
@@ -487,7 +495,7 @@ if task_list["comparison"]["plot_rate_flag"]:
                     # Now plot them all 
                     good_idx = np.where(rate_dict[srcovl][0] > 0)[0] if (scale == 'log' or scale == 'logit') else np.arange(len(uthresh_list))
                     print(f"scale = {scale}, good_idx = {good_idx}")
-                    h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[srcovl],rate_dict[srcovl][0,good_idx],color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,marker='o',linestyle='-',label=subsets[src]["overlaps"][ovl]["label"],alpha=1.0,s=32, zorder=1)
+                    h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[srcovl],rate_dict[srcovl][0,good_idx],color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,marker="_",linestyle='-',label=subsets[src]["overlaps"][ovl]["label"],alpha=1.0,s=32, zorder=1)
                     handles += [h]
                     xlabels = None if src == "s2s" else ['']*len(good_idx)
                     bootstraps = 2*rate_dict[srcovl][0,good_idx] - rate_dict[srcovl][1:,:][:,good_idx]
@@ -514,11 +522,13 @@ if task_list["comparison"]["plot_rate_flag"]:
                         else:
                             conf_lower = np.quantile(bootstraps, (1-conf_levels[i_conf])/2, axis=0)
                             conf_upper = np.quantile(bootstraps, (1+conf_levels[i_conf])/2, axis=0)
+                        if scale == 'logit':
+                            print(f"At confidence level {conf_levels[i_conf]} for {src}, interval widths = ({conf_upper-conf_lower})")
                         # Create fake data points halfway in between lower and upper
                         conf_mid = 0.5*(conf_lower + conf_upper)
                         yerr = 0.5*(conf_upper - conf_lower)
                         for i_uth in good_idx:
-                            ax.plot(np.ones(2)*(uthresh_list[i_uth]+errorbar_offsets[srcovl]), [conf_lower[i_uth],conf_upper[i_uth]], color=subsets[src]["overlaps"][ovl]["color"],linewidth=4/(2**i_conf),zorder=0) #, marker='x')
+                            ax.plot(np.ones(2)*(uthresh_list[i_uth]+errorbar_offsets[srcovl]), [conf_lower[i_uth],conf_upper[i_uth]], color=subsets[src]["overlaps"][ovl]["color"],linewidth=2.5/(2**i_conf),zorder=0) #, marker='x')
                         #ax.errorbar(uthresh_list[good_idx]+errorbar_offsets[srcovl],conf_mid,yerr=yerr,fmt='none',color=subsets[src]["overlaps"][ovl]["color"],linewidth=4/(2**i_conf),zorder=0,capthick=1)
                     savefig_suffix += f"{src}{ovl}"
                     ax.legend(handles=handles,loc=loc[scale])

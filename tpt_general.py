@@ -602,7 +602,7 @@ class WinterStratosphereTPT:
             #ra[k]["X"] = ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))
         ra["e5"]["color"] = "black"
         ra["e2"]["color"] = "deepskyblue"
-        ra["e5"]["label"] = "ERA5"
+        ra["e5"]["label"] = "ERA-5"
         ra["e2"]["label"] = "ERA-20C"
         # Plot fields using the data points rather than the clusters
         funlib_Y = winstrat.observable_function_library_Y(algo_params)
