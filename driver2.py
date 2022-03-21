@@ -171,7 +171,7 @@ Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 25.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -258,8 +258,8 @@ task_list = dict({
         }),
     "e5": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 0, 
-        "tpt_flag":                           0,
+        "tpt_featurize_flag":                 1, 
+        "tpt_flag":                           1,
         }),
     "s2s": dict({
         "evaluate_database_flag":             0,
@@ -267,11 +267,11 @@ task_list = dict({
         "cluster_flag":                       0,
         "build_msm_flag":                     0,
         "tpt_s2s_flag":                       0,
-        "transfer_results_flag":              0,
+        "transfer_results_flag":              1,
         "plot_tpt_results_flag":              1,
         }),
     "comparison": dict({
-        "plot_rate_flag":                     0,
+        "plot_rate_flag":                     1,
         "illustrate_dataset_flag":            0,
         }),
     })
@@ -345,8 +345,24 @@ for key in ["ei","e2","e5"]:
 # =======================================================================
 #                DGA from S2S 
 feat_filename = join(expdirs["s2s"],"X.npy")
-feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in ["e5","e2"]})
-tpt_feat_filename_ra_dict = dict({key: join(subsets[key]["overlaps"]["self"]["full_dirs"][0],"Y") for key in ["e5","e2"]})
+#feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in ["e5","e2"]})
+#tpt_feat_filename_ra_dict = dict({key: join(subsets[key]["overlaps"]["self"]["full_dirs"][0],"Y") for key in ["e5","e2"]})
+keys_ra = dict({
+    "e2": ["self",],
+    "e5": ["self","hc",],
+    })
+colors_ra_dict = dict({})
+labels_ra_dict = dict({})
+feat_filename_ra_dict = dict({})
+tpt_feat_filename_ra_dict = dict({})
+for src in keys_ra.keys():
+    for ovl in keys_ra[src]:
+        srcovl = f"{src}-{ovl}"
+        feat_filename_ra_dict[srcovl] = join(expdirs[src], "X.npy")
+        tpt_feat_filename_ra_dict[srcovl] = join(subsets[src]["overlaps"][ovl]["full_dirs"][0], "Y")
+        colors_ra_dict[srcovl] = subsets[src]["overlaps"][ovl]["color"]
+        labels_ra_dict[srcovl] = subsets[src]["overlaps"][ovl]["label"]
+
 ens_start_filename = join(expdirs["s2s"],"ens_start_idx.npy")
 fall_year_filename = join(expdirs["s2s"],"fall_year_list.npy")
 if task_list["s2s"]["evaluate_database_flag"]: # Expensive!
@@ -400,6 +416,7 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
                     verify_leadtime_flag=0*(uthresh_b in plottable_uthresh_list),
                     current2d_flag=1*(uthresh_b in plottable_uthresh_list),
                     comm_corr_flag=0*(uthresh_b in plottable_uthresh_list),
+                    colors_ra_dict=colors_ra_dict,labels_ra_dict=labels_ra_dict
                     )
 
 # =============================================================================

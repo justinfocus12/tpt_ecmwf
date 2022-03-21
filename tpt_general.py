@@ -574,11 +574,12 @@ class WinterStratosphereTPT:
             feat_def,savedir,winstrat,algo_params,
             spaghetti_flag=True,fluxdens_flag=True,
             current2d_flag=True,verify_leadtime_flag=True,
-            comm_corr_flag=True):
+            comm_corr_flag=True,
+            colors_ra_dict=None,labels_ra_dict=None):
         # Get DGA rate 
         rate = pickle.load(open(join(savedir,"summary"),"rb"))["rate_tob"]
         # Load the reanalysis data for comparison
-        keys_ra = list(feat_filename_ra_dict.keys()) # e2 and ei
+        keys_ra = list(feat_filename_ra_dict.keys()) # e2 and e5
         print(f"keys_ra = {keys_ra}")
         ra = dict({key: dict({}) for key in keys_ra})
         print(f"ra.keys() = {ra.keys()}")
@@ -600,10 +601,8 @@ class WinterStratosphereTPT:
             ra[k]["winter_flag"] = ((ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] >= self.tpt_bndy['tthresh'][0])*(ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] <= self.tpt_bndy['tthresh'][1]))#.flatten()
             #ra[k]["Y"] = ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))
             #ra[k]["X"] = ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))
-        ra["e5"]["color"] = "black"
-        ra["e2"]["color"] = "deepskyblue"
-        ra["e5"]["label"] = "ERA-5"
-        ra["e2"]["label"] = "ERA-20C"
+            ra[k]["color"] = colors_ra_dict[k]
+            ra[k]["label"] = labels_ra_dict[k]
         # Plot fields using the data points rather than the clusters
         funlib_Y = winstrat.observable_function_library_Y(algo_params)
         funlib_X = winstrat.observable_function_library_X()
