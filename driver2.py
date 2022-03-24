@@ -23,7 +23,7 @@ import sys
 import os
 from os import mkdir
 from os.path import join,exists
-codedir = "/home/jf4241/ecmwf/s2s"
+codedir = "/home/jf4241/ecmwf/tpt_ecmwf"
 os.chdir(codedir)
 datadirs = dict({
     "ei": "/scratch/jf4241/ecmwf_data/eraint_data/2022-02-10",
@@ -32,15 +32,15 @@ datadirs = dict({
     "s2s": "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23",
     })
 sources = list(datadirs.keys())
-featdir = "/scratch/jf4241/ecmwf_data/features/2022-03-13"
+featdir = "/scratch/jf4241/ecmwf_data/features/2022-03-24"
 if not exists(featdir): mkdir(featdir)
 feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-03-16")
+daydir = join(resultsdir,"2022-03-24")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"3")
+expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -68,7 +68,7 @@ subsets = dict({
                 "label": f"ERA-I {max(fall_years['ei'][0],fall_years['s2s'][0])}-{min(fall_years['ei'][-1],fall_years['s2s'][-1])}",
                 }),
             }),
-        "num_bootstrap": 10, 
+        "num_bootstrap": 40, 
         "num_full_kmeans_seeds": 1,
         "rank": 0,
         }),
@@ -87,7 +87,7 @@ subsets = dict({
                 "label": f"ERA-20C {max(fall_years['e2'][0],fall_years['s2s'][0])}-{min(fall_years['e2'][-1],fall_years['s2s'][-1])}"
                 }),
             }),
-        "num_bootstrap": 10, 
+        "num_bootstrap": 40, 
         "num_full_kmeans_seeds": 1,
         "rank": 1,
         }),
@@ -111,7 +111,7 @@ subsets = dict({
                 "label": f"ERA-5 {max(fall_years['e5'][0],fall_years['s2s'][0])}-{min(fall_years['e5'][-1],fall_years['s2s'][-1])}"
                 }),
             }),
-        "num_bootstrap": 10, 
+        "num_bootstrap": 40, 
         "num_full_kmeans_seeds": 1,
         "rank": 2,
         }),
@@ -123,7 +123,7 @@ subsets = dict({
                 "label": f"S2S {fall_years['s2s'][0]}-{fall_years['s2s'][-1]}"
                 }),
             }),
-        "num_bootstrap": 20, 
+        "num_bootstrap": 40, 
         "num_full_kmeans_seeds": 5,
         "rank": 3,
         }),
@@ -171,7 +171,7 @@ Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 25.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -243,18 +243,18 @@ for src in sources:
 # Parameters to determine what to do
 task_list = dict({
     "featurization": dict({
-        "create_features_flag":               0,
-        "display_features_flag":              0,
+        "create_features_flag":               1,
+        "display_features_flag":              1,
         }),
     "ei": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 0,
-        "tpt_flag":                           0,
+        "tpt_featurize_flag":                 1,
+        "tpt_flag":                           1,
         }),
     "e2": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 0, 
-        "tpt_flag":                           0,
+        "tpt_featurize_flag":                 1, 
+        "tpt_flag":                           1,
         }),
     "e5": dict({
         "evaluate_database_flag":             0,
@@ -263,16 +263,16 @@ task_list = dict({
         }),
     "s2s": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 0,
-        "cluster_flag":                       0,
-        "build_msm_flag":                     0,
-        "tpt_s2s_flag":                       0,
+        "tpt_featurize_flag":                 1,
+        "cluster_flag":                       1,
+        "build_msm_flag":                     1,
+        "tpt_s2s_flag":                       1,
         "transfer_results_flag":              1,
         "plot_tpt_results_flag":              1,
         }),
     "comparison": dict({
         "plot_rate_flag":                     1,
-        "illustrate_dataset_flag":            0,
+        "illustrate_dataset_flag":            1,
         }),
     })
 
@@ -351,14 +351,17 @@ keys_ra = dict({
     "e2": ["self",],
     "e5": ["self","hc",],
     })
+keys_ra_current = ["e5-self"] # Only plot this subset for the overlays
 colors_ra_dict = dict({})
 labels_ra_dict = dict({})
 feat_filename_ra_dict = dict({})
+fall_year_filename_ra_dict = dict({})
 tpt_feat_filename_ra_dict = dict({})
 for src in keys_ra.keys():
     for ovl in keys_ra[src]:
         srcovl = f"{src}-{ovl}"
         feat_filename_ra_dict[srcovl] = join(expdirs[src], "X.npy")
+        fall_year_filename_ra_dict[srcovl] = join(expdirs[src], "fall_year_list.npy")
         tpt_feat_filename_ra_dict[srcovl] = join(subsets[src]["overlaps"][ovl]["full_dirs"][0], "Y")
         colors_ra_dict[srcovl] = subsets[src]["overlaps"][ovl]["color"]
         labels_ra_dict[srcovl] = subsets[src]["overlaps"][ovl]["label"]
@@ -410,13 +413,18 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
             if not exists(savedir): mkdir(savedir)
             tpt_bndy = {"tthresh": np.array([tthresh0,tthresh1])*24.0, "uthresh_a": uthresh_a, "uthresh_b": uthresh_b, "sswbuffer": sswbuffer*24.0}
             tpt.set_boundaries(tpt_bndy)
-            tpt.plot_results_data(feat_filename,tpt_feat_filename,feat_filename_ra_dict,tpt_feat_filename_ra_dict,feat_def,savedir,winstrat,algo_params,
+            tpt.plot_results_data(
+                    feat_filename,tpt_feat_filename,
+                    feat_filename_ra_dict,tpt_feat_filename_ra_dict,
+                    fall_year_filename_ra_dict,
+                    feat_def,savedir,winstrat,algo_params,
                     spaghetti_flag=0*(uthresh_b in plottable_uthresh_list),
                     fluxdens_flag=1*(uthresh_b in plottable_uthresh_list),
                     verify_leadtime_flag=0*(uthresh_b in plottable_uthresh_list),
                     current2d_flag=1*(uthresh_b in plottable_uthresh_list),
                     comm_corr_flag=0*(uthresh_b in plottable_uthresh_list),
-                    colors_ra_dict=colors_ra_dict,labels_ra_dict=labels_ra_dict
+                    colors_ra_dict=colors_ra_dict,labels_ra_dict=labels_ra_dict,
+                    keys_ra_current=keys_ra_current,
                     )
 
 # =============================================================================
