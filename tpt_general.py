@@ -791,7 +791,7 @@ class WinterStratosphereTPT:
                         ])
                     ]
             # Make a vertical stack of panels, one for each reanalysis dataset
-            fig,ax = plt.subplots(nrows=1+len(ra), figsize=(6,3*(1+len(ra))),sharex=True,sharey=True)
+            fig,ax = plt.subplots(nrows=1+len(ra), figsize=(6,3*(1+len(ra))),sharex=True,sharey=False)
             # First, DGA
             info = dict({
                 "qm": qm_Y[winter_fully_idx], 
@@ -807,7 +807,7 @@ class WinterStratosphereTPT:
                     theta_normal_label,theta_tangential_label,
                     reactive_code,
                     theta_lower,theta_upper,
-                    bin_edges,hist_color_list[i_be],filled_flag=(i_be==0),
+                    bin_edges,hist_color_list[i_be],fill=('solid' if i_be==0 else 'hatch'),
                     info_type="dga",fig=fig,ax=ax[0],label=info["label"] if i_be==0 else None)
             # Second, the reanalysis
             for i_k,k in enumerate(ra.keys()):
@@ -823,15 +823,26 @@ class WinterStratosphereTPT:
                     "theta_tangential": funlib_X['time_d']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])),
                     })
                 hist_color_list = [ra[k]['color'],'black']
-                if k == 'e5-self': hist_color_list[0] = 'gray'
+                #if k == 'e5-self': hist_color_list[0] = 'gray'
                 for i_be,bin_edges in enumerate(bin_edges_list):
                     _,_,hist = self.plot_flux_distributions_multiresolution(
                         info,infoth, # Can be either reanalysis or DGA data
                         theta_normal_label,theta_tangential_label,
                         reactive_code,
                         theta_lower,theta_upper,
-                        bin_edges,hist_color_list[i_be],filled_flag=(i_be==0),
+                        bin_edges,hist_color_list[i_be],fill=('solid' if i_be==0 else 'hatch'),
                         info_type="ra",fig=fig,ax=ax[1+i_k],label=info["label"] if i_be==0 else None)
+            # Format the axis labels by naming months
+            for i_ax in range(1+len(ra)):
+                ax[i_ax].set_xticks(bin_edges_list[0])
+                if i_ax == len(ra):
+                    ax[i_ax].set_xticklabels(['Oct. 1', 'Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                else:
+                    ax[i_ax].set_xticklabels(['']*6)
+                ax[i_ax].set_xlim([25,155])
+                ax[i_ax].set_xlabel('')
+                ax[i_ax].set_ylabel("SSW freq.")
+            ax[0].set_title("SSW seasonal distributions")
             fig.savefig(join(savedir,"szn_dist"))
             plt.close(fig)
 
@@ -958,6 +969,9 @@ class WinterStratosphereTPT:
             handles,seg_labels = self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
             #ax.legend(handles=handles)
             print("----------- After plot_trajectory_segments with leadtime")
+            ax.set_xticks(np.cumsum([31,30,31,31,28]))
+            ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+            ax.set_xlabel("")
             fig.savefig(join(savedir,"J_timed_qp_ab"))
             plt.close(fig)
             # ------------- Lead time, zonal wind. Former has to be interpolated -----------
@@ -1038,6 +1052,9 @@ class WinterStratosphereTPT:
                     if key0 == "time_d" and key1 == "uref":
                         ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
                     helper.plot_field_2d((comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=True,logscale=False,cmap=plt.cm.coolwarm,contourflag=True,fig=fig,ax=ax)
+                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
+                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xlabel("")
                     fig.savefig(join(savedir,"qp_lin_%s_%s_ab_build1"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
                     fig,ax = plt.subplots()
@@ -1052,6 +1069,9 @@ class WinterStratosphereTPT:
                     if key0 == "time_d" and key1 == "uref":
                         ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
                     helper.plot_field_2d((-lt_mean_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=True,logscale=False,cmap=plt.cm.coolwarm,contourflag=True,fig=fig,ax=ax)
+                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
+                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xlabel("")
                     fig.savefig(join(savedir,"lt_%s_%s_ab_build1"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
                     # Plot the A->B density and current
@@ -1067,10 +1087,19 @@ class WinterStratosphereTPT:
                     ax.set_xlabel(lab0,fontdict=font)
                     ax.set_ylabel(lab1,fontdict=font)
                     ax.set_title(fieldname,fontdict=font)
+                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
+                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xlabel("")
                     fig.savefig(join(savedir,"J_%s_%s_ab_%s_build0"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=False,cmap=plt.cm.YlOrRd,contourflag=True,fig=fig,ax=ax)
+                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
+                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xlabel("")
                     fig.savefig(join(savedir,"J_%s_%s_ab_%s_build1"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
+                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
+                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xlabel("")
                     fig.savefig(join(savedir,"J_%s_%s_ab_%s_build2"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     plt.close(fig)
                     # Plot the A -> A density and current
@@ -1089,10 +1118,19 @@ class WinterStratosphereTPT:
                     ax.set_xlabel(lab0,fontdict=font)
                     ax.set_ylabel(lab1,fontdict=font)
                     ax.set_title(fieldname,fontdict=font)
+                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
+                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xlabel("")
                     fig.savefig(join(savedir,"J_%s_%s_aa_%s_build0"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=False,cmap=plt.cm.YlOrRd,contourflag=True,fig=fig,ax=ax)
+                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
+                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xlabel("")
                     fig.savefig(join(savedir,"J_%s_%s_aa_%s_build1"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
+                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
+                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xlabel("")
                     fig.savefig(join(savedir,"J_%s_%s_aa_%s_build2"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     plt.close(fig)
         if spaghetti_flag:
@@ -1289,7 +1327,7 @@ class WinterStratosphereTPT:
             theta_normal_label,theta_tangential_label,
             reactive_code,
             theta_lower,theta_upper,
-            bin_edges,hist_color,filled_flag=False,
+            bin_edges,hist_color,fill='solid',
             info_type="dga",
             fig=None,ax=None,label=None):
         # Meant to plot histograms of reactive flux density with different resolutions. 
@@ -1310,7 +1348,8 @@ class WinterStratosphereTPT:
                 x = infoth["thmid"][idx,1]
                 hist,bin_edges = np.histogram(infoth["thmid"][idx,1],weights=infoth["reactive_flux"][i_thlev][:,0],bins=bin_edges)
                 bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
-                hist *= info["rate"]/np.sum(hist*np.diff(bin_edges))
+                hist *= 1.0/np.sum(hist*np.diff(bin_edges))
+                hist *= info["rate"] 
             else:
                 raise Exception(f"HEY! There are no close idx! What's the big idea? Level = {(theta_lower+theta_upper)/2}")
         else: # Reanalysis
@@ -1328,20 +1367,23 @@ class WinterStratosphereTPT:
             if infoth["num_rxn"] != 0:
                 hist,bin_edges = np.histogram(theta_tangential_ra, weights=signs_ra,bins=bin_edges)
                 bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
-                hist *= info["rate"]/(np.sum(hist)*np.diff(bin_edges)) 
+                hist *= 1.0/(np.sum(hist)*np.diff(bin_edges)) 
+                hist *= info["rate"]
         # Make the plot
         if fig is None or ax is None: fig,ax = plt.subplots()
         for i_bin in range(len(bin_centers)):
-            ax.plot(bin_edges[i_bin:i_bin+2],hist[i_bin]*np.ones(2),color=hist_color)
-            if filled_flag:
+            #ax.plot(bin_edges[i_bin:i_bin+2],hist[i_bin]*np.ones(2),color=hist_color)
+            if fill == 'solid':
                 h = ax.fill_between(bin_edges[i_bin:i_bin+2],hist[i_bin],y2=0,color=hist_color,label=label)
-            left_jump = 0 if i_bin==0 else hist[i_bin-1]
-            right_jump = 0 if i_bin==len(bin_centers)-1 else hist[i_bin+1]
-            ax.plot(bin_edges[i_bin]*np.ones(2), [left_jump,hist[i_bin]],color=hist_color)
-            ax.plot(bin_edges[i_bin+1]*np.ones(2), [right_jump,hist[i_bin]],color=hist_color)
+            elif fill == 'hatch':
+                ax.fill_between(bin_edges[i_bin:i_bin+2],hist[i_bin],y2=0,color=hist_color,label=label,hatch='/',facecolor="none")
+            #left_jump = 0 if i_bin==0 else hist[i_bin-1]
+            #right_jump = 0 if i_bin==len(bin_centers)-1 else hist[i_bin+1]
+            #ax.plot(bin_edges[i_bin]*np.ones(2), [left_jump,hist[i_bin]],color=hist_color,linewidth=2.5)
+            #ax.plot(bin_edges[i_bin+1]*np.ones(2), [right_jump,hist[i_bin]],color=hist_color)
         ax.set_xlabel(theta_tangential_label,fontdict=font)
-        if filled_flag: ax.legend(handles=[h])
-        ax.set_ylabel(r"SSW frequency",fontdict=font)
+        if fill == 'solid': ax.legend(handles=[h],loc='upper left')
+        ax.set_ylabel(r"",fontdict=font)
         ax.axhline(y=0,color='black')
         return fig,ax,hist
     def plot_flux_distributions_1d(self,
@@ -1517,13 +1559,13 @@ class WinterStratosphereTPT:
                 # Plot a dotted line underneath, and a heavy line where reactive.
                 xx = rath[k]["theta"][i,:,:]
                 label = f"{ra[k]['fall_years'][i]}"
-                h, = ax.plot(xx[:,0],xx[:,1],color=ra[k]["color"],linewidth=0.7,zorder=zorder,linestyle='--',label=label)
+                h, = ax.plot(xx[:,0],xx[:,1],color="black",linewidth=0.7,zorder=zorder,linestyle='--',label=label)
                 handles += [h]
                 labels += [label]
                 ridx = np.sort(np.where(reactive_flag[i])[0])
                 if ridx[-1] < len(xx)-1:
                     ridx = np.concatenate((ridx,[ridx[-1]+1]))
-                ax.plot(xx[ridx,0],xx[ridx,1],color=ra[k]["color"],linewidth=1.5,zorder=zorder)
+                ax.plot(xx[ridx,0],xx[ridx,1],color="black",linewidth=1.5,zorder=zorder)
         return handles,labels
     def project_current_data(self,theta_x,qm,qp,pi):
         Nx,Nt,thdim = theta_x.shape

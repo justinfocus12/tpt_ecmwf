@@ -95,7 +95,7 @@ subsets = dict({
         "generic_label": "ERA-5",
         "overlaps": dict({
             "self": dict({"full": fall_years["e5"], 
-                "color": "black", 
+                "color": "gray", 
                 "label": f"ERA-5 {fall_years['e5'][0]}-{fall_years['e5'][-1]}"
                 }),
             "ra": dict({"full": intersection, 
@@ -272,7 +272,7 @@ task_list = dict({
         }),
     "comparison": dict({
         "plot_rate_flag":                     0,
-        "illustrate_dataset_flag":            0,
+        "illustrate_dataset_flag":            1,
         }),
     })
 
@@ -423,7 +423,7 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
                     spaghetti_flag=0*(uthresh_b in plottable_uthresh_list),
                     fluxdens_flag=1*(uthresh_b in plottable_uthresh_list),
                     verify_leadtime_flag=0*(uthresh_b in plottable_uthresh_list),
-                    current2d_flag=0*(uthresh_b in plottable_uthresh_list),
+                    current2d_flag=1*(uthresh_b in plottable_uthresh_list),
                     comm_corr_flag=0*(uthresh_b in plottable_uthresh_list),
                     colors_ra_dict=colors_ra_dict,labels_dict=labels_dict,
                     keys_ra_current=keys_ra_current,

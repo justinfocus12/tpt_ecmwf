@@ -1317,6 +1317,8 @@ class WinterStratosphereFeatures:
                 ax.legend(handles=handles,loc='upper left')
                 ax.set_ylim([np.min(uref_ra),np.max(uref_ra)])
                 ax.set_xlim([tthresh[0]/24.0,np.max(time_d_ra)])
+                ax.set_xticks(np.cumsum([31,30,31,31,28]))
+                ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
                 fig.savefig(join(feat_display_dir,"illustration_uth%i"%(uthresh_b)))
                 plt.close(fig)
                 print(f"Saved an illustration in directory {feat_display_dir}")
