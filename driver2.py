@@ -243,36 +243,36 @@ for src in sources:
 # Parameters to determine what to do
 task_list = dict({
     "featurization": dict({
-        "create_features_flag":               1,
-        "display_features_flag":              1,
+        "create_features_flag":               0,
+        "display_features_flag":              0,
         }),
     "ei": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 1,
-        "tpt_flag":                           1,
+        "tpt_featurize_flag":                 0,
+        "tpt_flag":                           0,
         }),
     "e2": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 1, 
-        "tpt_flag":                           1,
+        "tpt_featurize_flag":                 0, 
+        "tpt_flag":                           0,
         }),
     "e5": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 1, 
-        "tpt_flag":                           1,
+        "tpt_featurize_flag":                 0, 
+        "tpt_flag":                           0,
         }),
     "s2s": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 1,
-        "cluster_flag":                       1,
-        "build_msm_flag":                     1,
-        "tpt_s2s_flag":                       1,
-        "transfer_results_flag":              1,
+        "tpt_featurize_flag":                 0,
+        "cluster_flag":                       0,
+        "build_msm_flag":                     0,
+        "tpt_s2s_flag":                       0,
+        "transfer_results_flag":              0,
         "plot_tpt_results_flag":              1,
         }),
     "comparison": dict({
-        "plot_rate_flag":                     1,
-        "illustrate_dataset_flag":            1,
+        "plot_rate_flag":                     0,
+        "illustrate_dataset_flag":            0,
         }),
     })
 
@@ -421,7 +421,7 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
                     spaghetti_flag=0*(uthresh_b in plottable_uthresh_list),
                     fluxdens_flag=1*(uthresh_b in plottable_uthresh_list),
                     verify_leadtime_flag=0*(uthresh_b in plottable_uthresh_list),
-                    current2d_flag=1*(uthresh_b in plottable_uthresh_list),
+                    current2d_flag=0*(uthresh_b in plottable_uthresh_list),
                     comm_corr_flag=0*(uthresh_b in plottable_uthresh_list),
                     colors_ra_dict=colors_ra_dict,labels_ra_dict=labels_ra_dict,
                     keys_ra_current=keys_ra_current,
