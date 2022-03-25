@@ -353,10 +353,11 @@ keys_ra = dict({
     })
 keys_ra_current = ["e5-self"] # Only plot this subset for the overlays
 colors_ra_dict = dict({})
-labels_ra_dict = dict({})
+labels_dict = dict({})
 feat_filename_ra_dict = dict({})
 fall_year_filename_ra_dict = dict({})
 tpt_feat_filename_ra_dict = dict({})
+labels = dict({})
 for src in keys_ra.keys():
     for ovl in keys_ra[src]:
         srcovl = f"{src}-{ovl}"
@@ -364,7 +365,8 @@ for src in keys_ra.keys():
         fall_year_filename_ra_dict[srcovl] = join(expdirs[src], "fall_year_list.npy")
         tpt_feat_filename_ra_dict[srcovl] = join(subsets[src]["overlaps"][ovl]["full_dirs"][0], "Y")
         colors_ra_dict[srcovl] = subsets[src]["overlaps"][ovl]["color"]
-        labels_ra_dict[srcovl] = subsets[src]["overlaps"][ovl]["label"]
+        labels_dict[srcovl] = subsets[src]["overlaps"][ovl]["label"]
+labels_dict["s2s-self"] = subsets["s2s"]["overlaps"]["self"]["label"]
 
 ens_start_filename = join(expdirs["s2s"],"ens_start_idx.npy")
 fall_year_filename = join(expdirs["s2s"],"fall_year_list.npy")
@@ -423,7 +425,7 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
                     verify_leadtime_flag=0*(uthresh_b in plottable_uthresh_list),
                     current2d_flag=0*(uthresh_b in plottable_uthresh_list),
                     comm_corr_flag=0*(uthresh_b in plottable_uthresh_list),
-                    colors_ra_dict=colors_ra_dict,labels_ra_dict=labels_ra_dict,
+                    colors_ra_dict=colors_ra_dict,labels_dict=labels_dict,
                     keys_ra_current=keys_ra_current,
                     )
 

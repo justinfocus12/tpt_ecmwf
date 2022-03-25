@@ -576,7 +576,7 @@ class WinterStratosphereTPT:
             spaghetti_flag=True,fluxdens_flag=True,
             current2d_flag=True,verify_leadtime_flag=True,
             comm_corr_flag=True,
-            colors_ra_dict=None,labels_ra_dict=None,
+            colors_ra_dict=None,labels_dict=None,
             keys_ra_current=None):
         # Get DGA rate 
         rate = pickle.load(open(join(savedir,"summary"),"rb"))["rate_tob"]
@@ -607,7 +607,7 @@ class WinterStratosphereTPT:
             #ra[k]["Y"] = ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))
             #ra[k]["X"] = ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))
             ra[k]["color"] = colors_ra_dict[k]
-            ra[k]["label"] = labels_ra_dict[k]
+            ra[k]["label"] = labels_dict[k]
         # Plot fields using the data points rather than the clusters
         funlib_Y = winstrat.observable_function_library_Y(algo_params)
         funlib_X = winstrat.observable_function_library_X()
@@ -772,21 +772,14 @@ class WinterStratosphereTPT:
         if fluxdens_flag:
             reactive_code = [0,1] #= ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
             # ----------- Plot seasonal distribution with multiple resolutions ---------
-            info = dict({
-                "qm": qm_Y[winter_fully_idx], 
-                "qp": qp_Y[winter_fully_idx], 
-                "pi": pi_Y[winter_fully_idx], 
-                })
-            infoth = dict({
-                "theta_normal": funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))[winter_fully_idx],
-                "theta_tangential": funlib_X['time_d']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))[winter_fully_idx], 
-                })
             theta_normal_label = funlib_X['uref']['label']
             theta_tangential_label = funlib_X['time_d']['label']
             theta_lower = self.tpt_bndy['uthresh_b'] - 1.0
             theta_upper = self.tpt_bndy['uthresh_b'] + 1.0
-            # First, DGA
-            fig,ax = plt.subplots()
+            infoth = dict({
+                "theta_normal": funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))[winter_fully_idx],
+                "theta_tangential": funlib_X['time_d']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))[winter_fully_idx], 
+                })
             bin_edges_list = [
                     np.cumsum([0,31,30,31,31,28]),
                     np.cumsum([0,
@@ -794,19 +787,52 @@ class WinterStratosphereTPT:
                         10,10,10,
                         10,10,11,
                         10,10,11,
-                        10,10,8,
+                        9,9,10,
                         ])
                     ]
+            # Make a vertical stack of panels, one for each reanalysis dataset
+            fig,ax = plt.subplots(nrows=1+len(ra), figsize=(6,3*(1+len(ra))),sharex=True,sharey=True)
+            # First, DGA
+            info = dict({
+                "qm": qm_Y[winter_fully_idx], 
+                "qp": qp_Y[winter_fully_idx], 
+                "pi": pi_Y[winter_fully_idx], 
+                "rate": rate,
+                "label": labels_dict["s2s-self"],
+                })
             hist_color_list = ['red','black']
             for i_be,bin_edges in enumerate(bin_edges_list):
                 _,_,hist = self.plot_flux_distributions_multiresolution(
                     info,infoth, # Can be either reanalysis or DGA data
                     theta_normal_label,theta_tangential_label,
-                    reactive_code,rate,
+                    reactive_code,
                     theta_lower,theta_upper,
                     bin_edges,hist_color_list[i_be],filled_flag=(i_be==0),
-                    info_type="dga",fig=fig,ax=ax)
-            fig.savefig(join(savedir,"szn_dist_bins%i"%(len(bin_edges))))
+                    info_type="dga",fig=fig,ax=ax[0],label=info["label"] if i_be==0 else None)
+            # Second, the reanalysis
+            for i_k,k in enumerate(ra.keys()):
+                print(f"ra.keys = {ra.keys()}")
+                info = dict({
+                    "src_tag": ra[k]['src_tag'],
+                    "dest_tag": ra[k]['dest_tag'],
+                    "rate": ra[k]['rate'],
+                    "label": ra[k]['label'],
+                    })
+                infoth = dict({
+                    "theta_normal": funlib_X['uref']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])),
+                    "theta_tangential": funlib_X['time_d']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])),
+                    })
+                hist_color_list = [ra[k]['color'],'black']
+                if k == 'e5-self': hist_color_list[0] = 'gray'
+                for i_be,bin_edges in enumerate(bin_edges_list):
+                    _,_,hist = self.plot_flux_distributions_multiresolution(
+                        info,infoth, # Can be either reanalysis or DGA data
+                        theta_normal_label,theta_tangential_label,
+                        reactive_code,
+                        theta_lower,theta_upper,
+                        bin_edges,hist_color_list[i_be],filled_flag=(i_be==0),
+                        info_type="ra",fig=fig,ax=ax[1+i_k],label=info["label"] if i_be==0 else None)
+            fig.savefig(join(savedir,"szn_dist"))
             plt.close(fig)
 
             # ----------- Plot flux distribution of entry times ----------
@@ -1261,22 +1287,22 @@ class WinterStratosphereTPT:
     def plot_flux_distributions_multiresolution(self,
             info,infoth, # Can be either reanalysis or DGA data
             theta_normal_label,theta_tangential_label,
-            reactive_code,rate,
+            reactive_code,
             theta_lower,theta_upper,
             bin_edges,hist_color,filled_flag=False,
             info_type="dga",
-            fig=None,ax=None):
+            fig=None,ax=None,label=None):
         # Meant to plot histograms of reactive flux density with different resolutions. 
         theta_lower_list = [theta_lower]
         theta_upper_list = [theta_upper]
         infoth["thmid_tangential"] = 0.5*(infoth["theta_tangential"][:,1:] + infoth["theta_tangential"][:,:-1])
         infoth["thmid_normal"] = 0.5*(infoth["theta_normal"][:,1:] + infoth["theta_normal"][:,:-1])
+        i_thlev = 0 # Because only one level. Vestigial
         if info_type == "dga":
             theta_vec = np.transpose(np.array([infoth["theta_normal"],infoth["theta_tangential"]]), (1,2,0))
             infoth["Jth"],infoth["thmid"],infoth["Jweight"] = self.project_current_data(theta_vec,info["qm"],info["qp"],info["pi"])
             infoth["close_idx"],infoth["reactive_flux"] = self.reactive_flux_density_levelset(infoth["thmid"][:,0],infoth["Jth"],infoth["Jweight"],theta_lower_list,theta_upper_list)
             # Make a histogram of the reactive flux density distribution
-            i_thlev = 0 # Because only one level
             idx = infoth["close_idx"][i_thlev]
             if len(idx) > 1:
                 idx = np.array(idx)
@@ -1284,7 +1310,7 @@ class WinterStratosphereTPT:
                 x = infoth["thmid"][idx,1]
                 hist,bin_edges = np.histogram(infoth["thmid"][idx,1],weights=infoth["reactive_flux"][i_thlev][:,0],bins=bin_edges)
                 bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
-                hist *= rate/np.sum(hist)
+                hist *= info["rate"]/np.sum(hist*np.diff(bin_edges))
             else:
                 raise Exception(f"HEY! There are no close idx! What's the big idea? Level = {(theta_lower+theta_upper)/2}")
         else: # Reanalysis
@@ -1301,20 +1327,20 @@ class WinterStratosphereTPT:
             infoth["num_rxn"] = np.abs(np.sum(signs_ra))
             if infoth["num_rxn"] != 0:
                 hist,bin_edges = np.histogram(theta_tangential_ra, weights=signs_ra,bins=bin_edges)
-                #hist_ra *= num_rxn_ra/(Nxra*dth_tan_ra*np.sum(hist_ra))
-                bin_centers = (bin_edges_ra[1:] + bin_edges_ra[:-1])/2
-                hist = hist_ra*ra["rate"]/(np.abs(np.sum(hist_ra))) 
+                bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
+                hist *= info["rate"]/(np.sum(hist)*np.diff(bin_edges)) 
         # Make the plot
         if fig is None or ax is None: fig,ax = plt.subplots()
         for i_bin in range(len(bin_centers)):
             ax.plot(bin_edges[i_bin:i_bin+2],hist[i_bin]*np.ones(2),color=hist_color)
             if filled_flag:
-                ax.fill_between(bin_edges[i_bin:i_bin+2],hist[i_bin],y2=0,color=hist_color)
+                h = ax.fill_between(bin_edges[i_bin:i_bin+2],hist[i_bin],y2=0,color=hist_color,label=label)
             left_jump = 0 if i_bin==0 else hist[i_bin-1]
             right_jump = 0 if i_bin==len(bin_centers)-1 else hist[i_bin+1]
             ax.plot(bin_edges[i_bin]*np.ones(2), [left_jump,hist[i_bin]],color=hist_color)
             ax.plot(bin_edges[i_bin+1]*np.ones(2), [right_jump,hist[i_bin]],color=hist_color)
         ax.set_xlabel(theta_tangential_label,fontdict=font)
+        if filled_flag: ax.legend(handles=[h])
         ax.set_ylabel(r"SSW frequency",fontdict=font)
         ax.axhline(y=0,color='black')
         return fig,ax,hist
@@ -1374,12 +1400,9 @@ class WinterStratosphereTPT:
                 hist_nv *= np.sign(np.sum(hist))/np.sign(np.sum(hist_nv))
                 # ------------- Reanalysis --------------------
                 theta_mid = 0.5*(theta_lower_list[i_thlev] + theta_upper_list[i_thlev])
-                print(f"theta_mid = {theta_mid}")
                 for k in keys_ra:
                     idx_ra_fwd = np.where((rath[k]["theta_normal"][:,:-1] < theta_mid)*(rath[k]["theta_normal"][:,1:] >= theta_mid)*(rath[k]["reactive_flag"][:,:-1]+rath[k]["reactive_flag"][:,1:]))
-                    print(f"fwd: nidx = {len(idx_ra_fwd[0])}")
                     idx_ra_bwd = np.where((rath[k]["theta_normal"][:,:-1] >= theta_mid)*(rath[k]["theta_normal"][:,1:] < theta_mid)*(rath[k]["reactive_flag"][:,:-1]+rath[k]["reactive_flag"][:,1:]))
-                    print(f"bwd: nidx = {len(idx_ra_bwd[0])}")
                     idx_ra = (np.concatenate((idx_ra_fwd[0], idx_ra_bwd[0])),
                             np.concatenate((idx_ra_fwd[1], idx_ra_bwd[1])))
                     signs_ra = np.concatenate((np.ones(len(idx_ra_fwd[0])),-np.ones(len(idx_ra_bwd[0])))) #* np.sign(theta_normal_comm_corr)
