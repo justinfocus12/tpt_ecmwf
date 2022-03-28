@@ -171,7 +171,7 @@ Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 25.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -268,11 +268,11 @@ task_list = dict({
         "build_msm_flag":                     0,
         "tpt_s2s_flag":                       0,
         "transfer_results_flag":              0,
-        "plot_tpt_results_flag":              1,
+        "plot_tpt_results_flag":              0,
         }),
     "comparison": dict({
-        "plot_rate_flag":                     0,
-        "illustrate_dataset_flag":            1,
+        "plot_rate_flag":                     1,
+        "illustrate_dataset_flag":            0,
         }),
     })
 
@@ -348,8 +348,8 @@ feat_filename = join(expdirs["s2s"],"X.npy")
 #feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in ["e5","e2"]})
 #tpt_feat_filename_ra_dict = dict({key: join(subsets[key]["overlaps"]["self"]["full_dirs"][0],"Y") for key in ["e5","e2"]})
 keys_ra = dict({
-    "e2": ["self",],
     "e5": ["self","hc",],
+    "e2": ["self",],
     })
 keys_ra_current = ["e5-self"] # Only plot this subset for the overlays
 colors_ra_dict = dict({})
@@ -423,7 +423,7 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
                     spaghetti_flag=0*(uthresh_b in plottable_uthresh_list),
                     fluxdens_flag=1*(uthresh_b in plottable_uthresh_list),
                     verify_leadtime_flag=0*(uthresh_b in plottable_uthresh_list),
-                    current2d_flag=1*(uthresh_b in plottable_uthresh_list),
+                    current2d_flag=0*(uthresh_b in plottable_uthresh_list),
                     comm_corr_flag=0*(uthresh_b in plottable_uthresh_list),
                     colors_ra_dict=colors_ra_dict,labels_dict=labels_dict,
                     keys_ra_current=keys_ra_current,
@@ -438,8 +438,8 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
 
 # Plot 1: specify which overlaps to use from each source
 boxplot_keys_hc = dict({
+    "e5": ["hc","self",],
     "e2": ["self",],
-    "e5": ["self","hc",],
     "s2s": ["self",],
     })
 boxplot_keys_ra = dict({
@@ -483,10 +483,10 @@ def myinvlogit(z):
 # Build the rate dictionary as we go
 rate_dict = dict({})
 nyears_dict = dict({})
-conf_levels = [0.95]
+conf_levels = [0.5,0.95]
 if task_list["comparison"]["plot_rate_flag"]:
     for boxplot_keys in [boxplot_keys_hc,boxplot_keys_ra,boxplot_keys_ei]:
-        for scale in ['logit','linear','log']:
+        for scale in ['log']: #['logit','linear','log']:
             fig,ax = plt.subplots()
             savefig_suffix = ""
             ax.set_xlabel("Zonal wind threshold [m/s]",fontdict=font)
@@ -555,9 +555,9 @@ if task_list["comparison"]["plot_rate_flag"]:
                         conf_mid = 0.5*(conf_lower + conf_upper)
                         yerr = 0.5*(conf_upper - conf_lower)
                         for i_uth in good_idx:
-                            ax.plot(np.ones(2)*(uthresh_list[i_uth]+errorbar_offsets[srcovl]), [conf_lower[i_uth],conf_upper[i_uth]], color=subsets[src]["overlaps"][ovl]["color"],linewidth=2.5/(2**i_conf),zorder=0) #, marker='x')
+                            ax.plot(np.ones(2)*(uthresh_list[i_uth]+errorbar_offsets[srcovl]), [conf_lower[i_uth],conf_upper[i_uth]], color=subsets[src]["overlaps"][ovl]["color"],linewidth=3.0/(3**i_conf),zorder=0) #, marker='x')
                         #ax.errorbar(uthresh_list[good_idx]+errorbar_offsets[srcovl],conf_mid,yerr=yerr,fmt='none',color=subsets[src]["overlaps"][ovl]["color"],linewidth=4/(2**i_conf),zorder=0,capthick=1)
-                    savefig_suffix += f"{src}{ovl}"
+                    savefig_suffix += f"{src}-{ovl}"
                     ax.legend(handles=handles,loc=loc[scale])
                     ax.set_ylim(ylim[scale])
                     uthresh_list_sorted = np.sort(uthresh_list)

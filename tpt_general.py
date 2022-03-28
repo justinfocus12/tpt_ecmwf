@@ -11,6 +11,7 @@ matplotlib.rcParams['font.size'] = 12
 matplotlib.rcParams['font.family'] = 'serif'
 matplotlib.rcParams['savefig.bbox'] = 'tight'
 matplotlib.rcParams['savefig.pad_inches'] = 0.2
+matplotlib.rcParams['savefig.dpi'] = 140
 smallfont = {'family': 'serif', 'size': 12}
 font = {'family': 'serif', 'size': 18}
 bigfont = {'family': 'serif', 'size': 40}
@@ -792,6 +793,7 @@ class WinterStratosphereTPT:
                     ]
             # Make a vertical stack of panels, one for each reanalysis dataset
             fig,ax = plt.subplots(nrows=1+len(ra), figsize=(6,3*(1+len(ra))),sharex=True,sharey=False)
+            ax[0].set_title(r"$U_{10}^{\mathrm{(th)}}=%i$ m/s"%(self.tpt_bndy['uthresh_b']),fontdict=font)
             # First, DGA
             info = dict({
                 "qm": qm_Y[winter_fully_idx], 
@@ -842,7 +844,6 @@ class WinterStratosphereTPT:
                 ax[i_ax].set_xlim([25,155])
                 ax[i_ax].set_xlabel('')
                 ax[i_ax].set_ylabel("SSW freq.")
-            ax[0].set_title("SSW seasonal distributions")
             fig.savefig(join(savedir,"szn_dist"))
             plt.close(fig)
 
@@ -1371,12 +1372,16 @@ class WinterStratosphereTPT:
                 hist *= info["rate"]
         # Make the plot
         if fig is None or ax is None: fig,ax = plt.subplots()
+        x_edges = []
+        y_edges = []
         for i_bin in range(len(bin_centers)):
-            #ax.plot(bin_edges[i_bin:i_bin+2],hist[i_bin]*np.ones(2),color=hist_color)
-            if fill == 'solid':
-                h = ax.fill_between(bin_edges[i_bin:i_bin+2],hist[i_bin],y2=0,color=hist_color,label=label)
-            elif fill == 'hatch':
-                ax.fill_between(bin_edges[i_bin:i_bin+2],hist[i_bin],y2=0,color=hist_color,label=label,hatch='/',facecolor="none")
+            x_edges += [bin_edges[i_bin],bin_edges[i_bin+1]]
+            y_edges += [hist[i_bin],hist[i_bin]]
+        if fill == 'solid':
+            h = ax.fill_between(x_edges,y_edges,y2=0,color=hist_color,label=label)
+        elif fill == 'hatch':
+            ax.fill_between(x_edges,y_edges,y2=0,color=hist_color,label=label,hatch='//',facecolor="none")
+            ax.plot(bin_edges[i_bin:i_bin+2],hist[i_bin]*np.ones(2),color=hist_color)
             #left_jump = 0 if i_bin==0 else hist[i_bin-1]
             #right_jump = 0 if i_bin==len(bin_centers)-1 else hist[i_bin+1]
             #ax.plot(bin_edges[i_bin]*np.ones(2), [left_jump,hist[i_bin]],color=hist_color,linewidth=2.5)
