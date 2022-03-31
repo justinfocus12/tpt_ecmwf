@@ -782,13 +782,14 @@ class WinterStratosphereTPT:
                 "theta_tangential": funlib_X['time_d']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))[winter_fully_idx], 
                 })
             bin_edges_list = [
-                    np.cumsum([0,31,30,31,31,28]),
+                    np.cumsum([0,31,30,31,31,28,31]),
                     np.cumsum([0,
                         10,10,11,
                         10,10,10,
                         10,10,11,
                         10,10,11,
                         9,9,10,
+                        10,10,11,
                         ])
                     ]
             # Make a vertical stack of panels, one for each reanalysis dataset

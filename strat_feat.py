@@ -116,9 +116,9 @@ class WinterStratosphereFeatures:
         #print(f"nonwinter_flag = {nonwinter_flag}")
         nbuffer = int(round(tpt_bndy['sswbuffer']/self.dtwint))
         uref = y[:,i_uref] #self.uref_history(y,feat_def)
-        weak_wind_flag = (np.min(uref[:,:self.ndelay-nbuffer], axis=1) < tpt_bndy['uthresh_b'])  # This has to be defined from the Y construction
-        strong_wind_flag = (uref[:,0] > tpt_bndy['uthresh_a'])
-        ina = nonwinter_flag + winter_flag*(1 - weak_wind_flag)*strong_wind_flag
+        strong_wind_flag = (np.min(uref[:,:self.ndelay-nbuffer], axis=1) >= tpt_bndy['uthresh_a'])  # This has to be defined from the Y construction
+        #strong_wind_flag = (uref[:,0] > tpt_bndy['uthresh_a'])
+        ina = nonwinter_flag + winter_flag*strong_wind_flag
         return ina
     def inb_test(self,y,feat_def,tpt_bndy):
         # Test whether a reanalysis dataset's components are in B

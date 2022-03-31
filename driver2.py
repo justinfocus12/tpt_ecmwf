@@ -40,7 +40,7 @@ resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
 daydir = join(resultsdir,"2022-03-24")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"0")
+expdir = join(daydir,"1")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -68,7 +68,7 @@ subsets = dict({
                 "label": f"ERA-I {max(fall_years['ei'][0],fall_years['s2s'][0])}-{min(fall_years['ei'][-1],fall_years['s2s'][-1])}",
                 }),
             }),
-        "num_bootstrap": 40, 
+        "num_bootstrap": 5, 
         "num_full_kmeans_seeds": 1,
         "rank": 0,
         }),
@@ -87,7 +87,7 @@ subsets = dict({
                 "label": f"ERA-20C {max(fall_years['e2'][0],fall_years['s2s'][0])}-{min(fall_years['e2'][-1],fall_years['s2s'][-1])}"
                 }),
             }),
-        "num_bootstrap": 40, 
+        "num_bootstrap": 5, 
         "num_full_kmeans_seeds": 1,
         "rank": 1,
         }),
@@ -111,7 +111,7 @@ subsets = dict({
                 "label": f"ERA-5 {max(fall_years['e5'][0],fall_years['s2s'][0])}-{min(fall_years['e5'][-1],fall_years['s2s'][-1])}"
                 }),
             }),
-        "num_bootstrap": 40, 
+        "num_bootstrap": 5, 
         "num_full_kmeans_seeds": 1,
         "rank": 2,
         }),
@@ -123,8 +123,8 @@ subsets = dict({
                 "label": f"S2S {fall_years['s2s'][0]}-{fall_years['s2s'][-1]}"
                 }),
             }),
-        "num_bootstrap": 40, 
-        "num_full_kmeans_seeds": 5,
+        "num_bootstrap": 5, 
+        "num_full_kmeans_seeds": 2,
         "rank": 3,
         }),
     })
@@ -248,27 +248,27 @@ task_list = dict({
         }),
     "ei": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 0,
-        "tpt_flag":                           0,
+        "tpt_featurize_flag":                 1,
+        "tpt_flag":                           1,
         }),
     "e2": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 0, 
-        "tpt_flag":                           0,
+        "tpt_featurize_flag":                 1, 
+        "tpt_flag":                           1,
         }),
     "e5": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 0, 
-        "tpt_flag":                           0,
+        "tpt_featurize_flag":                 1, 
+        "tpt_flag":                           1,
         }),
     "s2s": dict({
         "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 0,
-        "cluster_flag":                       0,
-        "build_msm_flag":                     0,
-        "tpt_s2s_flag":                       0,
-        "transfer_results_flag":              0,
-        "plot_tpt_results_flag":              0,
+        "tpt_featurize_flag":                 1,
+        "cluster_flag":                       1,
+        "build_msm_flag":                     1,
+        "tpt_s2s_flag":                       1,
+        "transfer_results_flag":              1,
+        "plot_tpt_results_flag":              1,
         }),
     "comparison": dict({
         "plot_rate_flag":                     1,
@@ -300,9 +300,9 @@ if task_list["featurization"]["display_features_flag"]:
 
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = monthrange(1901,10)[1] # First day that SSW could happen is Nov. 1
-tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(1902,i)[1] for i in [1,2]]) #31 + 30 + 31 + 31 + 28  # Last day that SSW could happen: February 28
-sswbuffer = 0.0 # minimum buffer time between one SSW and the next
-uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
+tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(1902,i)[1] for i in [1,2,3]]) # Last day that SSW could happen: February 28
+sswbuffer = 14.0 # minimum buffer time between one SSW and the next
+uthresh_a = -100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(0,-36,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 plottable_uthresh_list = [0,-15]
 uthresh_dirname_fun = lambda uthresh_b: "tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer)
@@ -423,7 +423,7 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
                     spaghetti_flag=0*(uthresh_b in plottable_uthresh_list),
                     fluxdens_flag=1*(uthresh_b in plottable_uthresh_list),
                     verify_leadtime_flag=0*(uthresh_b in plottable_uthresh_list),
-                    current2d_flag=0*(uthresh_b in plottable_uthresh_list),
+                    current2d_flag=1*(uthresh_b in plottable_uthresh_list),
                     comm_corr_flag=0*(uthresh_b in plottable_uthresh_list),
                     colors_ra_dict=colors_ra_dict,labels_dict=labels_dict,
                     keys_ra_current=keys_ra_current,
