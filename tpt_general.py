@@ -798,12 +798,12 @@ class WinterStratosphereTPT:
             bin_edges_list = [
                     np.cumsum([0,31,30,31,31,28,31]),
                     np.cumsum([0,
-                        10,10,11,
-                        10,10,10,
-                        10,10,11,
-                        10,10,11,
-                        9,9,10,
-                        10,10,11,
+                        8,7,8,8,
+                        8,7,8,7,
+                        8,7,8,8,
+                        8,7,8,8,
+                        7,7,7,7,
+                        8,7,8,8,
                         ])
                     ]
             # Make a vertical stack of panels, one for each reanalysis dataset
@@ -836,7 +836,7 @@ class WinterStratosphereTPT:
                     "label": ra[k]['label'],
                     })
                 infoth = dict({
-                    "theta_normal": funlib_X['uref']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])),
+                    "theta_normal": -funlib_X['uref']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])),
                     "theta_tangential": funlib_X['time_d']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])),
                     })
                 hist_color_list = [ra[k]['color'],'black']
@@ -873,61 +873,9 @@ class WinterStratosphereTPT:
             fig.savefig(join(savedir,"verification_leadtime"))
             plt.close(fig)
         if current2d_flag:
-            # ------------- Real time, committor. Latter has to be interpolated -----------
-            theta_x = np.array([funlib_Y["time_d"]["fun"](Y.reshape((Ny*Nty,ydim))), qp_Y.reshape((Ny*Nty))]).T.reshape((Ny,Nty,2))
-            rath = dict({key: dict({}) for key in keys_ra_current}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
-            for k in keys_ra_current:
-                raqp = ra[k]["qp"]
-                print(f"raqp.shape = {raqp.shape}. ra[{k}][Ny,Nty] = {ra[k]['Ny']},{ra[k]['Nty']}")
-                rath[k]["theta"] = np.array([
-                    funlib_Y["time_d"]["fun"](ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))),
-                    ra[k]["qp"].reshape(ra[k]["Ny"]*ra[k]["Nty"])
-                    ]).T.reshape((ra[k]["Ny"],ra[k]["Nty"],2))
-                print(f"For reanalysis {k}, committor ranges from {np.nanmin(ra[k]['qp'])} to {np.nanmax(ra[k]['qp'])}")
-            lab0 = funlib_Y["time_d"]["label"]
-            lab1 = r"$q_B^+$"
-            # A -> B
-            reactive_code = [0,1]
-            comm_bwd = qm_Y*(reactive_code[0] == 0) + (1-qm_Y)*(reactive_code[0] == 1)
-            comm_fwd = qp_Y*(reactive_code[1] == 1) + (1-qp_Y)*(reactive_code[1] == 0)
-            print(f"shapes: qp_Y: {qp_Y.shape}, pi_Y: {pi_Y.shape}, theta_x: {theta_x.shape}")
-            print(f"idx_winter: 0: min={idx_winter[0].min()}, max={idx_winter[0].max()}")
-            fig,ax = helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$ (winters with SSW)",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrRd)
-            _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
-            print("------------ Before plot_trajectory_segments with leadtime")
-            handles,seg_labels = self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
-            #ax.legend(handles=handles)
-            print("----------- After plot_trajectory_segments with leadtime")
-            ax.set_xticks(np.cumsum([31,30,31,31,28]))
-            ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
-            ax.set_xlabel("")
-            fig.savefig(join(savedir,"J_timed_qp_ab"))
-            plt.close(fig)
-            # ------------- Lead time, zonal wind. Former has to be interpolated -----------
-            theta_x = np.array([-lt_mean_Y.reshape((Ny*Nty)), funlib_Y["uref_dl0"]["fun"](Y.reshape((Ny*Nty,ydim)))]).T.reshape((Ny,Nty,2))
-            rath = dict({key: dict({}) for key in keys_ra_current}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
-            for k in keys_ra_current:
-                rath[k]["theta"] = np.array([
-                    -ra[k]["lt_mean"].reshape(ra[k]["Ny"]*ra[k]["Nty"]),
-                    funlib_Y["uref_dl0"]["fun"](ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"])))]).T.reshape((ra[k]["Ny"],ra[k]["Nty"],2))
-                print(f"For reanalysis {k}, lead time ranges from {np.nanmin(ra[k]['lt_mean'])} to {np.nanmax(ra[k]['lt_mean'])}")
-            lab0 = r"$-\eta_B^+$ [days]"
-            lab1 = funlib_Y["uref_dl0"]["label"]
-            # A -> B
-            reactive_code = [0,1]
-            comm_bwd = qm_Y*(reactive_code[0] == 0) + (1-qm_Y)*(reactive_code[0] == 1)
-            comm_fwd = qp_Y*(reactive_code[1] == 1) + (1-qp_Y)*(reactive_code[1] == 0)
-            print(f"shapes: qp_Y: {qp_Y.shape}, pi_Y: {pi_Y.shape}, theta_x: {theta_x.shape}")
-            print(f"idx_winter: 0: min={idx_winter[0].min()}, max={idx_winter[0].max()}")
-            fig,ax = helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=r"$A\to B$ (winters with SSW)",fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=True,cmap=plt.cm.YlOrRd)
-            _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
-            print("------------ Before plot_trajectory_segments with leadtime")
-            handles,seg_labels = self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
-            #ax.legend(handles=handles)
-            print("----------- After plot_trajectory_segments with leadtime")
-            fig.savefig(join(savedir,"J_lt_uref_ab"))
-            plt.close(fig)
             # ------------- Current plots --------------------
+            xticks = np.cumsum([31,30,31,31,28,31])
+            xticklabels = ['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1', 'Apr. 1']
             keypairs = []
             #keypairs += [['uref_inc_0','uref_inc_2']]
             keypairs += [['time_d','uref']]
@@ -943,7 +891,6 @@ class WinterStratosphereTPT:
                 print(f"Plotting current on key pair {key0},{key1}")
                 y_flag = (key0 in funlib_Y.keys() and key1 in funlib_Y.keys())
                 x_flag = (key0 in funlib_X.keys() and key1 in funlib_X.keys())
-                print(f"y_flag = {y_flag}, x_flag = {x_flag}")
                 if not (y_flag or x_flag):
                     print(f"WARNING: {key0} and {key1} are not both in funlib_X.keys or funlib_Y.keys")
                 else:
@@ -981,8 +928,8 @@ class WinterStratosphereTPT:
                     if key0 == "time_d" and key1 == "uref":
                         ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
                     helper.plot_field_2d((comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=True,logscale=False,cmap=plt.cm.coolwarm,contourflag=True,fig=fig,ax=ax)
-                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
-                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
                     fig.savefig(join(savedir,"qp_lin_%s_%s_ab_build1"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
@@ -998,8 +945,8 @@ class WinterStratosphereTPT:
                     if key0 == "time_d" and key1 == "uref":
                         ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
                     helper.plot_field_2d((-lt_mean_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=True,logscale=False,cmap=plt.cm.coolwarm,contourflag=True,fig=fig,ax=ax)
-                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
-                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
                     fig.savefig(join(savedir,"lt_%s_%s_ab_build1"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
@@ -1016,18 +963,18 @@ class WinterStratosphereTPT:
                     ax.set_xlabel(lab0,fontdict=font)
                     ax.set_ylabel(lab1,fontdict=font)
                     ax.set_title(fieldname,fontdict=font)
-                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
-                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
                     fig.savefig(join(savedir,"J_%s_%s_ab_%s_build0"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=False,cmap=plt.cm.YlOrRd,contourflag=True,fig=fig,ax=ax)
-                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
-                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
                     fig.savefig(join(savedir,"J_%s_%s_ab_%s_build1"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
-                    _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
-                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
-                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    _,_,_,_ = self.plot_current_overlay_data(theta_x,comm_bwd,comm_fwd,pi_Y,fig,ax)
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
                     fig.savefig(join(savedir,"J_%s_%s_ab_%s_build2"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     plt.close(fig)
@@ -1047,18 +994,18 @@ class WinterStratosphereTPT:
                     ax.set_xlabel(lab0,fontdict=font)
                     ax.set_ylabel(lab1,fontdict=font)
                     ax.set_title(fieldname,fontdict=font)
-                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
-                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
                     fig.savefig(join(savedir,"J_%s_%s_aa_%s_build0"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=False,cmap=plt.cm.YlOrRd,contourflag=True,fig=fig,ax=ax)
-                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
-                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
                     fig.savefig(join(savedir,"J_%s_%s_aa_%s_build1"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
-                    _,_,_,_ = self.plot_current_overlay_data(theta_x[winter_fully_idx],comm_bwd[winter_fully_idx],comm_fwd[winter_fully_idx],pi_Y[winter_fully_idx],fig,ax)
-                    ax.set_xticks(np.cumsum([31,30,31,31,28]))
-                    ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    _,_,_,_ = self.plot_current_overlay_data(theta_x,comm_bwd,comm_fwd,pi_Y,fig,ax)
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
                     fig.savefig(join(savedir,"J_%s_%s_aa_%s_build2"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     plt.close(fig)
@@ -1280,7 +1227,7 @@ class WinterStratosphereTPT:
             hist,bin_edges = np.histogram(theta_tan_rflux.flatten(), weights=rflux.flatten(), bins=bin_edges)
             bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
             hist *= 1.0/np.sum(hist*np.diff(bin_edges))
-            hist *= info["rate"] 
+            #hist *= info["rate"] 
         else: # Reanalysis
             infoth["delta_theta_normal"] = infoth["theta_normal"][:,1:] - infoth["theta_normal"][:,:-1]
             infoth["reactive_flag"] = (info["src_tag"] == reactive_code[0])*(info["dest_tag"] == reactive_code[1])
@@ -1297,7 +1244,7 @@ class WinterStratosphereTPT:
                 hist,bin_edges = np.histogram(theta_tangential_ra, weights=signs_ra,bins=bin_edges)
                 bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
                 hist *= 1.0/(np.sum(hist)*np.diff(bin_edges)) 
-                hist *= info["rate"]
+                #hist *= info["rate"]
         # Make the plot
         if fig is None or ax is None: fig,ax = plt.subplots()
         x_edges = []
@@ -1483,6 +1430,7 @@ class WinterStratosphereTPT:
                 raise Exception(f"ERROR: you gave me a data set of shape {theta_x.shape}, but I need dimension 2 to have size 2")
             reactive_flag = (ra[k]["src_tag"] == reactive_code[0])*(ra[k]["dest_tag"] == reactive_code[1])*(ra[k]["ina"] == 0)*(ra[k]["inb"] == 0)
             any_rxn_idx = np.where(np.any(reactive_flag, axis=1))[0]
+            print(f"len(any_rxn_idx) = {len(any_rxn_idx)}")
             prng = np.random.RandomState(6)
             ss = prng.choice(any_rxn_idx,size=min(numtraj,len(any_rxn_idx)),replace=False)
             print(f"For reanalysis {k}, len(ss) = {len(ss)}")
@@ -1499,6 +1447,8 @@ class WinterStratosphereTPT:
                 if ridx[-1] < len(xx)-1:
                     ridx = np.concatenate((ridx,[ridx[-1]+1]))
                 ax.plot(xx[ridx,0],xx[ridx,1],color="black",linewidth=1.5,zorder=zorder)
+        if len(labels) == 0:
+            raise Exception("ERROR: no realized trajectories to plot")
         return handles,labels
     def project_current_data(self,theta_x,qm,qp,pi):
         Nx,Nt,thdim = theta_x.shape

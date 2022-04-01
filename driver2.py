@@ -259,16 +259,16 @@ task_list = dict({
         "tpt_flag":                           0,
         }),
     "s2s": dict({
-        "tpt_featurize_flag":                 1,
-        "cluster_flag":                       1,
-        "build_msm_flag":                     1,
-        "tpt_s2s_flag":                       1,
-        "transfer_results_flag":              1,
+        "tpt_featurize_flag":                 0,
+        "cluster_flag":                       0,
+        "build_msm_flag":                     0,
+        "tpt_s2s_flag":                       0,
+        "transfer_results_flag":              0,
         "plot_tpt_results_flag":              1,
         }),
     "comparison": dict({
         "plot_rate_flag":                     1,
-        "illustrate_dataset_flag":            1,
+        "illustrate_dataset_flag":            0,
         }),
     })
 
@@ -306,7 +306,7 @@ tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(19
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(0,-36,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
-plottable_uthresh_list = [0,-15]
+plottable_uthresh_list = [0,-10,-15]
 uthresh_dirname_fun = lambda uthresh_b: "tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer)
 
 # =============================================================
