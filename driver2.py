@@ -40,7 +40,7 @@ resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
 daydir = join(resultsdir,"2022-03-24")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"2")
+expdir = join(daydir,"3")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -55,7 +55,7 @@ fall_years = dict({
     })
 # Fully overlapping estimates
 intersection = np.intersect1d(fall_years["e2"],fall_years["e5"])
-print(f"intersection = {intersection}")
+#print(f"intersection = {intersection}")
 subsets = dict({
     "ei": dict({
         "overlaps": dict({
@@ -138,7 +138,7 @@ for src in sources:
         for i_ss in range(subsets[src]["num_bootstrap"]):
             subsets[src]["overlaps"][ovl]["bootstrap"] += [prng.choice(subsets[src]["overlaps"][ovl]["full"], size=Nyears, replace=True)]
 
-print(f"era5 subsets: \nself:\n\t{subsets['e5']['overlaps']['self']}\nra:\n\t{subsets['e5']['overlaps']['ra']}\nhc:\n\t{subsets['e5']['overlaps']['hc']}")
+#print(f"era5 subsets: \nself:\n\t{subsets['e5']['overlaps']['self']}\nra:\n\t{subsets['e5']['overlaps']['ra']}\nhc:\n\t{subsets['e5']['overlaps']['hc']}")
 
 
 file_lists = dict()
@@ -180,7 +180,7 @@ for key in sources:
     if not exists(expdirs[key]): mkdir(expdirs[key])
 # ------------------ Algorithmic parameters ---------------------
 multiprocessing_flag = 0
-num_clusters = 200
+num_clusters = 60
 #Npc_per_level_single = 4
 Npc_per_level = np.array([0,0,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
@@ -247,22 +247,18 @@ task_list = dict({
         "display_features_flag":              0,
         }),
     "ei": dict({
-        "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 1,
-        "tpt_flag":                           1,
+        "tpt_featurize_flag":                 0,
+        "tpt_flag":                           0,
         }),
     "e2": dict({
-        "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 1, 
-        "tpt_flag":                           1,
+        "tpt_featurize_flag":                 0, 
+        "tpt_flag":                           0,
         }),
     "e5": dict({
-        "evaluate_database_flag":             0,
-        "tpt_featurize_flag":                 1, 
-        "tpt_flag":                           1,
+        "tpt_featurize_flag":                 0, 
+        "tpt_flag":                           0,
         }),
     "s2s": dict({
-        "evaluate_database_flag":             0,
         "tpt_featurize_flag":                 1,
         "cluster_flag":                       1,
         "build_msm_flag":                     1,
@@ -275,6 +271,12 @@ task_list = dict({
         "illustrate_dataset_flag":            1,
         }),
     })
+
+# Evaluate databases?
+task_list["e5"]["evaluate_database_flag"] =  0
+task_list["ei"]["evaluate_database_flag"] =  0
+task_list["e2"]["evaluate_database_flag"] =  0
+task_list["s2s"]["evaluate_database_flag"] = 0
 
 
 feature_file = join(featdir,"feat_def")
@@ -300,7 +302,7 @@ if task_list["featurization"]["display_features_flag"]:
 
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = monthrange(1901,10)[1] # First day that SSW could happen is Nov. 1
-tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(1902,i)[1] for i in [1,2,3]]) # Last day that SSW could happen: February 28
+tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(1902,i)[1] for i in [1,2]]) # Last day that SSW could happen: February 28
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(0,-36,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])

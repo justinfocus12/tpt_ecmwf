@@ -633,12 +633,12 @@ class WinterStratosphereFeatures:
         return X
     def evaluate_tpt_features(self,feat_filename,ens_start_filename,fall_year_filename,feat_def,tpt_feat_filename,algo_params,resample_flag=False,fy_resamp=None):
         print(f" -------------- Inside evaluate_tpt_features: tpt_feat_filename = {tpt_feat_filename}, resample_flag = {resample_flag} --------------")
-        print(f"fy_resamp = {fy_resamp}")
+        #print(f"fy_resamp = {fy_resamp}")
         # Evaluate a subset of the full features to use for clustering TPT.
         # A normalized version of these will be used for clustering.
         # The data set for clustering will have fewer time steps, due to time-delay embedding.
         X = np.load(feat_filename)
-        print("Before resampling: X.shape = {}".format(X.shape))
+        #print("Before resampling: X.shape = {}".format(X.shape))
         if resample_flag:
             ens_start_idx = np.load(ens_start_filename)
             fall_year_list = np.load(fall_year_filename)
@@ -655,10 +655,10 @@ class WinterStratosphereFeatures:
                 idx_resamp = np.concatenate((idx_resamp,np.sort(matches)))
             X = X[idx_resamp]
         #print("len(idx_resamp) = {}".format(len(idx_resamp)))
-        print("After resampling: X.shape = {}".format(X.shape))
+        #print("After resampling: X.shape = {}".format(X.shape))
         Nlev = len(feat_def['plev'])
         Nx,Ntx,xdim = X.shape
-        print(f"Nx = {Nx}, Ntx = {Ntx}, xdim = {xdim}")
+        #print(f"Nx = {Nx}, Ntx = {Ntx}, xdim = {xdim}")
         # ------------- Define the cluster features Y ------------------
         # Y will have time-delay features built in. 
         Nty = Ntx - self.ndelay + 1
@@ -669,7 +669,7 @@ class WinterStratosphereFeatures:
         szn_std_Y = np.zeros((self.Ntwint-self.ndelay+1,ydim-1))
         # ------------- Time ---------------
         Y[:,:,self.fidx_Y["time_h"]] = X[:,self.ndelay-1:,self.fidx_X["time_h"]]
-        print(f"Y[0,0,0] = {Y[0,0,0]}")
+        #print(f"Y[0,0,0] = {Y[0,0,0]}")
         # ------------ Uref ------------------
         # Build time delays of u into Y
         i_feat_x = self.fidx_X["uref"]
@@ -677,8 +677,8 @@ class WinterStratosphereFeatures:
             i_feat_y = self.fidx_Y["uref_dl%i"%(i_dl)]
             #Y[:,:,i_feat_y] = X[:,i_dl:i_dl+Nty,i_feat_x]
             Y[:,:,i_feat_y] = X[:,self.ndelay-1-i_dl:self.ndelay-1-i_dl+Nty,i_feat_x]
-            print(f"szn_mean_Y.shape = {szn_mean_Y.shape}")
-            print(f"feat_def['uref_szn_mean'].shape = {feat_def['uref_szn_mean'].shape}")
+            #print(f"szn_mean_Y.shape = {szn_mean_Y.shape}")
+            #print(f"feat_def['uref_szn_mean'].shape = {feat_def['uref_szn_mean'].shape}")
             szn_mean_Y[:,i_feat_y-1] = feat_def["uref_szn_mean"][self.ndelay-1:] 
             szn_std_Y[:,i_feat_y-1] = feat_def["uref_szn_std"][self.ndelay-1:]
             #offset_Y[i_feat_y-1] = feat_def["uref_mean"]
@@ -741,7 +741,7 @@ class WinterStratosphereFeatures:
                 szn_std_Y[:,i_feat_y-1] = feat_def["vT_szn_std"][:,i_lev,i_wn]
         tpt_feat = {"Y": Y, "szn_mean_Y": szn_mean_Y, "szn_std_Y": szn_std_Y, "idx_resamp": idx_resamp}
         pickle.dump(tpt_feat, open(tpt_feat_filename,"wb"))
-        print(f"Y.shape = {Y.shape}")
+        #print(f"Y.shape = {Y.shape}")
         return 
     def set_feature_indices_X(self,feat_def,fidx_X_filename):
         # Build a mapping from feature names to indices in X.

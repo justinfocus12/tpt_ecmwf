@@ -186,7 +186,8 @@ class WinterStratosphereTPT:
         for ti in range(winstrat.Ntwint):
             idx_Y = np.where(np.abs(Y[:,winstrat.fidx_Y['time_h']] - winstrat.wtime[ti]) < winstrat.szn_hour_window/2)[0]
             if len(idx) == 0:
-                print("WARNING, we don't have any data in time slot {}. Y time: min={}, max={}. wtime: min={}, max={}.".format(ti,Y[:,0].min(),Y[:,0].max(),winstrat.wtime.min(),winstrat.wtime.max()))
+                #print("WARNING, we don't have any data in time slot {}. Y time: min={}, max={}. wtime: min={}, max={}.".format(ti,Y[:,0].min(),Y[:,0].max(),winstrat.wtime.min(),winstrat.wtime.max()))
+                pass
             else:
                 labels = kmlist[ti].predict(Y_unseasoned[idx_Y])
                 for i_cl in range(kmlist[ti].n_clusters):
@@ -198,11 +199,11 @@ class WinterStratosphereTPT:
         # Read in a feature array from feat_filename and build clusters. Save cluster centers. Save them out in clust_filename.
         tpt_feat = pickle.load(open(tpt_feat_filename,"rb"))
         Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
-        print(f"min(szn_std_Y) = {np.min(szn_std_Y)}")
-        print(f"which feature has zero szn_std? {np.where(np.min(szn_std_Y,axis=0)==0)[0]}")
+        #print(f"min(szn_std_Y) = {np.min(szn_std_Y)}")
+        #print(f"which feature has zero szn_std? {np.where(np.min(szn_std_Y,axis=0)==0)[0]}")
         Nx,Nt,ydim = Y.shape
-        print(f"Y.shape = {Y.shape}")
-        print(f"fidx_Y = {winstrat.fidx_Y}")
+        #print(f"Y.shape = {Y.shape}")
+        #print(f"fidx_Y = {winstrat.fidx_Y}")
         Y = Y.reshape((Nx*Nt,ydim))
         # cluster based on the non-time features. 
         Y_unseasoned = winstrat.unseason(Y[:,0],Y[:,1:],szn_mean_Y,szn_std_Y,normalize=True,delayed=True)
@@ -213,7 +214,8 @@ class WinterStratosphereTPT:
             #idx = np.where(np.abs(Y[:,winstrat.fidx_Y['time_h']] - winstrat.wtime[ti]) < winstrat.szn_hour_window/2)[0]
             idx = np.where(np.abs(Y[:,winstrat.fidx_Y['time_h']] - winstrat.wtime[ti]) < winstrat.dtwint/2)[0]
             if len(idx) == 0:
-                print("WARNING, we don't have any data in time slot {}. Y time: min={}, max={}. wtime: min={}, max={}.".format(ti,Y[:,0].min(),Y[:,0].max(),winstrat.wtime.min(),winstrat.wtime.max()))
+                #print("WARNING, we don't have any data in time slot {}. Y time: min={}, max={}. wtime: min={}, max={}.".format(ti,Y[:,0].min(),Y[:,0].max(),winstrat.wtime.min(),winstrat.wtime.max()))
+                pass
             else:
                 kmidx.append(idx)
                 kmtime.append(winstrat.wtime[ti])
@@ -221,9 +223,9 @@ class WinterStratosphereTPT:
                 if ti % 30 == 0:
                     print(f"ti = {ti}, km.n_clusters = {km.n_clusters}, len(idx) = {len(idx)}")
                 kmlist.append(km)
-        kmdict = {"kmlist": kmlist, "kmtime": kmtime, "kmidx": kmidx,}
+        kmdict = {"kmlist": kmlist, "kmtime": np.array(kmtime), "kmidx": kmidx,}
         pickle.dump(kmdict,open(clust_filename,"wb"))
-        print("n_clusters: {}".format(np.array([km.n_clusters for km in kmlist])))
+        #print("n_clusters: {}".format(np.array([km.n_clusters for km in kmlist])))
         return
     def build_msm(self,tpt_feat_filename,clust_filename,msm_filename,winstrat):
         nnk = 4 # Number of nearest neighbors for filling in empty positions
@@ -523,10 +525,21 @@ class WinterStratosphereTPT:
             rate_froma += np.sum(flux_froma[-1])
             rate_tob += np.sum(flux_tob[-1])
             flux_dens_tob[ti] = np.sum(flux_tob[-1])
-        print(f"flux_dens_tob: min={flux_dens_tob.min()},max={flux_dens_tob.max()}")
+        ti_feb1 = np.argmin(np.abs(kmtime/24 - (31 + 30 + 31 + 31)))
+        ti_mar1 = np.argmin(np.abs(kmtime/24 - (31 + 30 + 31 + 31 + 28)))
+        print(f"flux_dens_tob: min={flux_dens_tob.min()},max={flux_dens_tob.max()}, frac>0 = {np.mean(flux_dens_tob>0)}")
+        print(f"feb time indices: {ti_feb1}, {ti_mar1}. flux in feb. = {np.sum(flux_dens_tob[ti_feb1:ti_mar1])}")
+        print(f"flux_dens_tob = {flux_dens_tob}")
+        np.save(f"flux_dens_tob_tth1{self.tpt_bndy['tthresh'][1]}.npy",flux_dens_tob)
         # Smooth out flux_dens_tob
-        hist,t_hist = np.histogram(kmtime_d, weights=flux_dens_tob, bins=15)
+        hist,t_hist = np.histogram(kmtime_d, weights=flux_dens_tob, bins=5)
         t_hist = (t_hist[1:] + t_hist[:-1])/2
+        fig,ax = plt.subplots()
+        ax.bar(t_hist,hist)
+        ax.set_title("Sloppy")
+        fig.savefig(join(savedir,"szn_dist_sloppy"))
+        plt.close(fig)
+
         #ti_froma = np.where(winstrat.wtime > self.tpt_bndy['tthresh'][0])[0][0]
         if np.abs(rate_froma - rate_tob) > 0.1*max(rate_froma, rate_tob):
             raise Exception(f"Rate discrepancy: froma is {rate_froma}, tob is {rate_tob}")
@@ -773,13 +786,14 @@ class WinterStratosphereTPT:
         if fluxdens_flag:
             reactive_code = [0,1] #= ((src_tag==0)*(dest_tag==1)*winter_flag_ra).reshape((Nyra,Ntyra))
             # ----------- Plot seasonal distribution with multiple resolutions ---------
+            # New method: simply look at the discretized flux crossing the boundary.
             theta_normal_label = funlib_X['uref']['label']
             theta_tangential_label = funlib_X['time_d']['label']
-            theta_lower = self.tpt_bndy['uthresh_b'] - 1.0
-            theta_upper = self.tpt_bndy['uthresh_b'] + 1.0
+            theta_lower = -self.tpt_bndy['uthresh_b'] - 1.0
+            theta_upper = -self.tpt_bndy['uthresh_b'] + 1.0
             infoth = dict({
-                "theta_normal": funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))[winter_fully_idx],
-                "theta_tangential": funlib_X['time_d']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))[winter_fully_idx], 
+                "theta_normal": -funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty)),
+                "theta_tangential": funlib_X['time_d']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty)), 
                 })
             bin_edges_list = [
                     np.cumsum([0,31,30,31,31,28,31]),
@@ -797,9 +811,9 @@ class WinterStratosphereTPT:
             ax[0].set_title(r"$U_{10}^{\mathrm{(th)}}=%i$ m/s"%(self.tpt_bndy['uthresh_b']),fontdict=font)
             # First, DGA
             info = dict({
-                "qm": qm_Y[winter_fully_idx], 
-                "qp": qp_Y[winter_fully_idx], 
-                "pi": pi_Y[winter_fully_idx], 
+                "qm": qm_Y, 
+                "qp": qp_Y, 
+                "pi": pi_Y, 
                 "rate": rate,
                 "label": labels_dict["s2s-self"],
                 })
@@ -849,94 +863,6 @@ class WinterStratosphereTPT:
             fig.savefig(join(savedir,"szn_dist"))
             plt.close(fig)
 
-            # ----------- Plot flux distribution of entry times ----------
-            theta_normal = funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
-            theta_normal_label = funlib_X['uref']['label']
-            theta_tangential = funlib_X['time_d']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
-            theta_tangential_label = funlib_X['time_d']['label']
-            rath = dict({key: dict({}) for key in keys_ra}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
-            for k in keys_ra:
-                rath[k]["theta_normal"] = funlib_X['uref']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
-                rath[k]["theta_tangential"] = funlib_X['time_d']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
-            theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
-            theta_lower_list = theta_mid_list - 1.0
-            theta_upper_list = theta_mid_list + 1.0
-            # TODO: repeat this three times building up the dataset
-            for desired_bins in [4,12]:
-                for dga_flag in [0,1]:
-                    fig,ax,bins = self.plot_flux_distributions_1d(
-                            qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
-                            theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
-                            ra,rath,
-                            theta_normal_label,theta_tangential_label,
-                            reactive_code,rate,
-                            theta_lower_list,theta_upper_list,
-                            timeseries_like=False,invert_flag=True,desired_bins=desired_bins,dga_flag=dga_flag)
-                    fig.savefig(join(savedir,"fluxdens_J-uref_d-timed_bins%i_dga%i"%(bins,dga_flag)))
-                    plt.close(fig)
-            # ----------- Plot flux distribution of wavenumber 0  ---------
-            theta_normal = funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
-            theta_normal_label = funlib_X['uref']['label']
-            theta_tangential = funlib_X['heatflux_lev4_wn0']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
-            theta_tangential_label = funlib_X['heatflux_lev4_wn0']['label']
-            rath = dict({key: dict({}) for key in keys_ra}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
-            for k in keys_ra:
-                rath[k]["theta_normal"] = funlib_X['uref']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
-                rath[k]["theta_tangential"] = funlib_X['heatflux_lev4_wn0']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
-            theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
-            theta_lower_list = theta_mid_list - 5.0
-            theta_upper_list = theta_mid_list + 5.0
-            fig,ax,bins = self.plot_flux_distributions_1d(
-                    qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
-                    theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
-                    ra,rath,
-                    theta_normal_label,theta_tangential_label,
-                    reactive_code,rate,
-                    theta_lower_list,theta_upper_list)
-            fig.savefig(join(savedir,"fluxdens_J-uref_d-hflev4wn0"))
-            plt.close(fig)
-            # ----------- Plot flux distribution of wavenumber 1  ---------
-            theta_normal = funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
-            theta_normal_label = funlib_X['uref']['label']
-            theta_tangential = funlib_X['heatflux_lev4_wn1']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
-            theta_tangential_label = funlib_X['heatflux_lev4_wn1']['label']
-            rath = dict({key: dict({}) for key in keys_ra}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
-            for k in keys_ra:
-                rath[k]["theta_normal"] = funlib_X['uref']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
-                rath[k]["theta_tangential"] = funlib_X['heatflux_lev4_wn1']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
-            theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
-            theta_lower_list = theta_mid_list - 5.0
-            theta_upper_list = theta_mid_list + 5.0
-            fig,ax,_ = self.plot_flux_distributions_1d(
-                    qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
-                    theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
-                    ra,rath,
-                    theta_normal_label,theta_tangential_label,
-                    reactive_code,rate,
-                    theta_lower_list,theta_upper_list)
-            fig.savefig(join(savedir,"fluxdens_J-uref_d-hflev4wn1"))
-            plt.close(fig)
-            # ----------- Plot flux distribution of wavenumber 2  ---------
-            theta_normal = funlib_X['uref']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
-            theta_normal_label = funlib_X['uref']['label']
-            theta_tangential = funlib_X['heatflux_lev4_wn2']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty))
-            theta_tangential_label = funlib_X['heatflux_lev4_wn2']['label']
-            rath = dict({key: dict({}) for key in keys_ra}) # Supplemental dictionary for this specific projection and current direction. This might be modified by the function.
-            for k in keys_ra:
-                rath[k]["theta_normal"] = funlib_X['uref']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
-                rath[k]["theta_tangential"] = funlib_X['heatflux_lev4_wn2']['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"]))).reshape((ra[k]["Ny"],ra[k]["Nty"])) 
-            theta_mid_list = np.array([self.tpt_bndy['uthresh_b']]) #np.array([5,0,-5,-10,-15,-20,-25], dtype=float)
-            theta_lower_list = theta_mid_list - 5.0
-            theta_upper_list = theta_mid_list + 5.0
-            fig,ax,_ = self.plot_flux_distributions_1d(
-                    qm_Y[winter_fully_idx],qp_Y[winter_fully_idx],pi_Y[winter_fully_idx],
-                    theta_normal[winter_fully_idx],theta_tangential[winter_fully_idx],
-                    ra,rath,
-                    theta_normal_label,theta_tangential_label,
-                    reactive_code,rate,
-                    theta_lower_list,theta_upper_list)
-            fig.savefig(join(savedir,"fluxdens_J-uref_d-hflev4wn2"))
-            plt.close(fig)
         if verify_leadtime_flag:
             fig,ax = plt.subplots()
             for k in keys_ra_current:
@@ -1325,6 +1251,14 @@ class WinterStratosphereTPT:
             close_idx.append(close_idx_new)
             reactive_flux.append((Jweight[close_idx_new]*Jth[close_idx_new,:].T).T)
         return close_idx,reactive_flux
+    def reactive_flux_density_levelset_strict(self,theta_level,theta_x,qm,qp,pi):
+        # Only count trajectories crossing that surface.
+        Nx,Nt = theta_x.shape
+        rflux = np.zeros((Nx,Nt-1))
+        for i_time in range(Nt-1):
+            idx_crossing = np.where((theta_x[:,i_time] < theta_level)*(theta_x[:,i_time+1] > theta_level))[0]
+            rflux[idx_crossing,i_time] = qm[idx_crossing,i_time]*pi[idx_crossing,i_time]*qp[idx_crossing,i_time+1]
+        return rflux 
     def plot_flux_distributions_multiresolution(self,
             info,infoth, # Can be either reanalysis or DGA data
             theta_normal_label,theta_tangential_label,
@@ -1338,28 +1272,20 @@ class WinterStratosphereTPT:
         theta_upper_list = [theta_upper]
         infoth["thmid_tangential"] = 0.5*(infoth["theta_tangential"][:,1:] + infoth["theta_tangential"][:,:-1])
         infoth["thmid_normal"] = 0.5*(infoth["theta_normal"][:,1:] + infoth["theta_normal"][:,:-1])
-        i_thlev = 0 # Because only one level. Vestigial
         if info_type == "dga":
-            theta_vec = np.transpose(np.array([infoth["theta_normal"],infoth["theta_tangential"]]), (1,2,0))
-            infoth["Jth"],infoth["thmid"],infoth["Jweight"] = self.project_current_data(theta_vec,info["qm"],info["qp"],info["pi"])
-            infoth["close_idx"],infoth["reactive_flux"] = self.reactive_flux_density_levelset(infoth["thmid"][:,0],infoth["Jth"],infoth["Jweight"],theta_lower_list,theta_upper_list)
+            # In this case, possibly perform this in the space of cluster centers
+            rflux = self.reactive_flux_density_levelset_strict((theta_lower+theta_upper)/2, infoth["theta_normal"], info["qm"], info["qp"], info["pi"])
+            theta_tan_rflux = (infoth["theta_tangential"][:,:-1] + infoth["theta_tangential"][:,1:])/2
             # Make a histogram of the reactive flux density distribution
-            idx = infoth["close_idx"][i_thlev]
-            if len(idx) > 1:
-                idx = np.array(idx)
-                weights = infoth["reactive_flux"][i_thlev]
-                x = infoth["thmid"][idx,1]
-                hist,bin_edges = np.histogram(infoth["thmid"][idx,1],weights=infoth["reactive_flux"][i_thlev][:,0],bins=bin_edges)
-                bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
-                hist *= 1.0/np.sum(hist*np.diff(bin_edges))
-                hist *= info["rate"] 
-            else:
-                raise Exception(f"HEY! There are no close idx! What's the big idea? Level = {(theta_lower+theta_upper)/2}")
+            hist,bin_edges = np.histogram(theta_tan_rflux.flatten(), weights=rflux.flatten(), bins=bin_edges)
+            bin_centers = (bin_edges[1:] + bin_edges[:-1])/2
+            hist *= 1.0/np.sum(hist*np.diff(bin_edges))
+            hist *= info["rate"] 
         else: # Reanalysis
             infoth["delta_theta_normal"] = infoth["theta_normal"][:,1:] - infoth["theta_normal"][:,:-1]
             infoth["reactive_flag"] = (info["src_tag"] == reactive_code[0])*(info["dest_tag"] == reactive_code[1])
             print(f"reactive_flag: {np.sum(infoth['reactive_flag'],axis=1)}")
-            theta_mid = 0.5*(theta_lower_list[i_thlev] + theta_upper_list[i_thlev])
+            theta_mid = 0.5*(theta_lower_list[0] + theta_upper_list[0])
             idx_fwd = np.where((infoth["theta_normal"][:,:-1] < theta_mid)*(infoth["theta_normal"][:,1:] >= theta_mid)*(infoth["reactive_flag"][:,:-1]+infoth["reactive_flag"][:,1:]))
             idx_bwd = np.where((infoth["theta_normal"][:,:-1] >= theta_mid)*(infoth["theta_normal"][:,1:] < theta_mid)*(infoth["reactive_flag"][:,:-1]+infoth["reactive_flag"][:,1:]))
             idx = (np.concatenate((idx_fwd[0], idx_bwd[0])),
