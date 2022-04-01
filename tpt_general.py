@@ -144,7 +144,7 @@ class WinterStratosphereTPT:
         Nyra,Ntyra,ydim = Yra.shape
         Yra = Yra.reshape((Nyra*Ntyra,ydim))
         # Now find cluster labels of them all 
-        Yra_unseasoned = winstrat.unseason(Yra[:,0],Yra[:,1:],szn_mean_Yra,szn_std_Yra)
+        Yra_unseasoned = winstrat.unseason(Yra[:,0],Yra[:,1:],szn_mean_Yra,szn_std_Yra,delayed=True)
         kmdict = pickle.load(open(clust_filename,"rb"))
         kmlist,kmtime,kmidx = kmdict["kmlist"],kmdict["kmtime"],kmdict["kmidx"]
         # Identify the cluster time step that each Y corresponds to
@@ -178,7 +178,7 @@ class WinterStratosphereTPT:
     def out_of_sample_extension(self,winstrat,clust,f_clust,tpt_feat_test):
         # Given a function defined on cluster centers, evaluate the function on a "test set" tpt_feat_test. 
         Y,szn_mean_Y,szn_std_Y = [tpt_feat_test[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
-        Y_unseasoned = winstrat.unseason(Y[:,0],Y[:,1:],szn_mean_Y,szn_std_Y,normalize=True)
+        Y_unseasoned = winstrat.unseason(Y[:,0],Y[:,1:],szn_mean_Y,szn_std_Y,normalize=True,delayed=True)
         Nx,Nt,ydim = Y_unseasoned.shape
         Y_unseasoned = Y_unseasoned.reshape((Nx*Nt,ydim))
         kmlist,kmtime = [clust[v] for v in ["kmlist","kmtime"]]
@@ -205,7 +205,7 @@ class WinterStratosphereTPT:
         print(f"fidx_Y = {winstrat.fidx_Y}")
         Y = Y.reshape((Nx*Nt,ydim))
         # cluster based on the non-time features. 
-        Y_unseasoned = winstrat.unseason(Y[:,0],Y[:,1:],szn_mean_Y,szn_std_Y,normalize=True)
+        Y_unseasoned = winstrat.unseason(Y[:,0],Y[:,1:],szn_mean_Y,szn_std_Y,normalize=True,delayed=True)
         kmtime = []
         kmlist = []
         kmidx = [] # At each time step, which snapshots have the same time. 
@@ -230,7 +230,7 @@ class WinterStratosphereTPT:
         tpt_feat = pickle.load(open(tpt_feat_filename,"rb"))
         Y,szn_mean_Y,szn_std_Y = [tpt_feat[v] for v in ["Y","szn_mean_Y","szn_std_Y"]]
         Ny,Nt,ydim = Y.shape
-        Y_unseasoned = winstrat.unseason(Y[:,:,0].reshape(Ny*Nt),Y[:,:,1:].reshape((Ny*Nt,ydim-1)),szn_mean_Y,szn_std_Y,normalize=True).reshape((Ny,Nt,ydim-1))
+        Y_unseasoned = winstrat.unseason(Y[:,:,0].reshape(Ny*Nt),Y[:,:,1:].reshape((Ny*Nt,ydim-1)),szn_mean_Y,szn_std_Y,normalize=True,delayed=True).reshape((Ny,Nt,ydim-1))
         kmdict = pickle.load(open(clust_filename,"rb"))
         kmlist,kmtime = kmdict["kmlist"],kmdict["kmtime"]
         P = []
@@ -470,7 +470,7 @@ class WinterStratosphereTPT:
             #centers_t = np.concatenate((kmtime[ti]*np.ones((kmlist[ti].n_clusters,1)), offset_Y+scale_Y*kmlist[ti].cluster_centers_), axis=1)
             #centers_t = np.concatenate((kmtime[ti]*np.ones((kmlist[ti].n_clusters,1)), kmlist[ti].cluster_centers_), axis=1)
             # Re-season the centers
-            centers_t = winstrat.reseason(kmtime[ti]*np.ones(kmlist[ti].n_clusters),kmlist[ti].cluster_centers_,None,szn_mean_Y,szn_std_Y)
+            centers_t = winstrat.reseason(kmtime[ti]*np.ones(kmlist[ti].n_clusters),kmlist[ti].cluster_centers_,None,szn_mean_Y,szn_std_Y,delayed=True)
             centers += [np.zeros((centers_t.shape[0],centers_t.shape[1]+1))]
             centers[-1][:,0] = kmtime[ti]
             centers[-1][:,1:] = centers_t
@@ -554,7 +554,7 @@ class WinterStratosphereTPT:
         idx_b = np.where(inb_Y)[0]
         np.save(join(savedir,"ina_Y"),ina_Y)
         np.save(join(savedir,"inb_Y"),inb_Y)
-        Y_unseasoned = winstrat.unseason(Y.reshape((Ny*Nt,ydim))[:,0],Y.reshape((Ny*Nt,ydim))[:,1:],szn_mean_Y,szn_std_Y,normalize=True).reshape((Ny*Nt,ydim-1))
+        Y_unseasoned = winstrat.unseason(Y.reshape((Ny*Nt,ydim))[:,0],Y.reshape((Ny*Nt,ydim))[:,1:],szn_mean_Y,szn_std_Y,normalize=True,delayed=True).reshape((Ny*Nt,ydim-1))
         # Committor
         qp_Y = self.interpolate_field_clust2data(kmdict,Y_unseasoned,Ny,Nt,qp,density_flag=False,idx_a=idx_a,idx_b=idx_b,val_a=0.0,val_b=1.0)
         np.save(join(savedir,"qp_Y"),qp_Y)
@@ -828,6 +828,7 @@ class WinterStratosphereTPT:
                 hist_color_list = [ra[k]['color'],'black']
                 #if k == 'e5-self': hist_color_list[0] = 'gray'
                 for i_be,bin_edges in enumerate(bin_edges_list):
+                    print(f"Starting to plot histogram for {k} at level {self.tpt_bndy['uthresh_b']}. The reanalysis rate is {ra[k]['rate']}")
                     _,_,hist = self.plot_flux_distributions_multiresolution(
                         info,infoth, # Can be either reanalysis or DGA data
                         theta_normal_label,theta_tangential_label,
@@ -839,10 +840,10 @@ class WinterStratosphereTPT:
             for i_ax in range(1+len(ra)):
                 ax[i_ax].set_xticks(bin_edges_list[0])
                 if i_ax == len(ra):
-                    ax[i_ax].set_xticklabels(['Oct. 1', 'Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                    ax[i_ax].set_xticklabels(['Oct. 1', 'Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1', 'Apr. 1'])
                 else:
-                    ax[i_ax].set_xticklabels(['']*6)
-                ax[i_ax].set_xlim([25,155])
+                    ax[i_ax].set_xticklabels(['']*7)
+                ax[i_ax].set_xlim([25,185])
                 ax[i_ax].set_xlabel('')
                 ax[i_ax].set_ylabel("SSW freq.")
             fig.savefig(join(savedir,"szn_dist"))
@@ -1357,7 +1358,7 @@ class WinterStratosphereTPT:
         else: # Reanalysis
             infoth["delta_theta_normal"] = infoth["theta_normal"][:,1:] - infoth["theta_normal"][:,:-1]
             infoth["reactive_flag"] = (info["src_tag"] == reactive_code[0])*(info["dest_tag"] == reactive_code[1])
-            # ------------- Reanalysis --------------------
+            print(f"reactive_flag: {np.sum(infoth['reactive_flag'],axis=1)}")
             theta_mid = 0.5*(theta_lower_list[i_thlev] + theta_upper_list[i_thlev])
             idx_fwd = np.where((infoth["theta_normal"][:,:-1] < theta_mid)*(infoth["theta_normal"][:,1:] >= theta_mid)*(infoth["reactive_flag"][:,:-1]+infoth["reactive_flag"][:,1:]))
             idx_bwd = np.where((infoth["theta_normal"][:,:-1] >= theta_mid)*(infoth["theta_normal"][:,1:] < theta_mid)*(infoth["reactive_flag"][:,:-1]+infoth["reactive_flag"][:,1:]))

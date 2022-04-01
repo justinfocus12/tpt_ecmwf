@@ -64,6 +64,7 @@ class WinterStratosphereFeatures:
         self.winter_day0 = winter_day0
         self.spring_day0 = spring_day0
         self.wtime = 24.0 * np.arange(self.winter_day0,self.spring_day0) # All times are in hours
+        self.wtime_delayed = 24.0 * np.arange(self.winter_day0+delaytime_days, self.spring_day0)
         self.Ntwint = len(self.wtime)
         self.szn_hour_window = 5.0*24 # Number of days around which to average when unseasoning
         self.dtwint = self.wtime[1] - self.wtime[0]
@@ -116,7 +117,7 @@ class WinterStratosphereFeatures:
         #print(f"nonwinter_flag = {nonwinter_flag}")
         nbuffer = int(round(tpt_bndy['sswbuffer']/self.dtwint))
         uref = y[:,i_uref] #self.uref_history(y,feat_def)
-        strong_wind_flag = (np.min(uref[:,:self.ndelay-nbuffer], axis=1) >= tpt_bndy['uthresh_a'])  # This has to be defined from the Y construction
+        strong_wind_flag = (np.min(uref[:,:1+nbuffer], axis=1) >= tpt_bndy['uthresh_a'])  # This has to be defined from the Y construction
         #strong_wind_flag = (uref[:,0] > tpt_bndy['uthresh_a'])
         ina = nonwinter_flag + winter_flag*strong_wind_flag
         return ina
@@ -422,17 +423,19 @@ class WinterStratosphereFeatures:
             field_szn_mean[i_time] = np.mean(field[idx],axis=0)
             field_szn_std[i_time] = np.std(field[idx],axis=0)
         return field_szn_mean,field_szn_std
-    def unseason(self,t_field,field,field_szn_mean,field_szn_std,normalize=True):
-        wti = ((t_field - self.wtime[0])/self.dtwint).astype(int)
-        wti = np.maximum(0, np.minimum(len(self.wtime)-1, wti))
+    def unseason(self,t_field,field,field_szn_mean,field_szn_std,normalize=True,delayed=False):
+        wtime = self.wtime_delayed if delayed else self.wtime
+        wti = ((t_field - wtime[0])/self.dtwint).astype(int)
+        wti = np.maximum(0, np.minimum(len(wtime)-1, wti))
         field_unseasoned = field - field_szn_mean[wti]
         if normalize:
             field_unseasoned *= 1.0/field_szn_std[wti]
         return field_unseasoned
-    def reseason(self,t_field,field_unseasoned,t_szn,field_szn_mean,field_szn_std):
+    def reseason(self,t_field,field_unseasoned,t_szn,field_szn_mean,field_szn_std,delayed=True):
         #print("t_field.shape = {}, field_unseasoned.shape = {}, t_szn.shape = {}, field_szn_mean.shape = {}, field_szn_std.shape = {}".format(t_field.shape, field_unseasoned.shape, t_szn.shape, field_szn_mean.shape, field_szn_std.shape))
-        wti = ((t_field - self.wtime[0])/self.dtwint).astype(int)
-        wti = np.maximum(0, np.minimum(len(self.wtime)-1, wti))
+        wtime = self.wtime_delayed if delayed else self.wtime
+        wti = ((t_field - wtime[0])/self.dtwint).astype(int)
+        wti = np.maximum(0, np.minimum(len(wtime)-1, wti))
         #print("field_szn_std[wti].shape = {}, field_unseasoned.shape = {}, field_szn_mean[wti].shape = {}".format(field_szn_std[wti].shape,field_unseasoned.shape,field_szn_mean[wti].shape))
         field = field_szn_std[wti] * field_unseasoned + field_szn_mean[wti]
         return field
@@ -662,8 +665,8 @@ class WinterStratosphereFeatures:
         ydim = len(set(self.fidx_Y.values()))
         Y = np.zeros((Nx,Nty,ydim))
         # Store information to unseason Y, simply as a set of seasonal means, one per column.
-        szn_mean_Y = np.zeros((self.Ntwint,ydim-1))
-        szn_std_Y = np.zeros((self.Ntwint,ydim-1))
+        szn_mean_Y = np.zeros((self.Ntwint-self.ndelay+1,ydim-1))
+        szn_std_Y = np.zeros((self.Ntwint-self.ndelay+1,ydim-1))
         # ------------- Time ---------------
         Y[:,:,self.fidx_Y["time_h"]] = X[:,self.ndelay-1:,self.fidx_X["time_h"]]
         print(f"Y[0,0,0] = {Y[0,0,0]}")
@@ -674,8 +677,10 @@ class WinterStratosphereFeatures:
             i_feat_y = self.fidx_Y["uref_dl%i"%(i_dl)]
             #Y[:,:,i_feat_y] = X[:,i_dl:i_dl+Nty,i_feat_x]
             Y[:,:,i_feat_y] = X[:,self.ndelay-1-i_dl:self.ndelay-1-i_dl+Nty,i_feat_x]
-            szn_mean_Y[:,i_feat_y-1] = feat_def["uref_szn_mean"] 
-            szn_std_Y[:,i_feat_y-1] = feat_def["uref_szn_std"]
+            print(f"szn_mean_Y.shape = {szn_mean_Y.shape}")
+            print(f"feat_def['uref_szn_mean'].shape = {feat_def['uref_szn_mean'].shape}")
+            szn_mean_Y[:,i_feat_y-1] = feat_def["uref_szn_mean"][self.ndelay-1:] 
+            szn_std_Y[:,i_feat_y-1] = feat_def["uref_szn_std"][self.ndelay-1:]
             #offset_Y[i_feat_y-1] = feat_def["uref_mean"]
             #scale_Y[i_feat_y-1] = feat_def["uref_std"]
         # ----------- Waves -------------------
@@ -683,12 +688,12 @@ class WinterStratosphereFeatures:
             i_feat_y = self.fidx_Y["real%i"%(i_wave)]
             i_feat_x = self.fidx_X["real%i"%(i_wave)]
             Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
-            szn_mean_Y[:,i_feat_y-1] = feat_def["waves_szn_mean"][:,2*i_wave]
-            szn_std_Y[:,i_feat_y-1] = feat_def["waves_szn_std"][:,2*i_wave]
+            szn_mean_Y[:,i_feat_y-1] = feat_def["waves_szn_mean"][self.ndelay-1:,2*i_wave]
+            szn_std_Y[:,i_feat_y-1] = feat_def["waves_szn_std"][self.ndelay-1:,2*i_wave]
             i_feat_y = self.fidx_Y["imag%i"%(i_wave)]
             i_feat_x = self.fidx_X["imag%i"%(i_wave)]
             Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
-            szn_mean_Y[:,i_feat_y-1] = feat_def["waves_szn_mean"][:,2*i_wave+1]
+            szn_mean_Y[:,i_feat_y-1] = feat_def["waves_szn_mean"][self.ndelay-1:,2*i_wave+1]
             szn_std_Y[:,i_feat_y-1] = feat_def["waves_szn_std"][:,2*i_wave+1]
             #offset_Y[i_feat_y-1:i_feat_y+1] = np.mean(feat_def["waves_szn_mean"][:,2*i_wave:2*i_wave+2], axis=0)
             #scale_Y[i_feat_y-1:i_feat_y+1] = np.std(feat_def["waves_szn_mean"][:,2*i_wave:2*i_wave+2], axis=0)
@@ -710,7 +715,7 @@ class WinterStratosphereFeatures:
             #for i_dl in range(self.ndelay):
             #    Y[:,:,i_feat_y] += X[:,self.ndelay-1-i_dl:Ntx-i_dl,i_feat_x]/self.ndelay
             ## ----------------------------
-            szn_mean_Y[:,i_feat_y-1] = feat_def["vtx_diags_szn_mean"][:,i_mom]
+            szn_mean_Y[:,i_feat_y-1] = feat_def["vtx_diags_szn_mean"][self.ndelay-1:,i_mom]
             szn_std_Y[:,i_feat_y-1] = feat_def["vtx_diags_szn_std"][:,i_mom]
         # ------- Polar cap temperature ------------
         for i_lev in range(Nlev):
@@ -718,7 +723,7 @@ class WinterStratosphereFeatures:
                 i_feat_y = self.fidx_Y["captemp_lev%i"%(i_lev)]
                 i_feat_x = self.fidx_X["captemp_lev%i"%(i_lev)]
                 Y[:,:,i_feat_y] = X[:,self.ndelay-1:,i_feat_x]
-                szn_mean_Y[:,i_feat_y-1] = feat_def["temp_capavg_szn_mean"][:,i_lev]
+                szn_mean_Y[:,i_feat_y-1] = feat_def["temp_capavg_szn_mean"][self.ndelay-1:,i_lev]
                 szn_std_Y[:,i_feat_y-1] = feat_def["temp_capavg_szn_std"][:,i_lev]
         # ------- Heat flux ------------
         # TODO: make this a time integral
@@ -732,7 +737,7 @@ class WinterStratosphereFeatures:
                 #for i_dl in range(self.ndelay):
                 #    Y[:,:,i_feat_y] += X[:,self.ndelay-1-i_dl:Ntx-i_dl,i_feat_x]/self.ndelay
                 ## ----------------------------
-                szn_mean_Y[:,i_feat_y-1] = feat_def["vT_szn_mean"][:,i_lev,i_wn]
+                szn_mean_Y[:,i_feat_y-1] = feat_def["vT_szn_mean"][self.ndelay-1:,i_lev,i_wn]
                 szn_std_Y[:,i_feat_y-1] = feat_def["vT_szn_std"][:,i_lev,i_wn]
         tpt_feat = {"Y": Y, "szn_mean_Y": szn_mean_Y, "szn_std_Y": szn_std_Y, "idx_resamp": idx_resamp}
         pickle.dump(tpt_feat, open(tpt_feat_filename,"wb"))

@@ -40,7 +40,7 @@ resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
 daydir = join(resultsdir,"2022-03-24")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"1")
+expdir = join(daydir,"2")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -68,7 +68,7 @@ subsets = dict({
                 "label": f"ERA-I {max(fall_years['ei'][0],fall_years['s2s'][0])}-{min(fall_years['ei'][-1],fall_years['s2s'][-1])}",
                 }),
             }),
-        "num_bootstrap": 5, 
+        "num_bootstrap": 1, 
         "num_full_kmeans_seeds": 1,
         "rank": 0,
         }),
@@ -87,7 +87,7 @@ subsets = dict({
                 "label": f"ERA-20C {max(fall_years['e2'][0],fall_years['s2s'][0])}-{min(fall_years['e2'][-1],fall_years['s2s'][-1])}"
                 }),
             }),
-        "num_bootstrap": 5, 
+        "num_bootstrap": 1, 
         "num_full_kmeans_seeds": 1,
         "rank": 1,
         }),
@@ -111,7 +111,7 @@ subsets = dict({
                 "label": f"ERA-5 {max(fall_years['e5'][0],fall_years['s2s'][0])}-{min(fall_years['e5'][-1],fall_years['s2s'][-1])}"
                 }),
             }),
-        "num_bootstrap": 5, 
+        "num_bootstrap": 1, 
         "num_full_kmeans_seeds": 1,
         "rank": 2,
         }),
@@ -123,8 +123,8 @@ subsets = dict({
                 "label": f"S2S {fall_years['s2s'][0]}-{fall_years['s2s'][-1]}"
                 }),
             }),
-        "num_bootstrap": 5, 
-        "num_full_kmeans_seeds": 2,
+        "num_bootstrap": 1, 
+        "num_full_kmeans_seeds": 1,
         "rank": 3,
         }),
     })
@@ -171,7 +171,7 @@ Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 25.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -180,7 +180,7 @@ for key in sources:
     if not exists(expdirs[key]): mkdir(expdirs[key])
 # ------------------ Algorithmic parameters ---------------------
 multiprocessing_flag = 0
-num_clusters = 170
+num_clusters = 200
 #Npc_per_level_single = 4
 Npc_per_level = np.array([0,0,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
@@ -272,7 +272,7 @@ task_list = dict({
         }),
     "comparison": dict({
         "plot_rate_flag":                     1,
-        "illustrate_dataset_flag":            0,
+        "illustrate_dataset_flag":            1,
         }),
     })
 
@@ -301,8 +301,8 @@ if task_list["featurization"]["display_features_flag"]:
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = monthrange(1901,10)[1] # First day that SSW could happen is Nov. 1
 tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(1902,i)[1] for i in [1,2,3]]) # Last day that SSW could happen: February 28
-sswbuffer = 14.0 # minimum buffer time between one SSW and the next
-uthresh_a = -100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
+sswbuffer = 0.0 # minimum buffer time between one SSW and the next
+uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(0,-36,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
 plottable_uthresh_list = [0,-15]
 uthresh_dirname_fun = lambda uthresh_b: "tth%i-%i_uthb%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_b,uthresh_a,sswbuffer)
