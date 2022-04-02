@@ -56,6 +56,9 @@ fall_years = dict({
 # Fully overlapping estimates
 intersection = np.intersect1d(fall_years["e2"],fall_years["e5"])
 #print(f"intersection = {intersection}")
+num_bootstrap_global = 40
+num_full_kmeans_seeds_dga = 5
+num_full_kmeans_seeds_ra = 1
 subsets = dict({
     "ei": dict({
         "overlaps": dict({
@@ -68,8 +71,8 @@ subsets = dict({
                 "label": f"ERA-I {max(fall_years['ei'][0],fall_years['s2s'][0])}-{min(fall_years['ei'][-1],fall_years['s2s'][-1])}",
                 }),
             }),
-        "num_bootstrap": 1, 
-        "num_full_kmeans_seeds": 1,
+        "num_bootstrap": num_bootstrap_global, 
+        "num_full_kmeans_seeds": num_full_kmeans_seeds_ra,
         "rank": 0,
         }),
     "e2": dict({
@@ -87,8 +90,8 @@ subsets = dict({
                 "label": f"ERA-20C {max(fall_years['e2'][0],fall_years['s2s'][0])}-{min(fall_years['e2'][-1],fall_years['s2s'][-1])}"
                 }),
             }),
-        "num_bootstrap": 1, 
-        "num_full_kmeans_seeds": 1,
+        "num_bootstrap": num_bootstrap_global, 
+        "num_full_kmeans_seeds": num_full_kmeans_seeds_ra,
         "rank": 1,
         }),
     "e5": dict({
@@ -111,8 +114,8 @@ subsets = dict({
                 "label": f"ERA-5 {max(fall_years['e5'][0],fall_years['s2s'][0])}-{min(fall_years['e5'][-1],fall_years['s2s'][-1])}"
                 }),
             }),
-        "num_bootstrap": 1, 
-        "num_full_kmeans_seeds": 1,
+        "num_bootstrap": num_bootstrap_global, 
+        "num_full_kmeans_seeds": num_full_kmeans_seeds_ra,
         "rank": 2,
         }),
     "s2s": dict({
@@ -123,8 +126,8 @@ subsets = dict({
                 "label": f"S2S {fall_years['s2s'][0]}-{fall_years['s2s'][-1]}"
                 }),
             }),
-        "num_bootstrap": 1, 
-        "num_full_kmeans_seeds": 1,
+        "num_bootstrap": num_bootstrap_global, 
+        "num_full_kmeans_seeds": num_full_kmeans_seeds_dga,
         "rank": 3,
         }),
     })
@@ -171,7 +174,7 @@ Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 25.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -243,8 +246,8 @@ for src in sources:
 # Parameters to determine what to do
 task_list = dict({
     "featurization": dict({
-        "create_features_flag":               1,
-        "display_features_flag":              1,
+        "create_features_flag":               0,
+        "display_features_flag":              0,
         }),
     "ei": dict({
         "tpt_featurize_flag":                 1,
@@ -268,15 +271,15 @@ task_list = dict({
         }),
     "comparison": dict({
         "plot_rate_flag":                     1,
-        "illustrate_dataset_flag":            1,
+        "illustrate_dataset_flag":            0,
         }),
     })
 
 # Evaluate databases?
-task_list["e5"]["evaluate_database_flag"] =  1
-task_list["ei"]["evaluate_database_flag"] =  1
-task_list["e2"]["evaluate_database_flag"] =  1
-task_list["s2s"]["evaluate_database_flag"] = 1
+task_list["e5"]["evaluate_database_flag"] =  0
+task_list["ei"]["evaluate_database_flag"] =  0
+task_list["e2"]["evaluate_database_flag"] =  0
+task_list["s2s"]["evaluate_database_flag"] = 0
 
 
 feature_file = join(featdir,"feat_def")
@@ -302,7 +305,7 @@ if task_list["featurization"]["display_features_flag"]:
 
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = monthrange(1901,10)[1] # First day that SSW could happen is Nov. 1
-tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(1902,i)[1] for i in [1,2,3]]) # Last day that SSW could happen: February 28
+tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(1902,i)[1] for i in [1,2]]) # Last day that SSW could happen: February 28
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(0,-36,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])

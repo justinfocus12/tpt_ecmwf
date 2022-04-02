@@ -45,11 +45,17 @@ class WinterStratosphereTPT:
         # This is meant for full-winter trajectories
         ab_tag = (src_tag==0)*(dest_tag==1)
         print(f"ab_tag.shape = {ab_tag.shape}")
+        for i in range(1): #len(ab_tag)):
+            print(f"For {i}th reanalysis, ")
+            print(f"\tsrc_tag[{i}] = \n\t\t{src_tag[i].astype(int)}")
+            print(f"\tdest_tag[{i}] = \n\t\t{dest_tag[i].astype(int)}")
+            print(f"\tab_tag[{i}] = \n\t\t{ab_tag[i].astype(int)}")
         #absum = 1.0*(np.sum(ab_tag,axis=1) > 0)
         absum = 1.0*(np.sum(np.diff(1.0*ab_tag,axis=1)==1, axis=1))
         print(f"absum = {absum}")
         rate = np.mean(absum)
         print(f"rate = {rate}")
+        #sys.exit()
         return rate
     def tpt_pipeline_dns(self,tpt_feat_filename,savedir,winstrat,feat_def,algo_params,plot_field_flag=True):
         # savedir: where all the results of this particular TPT will be saved.
@@ -62,9 +68,12 @@ class WinterStratosphereTPT:
         funlib = winstrat.observable_function_library_Y(algo_params)
         # ---- Plot committor in a few different coordinates -----
         src_tag,dest_tag,time2dest = winstrat.compute_src_dest_tags(Y,feat_def,self.tpt_bndy,"src_dest")
-        #print(f"src_tag[:,0] = {src_tag[:,0]}")
-        ina_Y = winstrat.ina_test(Y[:,0,:],feat_def,self.tpt_bndy)
-        #print(f"ina_Y = {ina_Y}")
+        print(f"src_tag[:,0] = {src_tag[:,0]}")
+        print(f"dest_tag[:,0] = {dest_tag[:,0]}")
+        ina_Y = winstrat.ina_test(Y[:,90,:],feat_def,self.tpt_bndy)
+        print(f"ina_Y = {ina_Y}")
+        inb_Y = winstrat.inb_test(Y[:,90,:],feat_def,self.tpt_bndy)
+        print(f"inb_Y = {inb_Y}")
         qp = 1.0*(dest_tag == 1).flatten()
         qm = 1.0*(src_tag == 0).flatten()
         pi = 1.0*np.ones(Ny*Nt)/(Ny*Nt)
@@ -91,6 +100,7 @@ class WinterStratosphereTPT:
         # Compute density and backward committor
         # Compute rate
         rate = self.compute_rate_direct(src_tag,dest_tag)
+        print(f"rate = {rate}")
         # Compute lead time
         # Compute current (??)
         summary = {"rate": rate}
@@ -914,7 +924,11 @@ class WinterStratosphereTPT:
                                 funlib_X[key1]['fun'](ra[k]["X"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["xdim"])))]).T.reshape((ra[k]["Ny"],ra[k]["Nty"],2))
                         lab0 = funlib_X[key0]["label"]
                         lab1 = funlib_X[key1]["label"]
-                    xlim = np.array([np.nanmin(theta_x[idx_winter[0],idx_winter[1],0]),np.nanmax(theta_x[idx_winter[0],idx_winter[1],0])])
+                    if key0 == "time_d":
+                        xlim = self.tpt_bndy['tthresh']/24.0
+                        print(f"xlim = {xlim}")
+                    else:
+                        xlim = np.array([np.nanmin(theta_x[idx_winter[0],idx_winter[1],0]),np.nanmax(theta_x[idx_winter[0],idx_winter[1],0])])
                     ylim = np.array([np.nanmin(theta_x[idx_winter[0],idx_winter[1],1]),np.nanmax(theta_x[idx_winter[0],idx_winter[1],1])])
                     ylim[1] += 0.15*(ylim[1] - ylim[0])
                     # A -> B
@@ -932,12 +946,16 @@ class WinterStratosphereTPT:
                     ax.set_xticks(xticks)
                     ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
                     fig.savefig(join(savedir,"qp_lin_%s_%s_ab_build1"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
                     fig,ax = plt.subplots()
                     if key0 == "time_d" and key1 == "uref":
                         ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
                     helper.plot_field_2d((comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=True,logscale=True,cmap=plt.cm.coolwarm,contourflag=True,fig=fig,ax=ax)
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
                     fig.savefig(join(savedir,"qp_log_%s_%s_ab_build1"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
                     # Plot the lead time 
@@ -949,13 +967,13 @@ class WinterStratosphereTPT:
                     ax.set_xticks(xticks)
                     ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
                     fig.savefig(join(savedir,"lt_%s_%s_ab_build1"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
                     # Plot the A->B density and current
                     fieldname = r"$A\to B$ (winters with SSW)"
                     fig,ax = plt.subplots()
-                    ax.set_xlim(xlim)
-                    ax.set_ylim(ylim)
                     if key0 == "time_d" and key1 == "uref":
                         handles,seg_labels = self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
                         #ax.legend(handles=handles)
@@ -967,16 +985,22 @@ class WinterStratosphereTPT:
                     ax.set_xticks(xticks)
                     ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
                     fig.savefig(join(savedir,"J_%s_%s_ab_%s_build0"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=False,cmap=plt.cm.YlOrRd,contourflag=True,fig=fig,ax=ax)
                     ax.set_xticks(xticks)
                     ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
                     fig.savefig(join(savedir,"J_%s_%s_ab_%s_build1"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     _,_,_,_ = self.plot_current_overlay_data(theta_x,comm_bwd,comm_fwd,pi_Y,fig,ax)
                     ax.set_xticks(xticks)
                     ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
                     fig.savefig(join(savedir,"J_%s_%s_ab_%s_build2"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     plt.close(fig)
                     # Plot the A -> A density and current
@@ -985,8 +1009,6 @@ class WinterStratosphereTPT:
                     comm_bwd = qm_Y*(reactive_code[0] == 0) + (1-qm_Y)*(reactive_code[0] == 1)
                     comm_fwd = qp_Y*(reactive_code[1] == 1) + (1-qp_Y)*(reactive_code[1] == 0)
                     fig,ax = plt.subplots()
-                    ax.set_xlim(xlim)
-                    ax.set_ylim(ylim)
                     if key0 == "time_d" and key1 == "uref":
                         handles,seg_labels = self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
                         sample_suffix = '-'.join(seg_labels)
@@ -998,16 +1020,22 @@ class WinterStratosphereTPT:
                     ax.set_xticks(xticks)
                     ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
                     fig.savefig(join(savedir,"J_%s_%s_aa_%s_build0"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=False,cmap=plt.cm.YlOrRd,contourflag=True,fig=fig,ax=ax)
                     ax.set_xticks(xticks)
                     ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
                     fig.savefig(join(savedir,"J_%s_%s_aa_%s_build1"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     _,_,_,_ = self.plot_current_overlay_data(theta_x,comm_bwd,comm_fwd,pi_Y,fig,ax)
                     ax.set_xticks(xticks)
                     ax.set_xticklabels(xticklabels)
                     ax.set_xlabel("")
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
                     fig.savefig(join(savedir,"J_%s_%s_aa_%s_build2"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     plt.close(fig)
         if spaghetti_flag:
@@ -1485,7 +1513,7 @@ class WinterStratosphereTPT:
         J0_proj *= normalizer*(1 - np.isnan(J0_proj))
         J1_proj *= normalizer*(1 - np.isnan(J1_proj))
         th01,th10 = np.meshgrid(thaxes[0],thaxes[1],indexing='ij') 
-        ax.quiver(th01,th10,J0_proj,J1_proj,angles='xy',scale_units='xy',scale=1.0,color='black',width=1.5,headwidth=4.4,units='dots',zorder=4)
+        ax.quiver(th01,th10,J0_proj,J1_proj,angles='xy',scale_units='xy',scale=1.0,color='black',width=2.0,headwidth=4.4,units='dots',zorder=4)
         # Maybe plot a flux distribution across a surface
         return th01,th10,J0_proj,J1_proj
     def plot_current_overlay(self,theta_x,Jth,weight,fig,ax):
