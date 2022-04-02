@@ -36,3 +36,5 @@ Traceback (most recent call last):
   File "/home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py", line 1378, in plot_flux_distributions_multiresolution
     for i_bin in range(len(bin_centers)):
 UnboundLocalError: local variable 'bin_centers' referenced before assignment
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:287: RuntimeWarning: divide by zero encountered in true_divide
+  qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(gh_lap - (cos/sin)*gh_lat)

@@ -616,6 +616,7 @@ class WinterStratosphereTPT:
             # Get source and destination
             ra[k]["src_tag"],ra[k]["dest_tag"],ra[k]["time2dest"] = winstrat.compute_src_dest_tags(ra[k]["Y"],feat_def,self.tpt_bndy)
             ra[k]["rate"] = np.mean(np.any((ra[k]["src_tag"]==0)*(ra[k]["dest_tag"]==1), axis=1))
+            print(f"For reanalysis key {k}, rate = {ra[k]['rate']}")
             # Restrict reanalysis to the midwinter
             ra[k]["winter_flag"] = ((ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] >= self.tpt_bndy['tthresh'][0])*(ra[k]["Y"][:,:,winstrat.fidx_Y['time_h']] <= self.tpt_bndy['tthresh'][1]))#.flatten()
             #ra[k]["Y"] = ra[k]["Y"].reshape((ra[k]["Ny"]*ra[k]["Nty"],ra[k]["ydim"]))
@@ -1448,7 +1449,7 @@ class WinterStratosphereTPT:
                     ridx = np.concatenate((ridx,[ridx[-1]+1]))
                 ax.plot(xx[ridx,0],xx[ridx,1],color="black",linewidth=1.5,zorder=zorder)
         if len(labels) == 0:
-            raise Exception("ERROR: no realized trajectories to plot")
+            print("ERROR: no realized trajectories to plot")
         return handles,labels
     def project_current_data(self,theta_x,qm,qp,pi):
         Nx,Nt,thdim = theta_x.shape

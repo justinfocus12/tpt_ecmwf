@@ -32,15 +32,15 @@ datadirs = dict({
     "s2s": "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23",
     })
 sources = list(datadirs.keys())
-featdir = "/scratch/jf4241/ecmwf_data/features/2022-03-24"
+featdir = "/scratch/jf4241/ecmwf_data/features/2022-04-01"
 if not exists(featdir): mkdir(featdir)
 feat_display_dir = join(featdir,"display0")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
-daydir = join(resultsdir,"2022-03-24")
+daydir = join(resultsdir,"2022-04-01")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"3")
+expdir = join(daydir,"0")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -166,7 +166,7 @@ file_list_climavg = file_lists["ei"][:15]
 
 # ----------------- Constant parameters ---------------------
 winter_day0 = 0.0
-spring_day0 = 180.0
+spring_day0 = 190.0
 Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
@@ -180,7 +180,7 @@ for key in sources:
     if not exists(expdirs[key]): mkdir(expdirs[key])
 # ------------------ Algorithmic parameters ---------------------
 multiprocessing_flag = 0
-num_clusters = 60
+num_clusters = 170
 #Npc_per_level_single = 4
 Npc_per_level = np.array([0,0,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
 captemp_flag = np.array([0,0,0,0,0,0,0,0,0,0], dtype=bool)
@@ -243,40 +243,40 @@ for src in sources:
 # Parameters to determine what to do
 task_list = dict({
     "featurization": dict({
-        "create_features_flag":               0,
-        "display_features_flag":              0,
+        "create_features_flag":               1,
+        "display_features_flag":              1,
         }),
     "ei": dict({
-        "tpt_featurize_flag":                 0,
-        "tpt_flag":                           0,
+        "tpt_featurize_flag":                 1,
+        "tpt_flag":                           1,
         }),
     "e2": dict({
-        "tpt_featurize_flag":                 0, 
-        "tpt_flag":                           0,
+        "tpt_featurize_flag":                 1, 
+        "tpt_flag":                           1,
         }),
     "e5": dict({
-        "tpt_featurize_flag":                 0, 
-        "tpt_flag":                           0,
+        "tpt_featurize_flag":                 1, 
+        "tpt_flag":                           1,
         }),
     "s2s": dict({
-        "tpt_featurize_flag":                 0,
-        "cluster_flag":                       0,
-        "build_msm_flag":                     0,
-        "tpt_s2s_flag":                       0,
-        "transfer_results_flag":              0,
+        "tpt_featurize_flag":                 1,
+        "cluster_flag":                       1,
+        "build_msm_flag":                     1,
+        "tpt_s2s_flag":                       1,
+        "transfer_results_flag":              1,
         "plot_tpt_results_flag":              1,
         }),
     "comparison": dict({
         "plot_rate_flag":                     1,
-        "illustrate_dataset_flag":            0,
+        "illustrate_dataset_flag":            1,
         }),
     })
 
 # Evaluate databases?
-task_list["e5"]["evaluate_database_flag"] =  0
-task_list["ei"]["evaluate_database_flag"] =  0
-task_list["e2"]["evaluate_database_flag"] =  0
-task_list["s2s"]["evaluate_database_flag"] = 0
+task_list["e5"]["evaluate_database_flag"] =  1
+task_list["ei"]["evaluate_database_flag"] =  1
+task_list["e2"]["evaluate_database_flag"] =  1
+task_list["s2s"]["evaluate_database_flag"] = 1
 
 
 feature_file = join(featdir,"feat_def")
@@ -302,7 +302,7 @@ if task_list["featurization"]["display_features_flag"]:
 
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = monthrange(1901,10)[1] # First day that SSW could happen is Nov. 1
-tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(1902,i)[1] for i in [1,2]]) # Last day that SSW could happen: February 28
+tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(1902,i)[1] for i in [1,2,3]]) # Last day that SSW could happen: February 28
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(0,-36,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
