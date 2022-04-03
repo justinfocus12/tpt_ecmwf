@@ -1307,7 +1307,7 @@ class WinterStratosphereFeatures:
                     idx_hc = np.where(fy_hc == fy_ra[i_y])[0]
                     print(f"idx_hc.shape = {idx_hc.shape}")
                     days_idx_hc = time_d_hc[enst_hc[idx_hc],0]
-                    idx_hc_ss = idx_hc[np.array([np.argmin(np.abs(days_idx_hc - d)) for d in [30,100]])]
+                    idx_hc_ss = idx_hc[np.array([np.argmin(np.abs(days_idx_hc - d)) for d in [30,110]])]
                     #idx_hc_ss = idx_hc[np.linspace(0,len(idx_hc)-1,5).astype(int)[1:-1]]
                     #idx_hc_ss = prng.choice(idx_hc, size=3, replace=False)
                     colorlist = ['gray']*3
