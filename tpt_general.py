@@ -809,13 +809,21 @@ class WinterStratosphereTPT:
             bin_edges_list = [
                     np.cumsum([0,31,30,31,31,28,31]) + 0.5,
                     np.cumsum([0,
-                        8,7,8,8,
-                        8,7,8,7,
-                        8,7,8,8,
-                        8,7,8,8,
-                        7,7,7,7,
-                        8,7,8,8,
+                        10,10,11,
+                        10,10,10,
+                        10,10,11,
+                        10,10,11,
+                        9,9,10,
+                        10,10,11,
                         ]) + 0.5
+                    #np.cumsum([0,
+                    #    8,7,8,8,
+                    #    8,7,8,7,
+                    #    8,7,8,8,
+                    #    8,7,8,8,
+                    #    7,7,7,7,
+                    #    8,7,8,8,
+                    #    ]) + 0.5
                     ]
             # Make a vertical stack of panels, one for each reanalysis dataset
             fig,ax = plt.subplots(nrows=1+len(ra), figsize=(6,3*(1+len(ra))),sharex=True,sharey=False)
@@ -868,9 +876,9 @@ class WinterStratosphereTPT:
                     ax[i_ax].set_xticklabels(['Oct. 1', 'Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1', 'Apr. 1'])
                 else:
                     ax[i_ax].set_xticklabels(['']*7)
-                ax[i_ax].set_ylabel("SSW freq.")
+                ax[i_ax].set_ylabel("SSW rel. freq.")
             xlim = [self.tpt_bndy['tthresh'][0]/24.0-5, self.tpt_bndy['tthresh'][1]/24.0+5]
-            ylim = [0, 0.009]
+            ylim = [0, max([axi.get_ylim()[1] for axi in ax])]
             for i_ax in range(len(ax)):
                 ax[i_ax].set_xlim(xlim)
                 ax[i_ax].set_ylim(ylim)
