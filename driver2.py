@@ -267,10 +267,10 @@ task_list = dict({
         "build_msm_flag":                     0,
         "tpt_s2s_flag":                       0,
         "transfer_results_flag":              0,
-        "plot_tpt_results_flag":              1,
+        "plot_tpt_results_flag":              0,
         }),
     "comparison": dict({
-        "plot_rate_flag":                     0,
+        "plot_rate_flag":                     1,
         "illustrate_dataset_flag":            0,
         }),
     })
@@ -305,7 +305,7 @@ if task_list["featurization"]["display_features_flag"]:
 
 # ----------------- Determine list of SSW definitions to consider --------------
 tthresh0 = monthrange(1901,10)[1] # First day that SSW could happen is Nov. 1
-tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(1902,i)[1] for i in [1,2,3]]) # Last day that SSW could happen: February 28
+tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(1902,i)[1] for i in [1,2]]) # Last day that SSW could happen: February 28
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
 uthresh_list = np.arange(0,-36,-5) #np.array([5.0,0.0,-5.0,-10.0,-15.0,-20.0])
@@ -525,7 +525,8 @@ if task_list["comparison"]["plot_rate_flag"]:
                 for ovl in boxplot_keys[src]:
                     srcovl = f"{src}-{ovl}"
                     # Now plot them all 
-                    good_idx = np.where(rate_dict[srcovl][0] > 0)[0] if (scale == 'log' or scale == 'logit') else np.arange(len(uthresh_list))
+                    #good_idx = np.where(rate_dict[srcovl][0] > 0)[0] if (scale == 'log' or scale == 'logit') else np.arange(len(uthresh_list))
+                    good_idx = np.arange(len(uthresh_list))
                     print(f"scale = {scale}, good_idx = {good_idx}")
                     h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[srcovl],rate_dict[srcovl][0,good_idx],color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,marker="_",linestyle='-',label=subsets[src]["overlaps"][ovl]["label"],alpha=1.0,s=32, zorder=1)
                     handles += [h]
@@ -533,7 +534,7 @@ if task_list["comparison"]["plot_rate_flag"]:
                     bootstraps = 2*rate_dict[srcovl][0,good_idx] - rate_dict[srcovl][1:,:][:,good_idx]
                     if scale == 'log' or scale == 'logit':
                         bootstraps = np.maximum(0.5*ylim[scale][0], np.minimum(0.5*(ylim[scale][1]+1), bootstraps))
-                    for i_conf in range(len(conf_levels)):
+                    for i_conf in np.arange(len(conf_levels))[::-1]:
                         if binomial_flag and (src != "s2s"):
                             # Calculate confidence intervals for the binomial distribution coefficients
                             num_events = rate_dict[srcovl][0,good_idx]*nyears_dict[srcovl]
@@ -563,7 +564,10 @@ if task_list["comparison"]["plot_rate_flag"]:
                             ax.plot(np.ones(2)*(uthresh_list[i_uth]+errorbar_offsets[srcovl]), [conf_lower[i_uth],conf_upper[i_uth]], color=subsets[src]["overlaps"][ovl]["color"],linewidth=3.0/(3**i_conf),zorder=0) #, marker='x')
                         #ax.errorbar(uthresh_list[good_idx]+errorbar_offsets[srcovl],conf_mid,yerr=yerr,fmt='none',color=subsets[src]["overlaps"][ovl]["color"],linewidth=4/(2**i_conf),zorder=0,capthick=1)
                     savefig_suffix += f"{src}-{ovl}"
-                    ax.legend(handles=handles,loc=loc[scale])
+                    leg = ax.legend(handles=handles,loc=loc[scale])
+                    for legobj in leg.legendHandles:
+                        print(f"legobj = {legobj}")
+                        legobj.set_linewidth(4.0)
                     ax.set_ylim(ylim[scale])
                     uthresh_list_sorted = np.sort(uthresh_list)
                     xlim = [1.5*uthresh_list_sorted[0]-0.5*uthresh_list_sorted[1], 1.5*uthresh_list_sorted[-1]-0.5*uthresh_list_sorted[-2]]

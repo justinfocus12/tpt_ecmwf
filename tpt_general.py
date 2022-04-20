@@ -872,6 +872,7 @@ class WinterStratosphereTPT:
             # Format the axis labels by naming months
             for i_ax in range(1+len(ra)):
                 ax[i_ax].set_xticks(bin_edges_list[0])
+                ax[i_ax].set_xlabel("")
                 if i_ax == len(ra):
                     ax[i_ax].set_xticklabels(['Oct. 1', 'Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1', 'Apr. 1'])
                 else:
@@ -961,13 +962,18 @@ class WinterStratosphereTPT:
                     ax.set_ylim(ylim)
                     fig.savefig(join(savedir,"qp_lin_%s_%s_ab_build1"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
+                    # Plot the backward committor
+                    fieldname = r"Backward committor probability"
                     fig,ax = plt.subplots()
                     if key0 == "time_d" and key1 == "uref":
                         ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
-                    helper.plot_field_2d((comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=True,logscale=True,cmap=plt.cm.coolwarm,contourflag=True,fig=fig,ax=ax)
+                    helper.plot_field_2d((comm_bwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=True,logscale=False,cmap=plt.cm.coolwarm,contourflag=True,fig=fig,ax=ax)
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xticklabels)
+                    ax.set_xlabel("")
                     ax.set_xlim(xlim)
                     ax.set_ylim(ylim)
-                    fig.savefig(join(savedir,"qp_log_%s_%s_ab_build1"%(key0.replace("_",""),key1.replace("_",""))))
+                    fig.savefig(join(savedir,"qm_lin_%s_%s_ab_build1"%(key0.replace("_",""),key1.replace("_",""))))
                     plt.close(fig)
                     # Plot the lead time 
                     fig,ax = plt.subplots()
