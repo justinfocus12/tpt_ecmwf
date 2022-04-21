@@ -1281,6 +1281,15 @@ class WinterStratosphereFeatures:
             tpt_bndy["uthresh_b"] = uthresh_b
             src_tag,dest_tag,time2dest = self.compute_src_dest_tags(Yra,feat_def,tpt_bndy)
             fig,ax = plt.subplots()
+            # ---------- Plot the climatology in the background ----------
+            quantile_ranges = [0.4, 0.8, 1.0]
+            # TODO: line these up by timing. 
+            for qi in range(len(quantile_ranges))[::-1]:
+                print(f"qi = {qi}, uref_ra.shape = {uref_ra.shape}")
+                lower = np.quantile(uref_ra, 0.5-0.5*quantile_ranges[qi], axis=0)
+                upper = np.quantile(uref_ra, 0.5+0.5*quantile_ranges[qi], axis=0)
+                ax.fill_between(time_d_ra[0],lower,upper,color=plt.cm.binary(max(0.1, 1-quantile_ranges[qi])),zorder=-1)
+            # ------------------------------------------------------------
             handles = []
             ax.axhspan(np.min(uref_ra),uthresh_b,color='red')
             ax.axvspan(np.min(time_d_ra),tthresh[0]/24.0,color='lightskyblue')
