@@ -529,12 +529,12 @@ if task_list["comparison"]["plot_rate_flag"]:
                     good_idx = np.arange(len(uthresh_list))
                     print(f"scale = {scale}, good_idx = {good_idx}")
                     h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[srcovl],rate_dict[srcovl][0,good_idx],color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,marker="_",linestyle='-',label=subsets[src]["overlaps"][ovl]["label"],alpha=1.0,s=32, zorder=1)
-                    handles += [h]
+                    #handles += [h]
                     xlabels = None if src == "s2s" else ['']*len(good_idx)
                     bootstraps = 2*rate_dict[srcovl][0,good_idx] - rate_dict[srcovl][1:,:][:,good_idx]
                     if scale == 'log' or scale == 'logit':
                         bootstraps = np.maximum(0.5*ylim[scale][0], np.minimum(0.5*(ylim[scale][1]+1), bootstraps))
-                    for i_conf in np.arange(len(conf_levels))[::-1]:
+                    for i_conf in np.arange(len(conf_levels)):
                         if binomial_flag and (src != "s2s"):
                             # Calculate confidence intervals for the binomial distribution coefficients
                             num_events = rate_dict[srcovl][0,good_idx]*nyears_dict[srcovl]
@@ -561,13 +561,15 @@ if task_list["comparison"]["plot_rate_flag"]:
                         conf_mid = 0.5*(conf_lower + conf_upper)
                         yerr = 0.5*(conf_upper - conf_lower)
                         for i_uth in good_idx:
-                            ax.plot(np.ones(2)*(uthresh_list[i_uth]+errorbar_offsets[srcovl]), [conf_lower[i_uth],conf_upper[i_uth]], color=subsets[src]["overlaps"][ovl]["color"],linewidth=3.0/(3**i_conf),zorder=0) #, marker='x')
+                            h, = ax.plot(np.ones(2)*(uthresh_list[i_uth]+errorbar_offsets[srcovl]), [conf_lower[i_uth],conf_upper[i_uth]], color=subsets[src]["overlaps"][ovl]["color"],linewidth=3.0/(3**i_conf),zorder=0,label=subsets[src]["overlaps"][ovl]["label"],) #, marker='x')
+                        if i_conf == 0:
+                            handles += [h]
                         #ax.errorbar(uthresh_list[good_idx]+errorbar_offsets[srcovl],conf_mid,yerr=yerr,fmt='none',color=subsets[src]["overlaps"][ovl]["color"],linewidth=4/(2**i_conf),zorder=0,capthick=1)
                     savefig_suffix += f"{src}-{ovl}"
                     leg = ax.legend(handles=handles,loc=loc[scale])
-                    for legobj in leg.legendHandles:
-                        print(f"legobj = {legobj}")
-                        legobj.set_linewidth(4.0)
+                    #for legobj in leg.legendHandles:
+                    #    print(f"legobj = {legobj}")
+                    #    legobj.set_linewidth(4.0)
                     ax.set_ylim(ylim[scale])
                     uthresh_list_sorted = np.sort(uthresh_list)
                     xlim = [1.5*uthresh_list_sorted[0]-0.5*uthresh_list_sorted[1], 1.5*uthresh_list_sorted[-1]-0.5*uthresh_list_sorted[-2]]
