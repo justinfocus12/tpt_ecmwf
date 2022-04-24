@@ -28,51 +28,6 @@ import helper
 import strat_feat
 import tpt_general
 
-# -------------- Determine the list of tasks --------------
-task_list = dict({
-    "featurization": dict({
-        "create_features_flag":               0,
-        "display_features_flag":              0,
-        }),
-    "ei": dict({
-        "tpt_featurize_flag":                 0,
-        "tpt_flag":                           0,
-        }),
-    "e2": dict({
-        "tpt_featurize_flag":                 0, 
-        "tpt_flag":                           0,
-        }),
-    "e5": dict({
-        "tpt_featurize_flag":                 0, 
-        "tpt_flag":                           0,
-        }),
-    "s2s": dict({
-        "tpt_featurize_flag":                 0,
-        "cluster_flag":                       0,
-        "build_msm_flag":                     0,
-        "tpt_s2s_flag":                       0,
-        "transfer_results_flag":              0,
-        "plot_tpt_results_flag":              0,
-        }),
-    "comparison": dict({
-        "plot_rate_flag":                     0,
-        "illustrate_dataset_flag":            1,
-        }),
-    })
-
-# Download data? 
-task_list["e5"]["download_flag"] =  0
-task_list["ei"]["download_flag"] =  0
-task_list["e2"]["download_flag"] =  0
-task_list["s2s"]["download_flag"] = 0
-# Evaluate databases?
-task_list["e5"]["evaluate_database_flag"] =  0
-task_list["ei"]["evaluate_database_flag"] =  0
-task_list["e2"]["evaluate_database_flag"] =  0
-task_list["s2s"]["evaluate_database_flag"] = 0
-
-# ---------------------------------------------------------
-
 # ------------- Set directories for code and data ----------
 codedir = "/home/jf4241/ecmwf/tpt_ecmwf"
 os.chdir(codedir)
@@ -93,20 +48,17 @@ daydir = join(resultsdir,"2022-04-01") # Directory of day of running code
 if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"1") # Directory n for nth experiment on the current day
 if not exists(expdir): mkdir(expdir)
-# ---------------------------------------------------------
+# ----------------------------------------------------------
 
-# -------------- Set the full year ranges for each dataset, and download them if necessary ---------------
+# -------------- Set the full year ranges for each dataset ---------------
 fall_years = dict({
     "ei": np.arange(1979,2018),
     "e2": np.arange(1900,2008),
     "e5": np.arange(1950,2020),
     "s2s": np.arange(1996,2017),
     })
-# Download each dataset as assigned
-for src in data_sources:
-    if task_list[src]["download_flag"]:
-        # Call the corresponding bash script
 # ------------------------------------------------------------------------
+# -------------- Download the datasets, if necessary -----------------------
 # ---------------- Work out the overlaps between each pair of datasets -------
 intersection_ra = np.intersect1d(fall_years["e2"],fall_years["e5"]) # Intersection of all three reanalysis datasets (ERA-Interim is a strict subset of ERA-5)
 num_bootstrap_global = 40 # Number of bootstrap resamplings to perform for confidence intervals on rates
@@ -293,6 +245,42 @@ for src in data_sources:
             subsets[src]["all_kmeans_seeds"] += [subsets[src]["num_full_kmeans_seeds"]+seed for seed in range(subsets[src]["num_bootstrap"])]
 
 
+task_list = dict({
+    "featurization": dict({
+        "create_features_flag":               0,
+        "display_features_flag":              0,
+        }),
+    "ei": dict({
+        "tpt_featurize_flag":                 0,
+        "tpt_flag":                           0,
+        }),
+    "e2": dict({
+        "tpt_featurize_flag":                 0, 
+        "tpt_flag":                           0,
+        }),
+    "e5": dict({
+        "tpt_featurize_flag":                 0, 
+        "tpt_flag":                           0,
+        }),
+    "s2s": dict({
+        "tpt_featurize_flag":                 0,
+        "cluster_flag":                       0,
+        "build_msm_flag":                     0,
+        "tpt_s2s_flag":                       0,
+        "transfer_results_flag":              0,
+        "plot_tpt_results_flag":              0,
+        }),
+    "comparison": dict({
+        "plot_rate_flag":                     0,
+        "illustrate_dataset_flag":            1,
+        }),
+    })
+
+# Evaluate databases?
+task_list["e5"]["evaluate_database_flag"] =  0
+task_list["ei"]["evaluate_database_flag"] =  0
+task_list["e2"]["evaluate_database_flag"] =  0
+task_list["s2s"]["evaluate_database_flag"] = 0
 
 
 feature_file = join(featdir,"feat_def")
