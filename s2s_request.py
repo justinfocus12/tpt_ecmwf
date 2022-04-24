@@ -1,4 +1,8 @@
-#!/usr/bin/env python
+# This script dowloads 20 years of S2S (November-April) from the public-facing ECMWF data catalogue.
+# Notes:
+# 1. "rt" usually means "real-time"; "hc" usually means "hindcast"
+# 2. The SSW season is winter, and we label each winter by the year of its autumn. For example, winter 1999-2000 is labeled with the year 1999. 
+
 from ecmwfapi import ECMWFDataServer
 import numpy as np
 import sys
@@ -7,49 +11,36 @@ from os import mkdir,system
 from os.path import exists,join
 import datetime
 
-server = ECMWFDataServer()
-
-def digstr(n):
-    if type(n) is not int:
-        raise Exception("ERROR: n must be an integer")
-    if n < 10:
-        return "0%i"%(n)
-    return "%i"%(n)
-
-#task_id = int(sys.argv[1])
-# Directories
+# ------ Speficy directories and wintertime parameters -------
 datadir = "/scratch/jf4241/ecmwf_data/s2s_data/2021-12-23"
 if not exists(datadir): mkdir(datadir)
-#savedir = "./gridmath"
-#if not exists(savedir): mkdir(savedir)
-
-
-
+# The SSW season ("winter") is defined from Oct. 1 to ~Apr. 30
+winter_start_month = 10 # October
 winter_length = 212 # 7 months after Oct. 1
-winter_start_month = 10
 winter_start_day = 1 # That's Oct. 1
 # Set up the list of reforecasts, based on the current year
-year_rt = 2016 # Real-time year. Hindcasts go back 20 years, so we will get the time range 1996-2016
+year_rt = 2016 # Year of real-time AUTUMN. Hindcasts go back 20 years, so we will get the time range 1996-2016
 weekdays_rt = [0,3] # Monday and Thursday are when the hindcasts are launched
-year_list_hc = np.arange(year_rt-20,year_rt) # List of years with indcasts
+year_list_hc = np.arange(year_rt-20,year_rt) # List of years with hindcasts
+# -----------------------------------------------------------
 
-# Go from Oct. 1 to (Oct. 1 + winter_length)
+# Establish server connection and download each relevant hindcast. 
+server = ECMWFDataServer()
 winter_start_date_rt = datetime.datetime(year_rt,winter_start_month,winter_start_day)
-for k in range(winter_length):
+for k in range(winter_length): # Loop through days of winter
     date_rt = winter_start_date_rt + datetime.timedelta(days = k)
-    date_rt_str = "%s-%s-%s"%(digstr(date_rt.year),digstr(date_rt.month),digstr(date_rt.day))
-    print("date_rt = {}; date_rt_str = {}".format(date_rt,date_rt_str))
-    for j in range(len(year_list_hc)):
+    date_rt_str = f"{date_rt.year:04d}-{date_rt.month:02d}-{date_rt.day:02d}"
+    for j in range(len(year_list_hc)): # Loop through hindcast years
         year_hc = year_list_hc[j]
-        if date_rt.month <= 6: 
-            year_hc += 1
-        if not (date_rt.month == 2 and date_rt.day == 29):
+        if date_rt.month <= 6: # If it's on Jan. 1 or later, the date corresponding to day k has a year which is 1 greater than the corresponding autumn of the same winter. 
+            year_hc += 1 
+        if not (date_rt.month == 2 and date_rt.day == 29): # We ignore all leap days to head off headaches. This reduces the number of data points by a small amount. 
             date_hc = datetime.datetime(year_hc,date_rt.month,date_rt.day)
-            #print("date_rt.weekday() = {}".format(date_rt.weekday()))
             if date_rt.weekday() in weekdays_rt:
-                date_hc_str = "%s-%s-%s"%(digstr(date_hc.year),digstr(date_hc.month),digstr(date_hc.day))
-                print("date_hc = {}; date_hc_str = {}".format(date_hc,date_hc_str))
-                target = join(datadir,"hc%s_rt%s.grb"%(date_hc_str,date_rt_str))
+                date_hc_str = f"{date_hc.year:04d}-{date_hc.month:04d}-{date_hc.day:04d}"
+                # Name the output filename to include both the hindcast and real-time dates.
+                target = join(datadir,f"hc{date_hc_str}_rt{date_rt_str}.grb")
+                # Specify the object to retrieve according to ECMWF API
                 retr = ({
                     "class": "s2",
                     "dataset": "s2s",
@@ -70,8 +61,4 @@ for k in range(winter_length):
                     "target": target,
                 })
                 server.retrieve(retr)
-## Now convert to netcdf
-#cmd = "cdo -f nc copy %s %s.nc"%(target,target)
-#system(cmd)
-#cmd = "rm %s"%(target)
 
