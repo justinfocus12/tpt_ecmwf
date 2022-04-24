@@ -537,23 +537,8 @@ class WinterStratosphereTPT:
             flux_dens_tob[ti] = np.sum(flux_tob[-1])
         ti_feb1 = np.argmin(np.abs(kmtime/24 - (31 + 30 + 31 + 31)))
         ti_mar1 = np.argmin(np.abs(kmtime/24 - (31 + 30 + 31 + 31 + 28)))
-        print(f"flux_dens_tob: min={flux_dens_tob.min()},max={flux_dens_tob.max()}, frac>0 = {np.mean(flux_dens_tob>0)}")
-        print(f"feb time indices: {ti_feb1}, {ti_mar1}. flux in feb. = {np.sum(flux_dens_tob[ti_feb1:ti_mar1])}")
-        print(f"flux_dens_tob = {flux_dens_tob}")
-        np.save(f"flux_dens_tob_tth1{self.tpt_bndy['tthresh'][1]}.npy",flux_dens_tob)
-        # Smooth out flux_dens_tob
-        hist,t_hist = np.histogram(kmtime_d, weights=flux_dens_tob, bins=5)
-        t_hist = (t_hist[1:] + t_hist[:-1])/2
-        fig,ax = plt.subplots()
-        ax.bar(t_hist,hist)
-        ax.set_title("Sloppy")
-        fig.savefig(join(savedir,"szn_dist_sloppy"))
-        plt.close(fig)
-
-        #ti_froma = np.where(winstrat.wtime > self.tpt_bndy['tthresh'][0])[0][0]
         if np.abs(rate_froma - rate_tob) > 0.1*max(rate_froma, rate_tob):
             raise Exception(f"Rate discrepancy: froma is {rate_froma}, tob is {rate_tob}")
-        #rate = np.sum(flux[ti_froma])
         pickle.dump(qp,open(join(savedir,"qp"),"wb"))
         pickle.dump(qm,open(join(savedir,"qm"),"wb"))
         pickle.dump(pi,open(join(savedir,"pi"),"wb"))

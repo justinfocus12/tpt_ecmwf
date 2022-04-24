@@ -24,32 +24,6 @@ if not exists(datadir): mkdir(datadir)
 #if not exists(savedir): mkdir(savedir)
 
 
-# ----------- Try a normal request -------------
-if False:
-    #!/usr/bin/env python
-    server.retrieve({
-        "class": "s2",
-        "dataset": "s2s",
-        "date": "2021-11-15",
-        "expver": "prod",
-        "hdate": "2001-11-15",
-        "grid": "3.0/3.0",
-        "levelist": "10/50/100/200/300/500/700/850/925/1000",
-        "levtype": "pl",
-        "model": "glob",
-        "number": "1/2/3/4/5/6/7/8/9/10",
-        "origin": "ecmf",
-        "param": "156",
-        "step": "0/24/48/72/96/120/144/168/192/216/240/264/288/312/336/360/384/408/432/456/480/504/528/552/576/600/624/648/672/696/720/744/768/792/816/840/864/888/912/936/960/984/1008/1032/1056/1080/1104",
-        "stream": "enfh",
-        "time": "00:00:00",
-        "type": "pf",
-        "target": join(datadir,"test.grb"),
-    })
-    
-    sys.exit()
-
-# ----------------------------------------------
 
 winter_length = 32 # 1 months after Oct. 1
 winter_start_month = 10
