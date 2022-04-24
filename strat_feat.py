@@ -1276,24 +1276,32 @@ class WinterStratosphereFeatures:
         print(f"fy_ra = {fy_ra}\n fy_hc = {fy_hc}")
         common_years_hc_ra = np.intersect1d(fy_ra,fy_hc)
         print(f"common_years_hc_ra = {common_years_hc_ra}")
+        # Quantile ranges 
+        quantile_ranges = [0.4, 0.8, 1.0]
+        lower = np.zeros((len(quantile_ranges),Ntra))
+        upper = np.zeros((len(quantile_ranges),Ntra))
+        for ti in range(Ntra):
+            #idx = np.where(np.abs(time_d_ra - time_d_ra[0,ti]) < 1.5)
+            idx = np.where(time_d_ra == time_d_ra[0,ti])
+            for qi in range(len(quantile_ranges)):
+                lower[qi,ti] = np.quantile(uref_ra[idx[0],idx[1]], 0.5-0.5*quantile_ranges[qi])
+                upper[qi,ti] = np.quantile(uref_ra[idx[0],idx[1]], 0.5+0.5*quantile_ranges[qi])
         prng = np.random.RandomState(3)
         for i_uth,uthresh_b in enumerate(uthresh_b_list):
             tpt_bndy["uthresh_b"] = uthresh_b
             src_tag,dest_tag,time2dest = self.compute_src_dest_tags(Yra,feat_def,tpt_bndy)
             fig,ax = plt.subplots()
             # ---------- Plot the climatology in the background ----------
-            quantile_ranges = [0.4, 0.8, 1.0]
             # TODO: line these up by timing. 
             for qi in range(len(quantile_ranges))[::-1]:
-                print(f"qi = {qi}, uref_ra.shape = {uref_ra.shape}")
-                lower = np.quantile(uref_ra, 0.5-0.5*quantile_ranges[qi], axis=0)
-                upper = np.quantile(uref_ra, 0.5+0.5*quantile_ranges[qi], axis=0)
-                ax.fill_between(time_d_ra[0],lower,upper,color=plt.cm.binary(max(0.1, 1-quantile_ranges[qi])),zorder=-1)
+                ax.fill_between(time_d_ra[0],lower[qi],upper[qi],color=plt.cm.binary(0.2 + 0.6*(1-quantile_ranges[qi])),zorder=-1)
             # ------------------------------------------------------------
             handles = []
-            ax.axhspan(np.min(uref_ra),uthresh_b,color='red')
-            ax.axvspan(np.min(time_d_ra),tthresh[0]/24.0,color='lightskyblue')
-            ax.axvspan(tthresh[1]/24.0,np.max(time_d_ra),color='lightskyblue')
+            ax.plot([np.min(time_d_ra),tthresh[1]/24.0], uthresh_b*np.ones(2), color='red', linewidth=2.5)
+            ax.axvline(tthresh[1]/24.0, color='dodgerblue', linewidth=2.5)
+            #ax.axhspan(np.min(uref_ra),uthresh_b,color='red',zorder=-3)
+            #ax.axvspan(np.min(time_d_ra),tthresh[0]/24.0,color='lightskyblue',zorder=-2)
+            #ax.axvspan(tthresh[1]/24.0,np.max(time_d_ra),color='lightskyblue',zorder=-2)
             print(f"For uthresh = {uthresh_b}, rare event idx = {rare_event_idx[i_uth]}, corresponding to years {fy_ra[rare_event_idx[i_uth]]}")
             admissible_idx = np.intersect1d(rare_event_idx[i_uth], np.where(np.in1d(fy_ra, fy_hc))[0])
             if len(admissible_idx) == 0:
@@ -1319,7 +1327,7 @@ class WinterStratosphereFeatures:
                     idx_hc_ss = idx_hc[np.array([np.argmin(np.abs(days_idx_hc - d)) for d in [30,110]])]
                     #idx_hc_ss = idx_hc[np.linspace(0,len(idx_hc)-1,5).astype(int)[1:-1]]
                     #idx_hc_ss = prng.choice(idx_hc, size=3, replace=False)
-                    colorlist = ['gray']*3
+                    colorlist = ['darkviolet']*3
                     i_col = 0
                     for i_ens in idx_hc_ss:
                         for i_mem in range(Nmem_hc):
@@ -1328,11 +1336,13 @@ class WinterStratosphereFeatures:
                     handles += [h]
                 ax.set_xlabel(funlib_X["time_d"]["label"])
                 ax.set_ylabel(funlib_X["uref"]["label"])
-                ax.legend(handles=handles,loc='upper left')
+                leg = ax.legend(handles=handles,loc='upper left')
+                for legobj in leg.legendHandles:
+                    legobj.set_linewidth(2.5)
                 ax.set_ylim([np.min(uref_ra),np.max(uref_ra)])
                 ax.set_xlim([tthresh[0]/24.0,np.max(time_d_ra)])
-                ax.set_xticks(np.cumsum([31,30,31,31,28]))
-                ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1'])
+                ax.set_xticks(np.cumsum([31,30,31,31,28,31]))
+                ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1','Apr. 1'])
                 fig.savefig(join(feat_display_dir,"illustration_uth%i"%(uthresh_b)))
                 plt.close(fig)
                 print(f"Saved an illustration in directory {feat_display_dir}")
