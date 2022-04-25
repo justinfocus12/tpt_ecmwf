@@ -679,8 +679,10 @@ class WinterStratosphereFeatures:
             Y[:,:,i_feat_y] = X[:,self.ndelay-1-i_dl:self.ndelay-1-i_dl+Nty,i_feat_x]
             #print(f"szn_mean_Y.shape = {szn_mean_Y.shape}")
             #print(f"feat_def['uref_szn_mean'].shape = {feat_def['uref_szn_mean'].shape}")
-            szn_mean_Y[:,i_feat_y-1] = feat_def["uref_szn_mean"][self.ndelay-1:] 
-            szn_std_Y[:,i_feat_y-1] = feat_def["uref_szn_std"][self.ndelay-1:]
+            #szn_mean_Y[:,i_feat_y-1] = feat_def["uref_szn_mean"][self.ndelay-1:] 
+            #szn_std_Y[:,i_feat_y-1] = feat_def["uref_szn_std"][self.ndelay-1:]
+            szn_mean_Y[:,i_feat_y-1] = feat_def["uref_szn_mean"][self.ndelay-1-i_dl:self.ndelay-1-i_dl+szn_mean_Y.shape[0]]
+            szn_std_Y[:,i_feat_y-1] = feat_def["uref_szn_std"][self.ndelay-1-i_dl:self.ndelay-1-i_dl+szn_std_Y.shape[0]]
             #offset_Y[i_feat_y-1] = feat_def["uref_mean"]
             #scale_Y[i_feat_y-1] = feat_def["uref_std"]
         # ----------- Waves -------------------

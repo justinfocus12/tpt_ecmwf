@@ -538,3 +538,9 @@
   cond = np.sqrt(cond)
 /home/jf4241/ecmwf/tpt_ecmwf/tpt_general.py:426: RuntimeWarning: invalid value encountered in sqrt
   cond = np.sqrt(cond)
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:287: RuntimeWarning: divide by zero encountered in true_divide
+  qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(gh_lap - (cos/sin)*gh_lat)
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:287: RuntimeWarning: divide by zero encountered in true_divide
+  qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(gh_lap - (cos/sin)*gh_lat)
+/home/jf4241/ecmwf/tpt_ecmwf/strat_feat.py:287: RuntimeWarning: divide by zero encountered in true_divide
+  qgpv = fcor + grav_accel/(fcor*earth_radius**2)*(gh_lap - (cos/sin)*gh_lat)
