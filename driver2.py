@@ -40,7 +40,7 @@ resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
 daydir = join(resultsdir,"2022-04-25")
 if not exists(daydir): mkdir(daydir)
-expdir = join(daydir,"0")
+expdir = join(daydir,"1")
 if not exists(expdir): mkdir(expdir)
 import helper
 import strat_feat
@@ -246,8 +246,8 @@ for src in sources:
 # Parameters to determine what to do
 task_list = dict({
     "featurization": dict({
-        "create_features_flag":               1,
-        "display_features_flag":              1,
+        "create_features_flag":               0,
+        "display_features_flag":              0,
         }),
     "ei": dict({
         "tpt_featurize_flag":                 1,
@@ -276,10 +276,10 @@ task_list = dict({
     })
 
 # Evaluate databases?
-task_list["e5"]["evaluate_database_flag"] =  1
-task_list["ei"]["evaluate_database_flag"] =  1
-task_list["e2"]["evaluate_database_flag"] =  1
-task_list["s2s"]["evaluate_database_flag"] = 1
+task_list["e5"]["evaluate_database_flag"] =  0
+task_list["ei"]["evaluate_database_flag"] =  0
+task_list["e2"]["evaluate_database_flag"] =  0
+task_list["s2s"]["evaluate_database_flag"] = 0
 
 
 feature_file = join(featdir,"feat_def")
