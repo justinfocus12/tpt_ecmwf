@@ -28,7 +28,7 @@ import helper
 import strat_feat
 import tpt_general
 
-# -------------- Determine the list of tasks --------------
+# -------------- Set the list of tasks --------------
 task_list = dict({
     "featurization": dict({
         "create_features_flag":               0,
@@ -70,7 +70,6 @@ task_list["e5"]["evaluate_database_flag"] =  0
 task_list["ei"]["evaluate_database_flag"] =  0
 task_list["e2"]["evaluate_database_flag"] =  0
 task_list["s2s"]["evaluate_database_flag"] = 0
-
 # ---------------------------------------------------------
 
 # ------------- Set directories for code and data ----------
@@ -95,14 +94,27 @@ expdir = join(daydir,"1") # Directory n for nth experiment on the current day
 if not exists(expdir): mkdir(expdir)
 # ---------------------------------------------------------
 
-# -------------- Set the full year ranges for each dataset, and download them if necessary ---------------
+# -------------- Set the full year ranges and the full month ranges for each dataset ---------------
+# For S2S, a single real-time model year performs hindcasts on the previous 20 years
+year_rt_s2s = 2016
 fall_years = dict({
     "ei": np.arange(1979,2018),
     "e2": np.arange(1900,2008),
     "e5": np.arange(1950,2020),
-    "s2s": np.arange(1996,2017),
+    "s2s": np.arange(year_rt_s2s-20,year_rt_s2s+1),
     })
-# Download each dataset as assigned
+# Define the season in which SSWs can occur (winter). The first day of winter_start_month will be the time origin in the following TPT analysis. 
+winter_start_month = 10  
+winter_end_month = 4
+winter_length = sum([monthrange(1901,i)[1] for i in range(winter_start_month,13)]) + sum([monthrange(1902,i)[1] for i in range(winter_end_month+1)])
+
+# ------------------ Download each dataset as assigned --------------
+download_scripts = dict({
+    "ei": request_ei.py,
+    "e2": request_e2.py,
+    "e5": request_e5.py,
+    "s2s": request_s2s.py,
+    })
 for src in data_sources:
     if task_list[src]["download_flag"]:
         # Call the corresponding bash script
@@ -267,7 +279,8 @@ for key in data_sources:
 # For each subset of each data source, create
 # 1. Directories 
 # 2. Subset specifications, in the form of a list of years
-# 2. A running master list of directories and subsets to loop through later. 
+# 3. A running master list of directories and subsets to loop through later. 
+# 4. For the hindcast subsets, include a seed for KMeans
 for src in data_sources:
     subsets[src]["all_dirs"] = []
     subsets[src]["all_subsets"] = []
@@ -317,7 +330,7 @@ if task_list["featurization"]["display_features_flag"]:
         winstrat.plot_vortex_evolution(file_lists["ei"][display_idx],feat_display_dir,"fy{}".format(fall_years["ei"][display_idx]))
 
 # ----------------- Determine list of SSW definitions to consider --------------
-tthresh0 = monthrange(1901,10)[1] # First day that SSW could happen is Nov. 1
+tthresh0 = monthrange(1901,10)[1] + 1 # First day that SSW could happen is Nov. 1
 tthresh1 = sum([monthrange(1901,i)[1] for i in [10,11,12]]) + sum([monthrange(1902,i)[1] for i in [1,2]]) # Last day that SSW could happen: February 28
 sswbuffer = 0.0 # minimum buffer time between one SSW and the next
 uthresh_a = 100.0 # vortex is in state A if it exceeds uthresh_a and it's been sswbuffer days since being inside B
