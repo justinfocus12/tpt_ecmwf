@@ -182,7 +182,6 @@ print(f"expdirs = {expdirs}")
 for key in sources:
     if not exists(expdirs[key]): mkdir(expdirs[key])
 # ------------------ Algorithmic parameters ---------------------
-multiprocessing_flag = 0
 num_clusters = 170
 #Npc_per_level_single = 4
 Npc_per_level = np.array([0,0,0,0,0,0,0,0,0,0]) #Npc_per_level_single*np.ones(len(feat_def["plev"]), dtype=int)  
@@ -287,7 +286,7 @@ winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring
 
 if task_list["featurization"]["create_features_flag"]:
     print("Creating features")
-    winstrat.create_features(file_list_climavg, multiprocessing_flag=multiprocessing_flag)
+    winstrat.create_features(file_list_climavg)
 # ------------------ Initialize the TPT object -------------------------------------
 feat_def = pickle.load(open(winstrat.feature_file,"rb"))
 print(f"plev = {feat_def['plev']/100} hPa")
@@ -321,10 +320,7 @@ for key in ["ei","e2","e5"]:
     if task_list[key]["evaluate_database_flag"]:
         print(f"Evaluating {key} database")
         eval_start = timelib.time()
-        if multiprocessing_flag:
-            winstrat.evaluate_features_database_parallel(file_lists[key],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
-        else:
-            winstrat.evaluate_features_database(file_lists[key],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+        winstrat.evaluate_features_database(file_lists[key],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
         eval_dur = timelib.time() - eval_start
         print(f"eval_dur = {eval_dur}")
     if task_list[key]["tpt_flag"]: 
@@ -378,10 +374,7 @@ fall_year_filename = join(expdirs["s2s"],"fall_year_list.npy")
 if task_list["s2s"]["evaluate_database_flag"]: # Expensive!
     print("Evaluating S2S database")
     eval_start = timelib.time()
-    if multiprocessing_flag:
-        winstrat.evaluate_features_database_parallel(file_lists["s2s"],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
-    else:
-        winstrat.evaluate_features_database(file_lists["s2s"],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
+    winstrat.evaluate_features_database_parallel(file_lists["s2s"],feat_def,feat_filename,ens_start_filename,fall_year_filename,winstrat.wtime[0],winstrat.wtime[-1])
     eval_dur = timelib.time() - eval_start
     print(f"eval_dur = {eval_dur}")
 print("Starting TPT on S2S")

@@ -3,7 +3,6 @@
 # the DGA_SSW object will have no knowledge of what year anything is; that will be implmented at a higher level. 
 # Maybe even have variable lag time?
 import numpy as np
-import multiprocessing as MP
 import netCDF4 as nc
 import datetime
 import time as timelib
@@ -456,7 +455,7 @@ class WinterStratosphereFeatures:
         #dstime_adj += nc.date2num(date,dstime.units,dstime.calendar)  
         #print(f"dstime_adj after adding date = {dstime_adj}")
         return dstime_adj,oct1_year # This is just one-dimensional. 
-    def create_features(self,data_file_list,multiprocessing_flag=False):
+    def create_features(self,data_file_list):
         # Use data in data_file_list as training, and dump the results into feature_file. Note this is NOT a DGA basis yet, just a set of features.
         # Time-delay embedding happens not at this stage, but possibly at the next stage when creating DGA features.
         # Mark the boundary of ensembles with a list of indices.
@@ -467,37 +466,22 @@ class WinterStratosphereFeatures:
         ds0.close()
         # ---------------- Build up big arrays of gh, u, and t_szn ---------------------
         reading_start = timelib.time()
-        if multiprocessing_flag:
-            num_workers = min(10,MP.cpu_count())
-            gen = data_file_list #(nc.Dataset(ds_filename,"r") for ds_filename in data_file_list)
-            pool = MP.Pool(num_workers)
-            result = pool.map(self.get_u_gh_from_filename,gen)
-            reading_mid = timelib.time() - reading_start
-            print(f"Reading mid = {reading_mid}")
-            gh = np.zeros((0,Nlev,Nlat,Nlon))
-            u = np.zeros((0,Nlev,Nlat,Nlon))
-            t_szn = np.zeros(0)
-            for res in result:
-                gh = np.concatenate((gh,res[0].reshape((res[0].shape[0]*res[0].shape[1],Nlev,Nlat,Nlon))),axis=0)
-                u = np.concatenate((u,res[1].reshape((res[1].shape[0]*res[1].shape[1],Nlev,Nlat,Nlon))),axis=0)
-                t_szn = np.concatenate((t_szn,res[2]))
-        else:
-            gh = np.zeros((0,Nlev,Nlat,Nlon)) # First dimension will have both time and ensemble members
-            u = np.zeros((0,Nlev,Nlat,Nlon)) 
-            t_szn = np.zeros(0)
-            grid_shp = np.array([Nlev,Nlat,Nlon])
-            for i_file in range(len(data_file_list)):
-                print("Creating features: file {} out of {}".format(i_file,len(data_file_list)))
-                ds = nc.Dataset(data_file_list[i_file],"r")
-                gh_new,u_new,time,_,_,_,_,_ = self.get_u_gh(ds)
-                Nmem,Nt = gh_new.shape[:2]
-                shp_new = np.array(gh_new.shape)
-                if np.any(shp_new[2:5] != grid_shp):
-                    raise Exception("The file {} has a geopotential height field of shape {}, whereas it was supposed to have a shape {}".format(data_file_list[i_file],shp_new[2:5],grid_shp))
-                gh = np.concatenate((gh,gh_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
-                u = np.concatenate((u,u_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
-                t_szn = np.concatenate((t_szn,self.hours_since_oct1(ds)))
-                ds.close()
+        gh = np.zeros((0,Nlev,Nlat,Nlon)) # First dimension will have both time and ensemble members
+        u = np.zeros((0,Nlev,Nlat,Nlon)) 
+        t_szn = np.zeros(0)
+        grid_shp = np.array([Nlev,Nlat,Nlon])
+        for i_file in range(len(data_file_list)):
+            print("Creating features: file {} out of {}".format(i_file,len(data_file_list)))
+            ds = nc.Dataset(data_file_list[i_file],"r")
+            gh_new,u_new,time,_,_,_,_,_ = self.get_u_gh(ds)
+            Nmem,Nt = gh_new.shape[:2]
+            shp_new = np.array(gh_new.shape)
+            if np.any(shp_new[2:5] != grid_shp):
+                raise Exception("The file {} has a geopotential height field of shape {}, whereas it was supposed to have a shape {}".format(data_file_list[i_file],shp_new[2:5],grid_shp))
+            gh = np.concatenate((gh,gh_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
+            u = np.concatenate((u,u_new.reshape((Nmem*Nt,Nlev,Nlat,Nlon))),axis=0)
+            t_szn = np.concatenate((t_szn,self.hours_since_oct1(ds)))
+            ds.close()
         reading_duration = timelib.time() - reading_start
         print(f"Reading duration = {reading_duration}")
         # Vortex moment diagnostics, only at reference level
@@ -528,22 +512,13 @@ class WinterStratosphereFeatures:
         singvals = np.zeros((Nlev,self.Npc_per_level_max))
         tot_var = np.zeros(Nlev)
         svd_start = timelib.time()
-        if multiprocessing_flag:
-            with MP.Pool(num_workers) as pool:
-                svd_results = pool.map(reduced_svd, ((gh_unseasoned[:,i_lev,:Nlat_nh,:].reshape((len(gh),Nlat_nh*Nlon))*weight).T for i_lev in range(Nlev)))
-            for i_lev,svd_ilev in enumerate(svd_results):
-                eofs[i_lev,:,:] = svd_ilev[0][:,:self.Npc_per_level_max]
-                singvals[i_lev,:] = svd_ilev[1][:self.Npc_per_level_max]
-                tot_var[i_lev] = np.sum(svd_ilev[1]**2)
-        else:
-            for i_lev in range(Nlev):
-                print("svd'ing level %i out of %i"%(i_lev,Nlev))
-                U,S,Vh = np.linalg.svd((gh_unseasoned[:,i_lev,:Nlat_nh,:].reshape((len(gh),Nlat_nh*Nlon))*weight).T, full_matrices=False)
-                eofs[i_lev,:,:] = U[:,:self.Npc_per_level_max]
-                singvals[i_lev,:] = S[:self.Npc_per_level_max]
-                tot_var[i_lev] = np.sum(S**2)
+        for i_lev in range(Nlev):
+            print("svd'ing level %i out of %i"%(i_lev,Nlev))
+            U,S,Vh = np.linalg.svd((gh_unseasoned[:,i_lev,:Nlat_nh,:].reshape((len(gh),Nlat_nh*Nlon))*weight).T, full_matrices=False)
+            eofs[i_lev,:,:] = U[:,:self.Npc_per_level_max]
+            singvals[i_lev,:] = S[:self.Npc_per_level_max]
+            tot_var[i_lev] = np.sum(S**2)
         svd_duration = timelib.time() - svd_start
-        print(f"with multiprocessing = {multiprocessing_flag}, svd_duration = {svd_duration}")
         # Temperature: first compute cap average, then deseasonalize
         temperature = self.get_temperature(gh,plev,lat,lon)
         i_lat_cap = np.argmin(np.abs(lat - 60))
