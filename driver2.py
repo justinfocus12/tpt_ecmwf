@@ -174,7 +174,7 @@ Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 10.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -271,7 +271,7 @@ task_list = dict({
         }),
     "comparison": dict({
         "plot_rate_flag":                     1,
-        "illustrate_dataset_flag":            1,
+        "illustrate_dataset_flag":            0,
         }),
     })
 
@@ -428,7 +428,7 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
                     spaghetti_flag=0*(uthresh_b in plottable_uthresh_list),
                     fluxdens_flag=1*(uthresh_b in plottable_uthresh_list),
                     verify_leadtime_flag=0*(uthresh_b in plottable_uthresh_list),
-                    current2d_flag=0*(uthresh_b in plottable_uthresh_list),
+                    current2d_flag=1*(uthresh_b in plottable_uthresh_list),
                     comm_corr_flag=0*(uthresh_b in plottable_uthresh_list),
                     colors_ra_dict=colors_ra_dict,labels_dict=labels_dict,
                     keys_ra_current=keys_ra_current,
