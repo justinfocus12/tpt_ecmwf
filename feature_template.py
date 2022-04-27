@@ -16,7 +16,8 @@ class TPTFeatures(ABC):
         self.szn_end = szn_end 
         self.Nt_szn = Nt_szn # Number of time windows within the season (for example, days). Features will be averaged over each time interval to construct the MSM. 
         self.dt_szn = (self.szn_end - self.szn_start)/(self.Nt_szn + 1)
-        self.t_szn = np.linspace(self.szn_start,self.szn_end,self.Nt_szn+1)
+        self.t_szn_edge = np.linspace(self.szn_start,self.szn_end,self.Nt_szn+1)
+        self.t_szn_cent = 0.5*(self.t_szn_edge[:-1] + self.t_szn_edge[1:])
         self.szn_avg_window = szn_avg_window
         # Delay time will be a different number for each feature. And we will not assume a uniform time sampling. 
         return
@@ -49,7 +50,7 @@ class TPTFeatures(ABC):
         result = {'src_tag': src_tag, 'dest_tag': dest_tag, 'time2dest': time2dest}
         if save_filename is not None:
             pickle.dump(result,open(save_filename,'wb'))
-        return src_tag,dest_tag,time2dest
+        return src_tag,dest_tag
     def get_seasonal_stats(self,t_field,field):
         # Get a smoothed seasonal mean and standard deviation for a field 
         if not (t_field.ndim == 1 and (not np.isscalar(field)) and field.shape[0] == t.size):
@@ -91,8 +92,86 @@ class TPTFeatures(ABC):
         # Should evaluate a database of raw model output and convert to basic features. Could be the identity map if the model is simple. More likely, some things will be averaged out. This will be a long and slow execution if the database is large. 
         #Result: save out a .npy file
         pass
-    def evaluate_tpt_features(self):
-        # TODO
+    def resample_cycles(self,szn_id_fname,szn_id_resamp):
+        szn_id = np.load(szn_id_fname)
+        # Resample trajectories to only come from a certain set of cycles 
+        idx_resamp = []
+        for i in range(len(szn_id_resamp)):
+            match_idx = np.where(szn_id == szn_id_resamp[i])[0]
+            idx_resamp += [np.sort(match_idx)]
+        return np.array(idx_resamp)
+    @abstractmethod
+    def evaluate_tpt_features(self,X_fname,Y_fname,szn_id_resamp,feat_def,*args,**kwargs):
+        pass
+    @abstractmethod
+    def set_feature_indices_X(self,feat_def): 
+        pass
+    @abstractmethod
+    def set_feature_indices_Y(self,feat_def):
+        pass
+    @abstractmethod
+    def observable_function_library_X(self):
+        pass
+    @abstractmethod
+    def observable_function_library_X(self):
+        pass
+    def overlay_hc_ra(self,
+            tpt_bndy_list,feat_def,
+            Y_fname_ra,Y_fname_hc,
+            obs_name, # Tells us which observable function to use
+            label_ra,label_hc,
+            szn_id, # Tells us which year to plot
+            feat_display_dir):
+        # Evaluate the observable functions 
+        funlib = self.observable_function_library_Y()
+        Yra_dict = pickle.load(open(Y_fname_ra,"rb"))
+        Yhc_dict = pickle.load(open(Y_fname_hc,"rb"))
+        Yra = Yra_dict["Y"]
+        Nyra,Ntyra,_ = Yra.shape
+        Yhc = Yhc_dict["Y"]
+        Nyhc,Ntyhc,_ = Yhc.shape
+        fra = funlib[obs_name]["fun"](Yra)
+        fhc = funlib[obs_name]["fun"](Yhc)
+        # Evaluate the climatology quantiles
+        quantile_ranges = [0.4, 0.8, 1.0]
+        lower = np.zeros((len(quantile_ranges),self.Nt_szn))
+        upper = np.zeros((len(quantile_ranges),self.Nt_szn))
+        t_ra = Y[:,:,self.fidx_Y["time"]]
+        tidx_szn = ((t_ra - self.t_szn[0])/self.dt_szn).astype(int)
+        for ti in range(self.Nt_szn):
+            idx = np.where(tidx_szn == ti)
+            for qi in range(len(quantile_ranges)):
+                lower[qi,ti] = np.quantile(fra[idx[0],idx[1]], 0.5-0.5*quantile_ranges[qi])
+                upper[qi,ti] = np.quantile(fra[idx[0],idx[1]], 0.5+0.5*quantile_ranges[qi])
+        # Determine reanalysis years that cross each threshold but not the next one
+        src_tag_list = []
+        dest_tag_list = []
+        rxn_tag_list = []
+        for i_bndy,tpt_bndy in enumerate(tpt_bndy_list):
+            src_tag,dest_tag = self.compute_src_dest_tags(Y,feat_def,tpt_bndy)
+            ina = self.ina_test(Yra,feat_def,tpt_bndy)
+            inb = self.inb_test(Yra,feat_def,tpt_bndy)
+            src_tag_list += [src_tag]
+            dest_tag_list += [dest_tag]
+            rxn_tag_list += [np.where(np.any((src_tag==0)*(dest_tag==1), axis=1))[0]]
+        for i_bndy in np.arange(len(tpt_bndy_list)-1, 0, -1):
+            rxn_tag_list[i_bndy] = np.setdiff1d(rxn_tag_list[i_bndy],rxn_tag_list[i_bndy-1])
+        for i_bndy,tpt_bndy in enumerate(tpt_bndy_list):
+            if len(rxn_tag_list[i_bndy]) > 0:
+                fig,ax = plt.subplots()
+                # Plot the climatological envelopes
+                for qi in range(len(quantile_ranges)):
+                    ax.fill_between(self.t_szn_cent, lower[qi], upper[qi], color=plt.cm.binary(0.2 + 0.6*(1-quantile_ranges[qi])), zorder=-1)
+                # Plot the reanalysis, colored when it hits A or B
+                idx = rxn_tag_list[i_bndy][0]
+                ax.plot(t_ra[idx], Yra[idx], color='black')
+                # TODO
+
+            
+
+
+
+        # Plot the hindcasts as bundles overlying the reanalysis trajectories. Color differently the curves entering set B and A. 
 
 
 

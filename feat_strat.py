@@ -533,37 +533,6 @@ class WinterStratosphereFeatures:
                 }
         pickle.dump(feat_def,open(self.feature_file,"wb"))
         return
-    def evaluate_features_database_parallel(self,file_list,feat_def,feat_filename,ens_start_filename,fall_year_filename,tmin,tmax):
-        # Stack a bunch of forecasts together. They can start at different times, but must all have same length.
-        #X_fallyear_list = pool.map(self.evaluate_features,
-        ens_start_idx = np.zeros(len(file_list), dtype=int)
-        fall_year_list = np.zeros(len(file_list), dtype=int)
-        i_ens = 0
-        # Now start up a pool of workers to read in all the files. 
-        arg_gen = ((ds_filename, feat_def) for ds_filename in file_list)
-        pool = MP.Pool(max(1, min(len(file_list)//20,MP.cpu_count())))
-        result = pool.starmap(self.evaluate_features_from_filename,arg_gen)
-        for i,res in enumerate(result):
-            ens_start_idx[i] = i_ens
-            Xnew,fall_year = res
-            #print(f"Xnew.shape = {Xnew.shape}, fall_year = {fall_year}")
-            dstime = Xnew[0,:,0] - Xnew[0,0,0]
-            #print(f"dstime = {dstime}")
-            fall_year_list[i] = fall_year
-            ti_initial = np.where(dstime >= tmin)[0][0]
-            ti_final = np.where(dstime <= tmax)[0][-1]
-            #print(f"ti_initial = {ti_initial}, ti_final = {ti_final}")
-            Xnew = Xnew[:,ti_initial:ti_final+1,:]
-            if i == 0:
-                X = Xnew.copy()
-            else:
-                X = np.concatenate((X,Xnew),axis=0)
-            i_ens += Xnew.shape[0]
-        # Save them in the directory
-        np.save(feat_filename,X)
-        np.save(ens_start_filename,ens_start_idx)
-        np.save(fall_year_filename,fall_year_list)
-        return X
     def evaluate_features_database(self,file_list,feat_def,feat_filename,ens_start_filename,fall_year_filename,tmin,tmax):
         # Stack a bunch of forecasts together. They can start at different times, but must all have same length.
         ens_start_idx = np.zeros(len(file_list), dtype=int)
