@@ -33,18 +33,6 @@ from cartopy import crs as ccrs
 import pickle
 import itertools
 
-# Functions from stack-overflow for using starmap with keyword arguments
-def starmap_with_kwargs(pool, fn, args_iter, kwargs_iter):
-    args_for_starmap = zip(repeat(fn), args_iter, kwargs_iter)
-    return pool.starmap(apply_args_and_kwargs, args_for_starmap)
-
-def apply_args_and_kwargs(fn, args, kwargs):
-    return fn(*args, **kwargs)
-
-def reduced_svd(A):
-    print(f"Process {os.getpid()} is about to compute a reduced SVD")
-    return np.linalg.svd(A, full_matrices=False)
-
 def pca_several_levels(gh,Nsamp,Nlat,Nlon,Npc,arr_eof,arr_singvals,arr_totvar,lev_subset):
     # Perform PCA on one level of geopotential height and fill in the results 
     # gh is a numpy array ith only the relevant levels, while level_subset tells us where to fill in the entries of the output Arrays
@@ -77,34 +65,8 @@ class WinterStratosphereFeatures:
         self.lat_range_uref = self.lat_uref + 5.0*np.array([-1,1])
         self.pres_uref = 10 # hPa for CP07 definition of SSW
         return
-    def compute_src_dest_tags(self,Y,feat_def,tpt_bndy,save_filename=None):
-        # Compute where each trajectory started (A or B) and where it's going (A or B). Also maybe compute the first-passage times, forward and backward.
-        Nmem,Nt,Nfeat = Y.shape
-        ina = self.ina_test(Y.reshape((Nmem*Nt,Nfeat)),feat_def,tpt_bndy)
-        ina = ina.reshape((Nmem,Nt))
-        inb = self.inb_test(Y.reshape((Nmem*Nt,Nfeat)),feat_def,tpt_bndy)
-        inb = inb.reshape((Nmem,Nt))
-        src_tag = 0.5*np.ones((Nmem,Nt))
-        dest_tag = 0.5*np.ones((Nmem,Nt))
-        time2dest = 0.0*np.ones((Nmem,Nt))
-        # Source: move forward in time
-        # Time zero, A is the default src
-        src_tag[:,0] = 0*ina[:,0] + 1*inb[:,0] + 0.5*(ina[:,0]==0)*(inb[:,0]==0)*(Y[:,0,0] > tpt_bndy['tthresh'][0]) 
-        for k in range(1,Nt):
-            src_tag[:,k] = 0*ina[:,k] + 1*inb[:,k] + src_tag[:,k-1]*(ina[:,k]==0)*(inb[:,k]==0)
-        # Dest: move backward in time
-        # Time end, A is the default dest
-        dest_tag[:,Nt-1] = 0*ina[:,Nt-1] + 1*inb[:,Nt-1] + 0.5*(ina[:,Nt-1]==0)*(inb[:,Nt-1]==0)*(Y[:,-1,0] < tpt_bndy['tthresh'][1])
-        for k in np.arange(Nt-2,-1,-1):
-            dest_tag[:,k] = 0*ina[:,k] + 1*inb[:,k] + dest_tag[:,k+1]*(ina[:,k]==0)*(inb[:,k]==0)
-            time2dest[:,k] = 0*ina[:,k] + 0*inb[:,k] + (Y[:,k+1,self.fidx_Y['time_h']] - Y[:,k,self.fidx_Y['time_h']] + time2dest[:,k+1])*(ina[:,k]==0)*(inb[:,k]==0)
-        #print("Overall fraction in B = {}".format(np.mean(inb)))
-        #print("At time zero: fraction of traj in B = {}, fraction of traj headed to B = {}".format(np.mean(dest_tag[:,0]==1),np.mean((dest_tag[:,0]==1)*(inb[:,0]==0))))
-        result = {'src_tag': src_tag, 'dest_tag': dest_tag, 'time2dest': time2dest}
-        if save_filename is not None:
-            pickle.dump(result,open(save_filename,'wb'))
-        return src_tag,dest_tag,time2dest
     def ina_test(self,y,feat_def,tpt_bndy):
+        # Note: feat_def is supplied as an argument to speed up evaluation, although it can be read in from memory.
         Ny,ydim = y.shape
         ina = np.zeros(Ny,dtype=bool)
         # Now look for midwinter times with strong wind and significant time since previous SSW
@@ -132,6 +94,33 @@ class WinterStratosphereFeatures:
         weak_wind_flag = (uref < tpt_bndy['uthresh_b'])
         inb = winter_flag*weak_wind_flag
         return inb
+    def compute_src_dest_tags(self,Y,feat_def,tpt_bndy,save_filename=None):
+        # Compute where each trajectory started (A or B) and where it's going (A or B). Also maybe compute the first-passage times, forward and backward.
+        Nmem,Nt,Nfeat = Y.shape
+        ina = self.ina_test(Y.reshape((Nmem*Nt,Nfeat)),feat_def,tpt_bndy)
+        ina = ina.reshape((Nmem,Nt))
+        inb = self.inb_test(Y.reshape((Nmem*Nt,Nfeat)),feat_def,tpt_bndy)
+        inb = inb.reshape((Nmem,Nt))
+        src_tag = 0.5*np.ones((Nmem,Nt))
+        dest_tag = 0.5*np.ones((Nmem,Nt))
+        time2dest = 0.0*np.ones((Nmem,Nt))
+        # Source: move forward in time
+        # Time zero, A is the default src
+        src_tag[:,0] = 0*ina[:,0] + 1*inb[:,0] + 0.5*(ina[:,0]==0)*(inb[:,0]==0)*(Y[:,0,0] > tpt_bndy['tthresh'][0]) 
+        for k in range(1,Nt):
+            src_tag[:,k] = 0*ina[:,k] + 1*inb[:,k] + src_tag[:,k-1]*(ina[:,k]==0)*(inb[:,k]==0)
+        # Dest: move backward in time
+        # Time end, A is the default dest
+        dest_tag[:,Nt-1] = 0*ina[:,Nt-1] + 1*inb[:,Nt-1] + 0.5*(ina[:,Nt-1]==0)*(inb[:,Nt-1]==0)*(Y[:,-1,0] < tpt_bndy['tthresh'][1])
+        for k in np.arange(Nt-2,-1,-1):
+            dest_tag[:,k] = 0*ina[:,k] + 1*inb[:,k] + dest_tag[:,k+1]*(ina[:,k]==0)*(inb[:,k]==0)
+            time2dest[:,k] = 0*ina[:,k] + 0*inb[:,k] + (Y[:,k+1,self.fidx_Y['time_h']] - Y[:,k,self.fidx_Y['time_h']] + time2dest[:,k+1])*(ina[:,k]==0)*(inb[:,k]==0)
+        #print("Overall fraction in B = {}".format(np.mean(inb)))
+        #print("At time zero: fraction of traj in B = {}, fraction of traj headed to B = {}".format(np.mean(dest_tag[:,0]==1),np.mean((dest_tag[:,0]==1)*(inb[:,0]==0))))
+        result = {'src_tag': src_tag, 'dest_tag': dest_tag, 'time2dest': time2dest}
+        if save_filename is not None:
+            pickle.dump(result,open(save_filename,'wb'))
+        return src_tag,dest_tag,time2dest
     def hours_since_oct1(self,ds):
         # Given the time from a dataset, convert the number to time in days since the most recent November 1
         dstime = ds['time']

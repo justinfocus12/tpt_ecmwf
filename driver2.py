@@ -43,7 +43,7 @@ if not exists(daydir): mkdir(daydir)
 expdir = join(daydir,"1")
 if not exists(expdir): mkdir(expdir)
 import helper
-import strat_feat
+import feat_strat
 import tpt_general
 
 # COMPLETE listing of possible years to use for each dataset
@@ -282,7 +282,7 @@ task_list["s2s"]["evaluate_database_flag"] = 0
 
 
 feature_file = join(featdir,"feat_def")
-winstrat = strat_feat.WinterStratosphereFeatures(feature_file,winter_day0,spring_day0,delaytime_days=delaytime_days,Npc_per_level_max=Npc_per_level_max,num_vortex_moments_max=num_vortex_moments_max,heatflux_wavenumbers_per_level_max=heatflux_wavenumbers_per_level_max)
+winstrat = feat_strat.WinterStratosphereFeatures(feature_file,winter_day0,spring_day0,delaytime_days=delaytime_days,Npc_per_level_max=Npc_per_level_max,num_vortex_moments_max=num_vortex_moments_max,heatflux_wavenumbers_per_level_max=heatflux_wavenumbers_per_level_max)
 
 if task_list["featurization"]["create_features_flag"]:
     print("Creating features")
