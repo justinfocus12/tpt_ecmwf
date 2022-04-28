@@ -488,7 +488,7 @@ if task_list["comparison"]["plot_rate_flag"]:
             fig,ax = plt.subplots()
             savefig_suffix = ""
             ax.set_xlabel("Zonal wind threshold [m/s]",fontdict=font)
-            ax.set_ylabel("Rate",fontdict=font)
+            ax.set_ylabel(r"Rate [year$^{-1}$]",fontdict=font)
             handles = []
             for src in boxplot_keys:
                 for ovl in boxplot_keys[src]:
