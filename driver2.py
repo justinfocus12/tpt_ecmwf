@@ -174,7 +174,7 @@ Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 10.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 25.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -250,24 +250,24 @@ task_list = dict({
         "display_features_flag":              0,
         }),
     "ei": dict({
-        "tpt_featurize_flag":                 1,
-        "tpt_flag":                           1,
+        "tpt_featurize_flag":                 0,
+        "tpt_flag":                           0,
         }),
     "e2": dict({
-        "tpt_featurize_flag":                 1, 
-        "tpt_flag":                           1,
+        "tpt_featurize_flag":                 0, 
+        "tpt_flag":                           0,
         }),
     "e5": dict({
-        "tpt_featurize_flag":                 1, 
-        "tpt_flag":                           1,
+        "tpt_featurize_flag":                 0, 
+        "tpt_flag":                           0,
         }),
     "s2s": dict({
-        "tpt_featurize_flag":                 1,
-        "cluster_flag":                       1,
-        "build_msm_flag":                     1,
-        "tpt_s2s_flag":                       1,
-        "transfer_results_flag":              1,
-        "plot_tpt_results_flag":              1,
+        "tpt_featurize_flag":                 0,
+        "cluster_flag":                       0,
+        "build_msm_flag":                     0,
+        "tpt_s2s_flag":                       0,
+        "transfer_results_flag":              0,
+        "plot_tpt_results_flag":              0,
         }),
     "comparison": dict({
         "plot_rate_flag":                     1,
@@ -495,7 +495,7 @@ if task_list["comparison"]["plot_rate_flag"]:
             fig,ax = plt.subplots()
             savefig_suffix = ""
             ax.set_xlabel("Zonal wind threshold [m/s]",fontdict=font)
-            ax.set_ylabel("Rate",fontdict=font)
+            ax.set_ylabel(r"Rate [year$^{-1}$]",fontdict=font)
             handles = []
             for src in boxplot_keys:
                 for ovl in boxplot_keys[src]:
