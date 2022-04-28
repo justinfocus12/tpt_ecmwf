@@ -102,6 +102,9 @@ class TPTFeatures(ABC):
         return np.array(idx_resamp)
     @abstractmethod
     def evaluate_tpt_features(self,X_fname,Y_fname,szn_id_resamp,feat_def,*args,**kwargs):
+        # In Y_fname, save a dictionary with key-value mappings 
+        # Y: array of observables, including time
+        # id_szn: the unique ID associated with the season in which it was launched (e.g., the year)
         pass
     @abstractmethod
     def set_feature_indices_X(self,feat_def): 
@@ -120,15 +123,16 @@ class TPTFeatures(ABC):
             Y_fname_ra,Y_fname_hc,
             obs_name, # Tells us which observable function to use
             label_ra,label_hc,
-            szn_id, # Tells us which year to plot
             feat_display_dir):
         # Evaluate the observable functions 
         funlib = self.observable_function_library_Y()
         Yra_dict = pickle.load(open(Y_fname_ra,"rb"))
         Yhc_dict = pickle.load(open(Y_fname_hc,"rb"))
         Yra = Yra_dict["Y"]
+        id_szn_ra = Yra_dict["id_szn"]
         Nyra,Ntyra,_ = Yra.shape
         Yhc = Yhc_dict["Y"]
+        id_szn_hc = Yhc_dict["id_szn"]
         Nyhc,Ntyhc,_ = Yhc.shape
         fra = funlib[obs_name]["fun"](Yra)
         fhc = funlib[obs_name]["fun"](Yhc)
@@ -147,10 +151,12 @@ class TPTFeatures(ABC):
         src_tag_list = []
         dest_tag_list = []
         rxn_tag_list = []
+        ina_list = []
+        inb_list = []
         for i_bndy,tpt_bndy in enumerate(tpt_bndy_list):
             src_tag,dest_tag = self.compute_src_dest_tags(Y,feat_def,tpt_bndy)
-            ina = self.ina_test(Yra,feat_def,tpt_bndy)
-            inb = self.inb_test(Yra,feat_def,tpt_bndy)
+            ina_list += [self.ina_test(Yra,feat_def,tpt_bndy)]
+            inb_list += [self.inb_test(Yra,feat_def,tpt_bndy)]
             src_tag_list += [src_tag]
             dest_tag_list += [dest_tag]
             rxn_tag_list += [np.where(np.any((src_tag==0)*(dest_tag==1), axis=1))[0]]
@@ -164,8 +170,16 @@ class TPTFeatures(ABC):
                     ax.fill_between(self.t_szn_cent, lower[qi], upper[qi], color=plt.cm.binary(0.2 + 0.6*(1-quantile_ranges[qi])), zorder=-1)
                 # Plot the reanalysis, colored when it hits A or B
                 idx = rxn_tag_list[i_bndy][0]
-                ax.plot(t_ra[idx], Yra[idx], color='black')
-                # TODO
+                for i_time in range(self.Nt_szn-1):
+                    if ina_list[i_bndy][idx,i_time]: 
+                        color = 'dodgerblue'
+                    elif inb_list[i_bndy][idx,i_time]:
+                        color = 'red'
+                    else:
+                        color = 'black'
+                    ax.plot(self.t_szn_cent[i_time:i_time+2], Yra[idx][i_time:i_time+2], color=color)
+                # Plot two hindcast trajectories 
+                i_cycle = 
 
             
 
