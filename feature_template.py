@@ -1,5 +1,7 @@
 # Provide a parent class for features of any given system. Most important: definitions of A and B, time-delay embedding, and maps from features to indices. 
 import numpy as np
+import xarray as xr
+import netCDF4 as nc
 from numpy import save,load
 import matplotlib.pyplot as plt
 import os
@@ -22,35 +24,34 @@ class TPTFeatures(ABC):
         # Delay time will be a different number for each feature. And we will not assume a uniform time sampling. 
         return
     @abstractmethod
-    def ina_test(self,y,feat_def,tpt_bndy):
+    def ina_test(self,Y,feat_def,tpt_bndy):
+        # Y should be an xarray DataArray with dimensions (feature,member,simtime)
         pass
     @abstractmethod
-    def inb_test(self,y,feat_def,tpt_bndy):
+    def inb_test(self,Y,feat_def,tpt_bndy):
         pass
     def compute_src_dest_tags(self,Y,feat_def,tpt_bndy,save_filename=None):
         # Compute where each trajectory started (A or B) and where it's going (A or B). 
-        Ny,Nt,ydim = Y.shape
-        ina = self.ina_test(Y.reshape((Ny*Nt,ydim)),feat_def,tpt_bndy).reshape((Ny,Nt))
-        inb = self.inb_test(Y.reshape((Ny*Nt,ydim)),feat_def,tpt_bndy).reshape((Ny,Nt))
-        src_tag = 0.5*np.ones((Ny,Nt))
-        dest_tag = 0.5*np.ones((Ny,Nt))
+        ydim,Ny,Nt = [Y.sizes[v] for v in ['feature','member','simtime']]
+        ina = self.ina_test(Y,feat_def,tpt_bndy)
+        inb = self.inb_test(Y,feat_def,tpt_bndy)
+        src_tag = xr.Variable(('member','simtime'), 0.5*np.ones((Ny,Nt)))
+        dest_tag = xr.Variable(('member','simtime'), 0.5*np.ones((Ny,Nt)))
         # Source: move forward in time
         # Time zero, A is the default src
-        src_tag[:,0] = 0*ina[:,0] + 1*inb[:,0] + 0.5*(ina[:,0]==0)*(inb[:,0]==0)*(Y[:,0,0] > tpt_bndy['tthresh'][0]) 
+        src_tag.data[:,0] = 0*ina[:,0] + 1*inb[:,0] + 0.5*(ina[:,0]==0)*(inb[:,0]==0)*(Y[:,0,0] > tpt_bndy['tthresh'][0]) 
         for k in range(1,Nt):
-            src_tag[:,k] = 0*ina[:,k] + 1*inb[:,k] + src_tag[:,k-1]*(ina[:,k]==0)*(inb[:,k]==0)
+            src_tag.data[:,k] = 0*ina[:,k] + 1*inb[:,k] + src_tag.data[:,k-1]*(ina[:,k]==0)*(inb[:,k]==0)
         # Dest: move backward in time
         # Time end, A is the default dest
-        dest_tag[:,Nt-1] = 0*ina[:,Nt-1] + 1*inb[:,Nt-1] + 0.5*(ina[:,Nt-1]==0)*(inb[:,Nt-1]==0)*(Y[:,-1,0] < tpt_bndy['tthresh'][1])
+        dest_tag.data[:,Nt-1] = 0*ina[:,Nt-1] + 1*inb[:,Nt-1] + 0.5*(ina[:,Nt-1]==0)*(inb[:,Nt-1]==0)*(Y[:,-1,0] < tpt_bndy['tthresh'][1])
         for k in np.arange(Nt-2,-1,-1):
-            dest_tag[:,k] = 0*ina[:,k] + 1*inb[:,k] + dest_tag[:,k+1]*(ina[:,k]==0)*(inb[:,k]==0)
-            time2dest[:,k] = 0*ina[:,k] + 0*inb[:,k] + (Y[:,k+1,self.fidx_Y['time_h']] - Y[:,k,self.fidx_Y['time_h']] + time2dest[:,k+1])*(ina[:,k]==0)*(inb[:,k]==0)
-        #print("Overall fraction in B = {}".format(np.mean(inb)))
-        #print("At time zero: fraction of traj in B = {}, fraction of traj headed to B = {}".format(np.mean(dest_tag[:,0]==1),np.mean((dest_tag[:,0]==1)*(inb[:,0]==0))))
-        result = {'src_tag': src_tag, 'dest_tag': dest_tag, 'time2dest': time2dest}
+            dest_tag.data[:,k] = 0*ina[:,k] + 1*inb[:,k] + dest_tag.data[:,k+1]*(ina[:,k]==0)*(inb[:,k]==0)
+        result = xr.Dataset({"src_tag": src_tag, "dest_tag": dest_tag})
+        # Structure the result into an xarray dataset
         if save_filename is not None:
-            pickle.dump(result,open(save_filename,'wb'))
-        return src_tag,dest_tag
+            result.to_netcdf(save_filename)
+        return result
     def get_seasonal_stats(self,t_field,field):
         # Get a smoothed seasonal mean and standard deviation for a field 
         if not (t_field.ndim == 1 and (not np.isscalar(field)) and field.shape[0] == t.size):
