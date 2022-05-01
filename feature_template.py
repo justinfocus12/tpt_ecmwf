@@ -1,4 +1,5 @@
 # Provide a parent class for features of any given system. Most important: definitions of A and B, time-delay embedding, and maps from features to indices. 
+# The data will be in the form of Xarray DataSets, with a different variable for each feature, as well as appropriate metadata. 
 import numpy as np
 import xarray as xr
 import netCDF4 as nc
@@ -11,8 +12,8 @@ import sys
 from abc import ABC,abstractmethod
 
 class TPTFeatures(ABC):
-    def __init__(self,feature_file,szn_start,szn_end,Nt_szn,szn_avg_window):
-        self.feature_file = feature_file # File location to store parameters to specify features, e.g., from seasonal averages
+    def __init__(self,featspec_file,szn_start,szn_end,Nt_szn,szn_avg_window):
+        self.featspec_file = featspec_file # Filename of Xarray DataBase that stores parameters to specify features, e.g., from seasonal averages
         # szn_(start,end) denote the beginning and end times of the universe for this model.
         self.szn_start = szn_start 
         self.szn_end = szn_end 
@@ -23,20 +24,21 @@ class TPTFeatures(ABC):
         self.szn_avg_window = szn_avg_window
         # Delay time will be a different number for each feature. And we will not assume a uniform time sampling. 
         return
+    # For ina_test and inb_test, Y should be an xarray DataSet. Each component array has dimensions (member,simtime). One of the observables will be physical time.
     @abstractmethod
-    def ina_test(self,Y,feat_def,tpt_bndy):
-        # Y should be an xarray DataArray with dimensions (feature,member,simtime)
+    def ina_test(self,Y,featspec,tpt_bndy):
         pass
     @abstractmethod
-    def inb_test(self,Y,feat_def,tpt_bndy):
+    def inb_test(self,Y,featspec,tpt_bndy):
         pass
-    def compute_src_dest_tags(self,Y,feat_def,tpt_bndy,save_filename=None):
+    def compute_src_dest_tags(self,Y,featspec,tpt_bndy,save_filename=None):
         # Compute where each trajectory started (A or B) and where it's going (A or B). 
-        ydim,Ny,Nt = [Y.sizes[v] for v in ['feature','member','simtime']]
-        ina = self.ina_test(Y,feat_def,tpt_bndy)
-        inb = self.inb_test(Y,feat_def,tpt_bndy)
-        src_tag = xr.Variable(('member','simtime'), 0.5*np.ones((Ny,Nt)))
-        dest_tag = xr.Variable(('member','simtime'), 0.5*np.ones((Ny,Nt)))
+        Ny,Nt = [Y[v].size for v in ['member','simtime']]
+        Nfeat = Y.Nfeat
+        ina = self.ina_test(Y,featspec,tpt_bndy)
+        inb = self.inb_test(Y,featspec,tpt_bndy)
+        src_tag = xr.Variable(dims=('member','simtime'), data=0.5*np.ones((Ny,Nt)))
+        dest_tag = xr.Variable(dims=('member','simtime'), data=0.5*np.ones((Ny,Nt)))
         # Source: move forward in time
         # Time zero, A is the default src
         src_tag.data[:,0] = 0*ina[:,0] + 1*inb[:,0] + 0.5*(ina[:,0]==0)*(inb[:,0]==0)*(Y[:,0,0] > tpt_bndy['tthresh'][0]) 
@@ -52,10 +54,20 @@ class TPTFeatures(ABC):
         if save_filename is not None:
             result.to_netcdf(save_filename)
         return result
-    def get_seasonal_stats(self,t_field,field):
-        # Get a smoothed seasonal mean and standard deviation for a field 
-        if not (t_field.ndim == 1 and (not np.isscalar(field)) and field.shape[0] == t.size):
-            raise Exception(f"Shape error: you gave me t_field.shape = {t_field.shape}, and field.shape = {field.shape}. First dimensions must match")
+    def get_seasonal_stats(self,field):
+        # Get a smoothed seasonal mean and standard deviation
+        # param field: an xarray Dataset
+        if not ("t_szn" in field.data_vars):
+            raise Exception("You must pass a field with 't_szn' as one of the data variables. You passed a field with variables \n{field.data_vars}")
+        coords = {"t_szn": self.t_szn_cent}
+        var_names = []
+        for var in field.data_vars:
+            if var != 't_szn':
+                for coord_name in list(field[var].coords):
+                    if coord_name not in coords.keys():
+                        coord_names.append(coord)
+        field_szn_stats = xr.Dataset(coords=
+        field_szn_stats = xr.Dataset(dims=('t_szn',))
         field_szn_mean_shape = np.array(field.shape).copy()
         field_szn_mean_shape[0] = self.Nt_szn
         field_szn_mean = np.zeros(field_szn_mean_shape)
@@ -102,16 +114,16 @@ class TPTFeatures(ABC):
             idx_resamp += [np.sort(match_idx)]
         return np.array(idx_resamp)
     @abstractmethod
-    def evaluate_tpt_features(self,X_fname,Y_fname,szn_id_resamp,feat_def,*args,**kwargs):
+    def evaluate_tpt_features(self,X_fname,Y_fname,szn_id_resamp,featspec,*args,**kwargs):
         # In Y_fname, save a dictionary with key-value mappings 
         # Y: array of observables, including time
         # id_szn: the unique ID associated with the season in which it was launched (e.g., the year)
         pass
     @abstractmethod
-    def set_feature_indices_X(self,feat_def): 
+    def set_feature_indices_X(self,featspec): 
         pass
     @abstractmethod
-    def set_feature_indices_Y(self,feat_def):
+    def set_feature_indices_Y(self,featspec):
         pass
     @abstractmethod
     def observable_function_library_X(self):
@@ -120,7 +132,7 @@ class TPTFeatures(ABC):
     def observable_function_library_X(self):
         pass
     def overlay_hc_ra(self,
-            tpt_bndy_list,feat_def,
+            tpt_bndy_list,featspec,
             Y_fname_ra,Y_fname_hc,
             obs_name, # Tells us which observable function to use
             label_ra,label_hc,
@@ -155,9 +167,9 @@ class TPTFeatures(ABC):
         ina_list = []
         inb_list = []
         for i_bndy,tpt_bndy in enumerate(tpt_bndy_list):
-            src_tag,dest_tag = self.compute_src_dest_tags(Y,feat_def,tpt_bndy)
-            ina_list += [self.ina_test(Yra,feat_def,tpt_bndy)]
-            inb_list += [self.inb_test(Yra,feat_def,tpt_bndy)]
+            src_tag,dest_tag = self.compute_src_dest_tags(Y,featspec,tpt_bndy)
+            ina_list += [self.ina_test(Yra,featspec,tpt_bndy)]
+            inb_list += [self.inb_test(Yra,featspec,tpt_bndy)]
             src_tag_list += [src_tag]
             dest_tag_list += [dest_tag]
             rxn_tag_list += [np.where(np.any((src_tag==0)*(dest_tag==1), axis=1))[0]]
