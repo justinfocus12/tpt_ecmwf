@@ -33,6 +33,22 @@ class TPTFeatures(ABC):
         pass
     def compute_src_dest_tags(self,Y,featspec,tpt_bndy,save_filename=None):
         # Compute where each trajectory started (A or B) and where it's going (A or B). 
+        """
+        Parameters
+        ----------
+        Y: xarray.DataArray
+            Dimensions must be ('feature','member','simtime')
+        featspec: xarray.DataSet
+            A metadata structure that specifies how feaures are computed and evaluated. This will depend on the application.
+        tpt_bndy: dict
+            Metadata specifying the boundaries of the current TPT problem. 
+        save_filename: str
+            netcdf file in which to save the seasonal statistics.
+        Returns
+        ----------
+        src_dest: xarray.Dataset 
+            Two DataArrays: src, encoding where the system last came from, and dest, encoding where it is headed to next. Code 0 means A, code 1 means B.
+        """
         Ny,Nt = [Y[v].size for v in ['member','simtime']]
         Nfeat = Y.Nfeat
         ina = self.ina_test(Y,featspec,tpt_bndy)
@@ -55,33 +71,42 @@ class TPTFeatures(ABC):
             result.to_netcdf(save_filename)
         return result
     def get_seasonal_stats(self,field):
-        # Get a smoothed seasonal mean and standard deviation
-        # param field: an xarray Dataset
-        if not ("t_szn" in field.data_vars):
-            raise Exception("You must pass a field with 't_szn' as one of the data variables. You passed a field with variables \n{field.data_vars}")
-        coords = {"t_szn": self.t_szn_cent}
-        var_names = []
-        for var in field.data_vars:
-            if var != 't_szn':
-                for coord_name in list(field[var].coords):
-                    if coord_name not in coords.keys():
-                        coord_names.append(coord)
-        field_szn_stats = xr.Dataset(coords=
-        field_szn_stats = xr.Dataset(dims=('t_szn',))
-        field_szn_mean_shape = np.array(field.shape).copy()
-        field_szn_mean_shape[0] = self.Nt_szn
-        field_szn_mean = np.zeros(field_szn_mean_shape)
-        field_szn_std = np.zeros(field_szn_mean_shape)
-        field_szn_counts = np.zeros(self.Nt_szn)
-        for i_time in range(self.Nt_szn):
-            idx = np.where(np.abs(t_field - 0.5*(self.t_szn[i_time] + self.t_szn[i_time+1])) <= self.szn_avg_window/2)[0]
-            field_szn_mean[i_time] = np.mean(field[idx], axis=0)
-            field_szn_std[i_time] = np.std(field[idx], axis=0)
-            field_szn_counts[i_time] = len(idx)
-        # Where no data are available, make the statistics nan
-        field_szn_mean[np.where(field_szn_counts==0)[0]] = np.nan
-        field_szn_std[np.where(field_szn_counts==0)[0]] = np.nan
-        return field_szn_mean,field_szn_std,field_szn_counts
+        """
+        Parameters
+        ----------
+        field: xarray.DataArray
+            Some time-dependent field with possibly many realizations.
+            Must have dimensions ('feature','member'), where Y.feature.coords must include 't_szn' and Y.member.coords is a list of integers to index the realization.
+        featspec: xarray.DataSet
+            A metadata structure that specifies how feaures are computed and evaluated. This will depend on the application.
+        tpt_bndy: dict
+            Metadata specifying the boundaries of the current TPT problem. 
+        save_filename: str
+            netcdf file in which to save the seasonal statistics.
+
+        Returns
+        -------
+        field_szn_mean: xarray.DataArray
+            Dimensions ('feature','t_szn'). The value of any feature at a given time is the mean of the feature over all realizations of field in the same time window.
+        """
+        if not ('feature' in field.dims and 'member' in field.dims and "t_szn" in field.coords['feature']):
+            raise Exception("You must pass a field with dimensions including 'feature' and 'member', and with 't_szn' as a coordinate of 'feature'. You passed a field with dimensions \n{field.dims}")
+        # Construct DataArray for the seasonal mean
+        coords = {key: field.coords[key] for key in field.dims if key != 'member'}
+        coords['t_szn'] = self.t_szn_cent
+        field_szn_mean_shape = np.zeros([coords[key].size for key in coords.keys()])
+        field_szn_stats = xr.Dataset({stat: xr.DataArray(
+            coords=coords, data=np.nan*np.ones([coords[key].size for key in coords.keys()]))} 
+            for stat in ["mean", "std"]})
+        # Step through time and average the corresponding samples whose timesteps match within the given time window
+        field_t_szn_window = ((field.sel(dict(feature='t_szn')) - self.t_szn_edge[0])/self.dt_szn).astype(int)
+        for i_szn in range(self.Nt_szn):
+            # select all the points where the field's t_szn falls in the appropriate time window
+            selection =  xr.where((field.sel(feature='t_szn')>=self.t_szn_edge[i_szn])*(field.sel(feature='t_szn')<=self.t_szn_edge[i_szn+1]))
+            # Take statistics over all data points falling in that window
+            field_szn_stats["mean"] = selection.mean(dim=["member","t_szn"], skipna=True)
+            field_szn_stats["std"] = selection.std(dim=["member","t_szn"], skipna=True)
+        return field_szn_stats
     def unseason(self,t_field,field,field_szn_mean,field_szn_std,normalize=True,delayed=False):
         if not (t_field.ndim == 1 and (not np.isscalar(field)) and field.shape[0] == t_field.size):
             raise Exception(f"Shape error: you gave me t_field.shape = {t_field.shape} and field.shape = {field.shape}. First dimensions must match")
