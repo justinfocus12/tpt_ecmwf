@@ -70,43 +70,44 @@ class TPTFeatures(ABC):
         if save_filename is not None:
             result.to_netcdf(save_filename)
         return result
-    def get_seasonal_stats(self,field):
+    def get_seasonal_stats(self,ds):
         """
         Parameters
         ----------
-        field: xarray.DataArray
-            Some time-dependent field with possibly many realizations.
-            Must have dimensions ('feature','member'), where Y.feature.coords must include 't_szn' and Y.member.coords is a list of integers to index the realization.
-        featspec: xarray.DataSet
-            A metadata structure that specifies how feaures are computed and evaluated. This will depend on the application.
-        tpt_bndy: dict
-            Metadata specifying the boundaries of the current TPT problem. 
-        save_filename: str
-            netcdf file in which to save the seasonal statistics.
-
+        ds: xarray.Dataset
+            Some time-dependent fields with possibly many realizations.
+            Every var in ds.data_vars must have 'snapshot' as one of its dimensions, to represent different realizations.
+            ds.data_vars must include 't_szn', with a single dimension ('snapshot')
         Returns
         -------
-        field_szn_mean: xarray.DataArray
-            Dimensions ('feature','t_szn'). The value of any feature at a given time is the mean of the feature over all realizations of field in the same time window.
+        ds_szn_mean: xarray.DataArray
+            Dimensions ('stat','t_szn') plus whatever spatial dimensions were present in ds.dims. 'stat' includes mean and std.
         """
-        if not ('feature' in field.dims and 'member' in field.dims and "t_szn" in field.coords['feature']):
+        if not ('t_szn' in ds.data_vars and all(['snapshot' in ds[v].dims for v in ds.data_vars])):
             raise Exception("You must pass a field with dimensions including 'feature' and 'member', and with 't_szn' as a coordinate of 'feature'. You passed a field with dimensions \n{field.dims}")
-        # Construct DataArray for the seasonal mean
-        coords = {key: field.coords[key] for key in field.dims if key != 'member'}
-        coords['t_szn'] = self.t_szn_cent
-        field_szn_mean_shape = np.zeros([coords[key].size for key in coords.keys()])
-        field_szn_stats = xr.Dataset({stat: xr.DataArray(
-            coords=coords, data=np.nan*np.ones([coords[key].size for key in coords.keys()]))} 
-            for stat in ["mean", "std"]})
-        # Step through time and average the corresponding samples whose timesteps match within the given time window
-        field_t_szn_window = ((field.sel(dict(feature='t_szn')) - self.t_szn_edge[0])/self.dt_szn).astype(int)
-        for i_szn in range(self.Nt_szn):
-            # select all the points where the field's t_szn falls in the appropriate time window
-            selection =  xr.where((field.sel(feature='t_szn')>=self.t_szn_edge[i_szn])*(field.sel(feature='t_szn')<=self.t_szn_edge[i_szn+1]))
-            # Take statistics over all data points falling in that window
-            field_szn_stats["mean"] = selection.mean(dim=["member","t_szn"], skipna=True)
-            field_szn_stats["std"] = selection.std(dim=["member","t_szn"], skipna=True)
-        return field_szn_stats
+        # Construct DataArrays for each variable of the seasonal mean
+        stat_list = ['mean','std']
+        data_vars = {}
+        for v in list(ds.data_vars):
+            dims = list(ds[v].dims)
+            dims.remove('snapshot')
+            dims.insert(0,'t_szn')
+            dims.insert(0,'stat')
+            coords = {'t_szn': self.t_szn_cent, 'stat': stat_list}
+            for d in dims[2:]:
+                coords[d] = ds.coords[d]
+            # Set shape of the variable v
+            shp = [coords[d].size for d in dims]
+            data_vars[v] = xr.DataArray(coords=coords, np.nan*np.ones(shp))
+        # Now assemble these into a single Dataset
+        ds_szn_stats = xr.Dataset(data_vars=data_vars)
+        ds_szn_std = xr.Dataset(data_vars=data_vars)
+        for i_szn in range(ds_szn_mean['t_szn'].size):
+            selection = ds.where((ds['t_szn'] >= self.t_szn_edge[i_szn])*(ds['t_szn'] < self.t_szn_edge[i_szn+1]))
+            for v in list(ds_szn_mean.data_vars):
+                ds_szn_stats.isel(t_szn=i_szn,stat=0)[v][:] = selection[v].mean(dim=["snapshot"],skipna=True)
+                ds_szn_stats.isel(t_szn=i_szn,stat=1)[v][:] = selection[v].std(dim=["snapshot"],skipna=True)
+        return ds_szn_stats
     def unseason(self,t_field,field,field_szn_mean,field_szn_std,normalize=True,delayed=False):
         if not (t_field.ndim == 1 and (not np.isscalar(field)) and field.shape[0] == t_field.size):
             raise Exception(f"Shape error: you gave me t_field.shape = {t_field.shape} and field.shape = {field.shape}. First dimensions must match")
