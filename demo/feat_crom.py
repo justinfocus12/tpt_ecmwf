@@ -1,36 +1,64 @@
 # Methods to compute relevant observable functions from the Crommelin model. 
+import numpy as np
+import xarray as xr
+import netCDF4 as nc
+from numpy import save,load
+import matplotlib.pyplot as plt
+import os
+from os import mkdir
+from os.path import join,exists
+import sys
+from abc import ABC,abstractmethod
 
 
-class CrommelinModelFeatures:
-    def __init__(self,feature_file,szn_start,szn_end,delaytime=0):
-        self.feature_file = feature_file # File location to store parameters to specify features, e.g., from seasonal averages
-        # szn_(start,end) denote the beginning and end of the time window during which the event of interest can happen
-        self.szn_start = szn_start 
-        self.szn_end = szn_end 
+class CrommelinModelFeatures(TPTFeatures):
+    def __init__(self,featspec_file,szn_start,szn_end,Nt_szn,szn_avg_window,delaytime=0):
+        self.featspec_file = featspec_file 
         self.delaytime = delaytime # The length of time-delay embedding to use as features in the model. 
+        super().__init__(featspec_file,szn_start,szn_end,Nt_szn,szn_avg_window)
         return
-    def ina_test(self,y,feat_def,tpt_bndy):
-        i_time = self.fidx_Y['time_h']
-        i_uref = np.array([self.fidx_Y['uref_dl%i'%(i_dl)] for i_dl in range(self.ndelay)])
-        Ny,ydim = y.shape
-        ina = np.zeros(Ny,dtype=bool)
-        szn_flag = (y[:,i_time] >= tpt_bndy["tthresh"][0])*(y[:,i_time] < tpt_bndy["tthresh"][1])
-        uref = y[:,i_uref]
-        strong_wind_flag = (np.min(uref[:,:1+nbuffer], axis=1) >= tpt_bndy["uthresh_a"])
-        ina = (1-szn_flag) + szn_flag*strong_wind_flag
-        return ina
-    def inb_test(self,y,feat_def,tpt_bndy):
-        # Test whether a reanalysis dataset's components are in B
-        Ny,ydim = y.shape
-        i_time = self.fidx_Y['time_h']
-        i_uref = self.fidx_Y['uref_dl0'] #np.array([self.fidx_Y['uref_dl%i'%(i_dl)] for i_dl in range(self.ndelay)])
-        inb = np.zeros(Ny, dtype=bool)
-        winter_flag = (y[:,i_time] >= tpt_bndy['tthresh'][0])*(y[:,i_time] < tpt_bndy['tthresh'][1])
-        nbuffer = int(round(tpt_bndy['sswbuffer']/self.dtwint))
-        uref = y[:,i_uref] #self.uref_history(y,feat_def)[:,-1]
-        weak_wind_flag = (uref < tpt_bndy['uthresh_b'])
-        inb = winter_flag*weak_wind_flag
-        return inb
-
-        
+    def create_features_from_climatology(self,raw_file_list):
+        #TODO
+        """
+        Computes features from climatological database, e.g., find the EOFs and store them
+        Parameters
+        ----------
+        raw_file_list: list of str's
+            A list of netcdf files (each ending with '.nc'), each with 't_szn' as a coordinate. Ths function processes these files to generate climatological statistics.
+        Returns 
+        ------
+        featspec: a dict with information on evaluating features downstream. 
+        """
+        # For EOFs, we'll want to stack all the geopotential heights into a big xarray, and then pass that to get_seasonal_stats. 
+        return
+    def evaluate_features_database(self,raw_file):
+        #TODO
+        """
+        """
+        return
+    def abtest(self,Y,featspec,tpt_bndy):
+        """
+        Parameters
+        ----------
+        Y: xarray.DataArray
+            Dimensions must be ('feature','snapshot')
+        featspec: xarray.Dataset
+            A metadata structure that specifies how feaures are computed and evaluated. This will depend on the application.
+        tpt_bndy: dict
+            Metadata specifying the boundaries of the current TPT problem. 
+        Returns 
+        -------
+        ab_tag: xarray.DataArray
+            DataArray with one single dimension, 'snapshot', and an integer data array. Each entry is either 0 (if in A), 1 (if in B), or 2 (if in D).
+        """
+        x1 = Y.sel(feature='x1') # This feature determines whether we're in A or B
+        t_szn = Y.sel(feature='t_szn')
+        time_window_flag = 1.0*(t_szn.data > tpt_bndy['tthresh'][0])*(t_szn.data < tpt_bndy['tthresh'][1])
+        blocked_flag = 1.0*(x1 <= tpt_bndy['block_thresh'])
+        zonal_flag = 1.0*(x1 >= tpt_bndy['zonal_thresh'])
+        A_flag = (1-time_window_flag) + time_window_flag*zonal_flag
+        B_flag = time_window_flag*blocked_flag
+        D_flag = (1-b_flag)*(1-a_flag)
+        ab_tag = 0*A_flag + 1*B_flag + 2*D_flag
+        return ab_tag
 

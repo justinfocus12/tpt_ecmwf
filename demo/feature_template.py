@@ -18,54 +18,54 @@ class TPTFeatures(ABC):
         self.szn_start = szn_start 
         self.szn_end = szn_end 
         self.Nt_szn = Nt_szn # Number of time windows within the season (for example, days). Features will be averaged over each time interval to construct the MSM. 
-        self.dt_szn = (self.szn_end - self.szn_start)/(self.Nt_szn + 1)
+        self.dt_szn = (self.szn_end - self.szn_start)/self.Nt_szn
         self.t_szn_edge = np.linspace(self.szn_start,self.szn_end,self.Nt_szn+1)
         self.t_szn_cent = 0.5*(self.t_szn_edge[:-1] + self.t_szn_edge[1:])
         self.szn_avg_window = szn_avg_window
         # Delay time will be a different number for each feature. And we will not assume a uniform time sampling. 
+        super().__init__()
         return
-    # For ina_test and inb_test, Y should be an xarray DataSet. Each component array has dimensions (member,simtime). One of the observables will be physical time.
+    # For abtest, Y should be an xarray DataSet. Each component array has dimensions (member,simtime). One of the observables will be physical time.
     @abstractmethod
-    def ina_test(self,Y,featspec,tpt_bndy):
+    def abtest(self,Y,featspec,tpt_bndy):
         pass
-    @abstractmethod
-    def inb_test(self,Y,featspec,tpt_bndy):
-        pass
-    def compute_src_dest_tags(self,Y,featspec,tpt_bndy,save_filename=None):
+    def compute_src_dst(self,Y,featspec,tpt_bndy,save_filename=None):
         # Compute where each trajectory started (A or B) and where it's going (A or B). 
         """
         Parameters
         ----------
         Y: xarray.DataArray
             Dimensions must be ('feature','member','simtime')
-        featspec: xarray.DataSet
+            the 'feature' coordinate is categorical, with one element as 't_szn'
+        featspec: xarray.Dataset
             A metadata structure that specifies how feaures are computed and evaluated. This will depend on the application.
         tpt_bndy: dict
             Metadata specifying the boundaries of the current TPT problem. 
         save_filename: str
-            netcdf file in which to save the seasonal statistics.
+            netcdf file in which to save src_dst
         Returns
         ----------
-        src_dest: xarray.Dataset 
-            Two DataArrays: src, encoding where the system last came from, and dest, encoding where it is headed to next. Code 0 means A, code 1 means B.
+        cej: xarray.Dataset 
+            Stands for "Cotton-Eye Joe" (where did you come from, where did you go?). cej contains four component DataArrays: 
+                ina, a flag for whether the system is currently in A 
+                inb, a flag for whether the system is currently in B
+                src, encoding where the system last came from
+                dst, encoding where it is headed to next
+            Code 0 means A, code 1 means B.
         """
-        Ny,Nt = [Y[v].size for v in ['member','simtime']]
-        Nfeat = Y.Nfeat
-        ina = self.ina_test(Y,featspec,tpt_bndy)
-        inb = self.inb_test(Y,featspec,tpt_bndy)
-        src_tag = xr.Variable(dims=('member','simtime'), data=0.5*np.ones((Ny,Nt)))
-        dest_tag = xr.Variable(dims=('member','simtime'), data=0.5*np.ones((Ny,Nt)))
-        # Source: move forward in time
-        # Time zero, A is the default src
-        src_tag.data[:,0] = 0*ina[:,0] + 1*inb[:,0] + 0.5*(ina[:,0]==0)*(inb[:,0]==0)*(Y[:,0,0] > tpt_bndy['tthresh'][0]) 
+        Nfeat,Ny,Nt = [Y.coords[v].size for v in ['feature','member','simtime']]
+        ab_tag = self.abtest(Y,featspec,tpt_bndy)
+        src_tag = xr.DataArray(coords={c: Y.coords[c] for c in ['member','simtime']}, data=0.5*np.ones((Ny,Nt)))
+        dst_tag = xr.Variable(coords={c: Y.coords[c] for c in ['member','simtime']}, data=0.5*np.ones((Ny,Nt)))
+        # To calculate the source, move forward in time. At the beginning of the season, let A be the default source.
+        src_tag.isel(simtime=0)[:] = 0*ina.isel[simtime=0] + 1*inb.isel[simtime=0] + 0.5*(ina.isel(simtime=0)==0)*(inb.isel(simtime=0)==0) #*(Y[:,0,0] > tpt_bndy['tthresh'][0]) 
         for k in range(1,Nt):
             src_tag.data[:,k] = 0*ina[:,k] + 1*inb[:,k] + src_tag.data[:,k-1]*(ina[:,k]==0)*(inb[:,k]==0)
-        # Dest: move backward in time
-        # Time end, A is the default dest
-        dest_tag.data[:,Nt-1] = 0*ina[:,Nt-1] + 1*inb[:,Nt-1] + 0.5*(ina[:,Nt-1]==0)*(inb[:,Nt-1]==0)*(Y[:,-1,0] < tpt_bndy['tthresh'][1])
+        # To calculate the destination, move backward in time. At the end of the season, let A be the default destination
+        dst_tag.isel(simtime=Nt-1)[:] = 0*ina.isel[simtime=Nt-1] + 1*inb.isel[simtime=Nt-1] + 0.5*(ina.isel(simtime=Nt-1)==0)*(inb.isel(simtime=Nt-1)==0) #*(Y[:,-1,0] < tpt_bndy['tthresh'][1])
         for k in np.arange(Nt-2,-1,-1):
-            dest_tag.data[:,k] = 0*ina[:,k] + 1*inb[:,k] + dest_tag.data[:,k+1]*(ina[:,k]==0)*(inb[:,k]==0)
-        result = xr.Dataset({"src_tag": src_tag, "dest_tag": dest_tag})
+            dst_tag.data[:,k] = 0*ina[:,k] + 1*inb[:,k] + dst_tag.data[:,k+1]*(ina[:,k]==0)*(inb[:,k]==0)
+        result = xr.Dataset({"src_tag": src_tag, "dst_tag": dst_tag, "ina": ina, "inb": inb})
         # Structure the result into an xarray dataset
         if save_filename is not None:
             result.to_netcdf(save_filename)
@@ -76,7 +76,7 @@ class TPTFeatures(ABC):
         ----------
         ds: xarray.Dataset
             Some time-dependent fields with possibly many realizations.
-            Every var in ds.data_vars must have 'snapshot' as one of its dimensions, to represent different realizations.
+            Every var in ds.data_vars must have 'snapshot' as one of its dimensions, to represent different realizations. Different snapshots might come from a single trajectory, or from multiple trajectories, but whoever calls this function must stack all such time-like dimensions into a single dimension for snapshot. 
             ds.data_vars must include 't_szn', with a single dimension ('snapshot')
         Returns
         -------
