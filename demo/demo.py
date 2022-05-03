@@ -1,7 +1,42 @@
 # Create a minimal demonstration of the DGA method. This does not save all the intermediate results, as the main code does, because it's too intensive. 
 # Possibly allow for heterogeneous ensemble sizes and lengths 
+import numpy as np
+import xarray as xr
+import netCDF4 as nc
+import matplotlib.pyplot as plt 
+import model_crommelin
+import sys
+import os
+from os import mkdir
+from os.path import join,exists
+
+# ----------- Create directory to save results ----------
+topic_dir = "/scratch/jf4241/crommelin"
+if not exists(topic_dir): mkdir(topic_dir)
+day_dir = join(topic_dir,"2022-05-02")
+if not exists(day_dir): mkdir(day_dir)
+exp_dir = join(day_dir,"0")
+if not exists(exp_dir): mkdir(exp_dir)
+
+integrate_flag =             0 
+plot_integration_flag =      1
 
 # ------------ Create reanalysis ---------------
+fundamental_param_dict = dict({"b": 0.5, "beta": 1.25, "gamma": 0.2, "C": 0.1, "x1star": 0.95, "r": -0.801})
+crom = model_crommelin.CrommelinModel(fundamental_param_dict)
+traj_filename = join(exp_dir,"crom_long.nc")
+if integrate_flag:
+    x0 = np.zeros((1,6))
+    dt_save = 0.5
+    tmax_save = 3000
+    Nt_save = int(tmax_save/dt_save) + 1
+    t_save = np.linspace(0,tmax_save,Nt_save)
+    crom.integrate_and_save(x0,t_save,traj_filename,burnin_time=500)
+    print(f"Done integrating")
+if plot_integration_flag:
+    crom.plot_integration(traj_filename,exp_dir)
+    print(f"Done plotting")
+
 
 # ----------------------------------------------
 
