@@ -56,6 +56,39 @@ class SeasonalCrommelinModel:
                 self.q["gamma_tilde_limits"][j,i_m] = fpd["gamma_limits"][j]*4*m/(4*m**2 - 1)*np.sqrt(2)*fpd["b"]/np.pi
                 self.q["gamma_limits"][j,i_m] = fpd["gamma_limits"][j]*4*m**3/(4*m**2 - 1)*np.sqrt(2)*fpd["b"]/(np.pi*(fpd["b"]**2 + m**2))
         return
+    def orography_cycle(self,t_abs):
+        """
+        Parameters
+        ----------
+        t_abs: numpy.ndarray
+            The absolute time. Shape should be (Nx,) where Nx is the number of ensemble members running in parallel. 
+
+        Returns 
+        -------
+        gamma_t: numpy.ndarray
+            The gamma parameter corresponding to the given time of year. It varies sinusoidaly. Same is (Nx,m_max) where m_max is the maximum zonal wavenumber.
+        gamma_tilde_t: numpy.ndarray
+            The gamma_tilde parameter corresponding to the given time of year. Same shape as gamma_t.
+        """
+        cosine = np.cos(2*np.pi*t_abs/self.q["year_length"])
+        gamma_t = np.outer(cosine, (self.q["gamma_limits"][1,:] - self.q["gamma_limits"][0,:])/2) + (self.q["gamma_limits"][0,:] + self.q["gamma_limits"][1,:])/2
+        gamma_tilde_t = np.outer(cosine, (self.q["gamma_tilde_limits"][1,:] - self.q["gamma_tilde_limits"][0,:])/2) + (self.q["gamma_tilde_limits"][0,:] + self.q["gamma_tilde_limits"][1,:])/2
+        gamma_fpd_t = cosine * (self.q["gamma_limits_fpd"][1] - self.q["gamma_limits_fpd"][0])/2 + (self.q["gamma_limits_fpd"][0] + self.q["gamma_limits_fpd"][1])/2
+        return gamma_t,gamma_tilde_t,gamma_fpd_t
+    def calendar_day(self,t_abs):
+        """
+        Parameters
+        ----------
+        t_abs: numpy.ndarray
+            The absolute time. Shape should be (Nx,) where Nx is the number of ensemble members running in parallel. 
+
+        Returns 
+        -------
+        t_cal: numpy.ndarray
+            The calendar time, found by taking t_abs mod (year length)
+        """
+        t_cal = np.mod(t_abs,self.q["year_length"])
+        return t_cal
     def tendency(self,x):
         """
         Parameters
@@ -72,9 +105,7 @@ class SeasonalCrommelinModel:
         Nx = x.shape[0]
         xdot = np.zeros((Nx,self.xdim))
         # ------------ Do the calculation as written -----------------
-        orography_cycle = np.cos(2*np.pi*x[:,6]/self.q["year_length"])
-        gamma_t = np.outer(orography_cycle, (self.q["gamma_limits"][1,:] - self.q["gamma_limits"][0,:])/2) + (self.q["gamma_limits"][0,:] + self.q["gamma_limits"][1,:])/2
-        gamma_tilde_t = np.outer(orography_cycle, (self.q["gamma_tilde_limits"][1,:] - self.q["gamma_tilde_limits"][0,:])/2) + (self.q["gamma_tilde_limits"][0,:] + self.q["gamma_tilde_limits"][1,:])/2
+        gamma_t,gamma_tilde_t,gamma_fpd_t = self.orography_cycle(x[:,6])
         xdot[:,0] = gamma_tilde_t[:,0]*x[:,2] - self.q["C"]*(x[:,0] - self.q["xstar"][0])
         xdot[:,1] = -(self.q["alpha"][0]*x[:,0] - self.q["beta"][0])*x[:,2] - self.q["C"]*x[:,1] - self.q["delta"][0]*x[:,3]*x[:,5]
         xdot[:,2] = (self.q["alpha"][0]*x[:,0] - self.q["beta"][0])*x[:,1] - gamma_t[:,0]*x[:,0] - self.q["C"]*x[:,2] + self.q["delta"][0]*x[:,3]*x[:,4]
@@ -135,14 +166,19 @@ class SeasonalCrommelinModel:
         """
         Parameters
         ----------
-        x0,t_save: same as self.integrate
+        x0,t_save: same as in self.integrate
         traj_filename: str
             Filename (including full path, and .nc extension) in which to save the final output of self.integrate as an Xarray database
         burnin_time: float
-            Time to clip off the beginning of the trajectory to allow it to settle
+            Time to clip off the beginning of the trajectory to allow it to approach its attractor
+
         Returns 
         -------
-        Nothing; just saves the trajectory in traj_filename
+        None
+
+        Side effects
+        ------------
+        Saves trajectory to traj_filename as an xarray.Dataset
         """
         if not (traj_filename.endswith(".nc")):
             raise Exception("The traj_filename must end with .nc")
@@ -152,26 +188,45 @@ class SeasonalCrommelinModel:
             x = x[:,ti0:]
             t_save = t_save[ti0:]
         ds = xr.Dataset(
-                data_vars={"X": xr.DataArray(coords={'member': np.arange(x.shape[0]), 'time': t_save, 'feature': [f"x{i}" for i in range(1,self.xdim+1)], 'time': t_save}, data=x),}
+                data_vars={"X": xr.DataArray(coords={'member': np.arange(x.shape[0]), 't_sim': t_save, 'feature': [f"x{i}" for i in range(1,self.xdim)] + ["t_abs"]}, data=x),}
                 )
         ds.to_netcdf(traj_filename)
         return 
+    def split_long_integration(self,traj_filename,savefolder):
+        """
+        Parameters
+        ----------
+        traj_filename: str
+            name of the .nc file in which the long (multi-year) trajectory is stored
+        savefolder: str
+            name of the folder in which to store the single-season trajectories
+        """
+        # The season of anomalies ("winter") is days 300-399 and 0-150
+        
+        return
     def plot_integration(self,traj_filename,savefolder):
         """
         Plot the output of integrate_and_save above
+        Parameters
+        ----------
+        traj_filename: str
+            The filename storing the integration (with .nc extension)
+        savefolder: str
+            The folder in which to save the result
         """
         ds = xr.open_dataset(traj_filename)
-        # Plot x1 and x4 vs. time
+        # Plot x1 and x4 vs. time (but only for 4 cycles)
+        ti0 = 0
+        ti1 = np.where(ds.coords['t_sim'].data < 4*self.q["year_length"])[0][-1]
         fig,ax = plt.subplots(nrows=3,figsize=(12,18),sharex=True)
-        ax[0].plot(ds.coords['time'].data,ds['X'].sel(feature='x1').data.flatten(),color='black')
+        ax[0].plot(ds['X'].sel(feature='t_abs').data.flatten()[ti0:ti1],ds['X'].sel(feature='x1').data.flatten()[ti0:ti1],color='black')
         ax[0].set_ylabel(r"$x_1$")
-        ax[1].plot(ds.coords['time'].data,ds['X'].sel(feature='x4').data.flatten(),color='black')
+        ax[1].plot(ds['X'].sel(feature='t_abs').data.flatten()[ti0:ti1],ds['X'].sel(feature='x4').data.flatten()[ti0:ti1],color='black')
         ax[1].set_ylabel(r"$x_4$")
-        orography_cycle = np.cos(2*np.pi*ds['X'].sel(feature='x7').data.flatten()/self.q["year_length"])
-        gamma_t = orography_cycle * (self.q["gamma_limits_fpd"][1] - self.q["gamma_limits_fpd"][0])/2 + (self.q["gamma_limits_fpd"][0] + self.q["gamma_limits_fpd"][1])/2
-        ax[2].plot(ds.coords['time'].data,gamma_t,color='black')
+        gamma_t,gamma_tilde_t,gamma_fpd_t = self.orography_cycle(ds['X'].sel(feature='t_abs',member=0).data.flatten())
+        ax[2].plot(ds['X'].sel(feature='t_abs').data.flatten()[ti0:ti1],gamma_fpd_t[ti0:ti1],color='black')
         ax[2].set_ylabel(r"$\gamma(t)$")
-        fig.savefig(join(savefolder,"t_x1x4"))
+        fig.savefig(join(savefolder,"t_x1x4gamma"))
         plt.close(fig)
         # Plot x4 vs. x1
         fig,ax = plt.subplots()
@@ -179,6 +234,21 @@ class SeasonalCrommelinModel:
         ax.set_xlabel(r"$x_1$")
         ax.set_ylabel(r"$x_4$")
         fig.savefig(join(savefolder,"x1_x4"))
+        plt.close(fig)
+        # Plot x1 vs. the seasonal cycle
+        fig,ax = plt.subplots()
+        ax.plot(gamma_fpd_t,ds['X'].sel(feature='x1').data.flatten(), color='black')
+        ax.set_xlabel(r"$\gamma(t)$")
+        ax.set_ylabel(r"$x_1(t)$")
+        fig.savefig(join(savefolder,"gamma_x1"))
+        plt.close(fig)
+        # Plot x1 vs. the time of year
+        t_cal = self.calendar_day(ds['X'].sel(feature='t_abs',member=0).data.flatten())
+        fig,ax = plt.subplots()
+        ax.plot(t_cal,ds['X'].sel(feature='x1').data.flatten(), color='black')
+        ax.set_xlabel(r"Calendar time")
+        ax.set_ylabel(r"$x_1(t)$")
+        fig.savefig(join(savefolder,"gamma_x1"))
         plt.close(fig)
         return
     def generate_s2s_dataset(self,s2sdir,num_cycles):

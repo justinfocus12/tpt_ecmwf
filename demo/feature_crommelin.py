@@ -11,11 +11,16 @@ import sys
 from abc import ABC,abstractmethod
 
 
-class CrommelinModelFeatures(TPTFeatures):
-    def __init__(self,featspec_file,szn_start,szn_end,Nt_szn,szn_avg_window,delaytime=0):
-        self.featspec_file = featspec_file 
-        self.delaytime = delaytime # The length of time-delay embedding to use as features in the model. 
-        super().__init__(featspec_file,szn_start,szn_end,Nt_szn,szn_avg_window)
+class SeasonalCrommelinModelFeatures(TPTFeatures):
+    def __init__(self,featspec_filename,szn_start,szn_length,Nt_szn,szn_avg_window,dt_samp,delaytime=0):
+        self.featspec_filenamd = featspec_filename 
+        self.dt_samp = dt_samp # For now assume a constant temporal resolution on all data. Will relax this in the future once we have sampling-interval-independent observables. 
+        self.delaytime = delaytime # The length of time-delay embedding to use as features in the model, in terms of time units (not time samples). Hopefully we can make time delay embedding features independent of the sampling rate. 
+        self.ndelay = int(round(self.delaytime/self.dt_samp)) + 1
+        # Set the seasonal start and end: winter starts on day 300, and ends on day 150 of the following year. 
+        szn_start = 0.0
+        szn_length = 250.0 
+        super().__init__(featspec_file,szn_start,szn_length,Nt_szn,szn_avg_window)
         return
     def create_features_from_climatology(self,raw_file_list):
         #TODO
@@ -24,7 +29,7 @@ class CrommelinModelFeatures(TPTFeatures):
         Parameters
         ----------
         raw_file_list: list of str's
-            A list of netcdf files (each ending with '.nc'), each with 't_szn' as a coordinate. Ths function processes these files to generate climatological statistics.
+            A list of netcdf files (each ending with '.nc') in xarray Dataset format, each with 't_abs' as a coordinate. Ths function processes these files to generate climatological statistics.
         Returns 
         ------
         featspec: a dict with information on evaluating features downstream. 

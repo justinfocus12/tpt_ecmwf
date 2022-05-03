@@ -12,14 +12,14 @@ import sys
 from abc import ABC,abstractmethod
 
 class TPTFeatures(ABC):
-    def __init__(self,featspec_file,szn_start,szn_end,Nt_szn,szn_avg_window):
+    def __init__(self,featspec_file,szn_start,szn_length,Nt_szn,szn_avg_window):
         self.featspec_file = featspec_file # Filename of Xarray DataBase that stores parameters to specify features, e.g., from seasonal averages
         # szn_(start,end) denote the beginning and end times of the universe for this model.
         self.szn_start = szn_start 
-        self.szn_end = szn_end 
+        self.szn_length = szn_length 
         self.Nt_szn = Nt_szn # Number of time windows within the season (for example, days). Features will be averaged over each time interval to construct the MSM. 
-        self.dt_szn = (self.szn_end - self.szn_start)/self.Nt_szn
-        self.t_szn_edge = np.linspace(self.szn_start,self.szn_end,self.Nt_szn+1)
+        self.dt_szn = self.szn_length/self.Nt_szn
+        self.t_szn_edge = self.szn_start + np.linspace(0,self.szn_length,self.Nt_szn+1)
         self.t_szn_cent = 0.5*(self.t_szn_edge[:-1] + self.t_szn_edge[1:])
         self.szn_avg_window = szn_avg_window
         # Delay time will be a different number for each feature. And we will not assume a uniform time sampling. 
