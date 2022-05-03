@@ -24,26 +24,41 @@ if not exists(hc_dir): mkdir(hc_dir)
 results_dir = join(exp_dir,"results")
 if not exists(results_dir): mkdir(results_dir)
 
-integrate_flag =             1
-plot_integration_flag =      1
-calculate_climatology_flag = 1
+integrate_flag =             0
+plot_integration_flag =      0
+generate_hc_flag =           1
+calculate_climatology_flag = 0
+
+# ----------- Set some physical parameters -----
+dt_samp = 0.5
 
 # ------------ Create reanalysis ---------------
 fundamental_param_dict = dict({"b": 0.5, "beta": 1.25, "gamma_limits": [0.15, 0.22], "C": 0.1, "x1star": 0.95, "r": -0.801, "year_length": 400})
 crom = model_crommelin_seasonal.SeasonalCrommelinModel(fundamental_param_dict)
 traj_filename = join(ra_dir,"crom_long.nc")
+
 if integrate_flag:
     x0 = np.zeros((1,7))
     x0[0,6] = (1957 + 0.2)*fundamental_param_dict["year_length"] 
     dt_save = 0.5
     tmax_save = 40500
-    Nt_save = int(tmax_save/dt_save) + 1
-    t_save = np.linspace(0,tmax_save,Nt_save)
+    t_save = np.arange(0,tmax_save,dt_samp)
     crom.integrate_and_save(x0,t_save,traj_filename,burnin_time=500)
     print(f"Done integrating")
+   
+if split_reanalysis_flag:
+    crom.split_long_integration(traj_filename)
+
 if plot_integration_flag:
     crom.plot_integration(traj_filename,results_dir)
     print(f"Done plotting")
+
+# ------------ Create hindcasts ----------------------
+if generate_hc_flag:
+    t_abs_range = fundamental_param_dict["year_length"]*np.array([1960,1970])
+    crom.generate_hindcast_dataset(traj_filename,hc_dir,t_abs_range,dt_samp,ens_size=10,ens_duration=47,ens_gap=13,pert_scale=0.001)
+# ----------------------------------------------
+
 if calculate_climatology_flag:
     # Load dataset and compute etc.
     print("Done calculating climatology")
@@ -51,9 +66,7 @@ if calculate_climatology_flag:
 
 
 
-# ----------------------------------------------
 
-# ------------ Create hindcasts ----------------------
 
 # ----------------------------------------------
 

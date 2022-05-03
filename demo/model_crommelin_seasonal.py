@@ -56,6 +56,15 @@ class SeasonalCrommelinModel:
                 self.q["gamma_tilde_limits"][j,i_m] = fpd["gamma_limits"][j]*4*m/(4*m**2 - 1)*np.sqrt(2)*fpd["b"]/np.pi
                 self.q["gamma_limits"][j,i_m] = fpd["gamma_limits"][j]*4*m**3/(4*m**2 - 1)*np.sqrt(2)*fpd["b"]/(np.pi*(fpd["b"]**2 + m**2))
         return
+    def date_format(self,t_abs,decimal=False):
+        # Given a single time t_abs, format the date.
+        year = int(t_abs/self.q["year_length"])
+        t_cal = t_abs - year*self.q["year_length"]
+        if decimal:
+            t_str = f"{year:.0f}-{t_cal:.0f}"
+        else:
+            t_str = f"{year}-{t_cal}"
+        return t_str
     def orography_cycle(self,t_abs):
         """
         Parameters
@@ -192,7 +201,7 @@ class SeasonalCrommelinModel:
                 )
         ds.to_netcdf(traj_filename)
         return 
-    def split_long_integration(self,traj_filename,savefolder):
+    def split_long_integration(self,traj_filename,savefolder,szn_start,szn_length):
         """
         Parameters
         ----------
@@ -200,9 +209,12 @@ class SeasonalCrommelinModel:
             name of the .nc file in which the long (multi-year) trajectory is stored
         savefolder: str
             name of the folder in which to store the single-season trajectories
+        szn_start: float
+            calendar day for the beginning of the season 
+        szn_length: float
+            length of the season
         """
-        # The season of anomalies ("winter") is days 300-399 and 0-150
-        
+        #TODO
         return
     def plot_integration(self,traj_filename,savefolder):
         """
@@ -251,12 +263,14 @@ class SeasonalCrommelinModel:
         fig.savefig(join(savefolder,"gamma_x1"))
         plt.close(fig)
         return
-    def generate_hindcast_dataset(self,hc_dir,t_abs_range,ens_size=10,ens_duration=47,ens_gap=3):
+    def generate_hindcast_dataset(self,ra_filename,hc_dir,t_abs_range,dt_samp,ens_size=10,ens_duration=47,ens_gap=3,pert_scale=0.001):
         """
         Parameters
         ----------
+        ra_file: str
+            Path to read reanalysis data from (including .nc extension)
         hc_dir: str
-            Path to where to store hindcasts directory
+            Path to directory to store hindcasts 
         t_abs_range: array or list with 2 elements
             Absolute timespan over which to generate trajectories
             How many years should we compute hindcasts for? 
@@ -267,5 +281,26 @@ class SeasonalCrommelinModel:
         ens_gap: float
             Length of time between each successive ensemble (3.5 on average for biweekly forecasts)
         """
-
+        ra = xr.open_dataset(ra_filename)
+        t_sim_ra = ra.coords['t_sim'].data
+        t_abs_ra = ra['X'].sel(feature='t_abs',member=0).data.flatten()
+        if not (t_abs_range[0] >= t_abs_ra[0] and t_abs_range[1] <= t_abs_ra[-1]):
+            raise Exception("You gave me a time range that falls outside the simulation time: t_abs_range = {t_abs_range}, whilst the simulation time ranges from {t_abs_ra[0]} to {t_abs_ra[-1]}")
+        # Each hindcast ensemble will be stored in a different file. 
+        t_abs = t_abs_range[0]
+        while t_abs < t_abs_range[1]:
+            i_time_ra = np.where(t_abs_ra >= t_abs)[0][0]
+            x0_ra = ra['X'].isel(t_sim=i_time_ra,member=0).data
+            x0 = np.outer(np.ones(ens_size),x0_ra)
+            # Add perturbations to the non-time variables
+            x0[:,:-1] += pert_scale*np.random.randn(ens_size,self.xdim-1)
+            # Integrate 
+            print(f"Beginning ensemble near time {t_abs}; {(t_abs-t_abs_range[0])/(t_abs_range[1]-t_abs_range[0])*100}% done")
+            t0_str = self.date_format(t_abs)
+            t1_str = self.date_format(t_abs+ens_duration)
+            ens_filename = join(hc_dir,f"hc{t0_str}_to_{t1_str}.nc")
+            t_ens = np.arange(0,ens_duration,dt_samp)
+            self.integrate_and_save(x0,t_ens,ens_filename)
+            # Advance the initialization time
+            t_abs = t_abs_ra[i_time_ra] + ens_gap
         return

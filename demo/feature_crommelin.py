@@ -13,7 +13,7 @@ from abc import ABC,abstractmethod
 
 class SeasonalCrommelinModelFeatures(TPTFeatures):
     def __init__(self,featspec_filename,szn_start,szn_length,Nt_szn,szn_avg_window,dt_samp,delaytime=0):
-        self.featspec_filenamd = featspec_filename 
+        self.featspec_filename = featspec_filename 
         self.dt_samp = dt_samp # For now assume a constant temporal resolution on all data. Will relax this in the future once we have sampling-interval-independent observables. 
         self.delaytime = delaytime # The length of time-delay embedding to use as features in the model, in terms of time units (not time samples). Hopefully we can make time delay embedding features independent of the sampling rate. 
         self.ndelay = int(round(self.delaytime/self.dt_samp)) + 1
