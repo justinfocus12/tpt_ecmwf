@@ -4,7 +4,7 @@ import numpy as np
 import xarray as xr
 import netCDF4 as nc
 import matplotlib.pyplot as plt 
-import model_crommelin
+import model_crommelin_seasonal
 import sys
 import os
 from os import mkdir
@@ -15,20 +15,20 @@ topic_dir = "/scratch/jf4241/crommelin"
 if not exists(topic_dir): mkdir(topic_dir)
 day_dir = join(topic_dir,"2022-05-02")
 if not exists(day_dir): mkdir(day_dir)
-exp_dir = join(day_dir,"0")
+exp_dir = join(day_dir,"1")
 if not exists(exp_dir): mkdir(exp_dir)
 
-integrate_flag =             0 
+integrate_flag =             1
 plot_integration_flag =      1
 
 # ------------ Create reanalysis ---------------
-fundamental_param_dict = dict({"b": 0.5, "beta": 1.25, "gamma": 0.2, "C": 0.1, "x1star": 0.95, "r": -0.801})
-crom = model_crommelin.CrommelinModel(fundamental_param_dict)
+fundamental_param_dict = dict({"b": 0.5, "beta": 1.25, "gamma_limits": [0.15, 0.22], "C": 0.1, "x1star": 0.95, "r": -0.801, "year_length": 400})
+crom = model_crommelin_seasonal.SeasonalCrommelinModel(fundamental_param_dict)
 traj_filename = join(exp_dir,"crom_long.nc")
 if integrate_flag:
-    x0 = np.zeros((1,6))
+    x0 = np.zeros((1,7))
     dt_save = 0.5
-    tmax_save = 3000
+    tmax_save = 12500
     Nt_save = int(tmax_save/dt_save) + 1
     t_save = np.linspace(0,tmax_save,Nt_save)
     crom.integrate_and_save(x0,t_save,traj_filename,burnin_time=500)

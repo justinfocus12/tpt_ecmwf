@@ -21,9 +21,9 @@ import os
 from os import mkdir
 from os.path import join,exists
 
-class CrommelinModel:
+class SeasonalCrommelinModel:
     def __init__(self,fundamental_param_dict):
-        self.xdim = 6 
+        self.xdim = 7 # six standard dimensions plus time 
         self.dt_sim = 0.1
         self.set_params(fundamental_param_dict)
         return
@@ -37,49 +37,24 @@ class CrommelinModel:
         n_max = 1
         m_max = 2
         self.q = dict({})
+        self.q["year_length"] = fpd["year_length"]
         self.q["epsilon"] = 16*np.sqrt(2)/(5*np.pi)
         self.q["C"] = fpd["C"]
+        self.q["gamma_limits_fpd"] = fpd["gamma_limits"]
         self.q["xstar"] = np.array([fpd["x1star"],0,0,fpd["r"]*fpd["x1star"],0,0])
         self.q["alpha"] = np.zeros(m_max)
         self.q["beta"] = np.zeros(m_max)
-        self.q["gamma"] = np.zeros(m_max)
-        self.q["gamma_tilde"] = np.zeros(m_max)
+        self.q["gamma_limits"] = np.zeros((2,m_max))
+        self.q["gamma_tilde_limits"] = np.zeros((2,m_max))
         self.q["delta"] = np.zeros(m_max)
         for i_m in range(m_max):
             m = i_m + 1
             self.q["alpha"][i_m] = 8*np.sqrt(2)/np.pi*m**2/(4*m**2 - 1) * (fpd["b"]**2 + m**2 - 1)/(fpd["b"]**2 + m**2)
             self.q["beta"][i_m] = fpd["beta"]*fpd["b"]**2/(fpd["b"]**2 + m**2)
             self.q["delta"][i_m] = 64*np.sqrt(2)/(15*np.pi) * (fpd["b"]**2 - m**2 + 1)/(fpd["b"]**2 + m**2)
-            self.q["gamma_tilde"][i_m] = fpd["gamma"]*4*m/(4*m**2 - 1)*np.sqrt(2)*fpd["b"]/np.pi
-            self.q["gamma"][i_m] = fpd["gamma"]*4*m**3/(4*m**2 - 1)*np.sqrt(2)*fpd["b"]/(np.pi*(fpd["b"]**2 + m**2))
-        # The nonlinear system has a constant term F, a linear term Lx, and a quadratic term B(x,x). Construct them each in turn. 
-        # 1. Constant term
-        F = self.q["C"]*self.q["xstar"]
-        # 2. Matrix for linear term
-        L = -self.q["C"]*np.eye(self.xdim)
-        L[0,2] = self.q["gamma_tilde"][0]
-        L[1,2] = self.q["beta"][0]
-        L[2,0] = -self.q["gamma"][0]
-        L[2,1] = -self.q["beta"][0]
-        L[3,5] = self.q["gamma_tilde"][1]
-        L[4,5] = self.q["beta"][1]
-        L[5,4] = -self.q["beta"][1]
-        L[5,3] = -self.q["gamma"][1]
-        # 3. Matrix for bilinear term
-        B = np.zeros((self.xdim,self.xdim,self.xdim))
-        B[1,0,2] = -self.q["alpha"][0]
-        B[1,3,5] = -self.q["delta"][0]
-        B[2,0,1] = self.q["alpha"][0]
-        B[2,3,4] = self.q["delta"][0]
-        B[3,1,5] = self.q["epsilon"]
-        B[3,2,4] = -self.q["epsilon"]
-        B[4,0,5] = -self.q["alpha"][1]
-        B[4,3,2] = -self.q["delta"][1]
-        B[5,0,4] = self.q["alpha"][1]
-        B[5,3,1] = self.q["delta"][1]
-        self.q["forcing_term"] = F
-        self.q["linear_term"] = L
-        self.q["bilinear_term"] = B
+            for j in range(2):
+                self.q["gamma_tilde_limits"][j,i_m] = fpd["gamma_limits"][j]*4*m/(4*m**2 - 1)*np.sqrt(2)*fpd["b"]/np.pi
+                self.q["gamma_limits"][j,i_m] = fpd["gamma_limits"][j]*4*m**3/(4*m**2 - 1)*np.sqrt(2)*fpd["b"]/(np.pi*(fpd["b"]**2 + m**2))
         return
     def tendency(self,x):
         """
@@ -96,11 +71,22 @@ class CrommelinModel:
             raise Exception(f"Shape problem: you gave me (t,x) such that t.shape = {t.shape} and x.shape = {x.shape}")
         Nx = x.shape[0]
         xdot = np.zeros((Nx,self.xdim))
+        # ------------ Do the calculation as written -----------------
+        orography_cycle = np.cos(2*np.pi*x[:,6]/self.q["year_length"])
+        gamma_t = np.outer(orography_cycle, (self.q["gamma_limits"][1,:] - self.q["gamma_limits"][0,:])/2) + (self.q["gamma_limits"][0,:] + self.q["gamma_limits"][1,:])/2
+        gamma_tilde_t = np.outer(orography_cycle, (self.q["gamma_tilde_limits"][1,:] - self.q["gamma_tilde_limits"][0,:])/2) + (self.q["gamma_tilde_limits"][0,:] + self.q["gamma_tilde_limits"][1,:])/2
+        xdot[:,0] = gamma_tilde_t[:,0]*x[:,2] - self.q["C"]*(x[:,0] - self.q["xstar"][0])
+        xdot[:,1] = -(self.q["alpha"][0]*x[:,0] - self.q["beta"][0])*x[:,2] - self.q["C"]*x[:,1] - self.q["delta"][0]*x[:,3]*x[:,5]
+        xdot[:,2] = (self.q["alpha"][0]*x[:,0] - self.q["beta"][0])*x[:,1] - gamma_t[:,0]*x[:,0] - self.q["C"]*x[:,2] + self.q["delta"][0]*x[:,3]*x[:,4]
+        xdot[:,3] = gamma_tilde_t[:,1]*x[:,5] - self.q["C"]*(x[:,3] - self.q["xstar"][3]) + self.q["epsilon"]*(x[:,1]*x[:,5] - x[:,2]*x[:,4])
+        xdot[:,4] = -(self.q["alpha"][1]*x[:,0] - self.q["beta"][1])*x[:,5] - self.q["C"]*x[:,4] - self.q["delta"][1]*x[:,3]*x[:,2]
+        xdot[:,5] = (self.q["alpha"][1]*x[:,0] - self.q["beta"][1])*x[:,4] - gamma_t[:,1]*x[:,3] - self.q["C"]*x[:,5] + self.q["delta"][1]*x[:,3]*x[:,1]
+        xdot[:,6] = 1.0 # Time 
         # ----------- Do the calculation with the precomputed terms -------------
-        xdot += self.q["forcing_term"] 
-        xdot += x.dot(self.q["linear_term"].T)
-        for j in range(self.xdim):
-            xdot[:,j] += np.sum(x * (x.dot(self.q["bilinear_term"][j].T)), axis=1)
+        #xdot[:,1:] += self.q["forcing_term"] 
+        #xdot[:,1:] += x.dot(self.q["linear_term"].T)
+        #for j in range(self.xdim):
+        #    xdot[:,j] += np.sum(x * (x.dot(self.q["bilinear_term"][j].T)), axis=1)
         return xdot
     def integrate(self,x0,t_save):
         """
@@ -176,11 +162,15 @@ class CrommelinModel:
         """
         ds = xr.open_dataset(traj_filename)
         # Plot x1 and x4 vs. time
-        fig,ax = plt.subplots(nrows=2,figsize=(12,12),sharex=True)
+        fig,ax = plt.subplots(nrows=3,figsize=(12,18),sharex=True)
         ax[0].plot(ds.coords['time'].data,ds['X'].sel(feature='x1').data.flatten(),color='black')
         ax[0].set_ylabel(r"$x_1$")
         ax[1].plot(ds.coords['time'].data,ds['X'].sel(feature='x4').data.flatten(),color='black')
         ax[1].set_ylabel(r"$x_4$")
+        orography_cycle = np.cos(2*np.pi*ds['X'].sel(feature='x7').data.flatten()/self.q["year_length"])
+        gamma_t = orography_cycle * (self.q["gamma_limits_fpd"][1] - self.q["gamma_limits_fpd"][0])/2 + (self.q["gamma_limits_fpd"][0] + self.q["gamma_limits_fpd"][1])/2
+        ax[2].plot(ds.coords['time'].data,gamma_t,color='black')
+        ax[2].set_ylabel(r"$\gamma(t)$")
         fig.savefig(join(savefolder,"t_x1x4"))
         plt.close(fig)
         # Plot x4 vs. x1
