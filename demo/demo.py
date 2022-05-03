@@ -26,6 +26,7 @@ if not exists(results_dir): mkdir(results_dir)
 
 integrate_flag =             1
 plot_integration_flag =      1
+calculate_climatology_flag = 1
 
 # ------------ Create reanalysis ---------------
 fundamental_param_dict = dict({"b": 0.5, "beta": 1.25, "gamma_limits": [0.15, 0.22], "C": 0.1, "x1star": 0.95, "r": -0.801, "year_length": 400})
@@ -43,6 +44,11 @@ if integrate_flag:
 if plot_integration_flag:
     crom.plot_integration(traj_filename,results_dir)
     print(f"Done plotting")
+if calculate_climatology_flag:
+    # Load dataset and compute etc.
+    print("Done calculating climatology")
+
+
 
 
 # ----------------------------------------------

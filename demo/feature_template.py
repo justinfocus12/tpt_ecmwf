@@ -13,8 +13,21 @@ from abc import ABC,abstractmethod
 
 class TPTFeatures(ABC):
     def __init__(self,featspec_file,szn_start,szn_length,Nt_szn,szn_avg_window):
-        self.featspec_file = featspec_file # Filename of Xarray DataBase that stores parameters to specify features, e.g., from seasonal averages
-        # szn_(start,end) denote the beginning and end times of the universe for this model.
+        """
+        Parameters
+        ----------
+        featspec_file: str 
+            Full file path (with .nc extension) in which to store any parameters needed to compute features. It will be stored as an Xarray database.
+        szn_start: float or int
+            Starting time of the universe for this model. In case the data come from a periodic process, szn_start might be a calendar day. 
+        szn_length: float 
+            Duration of the universe for this model. In case szn_start + szn_length > (length of year), as is the case for the winter season, the season is understood to wrap around from one year to the next. 
+        Nt_szn: int
+            The number of time windows into which the model is divided. 
+        szn_avg_window: float 
+            The time window over which to average when computing a seasonal cycle.
+        """
+        self.featspec_file = featspec_file
         self.szn_start = szn_start 
         self.szn_length = szn_length 
         self.Nt_szn = Nt_szn # Number of time windows within the season (for example, days). Features will be averaged over each time interval to construct the MSM. 
@@ -22,12 +35,25 @@ class TPTFeatures(ABC):
         self.t_szn_edge = self.szn_start + np.linspace(0,self.szn_length,self.Nt_szn+1)
         self.t_szn_cent = 0.5*(self.t_szn_edge[:-1] + self.t_szn_edge[1:])
         self.szn_avg_window = szn_avg_window
-        # Delay time will be a different number for each feature. And we will not assume a uniform time sampling. 
         super().__init__()
         return
     # For abtest, Y should be an xarray DataSet. Each component array has dimensions (member,simtime). One of the observables will be physical time.
     @abstractmethod
     def abtest(self,Y,featspec,tpt_bndy):
+        """
+        Parameters
+        ----------
+        Y: xarray.DataArray
+            Dimensions must be ('feature','snapshot')
+        featspec: xarray.Dataset
+            A metadata structure that specifies how feaures are computed and evaluated. This will depend on the application.
+        tpt_bndy: dict
+            Metadata specifying the boundaries of the current TPT problem. 
+        Returns 
+        -------
+        ab_tag: xarray.DataArray
+            DataArray with one single dimension, 'snapshot', and an integer data array. Each entry is either 0 (if in A), 1 (if in B), or 2 (if in D).
+        """
         pass
     def compute_src_dst(self,Y,featspec,tpt_bndy,save_filename=None):
         # Compute where each trajectory started (A or B) and where it's going (A or B). 

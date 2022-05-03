@@ -251,11 +251,21 @@ class SeasonalCrommelinModel:
         fig.savefig(join(savefolder,"gamma_x1"))
         plt.close(fig)
         return
-    def generate_s2s_dataset(self,s2sdir,num_cycles):
+    def generate_hindcast_dataset(self,hc_dir,t_abs_range,ens_size=10,ens_duration=47,ens_gap=3):
         """
         Parameters
         ----------
-        s2sdir: str
-            Path to where to store s2s directory
+        hc_dir: str
+            Path to where to store hindcasts directory
+        t_abs_range: array or list with 2 elements
+            Absolute timespan over which to generate trajectories
+            How many years should we compute hindcasts for? 
+        ens_size: int
+            How many parallel ensembles to launch at each initialization date
+        ens_duration: float
+            How long to run each member before terminating
+        ens_gap: float
+            Length of time between each successive ensemble (3.5 on average for biweekly forecasts)
         """
+
         return

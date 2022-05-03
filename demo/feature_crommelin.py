@@ -17,9 +17,6 @@ class SeasonalCrommelinModelFeatures(TPTFeatures):
         self.dt_samp = dt_samp # For now assume a constant temporal resolution on all data. Will relax this in the future once we have sampling-interval-independent observables. 
         self.delaytime = delaytime # The length of time-delay embedding to use as features in the model, in terms of time units (not time samples). Hopefully we can make time delay embedding features independent of the sampling rate. 
         self.ndelay = int(round(self.delaytime/self.dt_samp)) + 1
-        # Set the seasonal start and end: winter starts on day 300, and ends on day 150 of the following year. 
-        szn_start = 0.0
-        szn_length = 250.0 
         super().__init__(featspec_file,szn_start,szn_length,Nt_szn,szn_avg_window)
         return
     def create_features_from_climatology(self,raw_file_list):
@@ -56,8 +53,8 @@ class SeasonalCrommelinModelFeatures(TPTFeatures):
         ab_tag: xarray.DataArray
             DataArray with one single dimension, 'snapshot', and an integer data array. Each entry is either 0 (if in A), 1 (if in B), or 2 (if in D).
         """
-        x1 = Y.sel(feature='x1') # This feature determines whether we're in A or B
-        t_szn = Y.sel(feature='t_szn')
+        x1 = Y.sel(feature='x1').data.flatten() # This feature determines whether we're in A or B
+        t_szn = Y.sel(feature='t_szn') # Time since beginning of the season
         time_window_flag = 1.0*(t_szn.data > tpt_bndy['tthresh'][0])*(t_szn.data < tpt_bndy['tthresh'][1])
         blocked_flag = 1.0*(x1 <= tpt_bndy['block_thresh'])
         zonal_flag = 1.0*(x1 >= tpt_bndy['zonal_thresh'])
