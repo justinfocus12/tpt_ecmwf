@@ -27,10 +27,13 @@ if not exists(results_dir): mkdir(results_dir)
 integrate_flag =             0
 plot_integration_flag =      0
 generate_hc_flag =           1
+split_reanalysis_flag =      0
 calculate_climatology_flag = 0
 
 # ----------- Set some physical parameters -----
 dt_samp = 0.5
+szn_start = 300.0
+szn_length = 250.0
 
 # ------------ Create reanalysis ---------------
 fundamental_param_dict = dict({"b": 0.5, "beta": 1.25, "gamma_limits": [0.15, 0.22], "C": 0.1, "x1star": 0.95, "r": -0.801, "year_length": 400})

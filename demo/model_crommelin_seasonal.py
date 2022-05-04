@@ -61,9 +61,9 @@ class SeasonalCrommelinModel:
         year = int(t_abs/self.q["year_length"])
         t_cal = t_abs - year*self.q["year_length"]
         if decimal:
-            t_str = f"{year:.0f}-{t_cal:.0f}"
-        else:
             t_str = f"{year}-{t_cal}"
+        else:
+            t_str = f"{year:.0f}-{t_cal:.0f}"
         return t_str
     def orography_cycle(self,t_abs):
         """
@@ -214,7 +214,18 @@ class SeasonalCrommelinModel:
         szn_length: float
             length of the season
         """
-        #TODO
+        traj = xr.open_dataset(traj_filename)
+        t_abs = traj['X'].sel(feature='t_abs',member=0).data.flatten()
+        t_cal = np.mod(t_abs, self.q["year_length"])
+        idx_start = np.where(t_cal >= szn_start)[0] # List of indices where the season starts 
+        idx_end = []
+        for j in range(len(idx_start)):
+            if t_abs[idx_start[j]] + szn_length <= t_abs[-1]:
+                i_end = np.where(t_abs - t_abs[idx_start[j]] > szn_length)[0][0] - 1
+                idx_end += [i_end]
+        idx_start = idx_start[:len(idx_end)]
+        # Now split off each season into a separate file 
+        # TODO
         return
     def plot_integration(self,traj_filename,savefolder):
         """
@@ -299,6 +310,7 @@ class SeasonalCrommelinModel:
             t0_str = self.date_format(t_abs)
             t1_str = self.date_format(t_abs+ens_duration)
             ens_filename = join(hc_dir,f"hc{t0_str}_to_{t1_str}.nc")
+            print(f"ens_filename = {ens_filename}")
             t_ens = np.arange(0,ens_duration,dt_samp)
             self.integrate_and_save(x0,t_ens,ens_filename)
             # Advance the initialization time
