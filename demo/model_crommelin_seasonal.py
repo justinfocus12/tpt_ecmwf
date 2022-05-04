@@ -167,6 +167,8 @@ class SeasonalCrommelinModel:
             if (t_old <= t_save[i_save+1]) and (t_new >= t_save[i_save+1]):
                 x[:,i_save+1] = x[:,i_save] + (t_save[i_save+1]-t_save[i_save])*(x_new - x_old)/self.dt_sim
                 i_save += 1
+            if np.mod(t_new, 1000) > np.mod(t_old, 1000):
+                print(f"Integrated through time {t_new} out of {t_save[Nt-1]}")
             # Update new to old
             x_old = x_new
             t_old = t_new
@@ -195,7 +197,7 @@ class SeasonalCrommelinModel:
         if burnin_time > 0:
             ti0 = np.where(t_save > burnin_time)[0][0]
             x = x[:,ti0:]
-            t_save = t_save[ti0:]
+            t_save = t_save[ti0:] - t_save[ti0]
         ds = xr.Dataset(
                 data_vars={"X": xr.DataArray(coords={'member': np.arange(x.shape[0]), 't_sim': t_save, 'feature': [f"x{i}" for i in range(1,self.xdim)] + ["t_abs"]}, data=x),}
                 )
@@ -215,17 +217,30 @@ class SeasonalCrommelinModel:
             length of the season
         """
         traj = xr.open_dataset(traj_filename)
+        print(f"traj = \n{traj}")
         t_abs = traj['X'].sel(feature='t_abs',member=0).data.flatten()
-        t_cal = np.mod(t_abs, self.q["year_length"])
-        idx_start = np.where(t_cal >= szn_start)[0] # List of indices where the season starts 
-        idx_end = []
-        for j in range(len(idx_start)):
-            if t_abs[idx_start[j]] + szn_length <= t_abs[-1]:
-                i_end = np.where(t_abs - t_abs[idx_start[j]] > szn_length)[0][0] - 1
-                idx_end += [i_end]
-        idx_start = idx_start[:len(idx_end)]
-        # Now split off each season into a separate file 
-        # TODO
+        year = (t_abs/self.q["year_length"]).astype(int)
+        t_cal = t_abs - year*self.q["year_length"]
+        # Does the first season start in the first year, or the second year? 
+        if t_cal[0] <= szn_start:
+            year_start = year[0]
+        else:
+            year_start = year[0] + 1
+        t_abs_start = year_start*self.q["year_length"] + szn_start
+        t_sim_start = t_abs_start - t_abs[0]
+        t_sim_end = t_sim_start + szn_length
+        print(f"t_sim_start = {t_sim_start}, t_sim_end = {t_sim_end}")
+        i_start = np.where(traj.t_sim[:] > t_sim_start)[0][0]
+        print(f"t_sim[i_start] = {traj.t_sim[i_start]}")
+        while t_sim_end < traj.t_sim[-1]:
+            traj_szn = traj.sel(t_sim=slice(t_sim_start,t_sim_end))
+            t0_str = self.date_format(t_sim_start + t_abs[0])
+            t1_str = self.date_format(t_sim_end + t_abs[0])
+            szn_filename = join(savefolder,f"ra{t0_str}_to_{t1_str}.nc")
+            traj_szn.to_netcdf(szn_filename)
+            # Advance t_start and t_end
+            t_sim_start += self.q["year_length"]
+            t_sim_end += self.q["year_length"]
         return
     def plot_integration(self,traj_filename,savefolder):
         """

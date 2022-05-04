@@ -30,12 +30,22 @@ class SeasonalCrommelinModelFeatures(TPTFeatures):
         Returns 
         ------
         featspec: a dict with information on evaluating features downstream. 
+
+        Side effects
+        ------------
+        write featspec to self.featspec_filename
         """
         # For EOFs, we'll want to stack all the geopotential heights into a big xarray, and then pass that to get_seasonal_stats. 
+        # For Crommelin, simply find the mean and variance for each feature
         return
-    def evaluate_features_database(self,raw_file):
-        #TODO
+    def evaluate_features_database(self,raw_file_list,save_file,featspec=None):
         """
+        Parameters
+        ----------
+        raw_file_list: list of str
+            Filenames, with .nc extensions, for the raw data to read.
+        save_file: str
+            Filename, with .nc extension, to write the features. 
         """
         return
     def abtest(self,Y,featspec,tpt_bndy):
