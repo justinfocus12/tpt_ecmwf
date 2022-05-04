@@ -232,16 +232,18 @@ class SeasonalCrommelinModel:
         print(f"t_sim_start = {t_sim_start}, t_sim_end = {t_sim_end}")
         i_start = np.where(traj.t_sim[:] > t_sim_start)[0][0]
         print(f"t_sim[i_start] = {traj.t_sim[i_start]}")
+        szn_filename_list = []
         while t_sim_end < traj.t_sim[-1]:
             traj_szn = traj.sel(t_sim=slice(t_sim_start,t_sim_end))
             t0_str = self.date_format(t_sim_start + t_abs[0])
             t1_str = self.date_format(t_sim_end + t_abs[0])
             szn_filename = join(savefolder,f"ra{t0_str}_to_{t1_str}.nc")
+            szn_filename_list += [szn_filename]
             traj_szn.to_netcdf(szn_filename)
             # Advance t_start and t_end
             t_sim_start += self.q["year_length"]
             t_sim_end += self.q["year_length"]
-        return
+        return szn_filename_list
     def plot_integration(self,traj_filename,savefolder):
         """
         Plot the output of integrate_and_save above
