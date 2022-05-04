@@ -235,11 +235,17 @@ class SeasonalCrommelinModel:
         szn_filename_list = []
         while t_sim_end < traj.t_sim[-1]:
             traj_szn = traj.sel(t_sim=slice(t_sim_start,t_sim_end))
+            print(f"traj_szn = \n{traj_szn}")
             t0_str = self.date_format(t_sim_start + t_abs[0])
             t1_str = self.date_format(t_sim_end + t_abs[0])
             szn_filename = join(savefolder,f"ra{t0_str}_to_{t1_str}.nc")
             szn_filename_list += [szn_filename]
             traj_szn.to_netcdf(szn_filename)
+            # Try to reload it
+            print(f"szn_filename = {szn_filename}")
+            traj_szn_reload = xr.open_dataset(szn_filename)
+            print(f"traj_szn_reload = \n{traj_szn_reload}")
+            #sys.exit()
             # Advance t_start and t_end
             t_sim_start += self.q["year_length"]
             t_sim_end += self.q["year_length"]

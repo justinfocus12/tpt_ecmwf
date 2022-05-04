@@ -54,6 +54,9 @@ class SeasonalCrommelinModelFeatures:
             Filename, with .nc extension, to write the features. 
         """
         # Concatenate all the DataArrays together
+        print(f"file = {raw_filename_list[0]}")
+        traj = xr.open_dataset(raw_filename_list[0])
+        print(f"traj = \n{traj}")
         X = xr.open_dataset(raw_filename_list[0])['X']
         # Which dimensions to concatenate along?
         for f in raw_filename_list[1:]:

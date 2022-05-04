@@ -40,7 +40,8 @@ plot_integration_flag =      0
 generate_hc_flag =           0
 split_reanalysis_flag =      0
 calculate_climatology_flag = 0
-featurize_hc_flag =          1
+featurize_hc_flag =          0
+featurize_ra_flag =          1
 
 # ----------- Set some physical parameters -----
 dt_samp = 0.5
@@ -92,17 +93,23 @@ if calculate_climatology_flag:
 
 # --------------------------------------------------------
 
-# ------ Evaluate TPT features on reanalysis --------
 featspec_filename = join(featspec_dir,"featspec")
 feat_crom = feature_crommelin.SeasonalCrommelinModelFeatures(featspec_filename,szn_start,szn_length,Nt_szn,szn_avg_window,dt_szn,delaytime=0)
+# ------- Evaluate TPT features on reanalysis  --------
+if featurize_ra_flag:
+    rafiles = os.listdir(ra_dir_seasonal)
+    raw_filename_list = [join(ra_dir_seasonal,f) for f in rafiles]
+    save_filename = join(results_dir_ra,"X")
+    feat_crom.evaluate_features_database(raw_filename_list,save_filename)
+
+# ------ Evaluate TPT features on hindcasts --------
 if featurize_hc_flag:
     hcfiles = os.listdir(hc_dir)
     raw_filename_list = [join(hc_dir,f) for f in hcfiles]
-    save_filename = join(results_dir_ra,"X")
+    save_filename = join(results_dir_hc,"X")
     feat_crom.evaluate_features_database(raw_filename_list,save_filename)
 # ----------------------------------------------
 
-# ------- Evaluate TPT features on hindcasts --------
 
 # ----------------------------------------------
 
