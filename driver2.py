@@ -247,7 +247,7 @@ for src in sources:
 task_list = dict({
     "featurization": dict({
         "create_features_flag":               0,
-        "display_features_flag":              0,
+        "display_features_flag":              1,
         }),
     "ei": dict({
         "tpt_featurize_flag":                 0,
@@ -270,7 +270,7 @@ task_list = dict({
         "plot_tpt_results_flag":              0,
         }),
     "comparison": dict({
-        "plot_rate_flag":                     1,
+        "plot_rate_flag":                     0,
         "illustrate_dataset_flag":            0,
         }),
     })
@@ -300,7 +300,8 @@ if task_list["featurization"]["display_features_flag"]:
     print("Showing EOFs")
     winstrat.show_multiple_eofs(feat_display_dir)
     # Show the basis functions evaluated on various samples
-    for display_idx in np.arange(1983,1985)-fall_years["ei"][0]:
+    disp_year_list = np.array([1983,1984,2005,2008,2009])
+    for display_idx in disp_year_list-fall_years["ei"][0]:
         winstrat.plot_vortex_evolution(file_lists["ei"][display_idx],feat_display_dir,"fy{}".format(fall_years["ei"][display_idx]))
 
 # ----------------- Determine list of SSW definitions to consider --------------

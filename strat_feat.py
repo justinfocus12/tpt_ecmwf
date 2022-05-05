@@ -1205,7 +1205,7 @@ class WinterStratosphereFeatures:
         for k in keys_ra:
             years[k] = np.load(fall_year_filename_ra_dict[k]).astype(int)
             common_years = np.intersect1d(common_years,years[k])
-        for i_yr,yr in enumerate(common_years):
+        for i_yr,yr in enumerate(all_years):
             print(f"yr = {yr}")
             fig,ax = plt.subplots()
             handles = []
@@ -1221,7 +1221,11 @@ class WinterStratosphereFeatures:
                     handles += [h]
             ax.legend(handles=handles)
             ax.set_title(f"{int(yr)}-{int(yr)+1}")
-            ax.set_xlabel("Time since October 1 [days]")
+            # Format the axis labels by naming months
+            ticks = np.cumsum([0,31,30,31,31,28,31]) 
+            ax.set_xticks(ticks)
+            ax.set_xlabel("")
+            ax.set_xticklabels(['Oct. 1', 'Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1', 'Apr. 1'])
             ax.set_ylabel(funlib_X["uref"]["label"])
             fig.savefig(join(savedir,f"uref_{int(yr)}-{int(yr)+1}"))
             plt.close(fig)
@@ -1234,7 +1238,8 @@ class WinterStratosphereFeatures:
             tpt_feat_filename_ra,tpt_feat_filename_hc,
             ens_start_filename_ra,ens_start_filename_hc,
             fall_year_filename_ra,fall_year_filename_hc,
-            feat_def,feat_display_dir):
+            feat_def,feat_display_dir,
+            extra_years=None):
         # Plot zonal wind over time with both reanalysis and hindcast datasets. Use multiple thresholds to demonstrate the difference between SSWs of different severity.
         tpt_feat_ra = pickle.load(open(tpt_feat_filename_ra,"rb"))
         Yra = tpt_feat_ra["Y"]
