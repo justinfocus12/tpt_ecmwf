@@ -10,7 +10,7 @@ import time as timelib
 import matplotlib
 matplotlib.use('AGG')
 import matplotlib.colors as colors
-matplotlib.rcParams['font.size'] = 12
+matplotlib.rcParams['font.size'] = 18
 matplotlib.rcParams['font.family'] = 'serif'
 matplotlib.rcParams['savefig.bbox'] = 'tight'
 matplotlib.rcParams['savefig.pad_inches'] = 0.2
@@ -1273,8 +1273,9 @@ class WinterStratosphereFeatures:
             ens_start_filename_ra,ens_start_filename_hc,
             fall_year_filename_ra,fall_year_filename_hc,
             feat_def,feat_display_dir,
-            extra_years=None):
-        # Plot zonal wind over time with both reanalysis and hindcast datasets. Use multiple thresholds to demonstrate the difference between SSWs of different severity.
+            years2plot):
+            #extra_years=None):
+        # Plot zonal wind and polar cap temperature over time with both reanalysis and hindcast datasets. Use multiple thresholds to demonstrate the difference between SSWs of different severity.
         tpt_feat_ra = pickle.load(open(tpt_feat_filename_ra,"rb"))
         Yra = tpt_feat_ra["Y"]
         idx_resamp_ra = tpt_feat_ra["idx_resamp"]
@@ -1311,80 +1312,89 @@ class WinterStratosphereFeatures:
         funlib_X = self.observable_function_library_X()
         time_d_ra = funlib_X["time_d"]["fun"](Xra.reshape((Nxra*Ntra,xdim))).reshape((Nxra,Ntra))
         uref_ra = funlib_X["uref"]["fun"](Xra.reshape((Nxra*Ntra,xdim))).reshape((Nxra,Ntra))
+        tcap_ra = funlib_X["captemp_lev0"]["fun"](Xra.reshape((Nxra*Ntra,xdim))).reshape((Nxra,Ntra))
         time_d_hc = funlib_X["time_d"]["fun"](Xhc.reshape((Nxhc*Nthc,xdim))).reshape((Nxhc,Nthc))
         uref_hc = funlib_X["uref"]["fun"](Xhc.reshape((Nxhc*Nthc,xdim))).reshape((Nxhc,Nthc))
-        # Before randomly sampling a reanalysis year, make sure there are corresponding hindcasts 
-        print(f"fy_ra = {fy_ra}\n fy_hc = {fy_hc}")
-        common_years_hc_ra = np.intersect1d(fy_ra,fy_hc)
-        print(f"common_years_hc_ra = {common_years_hc_ra}")
+        tcap_hc = funlib_X["captemp_lev0"]["fun"](Xhc.reshape((Nxhc*Nthc,xdim))).reshape((Nxhc,Nthc))
+        print(f"Xra.shape = {Xra.shape}; Xhc.shape = {Xhc.shape}")
+        print(f"tcap_hc: min={tcap_hc.min()}, max={tcap_hc.max()}")
+        print(f"tcap_ra: min={tcap_ra.min()}, max={tcap_ra.max()}")
         # Quantile ranges 
         quantile_ranges = [0.4, 0.8, 1.0]
-        lower = np.zeros((len(quantile_ranges),Ntra))
-        upper = np.zeros((len(quantile_ranges),Ntra))
+        lower_uref = np.zeros((len(quantile_ranges),Ntra))
+        upper_uref = np.zeros((len(quantile_ranges),Ntra))
+        lower_tcap = np.zeros((len(quantile_ranges),Ntra))
+        upper_tcap = np.zeros((len(quantile_ranges),Ntra))
         for ti in range(Ntra):
             #idx = np.where(np.abs(time_d_ra - time_d_ra[0,ti]) < 1.5)
             idx = np.where(time_d_ra == time_d_ra[0,ti])
             for qi in range(len(quantile_ranges)):
-                lower[qi,ti] = np.quantile(uref_ra[idx[0],idx[1]], 0.5-0.5*quantile_ranges[qi])
-                upper[qi,ti] = np.quantile(uref_ra[idx[0],idx[1]], 0.5+0.5*quantile_ranges[qi])
-        prng = np.random.RandomState(3)
-        for i_uth,uthresh_b in enumerate(uthresh_b_list):
-            tpt_bndy["uthresh_b"] = uthresh_b
-            src_tag,dest_tag,time2dest = self.compute_src_dest_tags(Yra,feat_def,tpt_bndy)
-            fig,ax = plt.subplots()
+                lower_uref[qi,ti] = np.quantile(uref_ra[idx[0],idx[1]], 0.5-0.5*quantile_ranges[qi])
+                upper_uref[qi,ti] = np.quantile(uref_ra[idx[0],idx[1]], 0.5+0.5*quantile_ranges[qi])
+                lower_tcap[qi,ti] = np.quantile(tcap_ra[idx[0],idx[1]], 0.5-0.5*quantile_ranges[qi])
+                upper_tcap[qi,ti] = np.quantile(tcap_ra[idx[0],idx[1]], 0.5+0.5*quantile_ranges[qi])
+        for fy in years2plot:
+            i_y = np.where(fy_ra == fy)[0][0]
+            fig,ax = plt.subplots(ncols=2,nrows=1,figsize=(15,6)) # Top for uref, bottom for tcap
+            #ax[0].set_title(f"{label_ra} reanalysis data")
+            ax[0].set_ylim([np.min(uref_ra),np.max(uref_ra)])
+            ax[1].set_ylim([np.min(tcap_ra),np.max(tcap_ra)])
+            for axi in ax:
+                axi.set_xlim([np.min(time_d_ra),np.max(time_d_ra)])
+                axi.set_xticks(np.cumsum([0,31,30,31,31,28,31]))
+                axi.set_xticklabels(['Oct. 1','Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1','Apr. 1'], fontdict=smallfont)
+            # ---------- Plot the variables over a single winter ---------
+            handles = [[], []]
+            h_uref, = ax[0].plot(time_d_ra[i_y],uref_ra[i_y],color='black',label=r"Zonal wind, %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1),zorder=2,linewidth=2)
+            h_tcap, = ax[1].plot(time_d_ra[i_y],tcap_ra[i_y],color='black',label=r"Polar cap temp, %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1),zorder=2,linewidth=2)
+            handles[0] += [h_uref]
+            handles[1] += [h_tcap]
+            ax[0].set_ylabel("[m/s]",fontdict=font)
+            ax[1].set_ylabel("[K]",fontdict=font)
+            for i in range(2):
+                leg = ax[i].legend(handles=handles[i],loc='upper left',prop={'size': 18})
+                for legobj in leg.legendHandles:
+                    legobj.set_linewidth(2.5)
+            fig_save_prefix = f"UandT_{fy}-{fy+1}"
+            fig.savefig(join(feat_display_dir,f"{fig_save_prefix}_build0"))
             # ---------- Plot the climatology in the background ----------
             # TODO: line these up by timing. 
             for qi in range(len(quantile_ranges))[::-1]:
-                ax.fill_between(time_d_ra[0],lower[qi],upper[qi],color=plt.cm.binary(0.2 + 0.6*(1-quantile_ranges[qi])),zorder=-1)
+                ax[0].fill_between(time_d_ra[0],lower_uref[qi],upper_uref[qi],color=plt.cm.binary(0.2 + 0.6*(1-quantile_ranges[qi])),zorder=-1)
+                ax[1].fill_between(time_d_ra[0],lower_tcap[qi],upper_tcap[qi],color=plt.cm.binary(0.2 + 0.6*(1-quantile_ranges[qi])),zorder=-1)
+            fig.savefig(join(feat_display_dir,f"{fig_save_prefix}_build1"))
             # ------------------------------------------------------------
-            handles = []
-            ax.plot([np.min(time_d_ra),tthresh[1]/24.0], uthresh_b*np.ones(2), color='red', linewidth=2.5)
-            ax.axvline(tthresh[1]/24.0, color='dodgerblue', linewidth=2.5)
-            #ax.axhspan(np.min(uref_ra),uthresh_b,color='red',zorder=-3)
-            #ax.axvspan(np.min(time_d_ra),tthresh[0]/24.0,color='lightskyblue',zorder=-2)
-            #ax.axvspan(tthresh[1]/24.0,np.max(time_d_ra),color='lightskyblue',zorder=-2)
-            print(f"For uthresh = {uthresh_b}, rare event idx = {rare_event_idx[i_uth]}, corresponding to years {fy_ra[rare_event_idx[i_uth]]}")
-            admissible_idx = np.intersect1d(rare_event_idx[i_uth], np.where(np.in1d(fy_ra, fy_hc))[0])
-            if len(admissible_idx) == 0:
-                print("WARNING: no common RA and HC years")
-            else:
-                #y_ss = prng.choice(rare_event_idx[i_uth],size=1,replace=False)
-                y_ss = prng.choice(admissible_idx,size=1,replace=False)
-                print(f"y_ss.shape = {y_ss.shape}")
-                for i_y in y_ss: #rare_event_idx[i_uth]:
-                    rxn_idx = np.where((src_tag[i_y]==0)*(dest_tag[i_y]==1))[0]
-                    i0,i1 = rxn_idx[0],rxn_idx[-1]+1
-                    i0 += self.ndelay-1
-                    i1 += self.ndelay-1
-                    h, = ax.plot(time_d_ra[i_y,i0:i1+1],uref_ra[i_y,i0:i1+1],color='black',label=r"%s %s-%s"%(label_ra,fy_ra[i_y],fy_ra[i_y]+1),zorder=2,linewidth=2)
-                    handles += [h]
-                    ax.plot(time_d_ra[i_y,:i0+1],uref_ra[i_y,:i0+1],color='black',linewidth=1.0,zorder=2,linestyle='--')
-                    ax.plot(time_d_ra[i_y,i1:],uref_ra[i_y,i1:],color='black',linewidth=1.0,zorder=2,linestyle='--')
-                    # ----------- Now identify three hindcast ensembles corresponding to this year ---------------
-                    print(f"fy_ra[i_y] = {fy_ra[i_y]}")
-                    idx_hc = np.where(fy_hc == fy_ra[i_y])[0]
-                    print(f"idx_hc.shape = {idx_hc.shape}")
-                    days_idx_hc = time_d_hc[enst_hc[idx_hc],0]
-                    idx_hc_ss = idx_hc[np.array([np.argmin(np.abs(days_idx_hc - d)) for d in [30,110]])]
-                    #idx_hc_ss = idx_hc[np.linspace(0,len(idx_hc)-1,5).astype(int)[1:-1]]
-                    #idx_hc_ss = prng.choice(idx_hc, size=3, replace=False)
-                    colorlist = ['darkviolet']*3
-                    i_col = 0
-                    for i_ens in idx_hc_ss:
-                        for i_mem in range(Nmem_hc):
-                            h, = ax.plot(time_d_hc[enst_hc[i_ens]+i_mem],uref_hc[enst_hc[i_ens]+i_mem],color=colorlist[i_col],zorder=1,linewidth=0.75,label=label_hc)
-                        i_col += 1
-                    handles += [h]
-                ax.set_xlabel(funlib_X["time_d"]["label"])
-                ax.set_ylabel(funlib_X["uref"]["label"])
-                leg = ax.legend(handles=handles,loc='upper left')
-                for legobj in leg.legendHandles:
-                    legobj.set_linewidth(2.5)
-                ax.set_ylim([np.min(uref_ra),np.max(uref_ra)])
-                ax.set_xlim([tthresh[0]/24.0,np.max(time_d_ra)])
-                ax.set_xticks(np.cumsum([31,30,31,31,28,31]))
-                ax.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1','Apr. 1'])
-                fig.savefig(join(feat_display_dir,"illustration_uth%i"%(uthresh_b)))
+            # Now add the lines defining the SSW event
+            for axi in ax: 
+                axi.axvline(tthresh[0]/24.0, color='dodgerblue', linewidth=2.5)
+                axi.axvline(tthresh[1]/24.0, color='dodgerblue', linewidth=2.5)
+            for i_uth,uthresh_b in enumerate(uthresh_b_list):
+                ax[0].plot([tthresh[0]/24.0,tthresh[1]/24.0], uthresh_b*np.ones(2), color='red', linewidth=2.5)
+            fig.savefig(join(feat_display_dir,f"{fig_save_prefix}_build2"))
+            # Now add hindcast data 
+            idx_hc = np.where(fy_hc == fy)[0]
+            print(f"idx_hc.shape = {idx_hc.shape} for year {fy}")
+            if len(idx_hc) > 0:
+                days_idx_hc = time_d_hc[enst_hc[idx_hc],0]
+                idx_hc_ss = idx_hc[np.array([np.argmin(np.abs(days_idx_hc - d)) for d in [30,110]])]
+                #idx_hc_ss = idx_hc[np.linspace(0,len(idx_hc)-1,5).astype(int)[1:-1]]
+                #idx_hc_ss = prng.choice(idx_hc, size=3, replace=False)
+                color = 'darkviolet'
+                for i_ens in idx_hc_ss:
+                    for i_mem in range(Nmem_hc):
+                        h_uref, = ax[0].plot(time_d_hc[enst_hc[i_ens]+i_mem],uref_hc[enst_hc[i_ens]+i_mem],color=color,zorder=1,linewidth=0.75,label=label_hc)
+                        h_tcap, = ax[1].plot(time_d_hc[enst_hc[i_ens]+i_mem],tcap_hc[enst_hc[i_ens]+i_mem],color=color,zorder=1,linewidth=0.75,label=label_hc)
+                handles[0] += [h_uref]
+                handles[1] += [h_tcap]
+                for i in range(2):
+                    leg = ax[i].legend(handles=handles[i],loc='upper left',prop={'size': 18})
+                    for legobj in leg.legendHandles:
+                        legobj.set_linewidth(2.5)
+                for axi in ax: 
+                    axi.set_xlim([tthresh[0]/24.0,np.max(time_d_ra)])
+                    axi.set_xticks(np.cumsum([31,30,31,31,28,31]))
+                    axi.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1','Apr. 1'])
+                fig.savefig(join(feat_display_dir,f"{fig_save_prefix}_build3"))
                 plt.close(fig)
                 print(f"Saved an illustration in directory {feat_display_dir}")
         return

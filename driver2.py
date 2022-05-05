@@ -61,6 +61,7 @@ num_full_kmeans_seeds_dga = 5
 num_full_kmeans_seeds_ra = 1
 subsets = dict({
     "ei": dict({
+        "generic_label": "ERA-I",
         "overlaps": dict({
             "self": dict({"full": fall_years["ei"],
                 "color": "red",
@@ -76,6 +77,7 @@ subsets = dict({
         "rank": 0,
         }),
     "e2": dict({
+        "generic_label": "ERA-20C",
         "overlaps": dict({
             "self": dict({"full": fall_years["e2"], 
                 "color": "dodgerblue", 
@@ -247,7 +249,7 @@ for src in sources:
 task_list = dict({
     "featurization": dict({
         "create_features_flag":               0,
-        "display_features_flag":              1,
+        "display_features_flag":              0,
         }),
     "ei": dict({
         "tpt_featurize_flag":                 0,
@@ -271,7 +273,8 @@ task_list = dict({
         }),
     "comparison": dict({
         "plot_rate_flag":                     0,
-        "illustrate_dataset_flag":            0,
+        "illustrate_dataset_flag":            1,
+        "plot_uref_every_year_flag":          0,
         }),
     })
 
@@ -584,32 +587,43 @@ if task_list["comparison"]["plot_rate_flag"]:
 
 
 if task_list["comparison"]["illustrate_dataset_flag"]:
-    feat_filename_ra = join(expdirs["e5"],"X.npy")
     feat_filename_hc = join(expdirs["s2s"],"X.npy")
-    ens_start_filename_ra = join(expdirs["e5"],"ens_start_idx.npy")
     ens_start_filename_hc = join(expdirs["s2s"],"ens_start_idx.npy")
-    fall_year_filename_ra = join(expdirs["e5"],"fall_year_list.npy")
     fall_year_filename_hc = join(expdirs["s2s"],"fall_year_list.npy")
-    tpt_feat_filename_ra = join(subsets["e5"]["overlaps"]["self"]["full_dirs"][0],"Y")
     tpt_feat_filename_hc = join(subsets["s2s"]["overlaps"]["self"]["full_dirs"][0],"Y")
-    label_ra = subsets["e5"]["generic_label"]
     label_hc = subsets["s2s"]["generic_label"]
+
+    feat_filename_ei = join(expdirs["ei"],"X.npy")
+    ens_start_filename_ei = join(expdirs["ei"],"ens_start_idx.npy")
+    fall_year_filename_ei = join(expdirs["ei"],"fall_year_list.npy")
+    tpt_feat_filename_ei = join(subsets["ei"]["overlaps"]["self"]["full_dirs"][0],"Y")
+    label_ei = subsets["ei"]["generic_label"]
+
+    feat_filename_e5 = join(expdirs["e5"],"X.npy")
+    ens_start_filename_e5 = join(expdirs["e5"],"ens_start_idx.npy")
+    fall_year_filename_e5 = join(expdirs["e5"],"fall_year_list.npy")
+    tpt_feat_filename_e5 = join(subsets["e5"]["overlaps"]["self"]["full_dirs"][0],"Y")
+    label_e5 = subsets["e5"]["generic_label"]
+
     tthresh = np.array([tthresh0,tthresh1])*24.0
+
     winstrat.illustrate_dataset(
-            uthresh_a,uthresh_list[[0,2,3]],tthresh,sswbuffer,
-            feat_filename_ra,feat_filename_hc,
-            label_ra,label_hc,
-            tpt_feat_filename_ra,tpt_feat_filename_hc,
-            ens_start_filename_ra,ens_start_filename_hc,
-            fall_year_filename_ra,fall_year_filename_hc,
-            feat_def,feat_display_dir
+            uthresh_a,uthresh_list[0:1],tthresh,sswbuffer,
+            feat_filename_ei,feat_filename_hc,
+            label_ei,label_hc,
+            tpt_feat_filename_ei,tpt_feat_filename_hc,
+            ens_start_filename_ei,ens_start_filename_hc,
+            fall_year_filename_ei,fall_year_filename_hc,
+            feat_def,feat_display_dir,
+            years2plot=[1984,2008,2009]
             )
-    fall_year_filename_ra_dict = dict({k: join(expdirs[k],"fall_year_list.npy") for k in ["e2","e5","ei"]})
-    feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in ["e2","e5","ei"]})
-    colors = {src: subsets[src]["overlaps"]["self"]["color"] for src in ["e2","e5","ei"]}
-    labels = {src: subsets[src]["overlaps"]["self"]["label"] for src in ["e2","e5","ei"]}
-    winstrat.plot_zonal_wind_every_year(
-            feat_filename_ra_dict,fall_year_filename_ra_dict,
-            feat_def,feat_display_dir,colors,labels,
-            uthresh_a,uthresh_list,tthresh,
-            )
+    if task_list["comparison"]["plot_uref_every_year_flag"]:
+        fall_year_filename_ra_dict = dict({k: join(expdirs[k],"fall_year_list.npy") for k in ["e2","e5","ei"]})
+        feat_filename_ra_dict = dict({key: join(expdirs[key],"X.npy") for key in ["e2","e5","ei"]})
+        colors = {src: subsets[src]["overlaps"]["self"]["color"] for src in ["e2","e5","ei"]}
+        labels = {src: subsets[src]["overlaps"]["self"]["label"] for src in ["e2","e5","ei"]}
+        winstrat.plot_zonal_wind_every_year(
+                feat_filename_ra_dict,fall_year_filename_ra_dict,
+                feat_def,feat_display_dir,colors,labels,
+                uthresh_a,uthresh_list,tthresh,
+                )
