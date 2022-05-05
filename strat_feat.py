@@ -956,7 +956,7 @@ class WinterStratosphereFeatures:
         # ------------ Unroll X -------------------
         X = X.reshape((Nmem,Nt,Nfeat))
         return X,fall_year
-    def plot_vortex_evolution(self,dsfile,savedir,save_suffix,i_mem=0):
+    def plot_vortex_evolution(self,dsfile,savedir,save_suffix,i_mem=0,restrict_to_decel=False):
         # Plot the holistic information about a single member of a single ensemble. Include some timeseries and some snapshots, perhaps along the region of maximum deceleration in zonal wind. 
         ds = nc.Dataset(dsfile,"r")
         print("self.num_wavenumbers = {}, self.Npc_per_level_max = {}".format(self.num_wavenumbers,self.Npc_per_level_max))
@@ -977,37 +977,47 @@ class WinterStratosphereFeatures:
         decel_time_range = [max(0,start-decel_window), min(len(time)-1, start+2*decel_window)]
         full_time_range = self.wtime[[0,-1]]
         # Make a list of things to plot
-        obs_key_list = ["mag1","mag2","captemp_lev0","heatflux_lev4_wn0","heatflux_lev4_wn1","heatflux_lev4_wn2","uref","pc0_lev0","pc1_lev0","pc2_lev0","pc3_lev0","pc4_lev0","pc5_lev0"]
-        for obs_key in obs_key_list:
+        obs_key_list = ["captemp_lev0","heatflux_lev4_wn0","heatflux_lev4_wn1","heatflux_lev4_wn2","uref"]
+        obs_title_list = ["Polar cap temperature","Wave-0 heat flux","Wave-1 heat flux","Wave-2 heat flux","Zonal wind"]
+        for i_obs_key,obs_key in enumerate(obs_key_list):
             fig,ax = plt.subplots()
             ydata = funlib[obs_key]["fun"](X)
-            #ydata = X[:,self.fidx_X[obs_key]]
             ylab = funlib[obs_key]["label"]
-            #ylab = self.flab_X[obs_key]
-            xdata = funlib["time_h"]["fun"](X)
-            #xdata = X[:,self.fidx_X["time_h"]]
-            xlab = "%s %i"%(funlib["time_h"]["label"], fall_year)
-            #xlab = self.flab_X["time_h"]
+            xdata = funlib["time_d"]["fun"](X)
+            xlab = "%s %i"%(funlib["time_d"]["label"], fall_year)
             if obs_key.startswith("pc0"):
                 ydata *= -1
             ax.plot(xdata,ydata,color='black')
-            ax.set_xlabel(xlab)
+            xticks = np.cumsum([31,30,31,31,28,31])
+            xticklabels = ['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1', 'Apr. 1']
+            ax.set_xticks(xticks)
+            ax.set_xticklabels(xticklabels)
+            ax.set_title("%i-%i %s"%(fall_year,fall_year+1,obs_title_list[i_obs_key]))
+            if obs_key == "uref":
+                ax.axhline(y=0.0, color='black', linestyle='--')
+            #ax.set_xlabel(xlab)
             ax.set_ylabel(ylab)
-            ax.axvspan(time[decel_time_range[0]],time[decel_time_range[1]],color='orange',zorder=-1)
+            #ax.axvspan(time[decel_time_range[0]],time[decel_time_range[1]],color='orange',zorder=-1)
             fig.savefig(join(savedir,"timeseries_%s_%s"%(save_suffix,obs_key)))
             plt.close(fig)
         # Plot polar cap evolution
-        num_snapshots = 30
+        # Also plot zonal wind profiles each day
         i_lev_ref,i_lat_ref = self.get_ilev_ilat(ds)
-        tidx = np.round(np.linspace(decel_time_range[0],decel_time_range[1],min(num_snapshots,decel_time_range[1]-decel_time_range[0]+2))).astype(int)
+        if restrict_to_decel:
+            num_snapshots = 30
+            tidx = np.round(np.linspace(decel_time_range[0],decel_time_range[1],min(num_snapshots,decel_time_range[1]-decel_time_range[0]+2))).astype(int)
+        else:
+            tidx = np.arange(len(time))
         gh,u,_,plev,lat,lon,fall_year,_ = self.get_u_gh(ds)
+        print(f"plev = {plev}")
+        pseudoheight = -7.0 * np.log(plev/plev.max())
         gh = gh[i_mem]
         u = u[i_mem]
         print("gh.shape = {}".format(gh.shape))
         _,v = self.compute_geostrophic_wind(gh,lat,lon)
         qgpv = self.compute_qgpv(gh,lat,lon)
         print("u.shape = {}".format(u.shape))
-        u = u[tidx,i_lev_ref,:,:]
+        uref = u[tidx,i_lev_ref,:,:]
         v = v[tidx,i_lev_ref,:,:]
         gh = gh[tidx,i_lev_ref,:,:]
         qgpv = qgpv[tidx,i_lev_ref,:,:]
@@ -1015,15 +1025,39 @@ class WinterStratosphereFeatures:
         i_lat_max = np.where(lat < 5)[0][0]
         gh[:,i_lat_max:,:] = np.nan
         qgpv[:,i_lat_max:,:] = np.nan
+        vmin_gh = np.nanmin(gh)
+        vmax_gh = np.nanmax(gh)
+        vmin_qgpv = np.nanmin(qgpv)
+        vmax_qgpv = np.nanmax(qgpv)
+        ubar = np.mean(u[:,:,i_lat_ref,:],axis=2)
+        vmin_u = np.nanmin(ubar)
+        vmax_u = np.nanmax(ubar)
+        print(f"qgpv limits: {vmin_qgpv}, {vmax_qgpv}")
         for k in range(len(tidx)):
             i_time = tidx[k]
-            fig,ax = self.show_ugh_onelevel_cartopy(gh[k],u[k],v[k],lat,lon,vmin=None,vmax=None)
-            ax.set_title(r"$\Phi$, $u$ at day {}, {}".format(time[tidx[k]]/24.0,fall_year))
+            if i_time % 20 == 0:
+                print(f"Starting pole plot on day {i_time} out of {len(tidx)}")
+            # Geopotential height at 10 hPa
+            fig,ax = self.show_ugh_onelevel_cartopy(gh[k],uref[k],v[k],lat,lon,vmin=vmin_gh,vmax=vmax_gh)
+            date_k = datetime.datetime(fall_year, 10, 1) + datetime.timedelta(hours=time[tidx[k]])
+            date_k_fmt = date_k.strftime("%b %-d %Y")
+            ax.set_title(r"%s Geop. Hgt. at 10 hPa [m$^2$s$^{-1}$]"%(date_k_fmt))
             fig.savefig(join(savedir,"vortex_gh_{}_day{}_yr{}".format(save_suffix,int(time[tidx[k]]/24.0),fall_year)))
             plt.close(fig)
-            fig,ax = self.show_ugh_onelevel_cartopy(qgpv[k],u[k],v[k],lat,lon,vmin=np.nanmin(qgpv),vmax=np.nanmax(qgpv))
-            ax.set_title(r"$\Phi$, $u$ at day {}, {}".format(time[tidx[k]]/24.0,fall_year))
+            # QGPV at 10 hPa
+            fig,ax = self.show_ugh_onelevel_cartopy(qgpv[k],uref[k],v[k],lat,lon,vmin=vmin_qgpv,vmax=vmax_qgpv)
+            ax.set_title(r"%s QGPV at 10 hPa [m$^2$s$^{-1}$]"%(date_k_fmt))
             fig.savefig(join(savedir,"vortex_qgpv_{}_day{}_yr{}".format(save_suffix,int(time[tidx[k]]/24.0),fall_year)))
+            plt.close(fig)
+            # Zonal wind profile
+            fig,ax = plt.subplots()
+            #ubar = np.mean(u[tidx[k],:,i_lat_ref,:], axis=1)
+            ax.plot(ubar[tidx[k]],pseudoheight,color='black')
+            ax.set_xlim([vmin_u,vmax_u])
+            ax.set_xlabel(r"$\overline{u}$ at 60$^\circ$N [m/s]")
+            ax.set_ylabel(r"Pseudo-height [km]")
+            ax.set_title("%s Zonal wind profile"%(date_k_fmt)) 
+            fig.savefig(join(savedir,"ubar_profile_{}_day{}_yr{}".format(save_suffix,int(time[tidx[k]]/24.0),fall_year)))
             plt.close(fig)
         return
     def wave_mph(self,Y,feat_def,wn,widx=None,unseason_mag=False):

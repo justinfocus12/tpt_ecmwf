@@ -34,7 +34,7 @@ datadirs = dict({
 sources = list(datadirs.keys())
 featdir = "/scratch/jf4241/ecmwf_data/features/2022-04-25"
 if not exists(featdir): mkdir(featdir)
-feat_display_dir = join(featdir,"display0")
+feat_display_dir = join(featdir,"display1")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
@@ -300,7 +300,7 @@ if task_list["featurization"]["display_features_flag"]:
     print("Showing EOFs")
     winstrat.show_multiple_eofs(feat_display_dir)
     # Show the basis functions evaluated on various samples
-    disp_year_list = np.array([1983,1984,2005,2008,2009])
+    disp_year_list = np.array([1984]) #np.array([1983,1984,2005,2008,2009])
     for display_idx in disp_year_list-fall_years["ei"][0]:
         winstrat.plot_vortex_evolution(file_lists["ei"][display_idx],feat_display_dir,"fy{}".format(fall_years["ei"][display_idx]))
 
