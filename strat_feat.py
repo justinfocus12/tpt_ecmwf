@@ -11,14 +11,14 @@ import matplotlib
 matplotlib.use('AGG')
 import matplotlib.colors as colors
 matplotlib.rcParams['font.size'] = 18
-matplotlib.rcParams['font.family'] = 'serif'
+matplotlib.rcParams['font.family'] = 'monospace'
 matplotlib.rcParams['savefig.bbox'] = 'tight'
 matplotlib.rcParams['savefig.pad_inches'] = 0.2
-smallfont = {'family': 'serif', 'size': 12}
-font = {'family': 'serif', 'size': 18}
-bigfont = {'family': 'serif', 'size': 40}
-giantfont = {'family': 'serif', 'size': 80}
-ggiantfont = {'family': 'serif', 'size': 120}
+smallfont = {'family': 'monospace', 'size': 12}
+font = {'family': 'monospace', 'size': 18}
+bigfont = {'family': 'monospace', 'size': 40}
+giantfont = {'family': 'monospace', 'size': 80}
+ggiantfont = {'family': 'monospace', 'size': 120}
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from scipy.optimize import minimize
@@ -1040,7 +1040,7 @@ class WinterStratosphereFeatures:
             # Geopotential height at 10 hPa
             fig,ax = self.show_ugh_onelevel_cartopy(gh[k],uref[k],v[k],lat,lon,vmin=vmin_gh,vmax=vmax_gh)
             date_k = datetime.datetime(fall_year, 10, 1) + datetime.timedelta(hours=time[tidx[k]])
-            date_k_fmt = date_k.strftime("%b %-d %Y")
+            date_k_fmt = date_k.strftime("%b %d %Y")
             ax.set_title(r"%s Geop. Hgt. at 10 hPa [m$^2$s$^{-1}$]"%(date_k_fmt))
             fig.savefig(join(savedir,"vortex_gh_{}_day{}_yr{}".format(save_suffix,int(time[tidx[k]]/24.0),fall_year)))
             plt.close(fig)
@@ -1337,8 +1337,8 @@ class WinterStratosphereFeatures:
             i_y = np.where(fy_ra == fy)[0][0]
             fig,ax = plt.subplots(ncols=2,nrows=1,figsize=(15,6)) # Top for uref, bottom for tcap
             #ax[0].set_title(f"{label_ra} reanalysis data")
-            ax[0].set_ylim([np.min(uref_ra),np.max(uref_ra)])
-            ax[1].set_ylim([np.min(tcap_ra),np.max(tcap_ra)])
+            ax[0].set_ylim([np.min(uref_ra)-0.1*np.ptp(uref_ra),np.max(uref_ra)+0.1*np.ptp(uref_ra)])
+            ax[1].set_ylim([np.min(tcap_ra)-0.1*np.ptp(tcap_ra),np.max(tcap_ra)+0.1*np.ptp(tcap_ra)])
             for axi in ax:
                 axi.set_xlim([np.min(time_d_ra),np.max(time_d_ra)])
                 axi.set_xticks(np.cumsum([0,31,30,31,31,28,31]))
@@ -1352,7 +1352,7 @@ class WinterStratosphereFeatures:
             ax[0].set_ylabel("[m/s]",fontdict=font)
             ax[1].set_ylabel("[K]",fontdict=font)
             for i in range(2):
-                leg = ax[i].legend(handles=handles[i],loc='upper left',prop={'size': 18})
+                leg = ax[i].legend(handles=handles[i],loc='upper left',prop={'family': 'monospace', 'size': 15})
                 for legobj in leg.legendHandles:
                     legobj.set_linewidth(2.5)
             fig_save_prefix = f"UandT_{fy}-{fy+1}"
@@ -1376,7 +1376,7 @@ class WinterStratosphereFeatures:
             print(f"idx_hc.shape = {idx_hc.shape} for year {fy}")
             if len(idx_hc) > 0:
                 days_idx_hc = time_d_hc[enst_hc[idx_hc],0]
-                idx_hc_ss = idx_hc[np.array([np.argmin(np.abs(days_idx_hc - d)) for d in [30,110]])]
+                idx_hc_ss = idx_hc[np.array([np.argmin(np.abs(days_idx_hc - d)) for d in [30,105]])]
                 #idx_hc_ss = idx_hc[np.linspace(0,len(idx_hc)-1,5).astype(int)[1:-1]]
                 #idx_hc_ss = prng.choice(idx_hc, size=3, replace=False)
                 color = 'darkviolet'
@@ -1387,13 +1387,9 @@ class WinterStratosphereFeatures:
                 handles[0] += [h_uref]
                 handles[1] += [h_tcap]
                 for i in range(2):
-                    leg = ax[i].legend(handles=handles[i],loc='upper left',prop={'size': 18})
+                    leg = ax[i].legend(handles=handles[i],loc='upper left',prop={'family': 'monospace', 'size': 18})
                     for legobj in leg.legendHandles:
                         legobj.set_linewidth(2.5)
-                for axi in ax: 
-                    axi.set_xlim([tthresh[0]/24.0,np.max(time_d_ra)])
-                    axi.set_xticks(np.cumsum([31,30,31,31,28,31]))
-                    axi.set_xticklabels(['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1','Apr. 1'])
                 fig.savefig(join(feat_display_dir,f"{fig_save_prefix}_build3"))
                 plt.close(fig)
                 print(f"Saved an illustration in directory {feat_display_dir}")

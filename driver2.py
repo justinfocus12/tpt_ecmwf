@@ -10,14 +10,14 @@ matplotlib.use('AGG')
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 matplotlib.rcParams['font.size'] = 12
-matplotlib.rcParams['font.family'] = 'serif'
+matplotlib.rcParams['font.family'] = 'monospace'
 matplotlib.rcParams['savefig.bbox'] = 'tight'
 matplotlib.rcParams['savefig.pad_inches'] = 0.2
-smallfont = {'family': 'serif', 'size': 12}
-font = {'family': 'serif', 'size': 18}
-bigfont = {'family': 'serif', 'size': 40}
-giantfont = {'family': 'serif', 'size': 80}
-ggiantfont = {'family': 'serif', 'size': 120}
+smallfont = {'family': 'monospace', 'size': 12}
+font = {'family': 'monospace', 'size': 18}
+bigfont = {'family': 'monospace', 'size': 40}
+giantfont = {'family': 'monospace', 'size': 80}
+ggiantfont = {'family': 'monospace', 'size': 120}
 import netCDF4 as nc
 import sys
 import os
@@ -34,7 +34,7 @@ datadirs = dict({
 sources = list(datadirs.keys())
 featdir = "/scratch/jf4241/ecmwf_data/features/2022-04-25"
 if not exists(featdir): mkdir(featdir)
-feat_display_dir = join(featdir,"display1")
+feat_display_dir = join(featdir,"display2")
 if not exists(feat_display_dir): mkdir(feat_display_dir)
 resultsdir = "/scratch/jf4241/ecmwf_data/results"
 if not exists(resultsdir): mkdir(resultsdir)
@@ -176,7 +176,7 @@ Npc_per_level_max = 15
 num_vortex_moments_max = 4 # Area, mean, variance, skewness, kurtosis. But it's too expensive. At least we need a linear approximation. 
 heatflux_wavenumbers_per_level_max = 3 # 0: nothing. 1: zonal mean. 2: wave 1. 3: wave 2. 
 # ----------------- Phase space definition parameters -------
-delaytime_days = 25.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
+delaytime_days = 20.0 # Both zonal wind and heat flux will be saved with this time delay. Must be shorter than tthresh0
 # ----------------- Directories for this experiment --------
 print(f"expdir = {expdir}, sources = {sources}")
 expdirs = dict({key: join(expdir,key) for key in sources})
@@ -269,11 +269,11 @@ task_list = dict({
         "build_msm_flag":                     0,
         "tpt_s2s_flag":                       0,
         "transfer_results_flag":              0,
-        "plot_tpt_results_flag":              0,
+        "plot_tpt_results_flag":              1,
         }),
     "comparison": dict({
-        "plot_rate_flag":                     0,
-        "illustrate_dataset_flag":            1,
+        "plot_rate_flag":                     1,
+        "illustrate_dataset_flag":            0,
         "plot_uref_every_year_flag":          0,
         }),
     })
@@ -303,7 +303,7 @@ if task_list["featurization"]["display_features_flag"]:
     print("Showing EOFs")
     winstrat.show_multiple_eofs(feat_display_dir)
     # Show the basis functions evaluated on various samples
-    disp_year_list = np.array([1984]) #np.array([1983,1984,2005,2008,2009])
+    disp_year_list = np.array([2008]) #np.array([1983,1984,2005,2008,2009])
     for display_idx in disp_year_list-fall_years["ei"][0]:
         winstrat.plot_vortex_evolution(file_lists["ei"][display_idx],feat_display_dir,"fy{}".format(fall_years["ei"][display_idx]))
 
@@ -451,9 +451,13 @@ boxplot_keys_hc = dict({
     "e2": ["self",],
     "s2s": ["self",],
     })
-boxplot_keys_ra = dict({
+boxplot_keys_ra_overlap = dict({
     "e2": ["ra",],
     "e5": ["ra",],
+    })
+boxplot_keys_ra_separate = dict({
+    "e2": ["self",],
+    "e5": ["self","hc"],
     })
 boxplot_keys_ei = dict({
     "e5": ["ei",],
@@ -494,7 +498,7 @@ rate_dict = dict({})
 nyears_dict = dict({})
 conf_levels = [0.5,0.95]
 if task_list["comparison"]["plot_rate_flag"]:
-    for boxplot_keys in [boxplot_keys_hc,boxplot_keys_ra,boxplot_keys_ei]:
+    for boxplot_keys in [boxplot_keys_hc,boxplot_keys_ra_overlap,boxplot_keys_ra_separate,boxplot_keys_ei]:
         for scale in ['log']: #['logit','linear','log']:
             fig,ax = plt.subplots()
             savefig_suffix = ""
@@ -514,7 +518,6 @@ if task_list["comparison"]["plot_rate_flag"]:
                             if src == "s2s":
                                 rate_dict[srcovl][0,i_uth] += summary["rate_tob"]/subsets[src]["num_full_kmeans_seeds"]
                             else:
-                                print(f"summary = {summary}")
                                 rate_dict[srcovl][0,i_uth] += summary["rate"]/subsets[src]["num_full_kmeans_seeds"]
                     # Bootstraps
                     for i_bs,dir_bs in enumerate(subsets[src]["overlaps"][ovl]["bootstrap_dirs"]):
@@ -555,12 +558,9 @@ if task_list["comparison"]["plot_rate_flag"]:
                             conf_upper = quantile_upper 
                             #conf_lower = rate_dict[srcovl][0,good_idx] - (quantile_upper - rate_dict["s2s-self"][0,good_idx])
                             #conf_upper = rate_dict[srcovl][0,good_idx] + (rate_dict["s2s-self"][0,good_idx] - quantile_lower)
-                            print(f"conf_lower = {conf_lower}")
                         else:
                             conf_lower = np.quantile(bootstraps, (1-conf_levels[i_conf])/2, axis=0)
                             conf_upper = np.quantile(bootstraps, (1+conf_levels[i_conf])/2, axis=0)
-                        if scale == 'logit':
-                            print(f"At confidence level {conf_levels[i_conf]} for {src}, interval widths = ({conf_upper-conf_lower})")
                         # Create fake data points halfway in between lower and upper
                         conf_mid = 0.5*(conf_lower + conf_upper)
                         yerr = 0.5*(conf_upper - conf_lower)
@@ -582,8 +582,10 @@ if task_list["comparison"]["plot_rate_flag"]:
                         ax.set_yscale('function',functions=(mylogit,myinvlogit))
                     else:
                         ax.set_yscale(scale)
-                    fig.savefig(join(paramdirs["s2s"],"rate_%s_%s_%s_binom%i"%(bndy_suffix,savefig_suffix,scale,binomial_flag)))
+                    fig_filename = "rate_%s_%s_%s_binom%i"%(bndy_suffix,savefig_suffix,scale,binomial_flag)
+                    fig.savefig(join(paramdirs["s2s"],fig_filename))
                     plt.close(fig)
+                    print(f"Just saved {fig_filename} in {paramdirs['s2s']}")
 
 
 if task_list["comparison"]["illustrate_dataset_flag"]:
@@ -608,7 +610,7 @@ if task_list["comparison"]["illustrate_dataset_flag"]:
     tthresh = np.array([tthresh0,tthresh1])*24.0
 
     winstrat.illustrate_dataset(
-            uthresh_a,uthresh_list[0:1],tthresh,sswbuffer,
+            uthresh_a,uthresh_list,tthresh,sswbuffer,
             feat_filename_ei,feat_filename_hc,
             label_ei,label_hc,
             tpt_feat_filename_ei,tpt_feat_filename_hc,

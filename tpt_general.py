@@ -8,15 +8,15 @@ import matplotlib
 matplotlib.use('AGG')
 import matplotlib.colors as colors
 matplotlib.rcParams['font.size'] = 12
-matplotlib.rcParams['font.family'] = 'serif'
+matplotlib.rcParams['font.family'] = 'monospace'
 matplotlib.rcParams['savefig.bbox'] = 'tight'
 matplotlib.rcParams['savefig.pad_inches'] = 0.2
 matplotlib.rcParams['savefig.dpi'] = 140
-smallfont = {'family': 'serif', 'size': 12}
-font = {'family': 'serif', 'size': 18}
-bigfont = {'family': 'serif', 'size': 40}
-giantfont = {'family': 'serif', 'size': 80}
-ggiantfont = {'family': 'serif', 'size': 120}
+smallfont = {'family': 'monospace', 'size': 12}
+font = {'family': 'monospace', 'size': 18}
+bigfont = {'family': 'monospace', 'size': 40}
+giantfont = {'family': 'monospace', 'size': 80}
+ggiantfont = {'family': 'monospace', 'size': 120}
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from scipy.optimize import minimize
@@ -897,8 +897,8 @@ class WinterStratosphereTPT:
             plt.close(fig)
         if current2d_flag:
             # ------------- Current plots --------------------
-            xticks = np.cumsum([31,30,31,31,28,31])
-            xticklabels = ['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1', 'Apr. 1']
+            xticks = np.cumsum([0,31,30,31,31,28,31])
+            xticklabels = ['Oct 1', 'Nov 1', 'Dec 1', 'Jan 1', 'Feb 1', 'Mar 1', 'Apr 1']
             keypairs = []
             #keypairs += [['uref_inc_0','uref_inc_2']]
             keypairs += [['time_d','uref']]
@@ -937,7 +937,7 @@ class WinterStratosphereTPT:
                         lab0 = funlib_X[key0]["label"]
                         lab1 = funlib_X[key1]["label"]
                     if key0 == "time_d":
-                        xlim = self.tpt_bndy['tthresh']/24.0
+                        xlim = [xticks[0],xticks[-1]] #self.tpt_bndy['tthresh']/24.0
                         print(f"xlim = {xlim}")
                     else:
                         xlim = np.array([np.nanmin(theta_x[idx_winter[0],idx_winter[1],0]),np.nanmax(theta_x[idx_winter[0],idx_winter[1],0])])
@@ -953,7 +953,9 @@ class WinterStratosphereTPT:
                     fieldname = r"Committor probability"
                     fig,ax = plt.subplots()
                     if key0 == "time_d" and key1 == "uref":
-                        ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
+                        ax.plot(self.tpt_bndy['tthresh']/24,self.tpt_bndy['uthresh_b']*np.ones(2),linestyle='--',color='purple',zorder=5)
+                        ax.axvline(self.tpt_bndy['tthresh'][0]/24.0, linewidth=2, color='dodgerblue')
+                        ax.axvline(self.tpt_bndy['tthresh'][1]/24.0, linewidth=2, color='dodgerblue')
                     helper.plot_field_2d((comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=True,logscale=False,cmap=plt.cm.coolwarm,contourflag=True,fig=fig,ax=ax)
                     ax.set_xticks(xticks)
                     ax.set_xticklabels(xticklabels)
@@ -966,7 +968,9 @@ class WinterStratosphereTPT:
                     fieldname = r"Backward committor probability"
                     fig,ax = plt.subplots()
                     if key0 == "time_d" and key1 == "uref":
-                        ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
+                        ax.plot(self.tpt_bndy['tthresh']/24,self.tpt_bndy['uthresh_b']*np.ones(2),linestyle='--',color='purple',zorder=5)
+                        ax.axvline(self.tpt_bndy['tthresh'][0]/24.0, linewidth=2, color='dodgerblue')
+                        ax.axvline(self.tpt_bndy['tthresh'][1]/24.0, linewidth=2, color='dodgerblue')
                     helper.plot_field_2d((comm_bwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=True,logscale=False,cmap=plt.cm.coolwarm,contourflag=True,fig=fig,ax=ax)
                     ax.set_xticks(xticks)
                     ax.set_xticklabels(xticklabels)
@@ -979,7 +983,10 @@ class WinterStratosphereTPT:
                     fig,ax = plt.subplots()
                     fieldname = r"Lead time [days]"
                     if key0 == "time_d" and key1 == "uref":
-                        ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
+                        #ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
+                        ax.plot(self.tpt_bndy['tthresh']/24,self.tpt_bndy['uthresh_b']*np.ones(2),linestyle='--',color='purple',zorder=5)
+                        ax.axvline(self.tpt_bndy['tthresh'][0]/24.0, linewidth=2, color='dodgerblue')
+                        ax.axvline(self.tpt_bndy['tthresh'][1]/24.0, linewidth=2, color='dodgerblue')
                     helper.plot_field_2d((-lt_mean_Y)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=True,logscale=False,cmap=plt.cm.coolwarm,contourflag=True,fig=fig,ax=ax)
                     ax.set_xticks(xticks)
                     ax.set_xticklabels(xticklabels)
@@ -992,10 +999,13 @@ class WinterStratosphereTPT:
                     fieldname = r"$A\to B$ (winters with SSW)"
                     fig,ax = plt.subplots()
                     if key0 == "time_d" and key1 == "uref":
-                        handles,seg_labels = self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
+                        handles,seg_labels = self.plot_trajectory_segments(ra,rath,fig,ax,reactive_code)
                         #ax.legend(handles=handles)
                         sample_suffix = '-'.join(seg_labels)
-                        ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
+                        #ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
+                        ax.plot(self.tpt_bndy['tthresh']/24,self.tpt_bndy['uthresh_b']*np.ones(2),linestyle='--',color='purple',zorder=5)
+                        ax.axvline(self.tpt_bndy['tthresh'][0]/24.0, linewidth=2, color='dodgerblue')
+                        ax.axvline(self.tpt_bndy['tthresh'][1]/24.0, linewidth=2, color='dodgerblue')
                     ax.set_xlabel(lab0,fontdict=font)
                     ax.set_ylabel(lab1,fontdict=font)
                     ax.set_title(fieldname,fontdict=font)
@@ -1027,7 +1037,7 @@ class WinterStratosphereTPT:
                     comm_fwd = qp_Y*(reactive_code[1] == 1) + (1-qp_Y)*(reactive_code[1] == 0)
                     fig,ax = plt.subplots()
                     if key0 == "time_d" and key1 == "uref":
-                        handles,seg_labels = self.plot_trajectory_segments(ra,rath,reactive_code,fig,ax)
+                        handles,seg_labels = self.plot_trajectory_segments(ra,rath,fig,ax,reactive_code)
                         sample_suffix = '-'.join(seg_labels)
                         #ax.legend(handles=handles)
                         ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
@@ -1054,6 +1064,43 @@ class WinterStratosphereTPT:
                     ax.set_xlim(xlim)
                     ax.set_ylim(ylim)
                     fig.savefig(join(savedir,"J_%s_%s_aa_%s_build2"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
+                    plt.close(fig)
+                    # Plot the AB -> AB density and current
+                    fieldname = r"All winters"
+                    comm_bwd = np.ones_like(qm_Y) 
+                    comm_fwd = np.ones_like(qp_Y) 
+                    fig,ax = plt.subplots()
+                    if key0 == "time_d" and key1 == "uref":
+                        handles,seg_labels = self.plot_trajectory_segments(ra,rath,fig,ax)
+                        sample_suffix = '-'.join(seg_labels)
+                        #ax.legend(handles=handles)
+                        #ax.axhline(self.tpt_bndy['uthresh_b'],linestyle='--',color='purple',zorder=5)
+                        ax.plot(self.tpt_bndy['tthresh']/24,self.tpt_bndy['uthresh_b']*np.ones(2),linestyle='--',color='purple',zorder=5)
+                        ax.axvline(self.tpt_bndy['tthresh'][0]/24.0, linewidth=2, color='dodgerblue')
+                        ax.axvline(self.tpt_bndy['tthresh'][1]/24.0, linewidth=2, color='dodgerblue')
+                    ax.set_xlabel(lab0,fontdict=font)
+                    ax.set_ylabel(lab1,fontdict=font)
+                    ax.set_title(fieldname,fontdict=font)
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xticklabels)
+                    ax.set_xlabel("")
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
+                    fig.savefig(join(savedir,"J_%s_%s_--_%s_build0"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
+                    helper.plot_field_2d((comm_bwd*comm_fwd)[idx_winter],pi_Y[idx_winter],theta_x[idx_winter],fieldname=fieldname,fun0name=lab0,fun1name=lab1,avg_flag=False,logscale=False,cmap=plt.cm.YlOrRd,contourflag=True,fig=fig,ax=ax)
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xticklabels)
+                    ax.set_xlabel("")
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
+                    fig.savefig(join(savedir,"J_%s_%s_--_%s_build1"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
+                    _,_,_,_ = self.plot_current_overlay_data(theta_x,comm_bwd,comm_fwd,pi_Y,fig,ax)
+                    ax.set_xticks(xticks)
+                    ax.set_xticklabels(xticklabels)
+                    ax.set_xlabel("")
+                    ax.set_xlim(xlim)
+                    ax.set_ylim(ylim)
+                    fig.savefig(join(savedir,"J_%s_%s_--_%s_build2"%(key0.replace("_",""),key1.replace("_",""),sample_suffix)))
                     plt.close(fig)
         if spaghetti_flag:
             # ----------- New plot: short histories of zonal wind, colored by committor. Maybe this will inform new coordinates --------------
@@ -1469,12 +1516,15 @@ class WinterStratosphereTPT:
                     Jth[i1:i2,j] += fwd_weight*np.sum(flux[k]*np.add.outer(-theta_flat[i1:i2,j], theta_flat[i2:i3,j]), axis=1)
             i1 = i2
         return Jth
-    def plot_trajectory_segments(self,ra,rath,reactive_code,fig,ax,zorder=10,numtraj=2,debug=False):
+    def plot_trajectory_segments(self,ra,rath,fig,ax,reactive_code=None,zorder=10,numtraj=2,debug=False):
         # Plot trajectory segments in 2D given by theta_x. only plot the segments with reactive_flag on
         for k in rath.keys():
             if rath[k]["theta"].shape[2] != 2:
                 raise Exception(f"ERROR: you gave me a data set of shape {theta_x.shape}, but I need dimension 2 to have size 2")
-            reactive_flag = (ra[k]["src_tag"] == reactive_code[0])*(ra[k]["dest_tag"] == reactive_code[1])*(ra[k]["ina"] == 0)*(ra[k]["inb"] == 0)
+            if reactive_code is None:
+                reactive_flag = (np.ones_like(ra[k]["src_tag"])*(ra[k]["ina"] == 0)*(ra[k]["inb"] == 0)).astype(bool)
+            else:
+                reactive_flag = (ra[k]["src_tag"] == reactive_code[0])*(ra[k]["dest_tag"] == reactive_code[1])*(ra[k]["ina"] == 0)*(ra[k]["inb"] == 0)
             any_rxn_idx = np.where(np.any(reactive_flag, axis=1))[0]
             print(f"len(any_rxn_idx) = {len(any_rxn_idx)}")
             prng = np.random.RandomState(6)
