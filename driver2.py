@@ -272,8 +272,8 @@ task_list = dict({
         "plot_tpt_results_flag":              1,
         }),
     "comparison": dict({
-        "plot_rate_flag":                     1,
-        "illustrate_dataset_flag":            0,
+        "plot_rate_flag":                     0,
+        "illustrate_dataset_flag":            1,
         "plot_uref_every_year_flag":          0,
         }),
     })

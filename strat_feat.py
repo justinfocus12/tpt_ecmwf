@@ -989,7 +989,7 @@ class WinterStratosphereFeatures:
                 ydata *= -1
             ax.plot(xdata,ydata,color='black')
             xticks = np.cumsum([31,30,31,31,28,31])
-            xticklabels = ['Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1', 'Apr. 1']
+            xticklabels = ['Nov 1', 'Dec 1', 'Jan 1', 'Feb 1', 'Mar 1', 'Apr 1']
             ax.set_xticks(xticks)
             ax.set_xticklabels(xticklabels)
             ax.set_title("%i-%i %s"%(fall_year,fall_year+1,obs_title_list[i_obs_key]))
@@ -1337,12 +1337,13 @@ class WinterStratosphereFeatures:
             i_y = np.where(fy_ra == fy)[0][0]
             fig,ax = plt.subplots(ncols=2,nrows=1,figsize=(15,6)) # Top for uref, bottom for tcap
             #ax[0].set_title(f"{label_ra} reanalysis data")
-            ax[0].set_ylim([np.min(uref_ra)-0.1*np.ptp(uref_ra),np.max(uref_ra)+0.1*np.ptp(uref_ra)])
-            ax[1].set_ylim([np.min(tcap_ra)-0.1*np.ptp(tcap_ra),np.max(tcap_ra)+0.1*np.ptp(tcap_ra)])
+            ax[0].set_ylim([np.min(uref_hc),np.max(uref_hc)])
+            ax[1].set_ylim([np.min(tcap_hc),np.max(tcap_hc)])
             for axi in ax:
-                axi.set_xlim([np.min(time_d_ra),np.max(time_d_ra)])
-                axi.set_xticks(np.cumsum([0,31,30,31,31,28,31]))
-                axi.set_xticklabels(['Oct. 1','Nov. 1', 'Dec. 1', 'Jan. 1', 'Feb. 1', 'Mar. 1','Apr. 1'], fontdict=smallfont)
+                xticks = np.cumsum([0,31,30,31,31,28,31])
+                axi.set_xlim([xticks[0],xticks[-1]])
+                axi.set_xticks(xticks)
+                axi.set_xticklabels(['Oct 1','Nov 1', 'Dec 1', 'Jan 1', 'Feb 1', 'Mar 1','Apr 1'], fontdict=smallfont)
             # ---------- Plot the variables over a single winter ---------
             handles = [[], []]
             h_uref, = ax[0].plot(time_d_ra[i_y],uref_ra[i_y],color='black',label=r"Zonal wind, %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1),zorder=2,linewidth=2)
