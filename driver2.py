@@ -269,11 +269,11 @@ task_list = dict({
         "build_msm_flag":                     0,
         "tpt_s2s_flag":                       0,
         "transfer_results_flag":              0,
-        "plot_tpt_results_flag":              1,
+        "plot_tpt_results_flag":              0,
         }),
     "comparison": dict({
-        "plot_rate_flag":                     1,
-        "illustrate_dataset_flag":            0,
+        "plot_rate_flag":                     0,
+        "illustrate_dataset_flag":            1,
         "plot_uref_every_year_flag":          0,
         }),
     })
@@ -303,7 +303,7 @@ if task_list["featurization"]["display_features_flag"]:
     print("Showing EOFs")
     winstrat.show_multiple_eofs(feat_display_dir)
     # Show the basis functions evaluated on various samples
-    disp_year_list = np.array([2008,1999]) #np.array([1983,1984,2005,2008,2009])
+    disp_year_list = np.array([2010]) #np.array([1983,1984,2005,2008,2009])
     for display_idx in disp_year_list-fall_years["ei"][0]:
         winstrat.plot_vortex_evolution(file_lists["ei"][display_idx],feat_display_dir,"fy{}".format(fall_years["ei"][display_idx]))
 
@@ -596,13 +596,13 @@ if task_list["comparison"]["illustrate_dataset_flag"]:
     ens_start_filename_hc = join(expdirs["s2s"],"ens_start_idx.npy")
     fall_year_filename_hc = join(expdirs["s2s"],"fall_year_list.npy")
     tpt_feat_filename_hc = join(subsets["s2s"]["overlaps"]["self"]["full_dirs"][0],"Y")
-    label_hc = subsets["s2s"]["generic_label"]
+    label_hc = "S2S hindcasts" #subsets["s2s"]["generic_label"]
 
     feat_filename_ei = join(expdirs["ei"],"X.npy")
     ens_start_filename_ei = join(expdirs["ei"],"ens_start_idx.npy")
     fall_year_filename_ei = join(expdirs["ei"],"fall_year_list.npy")
     tpt_feat_filename_ei = join(subsets["ei"]["overlaps"]["self"]["full_dirs"][0],"Y")
-    label_ei = subsets["ei"]["generic_label"]
+    label_ei = "ERA-5 Reanalysis" #subsets["ei"]["generic_label"]
 
     feat_filename_e5 = join(expdirs["e5"],"X.npy")
     ens_start_filename_e5 = join(expdirs["e5"],"ens_start_idx.npy")
@@ -620,7 +620,7 @@ if task_list["comparison"]["illustrate_dataset_flag"]:
             ens_start_filename_ei,ens_start_filename_hc,
             fall_year_filename_ei,fall_year_filename_hc,
             feat_def,feat_display_dir,
-            years2plot=[1984,2008,2009]
+            years2plot=[1984,2008,2009,2010]
             )
     if task_list["comparison"]["plot_uref_every_year_flag"]:
         fall_year_filename_ra_dict = dict({k: join(expdirs[k],"fall_year_list.npy") for k in ["e2","e5","ei"]})

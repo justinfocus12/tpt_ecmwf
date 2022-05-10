@@ -1346,8 +1346,10 @@ class WinterStratosphereFeatures:
                 axi.set_xticklabels(['Oct 1','Nov 1', 'Dec 1', 'Jan 1', 'Feb 1', 'Mar 1','Apr 1'], fontdict=smallfont)
             # ---------- Plot the variables over a single winter ---------
             handles = [[], []]
-            h_uref, = ax[0].plot(time_d_ra[i_y],uref_ra[i_y],color='black',label=r"Zonal wind, %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1),zorder=2,linewidth=2)
-            h_tcap, = ax[1].plot(time_d_ra[i_y],tcap_ra[i_y],color='black',label=r"Polar cap temp, %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1),zorder=2,linewidth=2)
+            h_uref, = ax[0].plot(time_d_ra[i_y],uref_ra[i_y],color='black',label=label_ra,zorder=2,linewidth=2)
+            ax[0].set_title(r"Zonal wind, %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1))
+            h_tcap, = ax[1].plot(time_d_ra[i_y],tcap_ra[i_y],color='black',label=label_ra,zorder=2,linewidth=2)
+            ax[1].set_title(r"Polar cap temp, %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1))
             handles[0] += [h_uref]
             handles[1] += [h_tcap]
             ax[0].set_ylabel("[m/s]",fontdict=font)
@@ -1371,7 +1373,9 @@ class WinterStratosphereFeatures:
                 axi.axvline(tthresh[1]/24.0, color='dodgerblue', linewidth=2.5)
             for i_uth,uthresh_b in enumerate(uthresh_b_list):
                 ax[0].plot([tthresh[0]/24.0,tthresh[1]/24.0], uthresh_b*np.ones(2), color='red', linewidth=2.5)
-            fig.savefig(join(feat_display_dir,f"{fig_save_prefix}_build2"))
+                if i_uth == 0:
+                    fig.savefig(join(feat_display_dir,f"{fig_save_prefix}_build2"))
+            fig.savefig(join(feat_display_dir,f"{fig_save_prefix}_build3"))
             # Now add hindcast data 
             idx_hc = np.where(fy_hc == fy)[0]
             print(f"idx_hc.shape = {idx_hc.shape} for year {fy}")
@@ -1388,10 +1392,10 @@ class WinterStratosphereFeatures:
                 handles[0] += [h_uref]
                 handles[1] += [h_tcap]
                 for i in range(2):
-                    leg = ax[i].legend(handles=handles[i],loc='upper left',prop={'family': 'monospace', 'size': 18})
+                    leg = ax[i].legend(handles=handles[i],loc='upper left',prop={'family': 'monospace', 'size': 15})
                     for legobj in leg.legendHandles:
                         legobj.set_linewidth(2.5)
-                fig.savefig(join(feat_display_dir,f"{fig_save_prefix}_build3"))
+                fig.savefig(join(feat_display_dir,f"{fig_save_prefix}_build4"))
                 plt.close(fig)
                 print(f"Saved an illustration in directory {feat_display_dir}")
         return
