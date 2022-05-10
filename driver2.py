@@ -272,8 +272,8 @@ task_list = dict({
         "plot_tpt_results_flag":              1,
         }),
     "comparison": dict({
-        "plot_rate_flag":                     0,
-        "illustrate_dataset_flag":            1,
+        "plot_rate_flag":                     1,
+        "illustrate_dataset_flag":            0,
         "plot_uref_every_year_flag":          0,
         }),
     })
@@ -303,7 +303,7 @@ if task_list["featurization"]["display_features_flag"]:
     print("Showing EOFs")
     winstrat.show_multiple_eofs(feat_display_dir)
     # Show the basis functions evaluated on various samples
-    disp_year_list = np.array([2008]) #np.array([1983,1984,2005,2008,2009])
+    disp_year_list = np.array([2008,1999]) #np.array([1983,1984,2005,2008,2009])
     for display_idx in disp_year_list-fall_years["ei"][0]:
         winstrat.plot_vortex_evolution(file_lists["ei"][display_idx],feat_display_dir,"fy{}".format(fall_years["ei"][display_idx]))
 
@@ -448,7 +448,7 @@ for i_subset,subset in enumerate(subsets["s2s"]["all_subsets"]):
 # Plot 1: specify which overlaps to use from each source
 boxplot_keys_hc = dict({
     "e5": ["hc","self",],
-    "e2": ["self",],
+    #"e2": ["self",],
     "s2s": ["self",],
     })
 boxplot_keys_ra_overlap = dict({
@@ -464,6 +464,8 @@ boxplot_keys_ei = dict({
     "ei": ["self",],
     })
 
+s2s_is_truth_flag = False
+
 # Two possibilities for error bars: bootstrap, or binomial confidence intervals.
 binomial_flag = True
         
@@ -471,7 +473,7 @@ ylim = {'log': [1e-3,1.0], 'logit': [1e-3,0.8], 'linear': [0.0,1.0]}
 loc = {'log': 'lower right', 'logit': 'lower right', 'linear': 'upper left'}
 bndy_suffix = "tth%i-%i_utha%i_buff%i"%(tthresh0,tthresh1,uthresh_a,sswbuffer)
 du = np.abs(uthresh_list[1] - uthresh_list[0])/8.0 # How far to offset the x axis positions for the three timeseries
-errorbar_offsets = dict({"e5-hc": -3/2*du, "e5-self": -du/2, "e2-self": du/2, "s2s-self": 3*du/2,
+errorbar_offsets = dict({"e5-hc": -1*du, "e5-self": 0*du, "e2-self": 0.22*du, "s2s-self": 1*du,
     "e5-ra": -1/2*du, "e5-ei": -1/2*du, "e2-ra": 1/2*du, "ei-self": du/2})
 quantiles = np.array([0.05,0.25,0.75,0.95])
 
@@ -496,10 +498,12 @@ def myinvlogit(z):
 # Build the rate dictionary as we go
 rate_dict = dict({})
 nyears_dict = dict({})
-conf_levels = [0.5,0.95]
+conf_levels = [] #[0.5,0.95]
+rate_plot_dir = join(paramdirs["s2s"],f"{len(conf_levels)}levels")
+if not exists(rate_plot_dir): mkdir(rate_plot_dir)
 if task_list["comparison"]["plot_rate_flag"]:
-    for boxplot_keys in [boxplot_keys_hc,boxplot_keys_ra_overlap,boxplot_keys_ra_separate,boxplot_keys_ei]:
-        for scale in ['log']: #['logit','linear','log']:
+    for boxplot_keys in [boxplot_keys_hc]: #,boxplot_keys_ra_overlap,boxplot_keys_ra_separate,boxplot_keys_ei]:
+        for scale in ['log','linear']: #['logit','linear','log']:
             fig,ax = plt.subplots()
             savefig_suffix = ""
             ax.set_xlabel("Zonal wind threshold [m/s]",fontdict=font)
@@ -535,8 +539,8 @@ if task_list["comparison"]["plot_rate_flag"]:
                     #good_idx = np.where(rate_dict[srcovl][0] > 0)[0] if (scale == 'log' or scale == 'logit') else np.arange(len(uthresh_list))
                     good_idx = np.arange(len(uthresh_list))
                     print(f"scale = {scale}, good_idx = {good_idx}")
-                    h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[srcovl],rate_dict[srcovl][0,good_idx],color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,marker="_",linestyle='-',label=subsets[src]["overlaps"][ovl]["label"],alpha=1.0,s=32, zorder=1)
-                    #handles += [h]
+                    h = ax.scatter(uthresh_list[good_idx]+errorbar_offsets[srcovl],rate_dict[srcovl][0,good_idx],color=subsets[src]["overlaps"][ovl]["color"],linewidth=2,marker="o",linestyle="-",label=subsets[src]["overlaps"][ovl]["label"],alpha=1.0,s=32, zorder=1)
+                    handles += [h]
                     xlabels = None if src == "s2s" else ['']*len(good_idx)
                     bootstraps = 2*rate_dict[srcovl][0,good_idx] - rate_dict[srcovl][1:,:][:,good_idx]
                     if scale == 'log' or scale == 'logit':
@@ -547,7 +551,7 @@ if task_list["comparison"]["plot_rate_flag"]:
                             num_events = rate_dict[srcovl][0,good_idx]*nyears_dict[srcovl]
                             if (src != "s2s") and np.max(np.abs(num_events - np.round(num_events))) > 1e-10:
                                 raise Exception(f"ERROR: num_events = {num_events}. the number of events given the empirical rate does not seem to be an integer. src = {src}")
-                            if "s2s" in boxplot_keys:
+                            if "s2s" in boxplot_keys and s2s_is_truth_flag:
                                 truth_prob = rate_dict["s2s-self"][0,good_idx]
                             else:
                                 truth_prob = rate_dict[srcovl][0,good_idx]
@@ -566,9 +570,8 @@ if task_list["comparison"]["plot_rate_flag"]:
                         yerr = 0.5*(conf_upper - conf_lower)
                         for i_uth in good_idx:
                             h, = ax.plot(np.ones(2)*(uthresh_list[i_uth]+errorbar_offsets[srcovl]), [conf_lower[i_uth],conf_upper[i_uth]], color=subsets[src]["overlaps"][ovl]["color"],linewidth=3.0/(3**i_conf),zorder=0,label=subsets[src]["overlaps"][ovl]["label"],) #, marker='x')
-                        if i_conf == 0:
-                            handles += [h]
-                        #ax.errorbar(uthresh_list[good_idx]+errorbar_offsets[srcovl],conf_mid,yerr=yerr,fmt='none',color=subsets[src]["overlaps"][ovl]["color"],linewidth=4/(2**i_conf),zorder=0,capthick=1)
+                        #if i_conf == 0:
+                        #    handles += [h]
                     savefig_suffix += f"{src}-{ovl}"
                     leg = ax.legend(handles=handles,loc=loc[scale])
                     #for legobj in leg.legendHandles:
@@ -583,9 +586,9 @@ if task_list["comparison"]["plot_rate_flag"]:
                     else:
                         ax.set_yscale(scale)
                     fig_filename = "rate_%s_%s_%s_binom%i"%(bndy_suffix,savefig_suffix,scale,binomial_flag)
-                    fig.savefig(join(paramdirs["s2s"],fig_filename))
+                    fig.savefig(join(rate_plot_dir,fig_filename))
                     plt.close(fig)
-                    print(f"Just saved {fig_filename} in {paramdirs['s2s']}")
+                    print(f"Just saved {fig_filename} in {rate_plot_dir}")
 
 
 if task_list["comparison"]["illustrate_dataset_flag"]:

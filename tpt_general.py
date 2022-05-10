@@ -807,7 +807,6 @@ class WinterStratosphereTPT:
                 "theta_tangential": funlib_X['time_d']['fun'](X.reshape((Ny*Nty,xdim))).reshape((Ny,Nty)), 
                 })
             bin_edges_list = [
-                    np.cumsum([0,31,30,31,31,28,31]) + 0.5,
                     np.cumsum([0,
                         10,10,11,
                         10,10,10,
@@ -815,7 +814,8 @@ class WinterStratosphereTPT:
                         10,10,11,
                         9,9,10,
                         10,10,11,
-                        ]) + 0.5
+                        ]) + 0.5,
+                    np.cumsum([0,31,30,31,31,28,31]) + 0.5,
                     #np.cumsum([0,
                     #    8,7,8,8,
                     #    8,7,8,7,
@@ -826,7 +826,7 @@ class WinterStratosphereTPT:
                     #    ]) + 0.5
                     ]
             # Make a vertical stack of panels, one for each reanalysis dataset
-            fig,ax = plt.subplots(nrows=1+len(ra), figsize=(6,3*(1+len(ra))),sharex=True,sharey=False)
+            fig,ax = plt.subplots(nrows=1+len(ra), figsize=(6,3*(1+len(ra))),sharex=False,sharey=False)
             ax[0].set_title(r"$U_{10}^{\mathrm{(th)}}=%i$ m/s"%(self.tpt_bndy['uthresh_b']),fontdict=font)
             # First, DGA
             info = dict({
@@ -837,7 +837,7 @@ class WinterStratosphereTPT:
                 "label": labels_dict["s2s-self"],
                 })
             hist_color_list = ['red','black']
-            for i_be,bin_edges in enumerate(bin_edges_list):
+            for i_be,bin_edges in enumerate(bin_edges_list[:1]):
                 _,_,hist = self.plot_flux_distributions_multiresolution(
                     info,infoth, # Can be either reanalysis or DGA data
                     theta_normal_label,theta_tangential_label,
@@ -860,7 +860,7 @@ class WinterStratosphereTPT:
                     })
                 hist_color_list = [ra[k]['color'],'black']
                 #if k == 'e5-self': hist_color_list[0] = 'gray'
-                for i_be,bin_edges in enumerate(bin_edges_list):
+                for i_be,bin_edges in enumerate(bin_edges_list[:1]):
                     print(f"Starting to plot histogram for {k} at level {self.tpt_bndy['uthresh_b']}. The reanalysis rate is {ra[k]['rate']}")
                     _,_,hist = self.plot_flux_distributions_multiresolution(
                         info,infoth, # Can be either reanalysis or DGA data
@@ -871,13 +871,10 @@ class WinterStratosphereTPT:
                         info_type="ra",fig=fig,ax=ax[1+i_k],label=info["label"] if i_be==0 else None)
             # Format the axis labels by naming months
             for i_ax in range(1+len(ra)):
-                ax[i_ax].set_xticks(bin_edges_list[0])
+                ax[i_ax].set_xticks(bin_edges_list[1])
                 ax[i_ax].set_xlabel("")
-                if i_ax == len(ra):
-                    ax[i_ax].set_xticklabels(['Oct 1', 'Nov 1', 'Dec 1', 'Jan 1', 'Feb 1', 'Mar 1', 'Apr 1'])
-                else:
-                    ax[i_ax].set_xticklabels(['']*7)
-                ax[i_ax].set_ylabel("SSW rel. freq.")
+                ax[i_ax].set_xticklabels(['Oct 1', 'Nov 1', 'Dec 1', 'Jan 1', 'Feb 1', 'Mar 1', 'Apr 1'])
+                ax[i_ax].set_ylabel("SSW daily freq")
             xlim = [self.tpt_bndy['tthresh'][0]/24.0-5, self.tpt_bndy['tthresh'][1]/24.0+5]
             ylim = [0, max([axi.get_ylim()[1] for axi in ax])]
             for i_ax in range(len(ax)):
