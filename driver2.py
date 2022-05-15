@@ -602,7 +602,7 @@ if task_list["comparison"]["illustrate_dataset_flag"]:
     ens_start_filename_ei = join(expdirs["ei"],"ens_start_idx.npy")
     fall_year_filename_ei = join(expdirs["ei"],"fall_year_list.npy")
     tpt_feat_filename_ei = join(subsets["ei"]["overlaps"]["self"]["full_dirs"][0],"Y")
-    label_ei = "ERA-5 Reanalysis" #subsets["ei"]["generic_label"]
+    label_ei = "ERA-I reanalysis" #subsets["ei"]["generic_label"]
 
     feat_filename_e5 = join(expdirs["e5"],"X.npy")
     ens_start_filename_e5 = join(expdirs["e5"],"ens_start_idx.npy")

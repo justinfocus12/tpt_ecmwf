@@ -1349,11 +1349,11 @@ class WinterStratosphereFeatures:
             h_uref, = ax[0].plot(time_d_ra[i_y],uref_ra[i_y],color='black',label=label_ra,zorder=2,linewidth=2)
             ax[0].set_title(r"Zonal wind, %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1))
             h_tcap, = ax[1].plot(time_d_ra[i_y],tcap_ra[i_y],color='black',label=label_ra,zorder=2,linewidth=2)
-            ax[1].set_title(r"Polar cap temp, %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1))
+            ax[1].set_title(r"Polar cap temperature, %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1))
             handles[0] += [h_uref]
             handles[1] += [h_tcap]
-            ax[0].set_ylabel("[m/s]",fontdict=font)
-            ax[1].set_ylabel("[K]",fontdict=font)
+            ax[0].set_ylabel(r"$\overline{u}$(10 hPa, 60$^\circ$N) [m/s]",fontdict=font)
+            ax[1].set_ylabel("T avg. (10 hPa, north of 60$^\circ$N) [K]",fontdict=font)
             for i in range(2):
                 leg = ax[i].legend(handles=handles[i],loc='upper left',prop={'family': 'monospace', 'size': 15})
                 for legobj in leg.legendHandles:
@@ -1369,10 +1369,10 @@ class WinterStratosphereFeatures:
             # ------------------------------------------------------------
             # Now add the lines defining the SSW event
             for axi in ax: 
-                axi.axvline(tthresh[0]/24.0, color='dodgerblue', linewidth=2.5)
-                axi.axvline(tthresh[1]/24.0, color='dodgerblue', linewidth=2.5)
+                axi.axvline(tthresh[0]/24.0, color='dodgerblue', linewidth=1.5)
+                axi.axvline(tthresh[1]/24.0, color='dodgerblue', linewidth=1.5)
             for i_uth,uthresh_b in enumerate(uthresh_b_list):
-                ax[0].plot([tthresh[0]/24.0,tthresh[1]/24.0], uthresh_b*np.ones(2), color='red', linewidth=2.5)
+                ax[0].plot([tthresh[0]/24.0,tthresh[1]/24.0], uthresh_b*np.ones(2), color='red', linewidth=1.5, zorder=1)
                 if i_uth == 0:
                     fig.savefig(join(feat_display_dir,f"{fig_save_prefix}_build2"))
             fig.savefig(join(feat_display_dir,f"{fig_save_prefix}_build3"))
