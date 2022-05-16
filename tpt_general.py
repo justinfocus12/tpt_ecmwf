@@ -837,7 +837,7 @@ class WinterStratosphereTPT:
                 "label": labels_dict["s2s-self"],
                 })
             hist_color_list = ['red','black']
-            for i_be,bin_edges in enumerate(bin_edges_list[:1]):
+            for i_be,bin_edges in enumerate(bin_edges_list):
                 _,_,hist = self.plot_flux_distributions_multiresolution(
                     info,infoth, # Can be either reanalysis or DGA data
                     theta_normal_label,theta_tangential_label,
@@ -860,7 +860,7 @@ class WinterStratosphereTPT:
                     })
                 hist_color_list = [ra[k]['color'],'black']
                 #if k == 'e5-self': hist_color_list[0] = 'gray'
-                for i_be,bin_edges in enumerate(bin_edges_list[:1]):
+                for i_be,bin_edges in enumerate(bin_edges_list):
                     print(f"Starting to plot histogram for {k} at level {self.tpt_bndy['uthresh_b']}. The reanalysis rate is {ra[k]['rate']}")
                     _,_,hist = self.plot_flux_distributions_multiresolution(
                         info,infoth, # Can be either reanalysis or DGA data
