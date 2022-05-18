@@ -269,11 +269,11 @@ task_list = dict({
         "build_msm_flag":                     0,
         "tpt_s2s_flag":                       0,
         "transfer_results_flag":              0,
-        "plot_tpt_results_flag":              1,
+        "plot_tpt_results_flag":              0,
         }),
     "comparison": dict({
-        "plot_rate_flag":                     1,
-        "illustrate_dataset_flag":            0,
+        "plot_rate_flag":                     0,
+        "illustrate_dataset_flag":            1,
         "plot_uref_every_year_flag":          0,
         }),
     })
@@ -608,17 +608,17 @@ if task_list["comparison"]["illustrate_dataset_flag"]:
     ens_start_filename_e5 = join(expdirs["e5"],"ens_start_idx.npy")
     fall_year_filename_e5 = join(expdirs["e5"],"fall_year_list.npy")
     tpt_feat_filename_e5 = join(subsets["e5"]["overlaps"]["self"]["full_dirs"][0],"Y")
-    label_e5 = subsets["e5"]["generic_label"]
+    label_e5 = "ERA-5 reanalysis" #subsets["e5"]["generic_label"]
 
     tthresh = np.array([tthresh0,tthresh1])*24.0
 
     winstrat.illustrate_dataset(
             uthresh_a,uthresh_list,tthresh,sswbuffer,
-            feat_filename_ei,feat_filename_hc,
-            label_ei,label_hc,
-            tpt_feat_filename_ei,tpt_feat_filename_hc,
-            ens_start_filename_ei,ens_start_filename_hc,
-            fall_year_filename_ei,fall_year_filename_hc,
+            feat_filename_e5,feat_filename_hc,
+            label_e5,label_hc,
+            tpt_feat_filename_e5,tpt_feat_filename_hc,
+            ens_start_filename_e5,ens_start_filename_hc,
+            fall_year_filename_e5,fall_year_filename_hc,
             feat_def,feat_display_dir,
             years2plot=[1984,2008,2009,2010]
             )
