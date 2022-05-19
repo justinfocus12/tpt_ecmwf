@@ -12,16 +12,17 @@ from abc import ABC,abstractmethod
 
 
 class SeasonalCrommelinModelFeatures:
-    def __init__(self,featspec_filename,szn_start,szn_length,Nt_szn,szn_avg_window,dt_samp,delaytime=0):
+    def __init__(self,featspec_filename,szn_start,szn_length,year_length,Nt_szn,szn_avg_window,dt_samp,delaytime=0):
         self.featspec_filename = featspec_filename 
         self.dt_samp = dt_samp # For now assume a constant temporal resolution on all data. Will relax this in the future once we have sampling-interval-independent observables. 
         self.delaytime = delaytime # The length of time-delay embedding to use as features in the model, in terms of time units (not time samples). Hopefully we can make time delay embedding features independent of the sampling rate. 
         self.ndelay = int(round(self.delaytime/self.dt_samp)) + 1
         self.szn_start = szn_start 
         self.szn_length = szn_length 
+        self.year_length = year_length
         self.Nt_szn = Nt_szn # Number of time windows within the season (for example, days). Features will be averaged over each time interval to construct the MSM. 
         self.dt_szn = self.szn_length/self.Nt_szn
-        self.t_szn_edge = self.szn_start + np.linspace(0,self.szn_length,self.Nt_szn+1)
+        self.t_szn_edge =  np.linspace(0,self.szn_length,self.Nt_szn+1) #+ self.szn_start
         self.t_szn_cent = 0.5*(self.t_szn_edge[:-1] + self.t_szn_edge[1:])
         self.szn_avg_window = szn_avg_window
         return
@@ -34,6 +35,10 @@ class SeasonalCrommelinModelFeatures:
             the .nc file with long reanalysis trajectories (one per season)
         Xhc_filename: str 
             the .nc file with short hindcast trajectories (many per season) 
+        results_dir: str
+            directory where to save the illustrations
+        szns2illustrate: list of str
+            Year numbers to plot
         Returns
         --------
         Nothing
@@ -41,21 +46,48 @@ class SeasonalCrommelinModelFeatures:
         --------
         Plot seasons with hindcasts atop background climatology
         """
-        quantile_midranges = [0.4,0.8,1.0]
-        Xra = xr.open_dataset(Xra_filename)['X']
-        Xhc = xr.open_dataset(Xhc_filename)['X']
         features2plot = ['x1','x4']
-        # The climatology is in different time windows
+        quantile_midranges = [0.4,0.8,1.0]
+        quantiles = np.sort([0.5 + 0.5*qmr*sgn for qmr in quantile_midranges for sgn in [-1,1]])
+        Xra = xr.open_dataset(Xra_filename)['X']
+        print(f"Xra = \n{Xra}")
+        Xhc = xr.open_dataset(Xhc_filename)['X']
+        print(f"Xhc = \n{Xhc}")
         Xclim = xr.DataArray(
-                dims={'t_szn_cent', 'feature'},
-                coords={'feature': features2plot, 't_szn_cent': self.t_szn_cent},
-                data=np.zeros((len(features2plot)+1, self.Nt_szn)),
+                dims=['feature', 't_szn_cent', 'quantile'],
+                coords={'feature': features2plot, 't_szn_cent': self.t_szn_cent, 'quantile': quantiles},
+                data=np.zeros((len(features2plot), self.Nt_szn, len(quantiles))),
                 )
+        t_szn = np.mod(Xra.sel(feature='t_abs'), self.year_length) - self.szn_start
+        # TODO: speed up this loop
         for i_tszn in range(self.Nt_szn):
-            selection = Xra.where((Xra['t_szn'] >= self.t_szn_edge[i_tszn])*(Xra['t_szn'] < self.t_szn_ede[i_tszn+1]))
-            for feat in Xclim.coords['feature']:
-                Xclim.isel(t_szn_cent=i_szn)[feat] = selection.sel(feature=feat).mean(dim=['member','t_szn'],skipna=True)
-        fig,ax = plt.subplots()
+            print(f"Starting i_tszn = {i_tszn} out of {self.Nt_szn}")
+            selection = Xra.where((t_szn >= self.t_szn_edge[i_tszn])*(t_szn < self.t_szn_edge[i_tszn+1])).sel(feature=features2plot)
+            for i_quant in range(len(quantiles)):
+                lhs = Xclim.isel(t_szn_cent=i_tszn,quantile=i_quant)[:]
+                rhs = selection.quantile(quantiles[i_quant],dim=['ensemble','member','t_sim'],skipna=True)
+                #print(f"lhs = \n{lhs}\nrhs = \n{rhs}")
+                Xclim.isel(t_szn_cent=i_tszn,quantile=i_quant)[:] = selection.quantile(quantiles[i_quant],dim=['ensemble','t_sim'],skipna=True).data.flatten()
+        sys.exit()
+        for szn_id in szns2illustrate:
+            # Find all years matching a specific szn_id
+            szn_id_start = (Xra.isel(t_sim=0) / self.year_length).astype(int)
+            if not (szn_id in szn_id_start):
+                raise Exception(f"You asked for a szn_id of {szn_id}, which is not in the existing szn_id_start array of {szn_id_start}")
+            for feat in features2plot:
+                # Plot climatology
+                Xclim_feat = Xclim.sel(feature=feat)
+                fig,ax = plt.subplots()
+                for i_quant in range(len(Xclim.quantile)//2):
+                    lower = Xclim_feat.isel(quantile=i_quant)
+                    upper = Xclim_feat.isel(quantile=len(Xclim_feat.quantile)-1-i_quant)
+                    ax.fill_between(Xclim_feat.t_szn_cent,lower,upper,color=plt.cm.binary(0.2 + 0.3*Xclim_feat.quantile[i_quant]), zorder=-len(Xclim_feat.quantile)+i_quant)
+                # Plot any trajectories matching the specific year 
+                Xra_szn = Xra.isel(ensemble=np.where(szn_id_start==szn_id)[0][0])
+                t_szn = np.mod(Xra_szn.sel(feature='t_abs').data.flatten(), self.year_length)
+                ax.plot(t_szn, Xra.sel(feature=feat), color='black', zorder=1)
+                fig.savefig(join(results_dir,f"clim_{feat}_{szn_id}"))
+                plt.close(fig)
         return
     def create_features_from_climatology(self,raw_file_list):
         #TODO

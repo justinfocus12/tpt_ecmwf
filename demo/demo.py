@@ -14,7 +14,7 @@ from os.path import join,exists
 # ----------- Create directory to save results ----------
 topic_dir = "/scratch/jf4241/crommelin"
 if not exists(topic_dir): mkdir(topic_dir)
-day_dir = join(topic_dir,"2022-05-18")
+day_dir = join(topic_dir,"2022-05-19")
 if not exists(day_dir): mkdir(day_dir)
 exp_dir = join(day_dir,"0")
 if not exists(exp_dir): mkdir(exp_dir)
@@ -38,10 +38,10 @@ if not exists(results_dir_hc): mkdir(results_dir_hc)
 # -------------- Specify which tasks to execute -------------
 integrate_flag =             0
 plot_integration_flag =      0
-generate_hc_flag =           1
-split_reanalysis_flag =      1
-featurize_hc_flag =          1
-featurize_ra_flag =          1
+generate_hc_flag =           0
+split_reanalysis_flag =      0
+featurize_hc_flag =          0
+featurize_ra_flag =          0
 illustrate_dataset_flag =    1
 # ------------------------------------------------------------
 
@@ -50,11 +50,12 @@ dt_samp = 0.5
 dt_szn = 0.74
 szn_start = 300.0
 szn_length = 250.0
+year_length = 400.0
 Nt_szn = int(szn_length / dt_szn)
 szn_avg_window = 5.0
 burnin_time = 500.0 
 
-fundamental_param_dict = dict({"b": 0.5, "beta": 1.25, "gamma_limits": [0.15, 0.22], "C": 0.1, "x1star": 0.95, "r": -0.801, "year_length": 400})
+fundamental_param_dict = dict({"b": 0.5, "beta": 1.25, "gamma_limits": [0.15, 0.22], "C": 0.1, "x1star": 0.95, "r": -0.801, "year_length": year_length})
 crom = model_crommelin_seasonal.SeasonalCrommelinModel(fundamental_param_dict)
 # ----------------------------------------------
 
@@ -90,12 +91,12 @@ if generate_hc_flag:
 
 
 featspec_filename = join(featspec_dir,"featspec")
-feat_crom = feature_crommelin.SeasonalCrommelinModelFeatures(featspec_filename,szn_start,szn_length,Nt_szn,szn_avg_window,dt_szn,delaytime=0)
+feat_crom = feature_crommelin.SeasonalCrommelinModelFeatures(featspec_filename,szn_start,szn_length,year_length,Nt_szn,szn_avg_window,dt_szn,delaytime=0)
 # ------- Evaluate TPT features on reanalysis  --------
 if featurize_ra_flag:
     rafiles = os.listdir(ra_dir_seasonal)
     raw_filename_list = [join(ra_dir_seasonal,f) for f in rafiles]
-    save_filename = join(results_dir_ra,"X")
+    save_filename = join(results_dir_ra,"X.nc")
     feat_crom.evaluate_features_database(raw_filename_list,save_filename)
 # ----------------------------------------------
 
@@ -103,7 +104,7 @@ if featurize_ra_flag:
 if featurize_hc_flag:
     hcfiles = os.listdir(hc_dir)
     raw_filename_list = [join(hc_dir,f) for f in hcfiles]
-    save_filename = join(results_dir_hc,"X")
+    save_filename = join(results_dir_hc,"X.nc")
     feat_crom.evaluate_features_database(raw_filename_list,save_filename)
 # ----------------------------------------------
 
