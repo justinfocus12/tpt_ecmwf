@@ -14,7 +14,7 @@ from os.path import join,exists
 # ----------- Create directory to save results ----------
 topic_dir = "/scratch/jf4241/crommelin"
 if not exists(topic_dir): mkdir(topic_dir)
-day_dir = join(topic_dir,"2022-05-04")
+day_dir = join(topic_dir,"2022-05-18")
 if not exists(day_dir): mkdir(day_dir)
 exp_dir = join(day_dir,"0")
 if not exists(exp_dir): mkdir(exp_dir)
@@ -35,13 +35,15 @@ if not exists(results_dir_ra): mkdir(results_dir_ra)
 results_dir_hc = join(results_dir,"hc")
 if not exists(results_dir_hc): mkdir(results_dir_hc)
 
+# -------------- Specify which tasks to execute -------------
 integrate_flag =             0
 plot_integration_flag =      0
-generate_hc_flag =           0
-split_reanalysis_flag =      0
-calculate_climatology_flag = 0
-featurize_hc_flag =          0
+generate_hc_flag =           1
+split_reanalysis_flag =      1
+featurize_hc_flag =          1
 featurize_ra_flag =          1
+illustrate_dataset_flag =    1
+# ------------------------------------------------------------
 
 # ----------- Set some physical parameters -----
 dt_samp = 0.5
@@ -50,6 +52,7 @@ szn_start = 300.0
 szn_length = 250.0
 Nt_szn = int(szn_length / dt_szn)
 szn_avg_window = 5.0
+burnin_time = 500.0 
 
 fundamental_param_dict = dict({"b": 0.5, "beta": 1.25, "gamma_limits": [0.15, 0.22], "C": 0.1, "x1star": 0.95, "r": -0.801, "year_length": 400})
 crom = model_crommelin_seasonal.SeasonalCrommelinModel(fundamental_param_dict)
@@ -59,11 +62,11 @@ crom = model_crommelin_seasonal.SeasonalCrommelinModel(fundamental_param_dict)
 traj_filename = join(ra_dir_contiguous,"crom_long.nc")
 if integrate_flag:
     x0 = np.zeros((1,7))
-    x0[0,6] = (1957 + 0.2)*fundamental_param_dict["year_length"] 
+    x0[0,6] = (1957 + 0.2)*fundamental_param_dict["year_length"]  # Starting time is about 20% of the way through 1957 (arbitrary)
     dt_save = 0.5
-    tmax_save = 40500
+    tmax_save = 100*fundamental_param_dict["year_length"] + burnin_time
     t_save = np.arange(0,tmax_save,dt_samp)
-    crom.integrate_and_save(x0,t_save,traj_filename,burnin_time=500)
+    crom.integrate_and_save(x0,t_save,traj_filename,burnin_time=burnin_time)
     print(f"Done integrating")
 if plot_integration_flag:
     crom.plot_integration(traj_filename,results_dir)
@@ -81,17 +84,10 @@ if generate_hc_flag:
     crom.generate_hindcast_dataset(traj_filename,hc_dir,t_abs_range,dt_samp,ens_size=10,ens_duration=47,ens_gap=13,pert_scale=0.001)
 # ----------------------------------------------
 
-if calculate_climatology_flag:
-    # Load dataset and compute etc.
-    print("Done calculating climatology")
-
 # ------------ Use reanalysis to define features --------
-
+# For example, compute EOFs from the database of raw files
 # -----------------------------------------------------
 
-# ---------- Display features in reanalysis ---------------
-
-# --------------------------------------------------------
 
 featspec_filename = join(featspec_dir,"featspec")
 feat_crom = feature_crommelin.SeasonalCrommelinModelFeatures(featspec_filename,szn_start,szn_length,Nt_szn,szn_avg_window,dt_szn,delaytime=0)
@@ -101,6 +97,7 @@ if featurize_ra_flag:
     raw_filename_list = [join(ra_dir_seasonal,f) for f in rafiles]
     save_filename = join(results_dir_ra,"X")
     feat_crom.evaluate_features_database(raw_filename_list,save_filename)
+# ----------------------------------------------
 
 # ------ Evaluate TPT features on hindcasts --------
 if featurize_hc_flag:
@@ -110,8 +107,14 @@ if featurize_hc_flag:
     feat_crom.evaluate_features_database(raw_filename_list,save_filename)
 # ----------------------------------------------
 
+# ---------- Display features in reanalysis ---------------
+if illustrate_dataset_flag:
+    Xra_filename = join(results_dir_ra,"X.nc")
+    Xhc_filename = join(results_dir_hc,"X.nc")
+    szns2illustrate = [1965,1967]
+    feat_crom.illustrate_dataset(Xra_filename,Xhc_filename,results_dir,szns2illustrate)
 
-# ----------------------------------------------
+# --------------------------------------------------------
 
 # -----  Cluster TPT features day by day --------
 

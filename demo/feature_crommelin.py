@@ -25,6 +25,38 @@ class SeasonalCrommelinModelFeatures:
         self.t_szn_cent = 0.5*(self.t_szn_edge[:-1] + self.t_szn_edge[1:])
         self.szn_avg_window = szn_avg_window
         return
+    def illustrate_dataset(self,Xra_filename,Xhc_filename,results_dir,szns2illustrate):
+        """
+        Plot two different seasons, on top of the background climatology.
+        Parameters
+        ----------
+        Xra_filename: str 
+            the .nc file with long reanalysis trajectories (one per season)
+        Xhc_filename: str 
+            the .nc file with short hindcast trajectories (many per season) 
+        Returns
+        --------
+        Nothing
+        Side effects
+        --------
+        Plot seasons with hindcasts atop background climatology
+        """
+        quantile_midranges = [0.4,0.8,1.0]
+        Xra = xr.open_dataset(Xra_filename)['X']
+        Xhc = xr.open_dataset(Xhc_filename)['X']
+        features2plot = ['x1','x4']
+        # The climatology is in different time windows
+        Xclim = xr.DataArray(
+                dims={'t_szn_cent', 'feature'},
+                coords={'feature': features2plot, 't_szn_cent': self.t_szn_cent},
+                data=np.zeros((len(features2plot)+1, self.Nt_szn)),
+                )
+        for i_tszn in range(self.Nt_szn):
+            selection = Xra.where((Xra['t_szn'] >= self.t_szn_edge[i_tszn])*(Xra['t_szn'] < self.t_szn_ede[i_tszn+1]))
+            for feat in Xclim.coords['feature']:
+                Xclim.isel(t_szn_cent=i_szn)[feat] = selection.sel(feature=feat).mean(dim=['member','t_szn'],skipna=True)
+        fig,ax = plt.subplots()
+        return
     def create_features_from_climatology(self,raw_file_list):
         #TODO
         """
@@ -53,7 +85,7 @@ class SeasonalCrommelinModelFeatures:
         save_filenamd: str
             Filename, with .nc extension, to write the features. 
         """
-        # Concatenate all the DataArrays together
+        # For the Crommelin model, feature space is the entire 6-dimensional staate space. Just Concatenate all the DataArrays together
         print(f"file = {raw_filename_list[0]}")
         traj = xr.open_dataset(raw_filename_list[0])
         print(f"traj = \n{traj}")

@@ -61,10 +61,10 @@ class SeasonalCrommelinModel:
         year = int(t_abs/self.q["year_length"])
         t_cal = t_abs - year*self.q["year_length"]
         if decimal:
-            t_str = f"{year}-{t_cal}"
+            t_str = f"{year:04d}-{t_cal:03d}"
         else:
             t_str = f"{year:.0f}-{t_cal:.0f}"
-        return t_str
+        return t_str,year
     def orography_cycle(self,t_abs):
         """
         Parameters
@@ -236,8 +236,10 @@ class SeasonalCrommelinModel:
         while t_sim_end < traj.t_sim[-1]:
             traj_szn = traj.sel(t_sim=slice(t_sim_start,t_sim_end))
             print(f"traj_szn = \n{traj_szn}")
-            t0_str = self.date_format(t_sim_start + t_abs[0])
-            t1_str = self.date_format(t_sim_end + t_abs[0])
+            t0_str,t0_year = self.date_format(t_sim_start + t_abs[0])
+            t1_str,t1_year = self.date_format(t_sim_end + t_abs[0])
+            # Add a unique identifier to traj_szn as metadata
+            traj_szn.attrs['szn_id'] = f"{t0_year:04d}-{t1_year:04d}"
             szn_filename = join(savefolder,f"ra{t0_str}_to_{t1_str}.nc")
             szn_filename_list += [szn_filename]
             traj_szn.to_netcdf(szn_filename)
@@ -330,8 +332,8 @@ class SeasonalCrommelinModel:
             x0[:,:-1] += pert_scale*np.random.randn(ens_size,self.xdim-1)
             # Integrate 
             print(f"Beginning ensemble near time {t_abs}; {(t_abs-t_abs_range[0])/(t_abs_range[1]-t_abs_range[0])*100}% done")
-            t0_str = self.date_format(t_abs)
-            t1_str = self.date_format(t_abs+ens_duration)
+            t0_str,t0_year = self.date_format(t_abs)
+            t1_str,t1_year = self.date_format(t_abs+ens_duration)
             ens_filename = join(hc_dir,f"hc{t0_str}_to_{t1_str}.nc")
             print(f"ens_filename = {ens_filename}")
             t_ens = np.arange(0,ens_duration,dt_samp)

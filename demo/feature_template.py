@@ -153,9 +153,12 @@ class TPTFeatures(ABC):
         field = mult_factor * field_unseasoned + field_szn_mean
         return field
     @abstractmethod
-    def evaluate_features_database(self,*args,**kwargs):
+    def illustrate_dataset(self,Xra_filename,Xhc_filename,results_dir):
+        pass
+    @abstractmethod
+    def evaluate_features_database(self,raw_filename_list,save_filename,featspec=None):
         # Should evaluate a database of raw model output and convert to basic features. Could be the identity map if the model is simple. More likely, some things will be averaged out. This will be a long and slow execution if the database is large. 
-        #Result: save out a .npy file
+        #Result: save out a .nc file
         pass
     def resample_cycles(self,szn_id_fname,szn_id_resamp):
         szn_id = np.load(szn_id_fname)
