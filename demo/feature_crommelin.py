@@ -26,6 +26,13 @@ class SeasonalCrommelinModelFeatures:
         self.t_szn_cent = 0.5*(self.t_szn_edge[:-1] + self.t_szn_edge[1:])
         self.szn_avg_window = szn_avg_window
         return
+    def time_conversion_from_absolute(self,t_abs):
+        year = (t_abs / self.year_length).astype(int)
+        t_cal = t_abs - year*self.year_length
+        szn_start_year = year*(t_cal >= self.szn_start) + (year-1)*(t_cal < self.szn_start)
+        t_szn = t_abs - (szn_start_year*self.year_length + self.szn_start)
+        ti_szn = (t_szn / self.dt_szn).astype(int)
+        return szn_start_year,t_cal,t_szn,ti_szn
     def illustrate_dataset(self,Xra_filename,Xhc_filename,results_dir,szns2illustrate):
         """
         Plot two different seasons, on top of the background climatology.
@@ -47,72 +54,57 @@ class SeasonalCrommelinModelFeatures:
         Plot seasons with hindcasts atop background climatology
         """
         features2plot = ['x1','x4']
-        quantile_midranges = [0.4,0.8,1.0]
+        quantile_midranges = [0.2,0.4,0.6,0.8,1.0]
         quantiles = np.sort([0.5 + 0.5*qmr*sgn for qmr in quantile_midranges for sgn in [-1,1]])
         Xra = xr.open_dataset(Xra_filename)['X']
-        print(f"Xra head: \n{Xra.data[0,0,:,:]}")
-        sys.exit()
-        print(f"Xra = \n{Xra}")
         Xhc = xr.open_dataset(Xhc_filename)['X']
-        print(f"Xhc = \n{Xhc}")
-        # Get seasonal average with groupby
-        #t_szn_ra = np.mod(Xra.sel(feature='t_abs'), self.year_length) - self.szn_start
-        print(f"year = {self.year_length}")
-        t_abs = Xra.sel(feature='t_abs')
-        print(f"t_abs: min={np.min(t_abs.data)}, max={np.max(t_abs.data)}, nanfrac={np.mean(np.isnan(t_abs.data))}")
-        t_szn_ra = np.mod(Xra.sel(feature='t_abs'), self.year_length)
-        print(f"t_szn_ra = \n{t_szn_ra}")
-        sys.exit()
-        ti_szn_ra = (t_szn_ra / self.dt_szn).astype(int) 
-        Xclim = Xra.groupby(ti_szn_ra).mean(dim=['t_abs','ensemble','member']).sel(feature=features2plot)
-        print(f"Xclim = \n{Xclim}")
-        sys.exit()
-
-
-
+        # Get seasonal average
+        t_abs_ra = Xra.sel(feature='t_abs')
+        szn_id_ra,t_cal_ra,t_szn_ra,ti_szn_ra = self.time_conversion_from_absolute(t_abs_ra)
+        t_abs_hc = Xhc.sel(feature='t_abs')
+        szn_id_hc,t_cal_hc,t_szn_hc,ti_szn_hc = self.time_conversion_from_absolute(t_abs_hc)
+        print(f"t_szn_hc = {t_szn_hc}")
+        #t_szn_ra = np.mod(t_abs.isel(t_sim=0), self.year_length) + Xra.t_sim - self.szn_start
+        Xra = Xra.sel(feature=features2plot)
+        Xhc = Xhc.sel(feature=features2plot)
         Xclim = xr.DataArray(
                 dims=['feature', 't_szn_cent', 'quantile'],
                 coords={'feature': features2plot, 't_szn_cent': self.t_szn_cent, 'quantile': quantiles},
                 data=np.zeros((len(features2plot), self.Nt_szn, len(quantiles))),
                 )
-        #t_szn_ra = np.mod(Xra.where(Xra.feature=='t_abs'), self.year_length) - self.szn_start
-        t_szn_ra = Xra.where(Xra.feature=='t_abs') #.isel(t_sim=0,ensemble=0,member=0)
-        print(f"t_szn_ra = \n{t_szn_ra}")
-        print(f"t_szn_ra nanfrac = {np.mean(np.isnan(t_szn_ra))}")
-        sys.exit()
-        Xra = Xra.sel(feature=features2plot)
-        ti_szn_ra = (t_szn_ra / self.dt_szn).astype(int)
-        t_szn_hc = np.mod(Xhc.sel(feature='t_abs'), self.year_length) - self.szn_start
-        Xhc = Xhc.sel(feature=features2plot)
-        ti_szn_hc = (t_szn_hc / self.dt_szn).astype(int)
-        Xclim = Xra.groupby(ti_szn_ra)
-        # TODO: speed up this loop
+        print(f"t_szn_cent = {Xclim.t_szn_cent}\nt_szn_ra = {t_szn_ra}")
         for i_tszn in range(self.Nt_szn):
             print(f"Starting i_tszn = {i_tszn} out of {self.Nt_szn}")
             selection = Xra.where(ti_szn_ra==i_tszn) #Xra.where((t_szn >= self.t_szn_edge[i_tszn])*(t_szn < self.t_szn_edge[i_tszn+1])).sel(feature=features2plot)
-            print(f"Made selection")
             for i_quant in range(len(quantiles)):
                 #print(f"lhs = \n{lhs}\nrhs = \n{rhs}")
                 Xclim.isel(t_szn_cent=i_tszn,quantile=i_quant)[:] = selection.quantile(quantiles[i_quant],dim=['ensemble','t_sim'],skipna=True).data.flatten()
-            print(f"Computed quantiles")
-        sys.exit()
         for szn_id in szns2illustrate:
             # Find all years matching a specific szn_id
-            szn_id_start = (Xra.isel(t_sim=0) / self.year_length).astype(int)
-            if not (szn_id in szn_id_start):
-                raise Exception(f"You asked for a szn_id of {szn_id}, which is not in the existing szn_id_start array of {szn_id_start}")
+            if not (szn_id in szn_id_ra):
+                raise Exception(f"You asked for a szn_id of {szn_id}, which is not in the existing szn_id_start array of {szn_id_start_ra}")
             for feat in features2plot:
                 # Plot climatology
                 Xclim_feat = Xclim.sel(feature=feat)
                 fig,ax = plt.subplots()
-                for i_quant in range(len(Xclim.quantile)//2):
+                for i_quant in range(len(quantiles)//2):
                     lower = Xclim_feat.isel(quantile=i_quant)
-                    upper = Xclim_feat.isel(quantile=len(Xclim_feat.quantile)-1-i_quant)
-                    ax.fill_between(Xclim_feat.t_szn_cent,lower,upper,color=plt.cm.binary(0.2 + 0.3*Xclim_feat.quantile[i_quant]), zorder=-len(Xclim_feat.quantile)+i_quant)
+                    upper = Xclim_feat.isel(quantile=len(quantiles)-1-i_quant)
+                    ax.fill_between(Xclim_feat.t_szn_cent,lower,upper,color=plt.cm.binary(0.2 + 0.7*quantiles[i_quant]), zorder=-len(quantiles)//2+i_quant)
                 # Plot any trajectories matching the specific year 
-                Xra_szn = Xra.isel(ensemble=np.where(szn_id_start==szn_id)[0][0])
-                t_szn = np.mod(Xra_szn.sel(feature='t_abs').data.flatten(), self.year_length)
-                ax.plot(t_szn, Xra.sel(feature=feat), color='black', zorder=1)
+                i_ens_ra = np.where(szn_id_ra==szn_id)[0]
+                ax.plot(t_szn_ra.isel(ensemble=i_ens_ra[0],member=0), Xra.sel(feature=feat,member=0).isel(ensemble=i_ens_ra[0]), color='black', zorder=1)
+                # Plot two hindcast trajectories on top
+                i_ens_hc = np.where(szn_id_hc==szn_id)[0]
+                print(f"t_szn_hc = {t_szn_hc}")
+                print(f"i_ens_hc = {i_ens_hc}")
+                i_ens_hc_2plot = []
+                for szn_frac in [0.1,0.4,0.7]:
+                    #print(f"list to choose from = {t_szn_hc.isel(ensemble=i_ens_hc,t_sim=0,member=0)}")
+                    i_ens_hc_2plot += [i_ens_hc[np.argmin(np.abs(t_szn_hc.isel(ensemble=i_ens_hc,t_sim=0,member=0).data.flatten() - szn_frac*self.szn_length))]]
+                for i_ens in i_ens_hc_2plot:
+                    for i_mem in range(Xhc.member.size):
+                        ax.plot(t_szn_hc.isel(ensemble=i_ens,member=i_mem), Xhc.isel(ensemble=i_ens,member=i_mem).sel(feature=feat), color='purple', zorder=2)
                 fig.savefig(join(results_dir,f"clim_{feat}_{szn_id}"))
                 plt.close(fig)
         return
@@ -146,22 +138,16 @@ class SeasonalCrommelinModelFeatures:
         """
         # For the Crommelin model, feature space is the entire 6-dimensional staate space. Just Concatenate all the DataArrays together
         print(f"file = {raw_filename_list[0]}")
-        traj = xr.open_dataset(raw_filename_list[0])
+        traj = xr.open_dataset(raw_filename_list[0])['X']
         print(f"traj = \n{traj}")
         X_list = []
         for f in raw_filename_list:
-            Xnew = xr.open_dataset(f) #['X']
-            X_list += [Xnew.copy()]
+            Xnew = xr.open_dataset(f)['X']
+            X_list += [Xnew]
         X = xr.concat(X_list, dim='ensemble')
         X.coords['ensemble'] = np.arange(len(raw_filename_list))
-        for i in [0,20,30]:
-            print(f"X_list[{i}] = \n{X_list[i]}")
-        print(f"X = \n{X}")
-        sys.exit()
-        print(f"X.data = {X.data}")
-        print(f"Xnew.data = {Xnew.data}")
-        sys.exit()
         X.to_netcdf(save_filename)
+        print("Finishing featurization")
         return
     def abtest(self,Y,featspec,tpt_bndy):
         """

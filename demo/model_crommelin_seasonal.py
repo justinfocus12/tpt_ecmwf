@@ -167,7 +167,7 @@ class SeasonalCrommelinModel:
             if (t_old <= t_save[i_save+1]) and (t_new >= t_save[i_save+1]):
                 x[:,i_save+1] = x[:,i_save] + (t_save[i_save+1]-t_save[i_save])*(x_new - x_old)/self.dt_sim
                 i_save += 1
-            if np.mod(t_new, 1000) > np.mod(t_old, 1000):
+            if int(t_new/1000) > int(t_old/1000):
                 print(f"Integrated through time {t_new} out of {t_save[Nt-1]}")
             # Update new to old
             x_old = x_new
@@ -216,9 +216,11 @@ class SeasonalCrommelinModel:
         szn_length: float
             length of the season
         """
-        traj = xr.open_dataset(traj_filename)
+        traj = xr.open_dataset(traj_filename)['X']
         print(f"traj = \n{traj}")
-        t_abs = traj['X'].sel(feature='t_abs',member=0).data.flatten()
+        traj_coords_local = {dim: traj.coords[dim].data for dim in traj.dims}
+        print(f"traj = \n{traj}")
+        t_abs = traj.sel(feature='t_abs',member=0).data.flatten()
         year = (t_abs/self.q["year_length"]).astype(int)
         t_cal = t_abs - year*self.q["year_length"]
         # Does the first season start in the first year, or the second year? 
@@ -235,8 +237,9 @@ class SeasonalCrommelinModel:
         szn_filename_list = []
         while t_sim_end < traj.t_sim[-1]:
             traj_szn = traj.sel(t_sim=slice(t_sim_start,t_sim_end))
-            traj_szn.coords['t_sim'][:] -= traj_szn.t_sim[0]
-            print(f"traj_szn = \n{traj_szn}")
+            traj_coords_local['t_sim'] = traj_szn.t_sim.data 
+            traj_coords_local['t_sim'] -= traj_coords_local['t_sim'][0]
+            traj_szn = xr.Dataset({'X': xr.DataArray(data=traj_szn.data, coords=traj_coords_local)})
             t0_str,t0_year = self.date_format(t_sim_start + t_abs[0])
             t1_str,t1_year = self.date_format(t_sim_end + t_abs[0])
             # Add a unique identifier to traj_szn as metadata
@@ -295,7 +298,7 @@ class SeasonalCrommelinModel:
         fig.savefig(join(savefolder,"gamma_x1"))
         plt.close(fig)
         return
-    def generate_hindcast_dataset(self,ra_filename,hc_dir,t_abs_range,dt_samp,ens_size=10,ens_duration=47,ens_gap=3,pert_scale=0.001):
+    def generate_hindcast_dataset(self,ra_filename,hc_dir,t_abs_range,dt_samp,ens_size=10,ens_duration=47,ens_gap=3,pert_scale=0.01):
         """
         Parameters
         ----------
@@ -325,15 +328,16 @@ class SeasonalCrommelinModel:
             x0_ra = ra['X'].isel(t_sim=i_time_ra,member=0).data
             x0 = np.outer(np.ones(ens_size),x0_ra)
             # Add perturbations to the non-time variables
-            x0[:,:-1] += pert_scale*np.random.randn(ens_size,self.xdim-1)
+            pert = pert_scale * np.random.randn(ens_size,self.xdim-1)
+            x0[:,:-1] += pert
             # Integrate 
-            print(f"Beginning ensemble near time {t_abs}; {(t_abs-t_abs_range[0])/(t_abs_range[1]-t_abs_range[0])*100}% done")
             t0_str,t0_year = self.date_format(t_abs)
             t1_str,t1_year = self.date_format(t_abs+ens_duration)
             ens_filename = join(hc_dir,f"hc{t0_str}_to_{t1_str}.nc")
-            print(f"ens_filename = {ens_filename}")
             t_ens = np.arange(0,ens_duration,dt_samp)
             self.integrate_and_save(x0,t_ens,ens_filename)
             # Advance the initialization time
             t_abs = t_abs_ra[i_time_ra] + ens_gap
+            if int(t_abs/1000) > (t_abs_ra[i_time_ra]/1000):
+                print(f"Hindcast integration {(t_abs - t_abs_range[0])/np.ptp(t_abs_range)*100} percent done")
         return
