@@ -14,7 +14,7 @@ from os.path import join,exists
 # ----------- Create directory to save results ----------
 topic_dir = "/scratch/jf4241/crommelin"
 if not exists(topic_dir): mkdir(topic_dir)
-day_dir = join(topic_dir,"2022-05-19")
+day_dir = join(topic_dir,"2022-05-20")
 if not exists(day_dir): mkdir(day_dir)
 exp_dir = join(day_dir,"0")
 if not exists(exp_dir): mkdir(exp_dir)
@@ -39,10 +39,10 @@ if not exists(results_dir_hc): mkdir(results_dir_hc)
 integrate_flag =             0
 plot_integration_flag =      0
 generate_hc_flag =           0
-split_reanalysis_flag =      0
+split_reanalysis_flag =      1
 featurize_hc_flag =          0
-featurize_ra_flag =          0
-illustrate_dataset_flag =    1
+featurize_ra_flag =          1
+illustrate_dataset_flag =    0
 # ------------------------------------------------------------
 
 # ----------- Set some physical parameters -----

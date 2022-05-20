@@ -235,6 +235,7 @@ class SeasonalCrommelinModel:
         szn_filename_list = []
         while t_sim_end < traj.t_sim[-1]:
             traj_szn = traj.sel(t_sim=slice(t_sim_start,t_sim_end))
+            traj_szn.coords['t_sim'][:] -= traj_szn.t_sim[0]
             print(f"traj_szn = \n{traj_szn}")
             t0_str,t0_year = self.date_format(t_sim_start + t_abs[0])
             t1_str,t1_year = self.date_format(t_sim_end + t_abs[0])

@@ -150,14 +150,12 @@ class SeasonalCrommelinModelFeatures:
         print(f"traj = \n{traj}")
         X_list = []
         for f in raw_filename_list:
-            Xnew = xr.open_dataset(f) #['X']
+            Xnew = xr.open_dataset(f)['X']
             X_list += [Xnew.copy()]
         X = xr.concat(X_list, dim='ensemble')
         X.coords['ensemble'] = np.arange(len(raw_filename_list))
         for i in [0,20,30]:
             print(f"X_list[{i}] = \n{X_list[i]}")
-        print(f"X = \n{X}")
-        sys.exit()
         print(f"X.data = {X.data}")
         print(f"Xnew.data = {Xnew.data}")
         sys.exit()
