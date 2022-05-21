@@ -109,6 +109,14 @@ if featurize_hc_flag:
     feat_crom.evaluate_features_database(raw_filename_list,save_filename)
 # ----------------------------------------------
 
+# --------- Evaluate DGA features (i.e., to use for clustering) on reanalysis ----------------------
+# Directly derivable from the X file 
+if featurize_for_dga_ra_flag:
+    input_filename = join(results_dir_ra,"X.nc")
+    output_filename = join(results_dir_ra,"Y.nc")
+    feat_crom.evaluate_features_for_dga(input_filename,output_filename)
+# --------------------------------------------------------------------------------------------------
+
 # ---------- Display features in reanalysis ---------------
 if illustrate_dataset_flag:
     Xra_filename = join(results_dir_ra,"X.nc")
@@ -119,6 +127,7 @@ if illustrate_dataset_flag:
 
 # -----  Cluster TPT features day by day --------
 if cluster_flag:
+    
 # ----------------------------------------------
 
 # ------- Build the MSM on hindcast data ---------

@@ -127,6 +127,23 @@ class SeasonalCrommelinModelFeatures:
         # For EOFs, we'll want to stack all the geopotential heights into a big xarray, and then pass that to get_seasonal_stats. 
         # For Crommelin, simply find the mean and variance for each feature
         return
+    def evaluate_features_for_dga(self,input_filename,output_filename):
+        """
+        Parameters
+        ----------
+        input_filename: str
+            Filename (ending with X.nc, probably) for the data transformed from raw
+        output_filename: str
+            Filename (ending with Y.nc, probably) for the data to use 
+        Returns
+        -------
+        Nothing
+        Side effects
+        ------------
+        write output (e.g., with time delays) to output_filename
+        """
+        #TODO
+        return
     def evaluate_features_database(self,raw_filename_list,save_filename,featspec=None):
         """
         Parameters
