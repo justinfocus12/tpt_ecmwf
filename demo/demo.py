@@ -112,9 +112,17 @@ if featurize_hc_flag:
 # ---------- Compute climatological statistics that will be neeed for the downstream DGA step. Use reanalysis for this, in order to define objective values --------
 if compute_climatology_flag:
     in_filename = join(results_dir_ra,"X.nc")
-    save_filename = join(results_dir_ra,"Xstats.nc")
+    save_filename = join(results_dir_ra,"Xclim.nc")
     feat_crom.compute_climatology(in_filename,save_filename)
 # -----------------------------------------------------------------------------
+# ---------- Display features in reanalysis ---------------
+if illustrate_dataset_flag:
+    Xra_filename = join(results_dir_ra,"X.nc")
+    Xhc_filename = join(results_dir_hc,"X.nc")
+    Xclim_filename = join(results_dir_ra,"Xclim.nc")
+    szns2illustrate = np.arange(1960,1970)
+    feat_crom.illustrate_dataset(Xra_filename,Xhc_filename,Xclim_filename,results_dir,szns2illustrate)
+# --------------------------------------------------------
 
 # --------- Evaluate DGA features (i.e., to use for clustering) on reanalysis ----------------------
 # Directly derivable from the X file 
@@ -124,13 +132,6 @@ if featurize_for_dga_ra_flag:
     feat_crom.evaluate_features_for_dga(input_filename,output_filename)
 # --------------------------------------------------------------------------------------------------
 
-# ---------- Display features in reanalysis ---------------
-if illustrate_dataset_flag:
-    Xra_filename = join(results_dir_ra,"X.nc")
-    Xhc_filename = join(results_dir_hc,"X.nc")
-    szns2illustrate = np.arange(1960,1970)
-    feat_crom.illustrate_dataset(Xra_filename,Xhc_filename,results_dir,szns2illustrate)
-# --------------------------------------------------------
 
 # -----  Cluster TPT features day by day --------
 if cluster_flag:
