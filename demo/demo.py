@@ -14,7 +14,7 @@ from os.path import join,exists
 # ----------- Create directory to save results ----------
 topic_dir = "/scratch/jf4241/crommelin"
 if not exists(topic_dir): mkdir(topic_dir)
-day_dir = join(topic_dir,"2022-05-20")
+day_dir = join(topic_dir,"2022-06-25")
 if not exists(day_dir): mkdir(day_dir)
 exp_dir = join(day_dir,"0")
 if not exists(exp_dir): mkdir(exp_dir)
@@ -36,12 +36,12 @@ results_dir_hc = join(results_dir,"hc")
 if not exists(results_dir_hc): mkdir(results_dir_hc)
 
 # -------------- Specify which tasks to execute -------------
-integrate_flag =             0
-plot_integration_flag =      0
+integrate_flag =             1
+plot_integration_flag =      1
 generate_hc_flag =           1
-split_reanalysis_flag =      0
-featurize_hc_flag =          0
-featurize_ra_flag =          0
+split_reanalysis_flag =      1
+featurize_hc_flag =          1
+featurize_ra_flag =          1
 illustrate_dataset_flag =    1
 cluster_flag =               1
 # ------------------------------------------------------------
@@ -75,7 +75,7 @@ if plot_integration_flag:
     print(f"Done plotting")
 # -----------------------------------------------
 
-# ---------- Split reanalysis into chunks -------
+# ---------- Split reanalysis into chunks representing seasons -------
 if split_reanalysis_flag:
     crom.split_long_integration(traj_filename,ra_dir_seasonal,szn_start,szn_length)
 # -----------------------------------------------
@@ -109,6 +109,13 @@ if featurize_hc_flag:
     feat_crom.evaluate_features_database(raw_filename_list,save_filename)
 # ----------------------------------------------
 
+# ---------- Compute climatological statistics that will be neeed for the downstream DGA step. Use reanalysis for this, in order to define objective values --------
+if compute_climatology_flag:
+    in_filename = join(results_dir_ra,"X.nc")
+    save_filename = join(results_dir_ra,"Xstats.nc")
+    feat_crom.compute_climatology(in_filename,save_filename)
+# -----------------------------------------------------------------------------
+
 # --------- Evaluate DGA features (i.e., to use for clustering) on reanalysis ----------------------
 # Directly derivable from the X file 
 if featurize_for_dga_ra_flag:
@@ -127,6 +134,7 @@ if illustrate_dataset_flag:
 
 # -----  Cluster TPT features day by day --------
 if cluster_flag:
+    pass
     
 # ----------------------------------------------
 

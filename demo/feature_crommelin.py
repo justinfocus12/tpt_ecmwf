@@ -127,6 +127,27 @@ class SeasonalCrommelinModelFeatures:
         # For EOFs, we'll want to stack all the geopotential heights into a big xarray, and then pass that to get_seasonal_stats. 
         # For Crommelin, simply find the mean and variance for each feature
         return
+    def compute_climatology(self, in_filename: str, out_filename: str):
+        """
+        Parameters
+        ---------
+        in_filename: xarray file with coordinates (member, t_sim, feature) 
+        out_filename: dictionary where to store relevant statistics of the input data to be used for defining the features for clustering.
+        """
+        # Group by the season time and average period by period
+        Xclim = xr.DataArray(
+                dims=['feature', 't_szn_cent', 'quantile'],
+                coords={'feature': features2plot, 't_szn_cent': self.t_szn_cent, 'quantile': quantiles},
+                data=np.zeros((len(features2plot), self.Nt_szn, len(quantiles))),
+                )
+        print(f"t_szn_cent = {Xclim.t_szn_cent}\nt_szn_ra = {t_szn_ra}")
+        for i_tszn in range(self.Nt_szn):
+            print(f"Starting i_tszn = {i_tszn} out of {self.Nt_szn}")
+            selection = Xra.where(ti_szn_ra==i_tszn) #Xra.where((t_szn >= self.t_szn_edge[i_tszn])*(t_szn < self.t_szn_edge[i_tszn+1])).sel(feature=features2plot)
+            for i_quant in range(len(quantiles)):
+                #print(f"lhs = \n{lhs}\nrhs = \n{rhs}")
+                Xclim.isel(t_szn_cent=i_tszn,quantile=i_quant)[:] = selection.quantile(quantiles[i_quant],dim=['ensemble','t_sim'],skipna=True).data.flatten()
+        return
     def evaluate_features_for_dga(self,input_filename,output_filename):
         """
         Parameters
@@ -135,12 +156,14 @@ class SeasonalCrommelinModelFeatures:
             Filename (ending with X.nc, probably) for the data transformed from raw
         output_filename: str
             Filename (ending with Y.nc, probably) for the data to use 
+
         Returns
         -------
         Nothing
+
         Side effects
         ------------
-        write output (e.g., with time delays) to output_filename
+        Write output (e.g., with time delays) to output_filename. 
         """
         #TODO
         return
