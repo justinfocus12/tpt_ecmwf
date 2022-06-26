@@ -161,7 +161,44 @@ class SeasonalCrommelinModelFeatures:
                 #print(f"At initial time and feature, mean is {Xclim['Xmom'].isel(t_szn_cent=i_tszn,moment=i_mom,feature=0)}. min X = {selection.isel(feature=0).min()}, max = {selection.isel(feature=0).max()}")
         Xclim.to_netcdf(out_file)
         return 
-    def evaluate_features_for_dga(self,in_file,out_file,clim_file,inverse=False):
+    def seasonalize(self,X,Xclim,inverse=False):
+        """
+        Demean and de-seasonalize, or re-mean and re-seasonalize 
+        Parameters
+        ----------
+        X: xr.DataArray
+            Contains the data to transform according to Xclim
+        Xclim: xr.Dataset
+            Contains the climatological statistics
+        Returns
+        -------
+        Y: xr.DataArray
+            A normalized (or un-normalized) version of X
+
+        Side effects
+        ------------
+        None
+        """
+        t_abs = X.sel(feature='t_abs')
+        szn_id,t_cal,t_szn,ti_szn = self.time_conversion_from_absolute(t_abs)
+        Y = xr.DataArray(
+                data = np.zeros(X.shape),
+                coords = X.coords, 
+                dims = X.dims,
+                )
+        for i_tszn in range(self.Nt_szn):
+            Xmom_t = Xclim['Xmom'].isel(t_szn_cent=i_tszn, drop=True)
+            Xmom_mean = Xmom_t.sel(moment=1, drop=True)
+            Xmom_std = np.sqrt(Xmom_t.sel(moment=2, drop=True) - Xmom_mean**2)
+            if inverse:
+                rhs = Xmom_std * X + Xmom_mean
+            else:
+                rhs = (X - Xmom_mean)/Xmom_std
+            Y += (ti_szn == i_tszn) * rhs
+        # Correct the time coordinate, which should be the same as X
+        Y.sel(feature='t_abs')[:] = X.sel(feature='t_abs').data
+        return Y
+    def evaluate_features_for_dga(self,in_file,out_file,clim_file,ndelay,inverse=False):
         """
         Demean and de-seasonalize to feed into clustering algorithm
         Parameters
@@ -187,22 +224,29 @@ class SeasonalCrommelinModelFeatures:
         X = xr.open_dataset(in_file)['X']
         t_abs = X.sel(feature='t_abs')
         szn_id,t_cal,t_szn,ti_szn = self.time_conversion_from_absolute(t_abs)
-        Y = xr.DataArray(
-                data = np.zeros(X.shape),
-                coords = X.coords, 
-                dims = X.dims,
+        Xszn = self.seasonalize(X,Xclim,inverse=inverse)
+        if inverse:
+            Y = Xszn.sel(feature=Xclim.coords['feature'].data, drop=True)
+        else:
+            # Build in time-delays
+            Ycoords = dict()
+            Ycoords['t_sim'] = X.coords['t_sim'].data[ndelay:]
+            Yfeat = []
+            for feat in list(X.coords['feature']):
+                for i_delay in range(ndelay+1):
+                    Yfeat += [f"{feat}_delay{i_delay}"]
+            Ycoords['feature'] = Yfeat
+            Ycoords['ensemble'] = X.coords['ensemble']
+            Ycoords['member'] = X.coords['member']
+            Y = xr.DataArray(
+                data=np.zeros((len(Ycoords['ensemble']),len(Ycoords['member']),len(Ycoords['t_sim']),len(Ycoords['feature']))),
+                coords=Ycoords,
+                dims=["ensemble","member","t_sim","feature"],
                 )
-        for i_tszn in range(self.Nt_szn):
-            Xmom_t = Xclim['Xmom'].isel(t_szn_cent=i_tszn, drop=True)
-            Xmom_mean = Xmom_t.sel(moment=1, drop=True)
-            Xmom_std = np.sqrt(Xmom_t.sel(moment=2, drop=True) - Xmom_mean**2)
-            if inverse:
-                rhs = Xmom_std * X + Xmom_mean
-            else:
-                rhs = (X - Xmom_mean)/Xmom_std
-            Y += (ti_szn == i_tszn) * rhs
-        # Correct the time coordinate, which should be the same as X
-        Y.sel(feature='t_abs')[:] = X.sel(feature='t_abs').data
+            # TODO: make a design decision about how to deal with time-delays. It's inefficient, but maybe general, to make such a huger feature space
+            for i_delay in range(ndelay+1):
+                for feat in X.coords['feature']:
+                    Y.sel(feature=f"{feat}_delay{i_delay}")[:] = X.sel(feature=feat).isel(t_sim=slice(ndelay-i_delay,X.coords['t_sim'].size-i_delay)).data
         Y_ds = xr.Dataset(data_vars={"X": Y})
         Y_ds.to_netcdf(out_file)
         return

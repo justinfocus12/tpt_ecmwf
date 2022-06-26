@@ -59,6 +59,9 @@ Nt_szn = int(szn_length / dt_szn)
 szn_avg_window = 5.0
 burnin_time = 500.0 
 
+
+ndelay = 3
+
 fundamental_param_dict = dict({"b": 0.5, "beta": 1.25, "gamma_limits": [0.15, 0.22], "C": 0.1, "x1star": 0.95, "r": -0.801, "year_length": year_length})
 crom = model_crommelin_seasonal.SeasonalCrommelinModel(fundamental_param_dict)
 # ----------------------------------------------
@@ -133,11 +136,11 @@ if featurize_for_dga_ra_flag:
     input_filename = join(results_dir_ra,"X.nc")
     output_filename = join(results_dir_ra,"Y.nc")
     Xclim_filename = join(results_dir_ra,"Xclim.nc")
-    feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename,inverse=False)
+    feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename,ndelay=ndelay,inverse=False)
     # Invert to make sure
     input_filename = join(results_dir_ra,"Y.nc")
     output_filename = join(results_dir_ra,"XfromY.nc")
-    feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename,inverse=True)
+    feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename,ndelay=ndelay,inverse=True)
     
 if featurize_for_dga_hc_flag:
     input_filename = join(results_dir_hc,"X.nc")
@@ -147,7 +150,7 @@ if featurize_for_dga_hc_flag:
     # Invert to make sure
     input_filename = join(results_dir_hc,"Y.nc")
     output_filename = join(results_dir_hc,"XfromY.nc")
-    feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename,inverse=True)
+    feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename,ndelay=ndelay,inverse=True)
 # Now illustrate the normalized dataset
 Xra_filename = join(results_dir_ra,"Y.nc")
 Xhc_filename = join(results_dir_hc,"Y.nc")
