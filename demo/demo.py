@@ -45,7 +45,7 @@ featurize_ra_flag =          0
 compute_climatology_flag =   0
 illustrate_dataset_flag =    0
 featurize_for_dga_ra_flag =  1
-featurize_for_dga_hc_flag =  0
+featurize_for_dga_hc_flag =  1
 cluster_flag =               0
 # ------------------------------------------------------------
 
@@ -133,16 +133,33 @@ if featurize_for_dga_ra_flag:
     input_filename = join(results_dir_ra,"X.nc")
     output_filename = join(results_dir_ra,"Y.nc")
     Xclim_filename = join(results_dir_ra,"Xclim.nc")
-    feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename)
+    feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename,inverse=False)
+    # Invert to make sure
+    input_filename = join(results_dir_ra,"Y.nc")
+    output_filename = join(results_dir_ra,"XfromY.nc")
+    feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename,inverse=True)
+    
 if featurize_for_dga_hc_flag:
     input_filename = join(results_dir_hc,"X.nc")
     output_filename = join(results_dir_hc,"Y.nc")
     Xclim_filename = join(results_dir_ra,"Xclim.nc")
     feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename)
+    # Invert to make sure
+    input_filename = join(results_dir_hc,"Y.nc")
+    output_filename = join(results_dir_hc,"XfromY.nc")
+    feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename,inverse=True)
 # Now illustrate the normalized dataset
-Xra_filaneme = join(results_dir_ra,"Y.nc")
-Xhc_filename = join(results_dir_ra,"Y.nc")
-feat_crom.illustrate_dataset(Xra_filename,Xhc_filename,results_dir,szns2illustrate,Xclim_filename,plot_climatology=False)
+Xra_filename = join(results_dir_ra,"Y.nc")
+Xhc_filename = join(results_dir_hc,"Y.nc")
+Xclim_filename = join(results_dir_ra,"Xclim.nc")
+szns2illustrate = np.arange(1960,1970)
+feat_crom.illustrate_dataset(Xra_filename,Xhc_filename,results_dir,szns2illustrate,Xclim_filename,plot_climatology=False,suffix="_norm")
+# Now illustrate the re-normalized dataset to make sure it matches the original
+Xra_filename = join(results_dir_ra,"XfromY.nc")
+Xhc_filename = join(results_dir_hc,"XfromY.nc")
+Xclim_filename = join(results_dir_ra,"Xclim.nc")
+szns2illustrate = np.arange(1960,1970)
+feat_crom.illustrate_dataset(Xra_filename,Xhc_filename,results_dir,szns2illustrate,Xclim_filename,plot_climatology=True,suffix="_unnorm")
 # --------------------------------------------------------------------------------------------------
 
 

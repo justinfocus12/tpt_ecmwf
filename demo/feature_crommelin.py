@@ -33,7 +33,7 @@ class SeasonalCrommelinModelFeatures:
         t_szn = t_abs - (szn_start_year*self.year_length + self.szn_start)
         ti_szn = (t_szn / self.dt_szn).astype(int)
         return szn_start_year,t_cal,t_szn,ti_szn
-    def illustrate_dataset(self,Xra_filename,Xhc_filename,results_dir,szns2illustrate,Xclim_filename,plot_climatology=True):
+    def illustrate_dataset(self,Xra_filename,Xhc_filename,results_dir,szns2illustrate,Xclim_filename,plot_climatology=True,suffix=""):
         """
         Parameters
         ----------
@@ -90,7 +90,7 @@ class SeasonalCrommelinModelFeatures:
                 ax.plot(t_szn_ra.isel(ensemble=i_ens_ra[0],member=0), Xra.sel(feature=feat,member=0).isel(ensemble=i_ens_ra[0]), color='black', zorder=1)
                 # Plot two hindcast trajectories on top
                 i_ens_hc = np.where(szn_id_hc==szn_id)[0]
-                print(f"i_ens_hc = {i_ens_hc}")
+                #print(f"i_ens_hc = {i_ens_hc}")
                 i_ens_hc_2plot = []
                 for szn_frac in [0.1,0.4,0.7]:
                     #print(f"list to choose from = {t_szn_hc.isel(ensemble=i_ens_hc,t_sim=0,member=0)}")
@@ -98,7 +98,7 @@ class SeasonalCrommelinModelFeatures:
                 for i_ens in i_ens_hc_2plot:
                     for i_mem in range(Xhc.member.size):
                         ax.plot(t_szn_hc.isel(ensemble=i_ens,member=i_mem), Xhc.isel(ensemble=i_ens,member=i_mem).sel(feature=feat), color='purple', zorder=2, alpha=0.3)
-                fig.savefig(join(results_dir,f"clim_{feat}_{szn_id}"))
+                fig.savefig(join(results_dir,f"clim_{feat}_{szn_id}{suffix}"))
                 plt.close(fig)
         return
     def create_features_from_climatology(self,raw_file_list):
@@ -161,7 +161,7 @@ class SeasonalCrommelinModelFeatures:
                 #print(f"At initial time and feature, mean is {Xclim['Xmom'].isel(t_szn_cent=i_tszn,moment=i_mom,feature=0)}. min X = {selection.isel(feature=0).min()}, max = {selection.isel(feature=0).max()}")
         Xclim.to_netcdf(out_file)
         return 
-    def evaluate_features_for_dga(self,in_file,out_file,clim_file):
+    def evaluate_features_for_dga(self,in_file,out_file,clim_file,inverse=False):
         """
         Demean and de-seasonalize to feed into clustering algorithm
         Parameters
@@ -172,6 +172,8 @@ class SeasonalCrommelinModelFeatures:
             Filename (ending with Y.nc, probably) for the data to use 
         clim_file: str
             Filename (ending with Xclim.nc, probably) the climatology so that the features can be normalized.
+        inverse: bool
+            True if we are normalizing, False if we are unnormalizing
 
         Returns
         -------
@@ -192,8 +194,15 @@ class SeasonalCrommelinModelFeatures:
                 )
         for i_tszn in range(self.Nt_szn):
             Xmom_t = Xclim['Xmom'].isel(t_szn_cent=i_tszn, drop=True)
-            rhs = (X - Xmom_t.sel(moment=1,drop=True))/np.sqrt(Xmom_t.sel(moment=2,drop=True) - Xmom_t.sel(moment=1,drop=True)**2)
+            Xmom_mean = Xmom_t.sel(moment=1, drop=True)
+            Xmom_std = np.sqrt(Xmom_t.sel(moment=2, drop=True) - Xmom_mean**2)
+            if inverse:
+                rhs = Xmom_std * X + Xmom_mean
+            else:
+                rhs = (X - Xmom_mean)/Xmom_std
             Y += (ti_szn == i_tszn) * rhs
+        # Correct the time coordinate, which should be the same as X
+        Y.sel(feature='t_abs')[:] = X.sel(feature='t_abs').data
         Y_ds = xr.Dataset(data_vars={"X": Y})
         Y_ds.to_netcdf(out_file)
         return
