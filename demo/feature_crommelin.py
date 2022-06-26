@@ -33,7 +33,7 @@ class SeasonalCrommelinModelFeatures:
         t_szn = t_abs - (szn_start_year*self.year_length + self.szn_start)
         ti_szn = (t_szn / self.dt_szn).astype(int)
         return szn_start_year,t_cal,t_szn,ti_szn
-    def illustrate_dataset(self,Xra_filename,Xhc_filename,Xclim_filename,results_dir,szns2illustrate):
+    def illustrate_dataset(self,Xra_filename,Xhc_filename,results_dir,szns2illustrate,Xclim_filename,plot_climatology=True):
         """
         Parameters
         ----------
@@ -57,8 +57,7 @@ class SeasonalCrommelinModelFeatures:
         features2plot = ['x1','x4']
         Xra = xr.open_dataset(Xra_filename)['X']
         Xhc = xr.open_dataset(Xhc_filename)['X']
-        Xclim = xr.open_dataset(Xclim_filename)['X']
-        print(f"Xclim.coords['quantile'] = {Xclim.coords['quantile']}")
+        Xclim = xr.open_dataset(Xclim_filename)
         # Get seasonal average
         t_abs_ra = Xra.sel(feature='t_abs')
         szn_id_ra,t_cal_ra,t_szn_ra,ti_szn_ra = self.time_conversion_from_absolute(t_abs_ra)
@@ -71,16 +70,21 @@ class SeasonalCrommelinModelFeatures:
             if not (szn_id in szn_id_ra):
                 raise Exception(f"You asked for a szn_id of {szn_id}, which is not in the existing szn_id array of {szn_id_ra}")
             for feat in features2plot:
-                # Plot climatology
-                Xclim_feat = Xclim.sel(feature=feat)
-                for i_quant in range(Xclim.coords['quantile'].size):
-                    qi_mean = Xclim_feat.isel(quantile=i_quant).mean(dim=['t_szn_cent'])
-                    print(f"i_quant={i_quant}, quantiles[i_quant] = {Xclim.coords['quantile'].data[i_quant]}, qi_mean = {qi_mean}")
                 fig,ax = plt.subplots()
-                for i_quant in range(Xclim.coords['quantile'].size//2):
-                    lower = Xclim_feat.isel(quantile=2*i_quant)
-                    upper = Xclim_feat.isel(quantile=2*i_quant+1)
-                    ax.fill_between(Xclim_feat.t_szn_cent,lower,upper,color=plt.cm.binary(0.2 + 0.7*Xclim.coords['quantile'].data[2*i_quant]), zorder=-Xclim.coords['quantile'].size//2+i_quant)
+                if plot_climatology:
+                    for i_quant in range(Xclim.coords['quantile'].size//2):
+                        print(f"About to compute lower and upper for i_quant {i_quant} of feature {feat}")
+                        lower = Xclim['Xquant'].sel(feature=feat).isel(quantile=2*i_quant)
+                        upper = Xclim['Xquant'].sel(feature=feat).isel(quantile=2*i_quant+1)
+                        ax.fill_between(Xclim.t_szn_cent,lower,upper,color=plt.cm.binary(0.2 + 0.7*Xclim.coords['quantile'].data[2*i_quant]), zorder=-Xclim.coords['quantile'].size//2+i_quant)
+                    # Plot the mean and standard deviation in orange
+                    #print(f"About to compute avg for feature {feat}")
+                    avg = Xclim['Xmom'].sel(feature=feat,moment=1)
+                    #print(f"In ilustrate, at initial time and feature, mean is {Xclim['Xmom'].isel(t_szn_cent=0,moment=0).sel(feature=feat)}, whereas avg = {avg}.")
+                    std = np.sqrt(Xclim['Xmom'].sel(feature=feat,moment=2) - avg**2)
+                    ax.plot(Xclim.t_szn_cent, avg, color='orange')
+                    for sgn in [-1,1]:
+                        ax.plot(Xclim.t_szn_cent, avg+sgn*std, color='orange', linestyle='--')
                 # Plot any trajectories matching the specific year 
                 i_ens_ra = np.where(szn_id_ra==szn_id)[0]
                 ax.plot(t_szn_ra.isel(ensemble=i_ens_ra[0],member=0), Xra.sel(feature=feat,member=0).isel(ensemble=i_ens_ra[0]), color='black', zorder=1)
@@ -123,6 +127,7 @@ class SeasonalCrommelinModelFeatures:
         in_file: filename containing xarray with coordinates (member, t_sim, feature) 
         out_file: filename for an xarray where to store relevant statistics of the input data to be used for defining the features for clustering.
         """
+        print(f"Beginning compute_climatology")
         X = xr.open_dataset(in_file)['X']
         # Group by the season time and average period by period
         if quantile_midranges is None:
@@ -131,26 +136,30 @@ class SeasonalCrommelinModelFeatures:
         quantiles = []
         for qmr in quantile_midranges:
             quantiles += [0.5-0.5*qmr, 0.5+0.5*qmr]
+        quantiles += [0.5] # Median
         quantiles = np.array(quantiles)
+        moments = np.array([1, 2, 3])
         t_abs = X.sel(feature='t_abs')
+        print(f"Starting time conversion")
         szn_id,t_cal,t_szn,ti_szn = self.time_conversion_from_absolute(t_abs)
-        Xclim = xr.DataArray(
-                    dims=['feature', 't_szn_cent', 'quantile'],
-                    coords={'feature': X.coords['feature'], 't_szn_cent': self.t_szn_cent, 'quantile': quantiles},
-                    data=np.zeros((X.coords['feature'].size, self.Nt_szn, len(quantiles))),
-                    )
-        print(f"t_szn_cent = {Xclim.t_szn_cent}\nt_szn = {t_szn}")
+        print(f"Finished time conversion")
+        Xclim = xr.Dataset(
+                coords={'feature': X.coords['feature'], 't_szn_cent': self.t_szn_cent, 'quantile': quantiles, 'moment': moments},
+                data_vars = {
+                    'Xquant': (['feature', 't_szn_cent', 'quantile'], np.zeros((X.coords['feature'].size, self.Nt_szn, len(quantiles)))), 
+                    'Xmom': (['feature', 't_szn_cent', 'moment'], np.zeros((X.coords['feature'].size, self.Nt_szn, len(moments)))),
+                    }
+                )
+        print(f"Starting to sweep through i_tszn")
         for i_tszn in range(self.Nt_szn):
             if i_tszn % 20 == 0: print(f"Starting i_tszn = {i_tszn} out of {self.Nt_szn}")
             selection = X.where(ti_szn==i_tszn) 
             for i_quant in range(len(quantiles)):
-                Xclim.isel(t_szn_cent=i_tszn,quantile=i_quant)[:] = selection.quantile(quantiles[i_quant],dim=['ensemble','t_sim'],skipna=True).data.flatten()
-        # Test out that the quantiles are arranged as thought
-        for i_quant in range(len(quantiles)):
-            qi_mean = Xclim.isel(quantile=i_quant,feature=0).mean(dim=['t_szn_cent'])
-            print(f"i_quant={i_quant}, qi_mean = {qi_mean}")
-        Xclim_ds = xr.Dataset(data_vars={'X': Xclim,})
-        Xclim_ds.to_netcdf(out_file)
+                Xclim['Xquant'].isel(t_szn_cent=i_tszn,quantile=i_quant)[:] = selection.quantile(quantiles[i_quant],dim=['ensemble','t_sim'],skipna=True).data.flatten()
+            for i_mom in range(len(moments)):
+                Xclim['Xmom'].isel(t_szn_cent=i_tszn,moment=i_mom)[:] = np.power(selection, moments[i_mom]).mean(dim=['ensemble','t_sim'], skipna=True).data.flatten()
+                #print(f"At initial time and feature, mean is {Xclim['Xmom'].isel(t_szn_cent=i_tszn,moment=i_mom,feature=0)}. min X = {selection.isel(feature=0).min()}, max = {selection.isel(feature=0).max()}")
+        Xclim.to_netcdf(out_file)
         return 
     def evaluate_features_for_dga(self,in_file,out_file,clim_file):
         """
@@ -172,21 +181,21 @@ class SeasonalCrommelinModelFeatures:
         ------------
         Write output (e.g., with time delays) to output_filename. 
         """
-        Xclim = xr.open_dataset(clim_file)['X']
+        Xclim = xr.open_dataset(clim_file)
         X = xr.open_dataset(in_file)['X']
         t_abs = X.sel(feature='t_abs')
         szn_id,t_cal,t_szn,ti_szn = self.time_conversion_from_absolute(t_abs)
         Y = xr.DataArray(
-                data = X.data,
+                data = np.zeros(X.shape),
                 coords = X.coords, 
                 dims = X.dims,
                 )
-        # TODO: build in Mean to climatology computation so I can subtract it here
         for i_tszn in range(self.Nt_szn):
-            Y = Y - Xclim.isel(t_szn_cent=i_tszn,
-            selection = X.where(ti_szn==i_tszn)
-
-
+            Xmom_t = Xclim['Xmom'].isel(t_szn_cent=i_tszn, drop=True)
+            rhs = (X - Xmom_t.sel(moment=1,drop=True))/np.sqrt(Xmom_t.sel(moment=2,drop=True) - Xmom_t.sel(moment=1,drop=True)**2)
+            Y += (ti_szn == i_tszn) * rhs
+        Y_ds = xr.Dataset(data_vars={"X": Y})
+        Y_ds.to_netcdf(out_file)
         return
     def evaluate_features_database(self,raw_filename_list,save_filename,featspec=None):
         """
