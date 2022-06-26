@@ -36,13 +36,16 @@ results_dir_hc = join(results_dir,"hc")
 if not exists(results_dir_hc): mkdir(results_dir_hc)
 
 # -------------- Specify which tasks to execute -------------
-integrate_flag =             1
-plot_integration_flag =      1
-generate_hc_flag =           1
-split_reanalysis_flag =      1
-featurize_hc_flag =          1
-featurize_ra_flag =          1
-illustrate_dataset_flag =    1
+integrate_flag =             0
+plot_integration_flag =      0
+generate_hc_flag =           0
+split_reanalysis_flag =      0
+featurize_hc_flag =          0
+featurize_ra_flag =          0
+compute_climatology_flag =   0
+illustrate_dataset_flag =    0
+featurize_for_dga_ra_flag =  1
+featurize_for_dga_hc_flag =  1
 cluster_flag =               1
 # ------------------------------------------------------------
 
@@ -83,7 +86,7 @@ if split_reanalysis_flag:
 # ------------ Create hindcasts ----------------------
 if generate_hc_flag:
     t_abs_range = fundamental_param_dict["year_length"]*np.array([1960,1970])
-    crom.generate_hindcast_dataset(traj_filename,hc_dir,t_abs_range,dt_samp,ens_size=30,ens_duration=47,ens_gap=13,pert_scale=0.1)
+    crom.generate_hindcast_dataset(traj_filename,hc_dir,t_abs_range,dt_samp,ens_size=30,ens_duration=47,ens_gap=13,pert_scale=0.01)
 # ----------------------------------------------
 
 # ------------ Use reanalysis to define features --------
@@ -115,7 +118,7 @@ if compute_climatology_flag:
     save_filename = join(results_dir_ra,"Xclim.nc")
     feat_crom.compute_climatology(in_filename,save_filename)
 # -----------------------------------------------------------------------------
-# ---------- Display features in reanalysis ---------------
+# ---------- Display features in reanalysis and hindcast data ---------------
 if illustrate_dataset_flag:
     Xra_filename = join(results_dir_ra,"X.nc")
     Xhc_filename = join(results_dir_hc,"X.nc")
