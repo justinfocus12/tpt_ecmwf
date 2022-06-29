@@ -43,9 +43,9 @@ split_reanalysis_flag =      0
 featurize_hc_flag =          0
 featurize_ra_flag =          0
 compute_climatology_flag =   0
-illustrate_dataset_flag =    0
-featurize_for_dga_ra_flag =  1
-featurize_for_dga_hc_flag =  1
+illustrate_dataset_flag =    1
+featurize_for_dga_ra_flag =  0
+featurize_for_dga_hc_flag =  0
 cluster_flag =               0
 # ------------------------------------------------------------
 
@@ -146,8 +146,9 @@ if featurize_for_dga_hc_flag:
     input_filename = join(results_dir_hc,"X.nc")
     output_filename = join(results_dir_hc,"Y.nc")
     Xclim_filename = join(results_dir_ra,"Xclim.nc")
-    feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename)
+    feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename,ndelay=ndelay,inverse=False)
     # Invert to make sure
+    print(f"Beginning inversion of HC data")
     input_filename = join(results_dir_hc,"Y.nc")
     output_filename = join(results_dir_hc,"XfromY.nc")
     feat_crom.evaluate_features_for_dga(input_filename,output_filename,Xclim_filename,ndelay=ndelay,inverse=True)

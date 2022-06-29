@@ -92,9 +92,9 @@ class SeasonalCrommelinModelFeatures:
                 i_ens_hc = np.where(szn_id_hc==szn_id)[0]
                 #print(f"i_ens_hc = {i_ens_hc}")
                 i_ens_hc_2plot = []
-                for szn_frac in [0.1,0.4,0.7]:
+                for szn_frac in [0.3,0.5,0.95]:
                     #print(f"list to choose from = {t_szn_hc.isel(ensemble=i_ens_hc,t_sim=0,member=0)}")
-                    i_ens_hc_2plot += [i_ens_hc[np.argmin(np.abs(t_szn_hc.isel(ensemble=i_ens_hc,t_sim=0,member=0).data.flatten() - szn_frac*self.szn_length))]]
+                    i_ens_hc_2plot += [i_ens_hc[np.argmin(np.abs(t_szn_hc.isel(ensemble=i_ens_hc,t_sim=-1,member=0).data.flatten() - szn_frac*self.szn_length))]]
                 for i_ens in i_ens_hc_2plot:
                     for i_mem in range(Xhc.member.size):
                         ax.plot(t_szn_hc.isel(ensemble=i_ens,member=i_mem), Xhc.isel(ensemble=i_ens,member=i_mem).sel(feature=feat), color='purple', zorder=2, alpha=0.3)
@@ -172,20 +172,23 @@ class SeasonalCrommelinModelFeatures:
             Contains the climatological statistics
         Returns
         -------
-        Y: xr.DataArray
+        Xszn: xr.DataArray
             A normalized (or un-normalized) version of X
 
         Side effects
         ------------
         None
         """
+        print(f"X.coords = {X.coords}")
+        print(f"Xclim.coords = {Xclim.coords}")
         t_abs = X.sel(feature='t_abs')
         szn_id,t_cal,t_szn,ti_szn = self.time_conversion_from_absolute(t_abs)
-        Y = xr.DataArray(
+        Xszn = xr.DataArray(
                 data = np.zeros(X.shape),
                 coords = X.coords, 
                 dims = X.dims,
                 )
+        modified_flag = 0*Xszn
         for i_tszn in range(self.Nt_szn):
             Xmom_t = Xclim['Xmom'].isel(t_szn_cent=i_tszn, drop=True)
             Xmom_mean = Xmom_t.sel(moment=1, drop=True)
@@ -194,10 +197,15 @@ class SeasonalCrommelinModelFeatures:
                 rhs = Xmom_std * X + Xmom_mean
             else:
                 rhs = (X - Xmom_mean)/Xmom_std
-            Y += (ti_szn == i_tszn) * rhs
+            #print(f"Xmom_t.coords = {Xmom_t.coords}")
+            #print(f"rhs.coords = {rhs.coords}")
+            #print(f"Xszn.coords = {Xszn.coords}")
+            #print(f"modified_flag.coords = {modified_flag.coords}")
+            Xszn += (ti_szn == i_tszn) * rhs * (modified_flag == 0)
+            modified_flag += (ti_szn == i_tszn)
         # Correct the time coordinate, which should be the same as X
-        Y.sel(feature='t_abs')[:] = X.sel(feature='t_abs').data
-        return Y
+        Xszn.sel(feature='t_abs')[:] = X.sel(feature='t_abs').data
+        return Xszn
     def evaluate_features_for_dga(self,in_file,out_file,clim_file,ndelay,inverse=False):
         """
         Demean and de-seasonalize to feed into clustering algorithm
@@ -225,31 +233,34 @@ class SeasonalCrommelinModelFeatures:
         print(f"X['feature'] = {list(X['feature'].data)}")
         t_abs = X.sel(feature='t_abs')
         szn_id,t_cal,t_szn,ti_szn = self.time_conversion_from_absolute(t_abs)
+        if inverse:
+            X = X.sel(feature=Xclim.coords['feature'].data, drop=True)
         Xszn = self.seasonalize(X,Xclim,inverse=inverse)
         if inverse:
-            Y = Xszn.sel(feature=Xclim.coords['feature'].data, drop=True)
+            Y = Xszn
         else:
             # Build in time-delays
             Ycoords = dict()
             Ycoords['t_sim'] = X.coords['t_sim'].data[ndelay:]
             Yfeat = []
             for feat in list(X.coords['feature'].data):
+                print(f"Beginning to time-delay feature {feat}")
                 Yfeat += [f"{str(feat)}"]
                 for i_delay in range(1,ndelay+1):
                     Yfeat += [f"{str(feat)}_delay{i_delay}"]
             Ycoords['feature'] = Yfeat
-            Ycoords['ensemble'] = X.coords['ensemble']
-            Ycoords['member'] = X.coords['member']
+            Ycoords['ensemble'] = Xszn.coords['ensemble']
+            Ycoords['member'] = Xszn.coords['member']
             Y = xr.DataArray(
                 data=np.zeros((len(Ycoords['ensemble']),len(Ycoords['member']),len(Ycoords['t_sim']),len(Ycoords['feature']))),
                 coords=Ycoords,
                 dims=["ensemble","member","t_sim","feature"],
                 )
             # TODO: make a design decision about how to deal with time-delays. It's inefficient, but maybe general, to make such a huger feature space
-            for feat in list(X.coords['feature'].data):
-                Y.sel(feature=feat)[:] = X.sel(feature=feat,drop=True).isel(t_sim=slice(ndelay,X.coords['t_sim'].size)).data
+            for feat in list(Xszn.coords['feature'].data):
+                Y.sel(feature=feat)[:] = Xszn.sel(feature=feat,drop=True).isel(t_sim=slice(ndelay,Xszn.coords['t_sim'].size)).data
                 for i_delay in range(1,ndelay+1):
-                    Y.sel(feature=f"{str(feat)}_delay{i_delay}")[:] = X.sel(feature=feat,drop=True).isel(t_sim=slice(ndelay-i_delay,X.coords['t_sim'].size-i_delay)).data
+                    Y.sel(feature=f"{str(feat)}_delay{i_delay}")[:] = Xszn.sel(feature=feat,drop=True).isel(t_sim=slice(ndelay-i_delay,Xszn.coords['t_sim'].size-i_delay)).data
         Y_ds = xr.Dataset(data_vars={"X": Y})
         Y_ds.to_netcdf(out_file)
         return
