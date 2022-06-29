@@ -222,6 +222,7 @@ class SeasonalCrommelinModelFeatures:
         """
         Xclim = xr.open_dataset(clim_file)
         X = xr.open_dataset(in_file)['X']
+        print(f"X['feature'] = {list(X['feature'].data)}")
         t_abs = X.sel(feature='t_abs')
         szn_id,t_cal,t_szn,ti_szn = self.time_conversion_from_absolute(t_abs)
         Xszn = self.seasonalize(X,Xclim,inverse=inverse)
@@ -232,9 +233,10 @@ class SeasonalCrommelinModelFeatures:
             Ycoords = dict()
             Ycoords['t_sim'] = X.coords['t_sim'].data[ndelay:]
             Yfeat = []
-            for feat in list(X.coords['feature']):
-                for i_delay in range(ndelay+1):
-                    Yfeat += [f"{feat}_delay{i_delay}"]
+            for feat in list(X.coords['feature'].data):
+                Yfeat += [f"{str(feat)}"]
+                for i_delay in range(1,ndelay+1):
+                    Yfeat += [f"{str(feat)}_delay{i_delay}"]
             Ycoords['feature'] = Yfeat
             Ycoords['ensemble'] = X.coords['ensemble']
             Ycoords['member'] = X.coords['member']
@@ -244,9 +246,10 @@ class SeasonalCrommelinModelFeatures:
                 dims=["ensemble","member","t_sim","feature"],
                 )
             # TODO: make a design decision about how to deal with time-delays. It's inefficient, but maybe general, to make such a huger feature space
-            for i_delay in range(ndelay+1):
-                for feat in X.coords['feature']:
-                    Y.sel(feature=f"{feat}_delay{i_delay}")[:] = X.sel(feature=feat).isel(t_sim=slice(ndelay-i_delay,X.coords['t_sim'].size-i_delay)).data
+            for feat in list(X.coords['feature'].data):
+                Y.sel(feature=feat)[:] = X.sel(feature=feat,drop=True).isel(t_sim=slice(ndelay,X.coords['t_sim'].size)).data
+                for i_delay in range(1,ndelay+1):
+                    Y.sel(feature=f"{str(feat)}_delay{i_delay}")[:] = X.sel(feature=feat,drop=True).isel(t_sim=slice(ndelay-i_delay,X.coords['t_sim'].size-i_delay)).data
         Y_ds = xr.Dataset(data_vars={"X": Y})
         Y_ds.to_netcdf(out_file)
         return
