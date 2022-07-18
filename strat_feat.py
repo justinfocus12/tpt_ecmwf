@@ -179,6 +179,7 @@ class WinterStratosphereFeatures:
         grav_accel = 9.80665
         gh = np.zeros((Nmem,Nt,Nlev,Nlat,Nlon))
         u = np.zeros((Nmem,Nt,Nlev,Nlat,Nlon))
+        print(f"dssource = {dssource}")
         for i_mem in range(Nmem):
             if dssource == 's2s':
                 memkey_gh = 'gh' if i_mem==0 else 'gh_%i'%(i_mem+1)
@@ -187,6 +188,7 @@ class WinterStratosphereFeatures:
                 u[i_mem] = ds[memkey_u][:]
                 ghflag = True
             elif dssource == 'era': 
+                print(f"dssource is era")
                 u[i_mem] = ds['var131'][:]
                 if 'var129' in ds.variables.keys():
                     gh[i_mem] = ds['var129'][:]/grav_accel
@@ -1012,6 +1014,11 @@ class WinterStratosphereFeatures:
         print(f"plev = {plev}")
         pseudoheight = -7.0 * np.log(plev/plev.max())
         gh = gh[i_mem]
+        # ----------------------- is gh what we think? --------------
+        print(f"gh.shape = {gh.shape}")
+        print(f"gh mean at highest pressure level = {np.nanmean(gh[0])}")
+
+        # -----------------------------------------------------------
         u = u[i_mem]
         print("gh.shape = {}".format(gh.shape))
         _,v = self.compute_geostrophic_wind(gh,lat,lon)
@@ -1041,7 +1048,7 @@ class WinterStratosphereFeatures:
             fig,ax = self.show_ugh_onelevel_cartopy(gh[k],uref[k],v[k],lat,lon,vmin=vmin_gh,vmax=vmax_gh)
             date_k = datetime.datetime(fall_year, 10, 1) + datetime.timedelta(hours=time[tidx[k]])
             date_k_fmt = date_k.strftime("%b %d %Y")
-            ax.set_title(r"%s Geop. Hgt. at 10 hPa [m$^2$s$^{-1}$]"%(date_k_fmt))
+            ax.set_title(r"%s Geop. Hgt. at 10 hPa [m]"%(date_k_fmt))
             fig.savefig(join(savedir,"vortex_gh_{}_day{}_yr{}".format(save_suffix,int(time[tidx[k]]/24.0),fall_year)))
             plt.close(fig)
             # QGPV at 10 hPa
