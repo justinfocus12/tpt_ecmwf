@@ -1356,6 +1356,8 @@ class WinterStratosphereFeatures:
             h_uref, = ax[0].plot(time_d_ra[i_y],uref_ra[i_y],color='black',label=label_ra,zorder=2,linewidth=2)
             ax[0].set_title(r"Zonal wind, %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1))
             h_tcap, = ax[1].plot(time_d_ra[i_y],tcap_ra[i_y],color='black',label=label_ra,zorder=2,linewidth=2)
+            print(f"Plotted cap temperature")
+            print(f"tcap_ra[i_y] = {tcap_ra[i_y]}")
             ax[1].set_title(r"Polar cap temperature, %s-%s"%(fy_ra[i_y],fy_ra[i_y]+1))
             handles[0] += [h_uref]
             handles[1] += [h_tcap]

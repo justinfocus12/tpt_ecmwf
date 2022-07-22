@@ -249,7 +249,7 @@ for src in sources:
 task_list = dict({
     "featurization": dict({
         "create_features_flag":               0,
-        "display_features_flag":              1,
+        "display_features_flag":              0,
         }),
     "ei": dict({
         "tpt_featurize_flag":                 0,
@@ -613,11 +613,11 @@ if task_list["comparison"]["illustrate_dataset_flag"]:
 
     winstrat.illustrate_dataset(
             uthresh_a,uthresh_list,tthresh,sswbuffer,
-            feat_filename_e5,feat_filename_hc,
-            label_e5,label_hc,
-            tpt_feat_filename_e5,tpt_feat_filename_hc,
-            ens_start_filename_e5,ens_start_filename_hc,
-            fall_year_filename_e5,fall_year_filename_hc,
+            feat_filename_ei,feat_filename_hc,
+            label_ei,label_hc,
+            tpt_feat_filename_ei,tpt_feat_filename_hc,
+            ens_start_filename_ei,ens_start_filename_hc,
+            fall_year_filename_ei,fall_year_filename_hc,
             feat_def,feat_display_dir,
             years2plot=[1984,2008,2009,2010]
             )
