@@ -305,34 +305,40 @@ class SeasonalCrommelinModelFeatures:
     def energy_observable(self,ds):
         # ds is the dataset, including metadata
         # Return a dataarray with all the energy components
-        ds_E = xr.DataArray(
+        da_E = xr.DataArray(
                 coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["E01","E02","E11","E12","Etot",]},
                 data = np.zeros((ds["member"].size, ds["t_sim"].size, 5)),
                 dims = ["member","t_sim","feature"],
                 )
-        ds_E.loc[dict(feature="E01")] = 0.5*ds["X"].sel(feature="x1")**2
-        ds_E.loc[dict(feature="E02")] = 2.0*ds["X"].sel(feature="x4")**2
-        ds_E.loc[dict(feature="E11")] = (ds.attrs["b"]**2 + 1)/2*(ds["X"].sel(feature=["x2","x3"])**2).sum(dim=["feature"])
-        ds_E.loc[dict(feature="E12")] = (ds.attrs["b"]**2 + 4)/2*(ds["X"].sel(feature=["x4","x5"])**2).sum(dim=["feature"])
-        ds_E.loc[dict(feature="Etot")] = ds_E.sel(feature=["E01","E02","E11","E12"]).sum(dim=["feature"])
-        return ds_E
-    def energy_tendency_observable(self,ds,ds_E=None):
+        da_E.loc[dict(feature="E01")] = 0.5*ds["X"].sel(feature="x1")**2
+        da_E.loc[dict(feature="E02")] = 2.0*ds["X"].sel(feature="x4")**2
+        da_E.loc[dict(feature="E11")] = (ds.attrs["b"]**2 + 1)/2*(ds["X"].sel(feature=["x2","x3"])**2).sum(dim=["feature"])
+        da_E.loc[dict(feature="E12")] = (ds.attrs["b"]**2 + 4)/2*(ds["X"].sel(feature=["x5","x6"])**2).sum(dim=["feature"])
+        da_E.loc[dict(feature="Etot")] = da_E.sel(feature=["E01","E02","E11","E12"]).sum(dim=["feature"])
+        return da_E
+    def energy_tendency_observable(self,ds,da_E=None):
         # Compute the tendency of the total energy.
-        ds_Edot = xr.DataArray(
-                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["dissipation","forcing","quadratic","total"]},
+        da_Edot = xr.DataArray(
+                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["dissipation","forcing","quadratic","Etot"]},
                 data = np.zeros((ds["member"].size, ds["t_sim"].size, 4)),
                 dims = ["member","t_sim","feature"],
                 )
-        if ds_E is None:
-            ds_E = self.energy_observable(ds)
-        ds_Edot.loc[dict(feature="dissipation")] = -2*ds.attrs["C"]*ds_E.sel(feature="Etot")
-        ds_Edot.loc[dict(feature="forcing")] = ds.attrs["C"]*(
+        if da_E is None:
+            da_E = self.energy_observable(ds)
+        da_Edot.loc[dict(feature="dissipation")] = -2*ds.attrs["C"]*da_E.sel(feature="Etot")
+        da_Edot.loc[dict(feature="forcing")] = ds.attrs["C"]*(
                 ds["X"].sel(feature="x1")*ds.attrs["xstar"][0] + 
                 4*ds["X"].sel(feature="x4")*ds.attrs["xstar"][3]
                 )
-        return ds_Edot
-        ds_Edot.loc[dict(feature="E02")] = 2.0*ds["X"].sel(feature="x4")**2
-        return ds_Edot
+        da_Edot.loc[dict(feature="quadratic")] = 0.0
+        da_Edot.loc[dict(feature="Etot")] = da_Edot.sel(feature=["dissipation","forcing","quadratic"]).sum(dim=["feature"])
+        return da_Edot
+    def energy_tendency_observable_findiff(self,ds,da_E=None):
+        # Approximate the tendency of energy by taking a finite difference. The dataset must be time-ordered.
+        if da_E is None:
+            da_E = self.energy_observable(ds)
+        da_Edot_findiff = da_E.differentiate('t_sim')
+        return da_Edot_findiff
     def enstrophy_observable(self,ds):
         # ds is the dataset, including metadata
         # Return a dataarray with all the energy components
@@ -344,7 +350,7 @@ class SeasonalCrommelinModelFeatures:
         dsOm.loc[dict(feature="Om01")] = 1.0/(2*ds.attrs["b"]**2)*ds["X"].sel(feature="x1")**2
         dsOm.loc[dict(feature="Om02")] = 8.0/ds.attrs["b"]**2*ds["X"].sel(feature="x4")**2
         dsOm.loc[dict(feature="Om11")] = (ds.attrs["b"]**2 + 1)/(2*ds.attrs["b"]**2)*(ds["X"].sel(feature=["x2","x3"])**2).sum(dim=["feature"])
-        dsOm.loc[dict(feature="Om12")] = (ds.attrs["b"]**2 + 4)/(2*ds.attrs["b"]**2)*(ds["X"].sel(feature=["x4","x5"])**2).sum(dim=["feature"])
+        dsOm.loc[dict(feature="Om12")] = (ds.attrs["b"]**2 + 4)/(2*ds.attrs["b"]**2)*(ds["X"].sel(feature=["x5","x6"])**2).sum(dim=["feature"])
         dsOm.loc[dict(feature="Omtot")] = dsOm.sel(feature=["Om01","Om02","Om11","Om12"]).sum(dim=["feature"])
         return dsOm
     def phase_observable(self,ds):
