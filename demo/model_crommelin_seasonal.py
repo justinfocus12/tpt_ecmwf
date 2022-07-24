@@ -110,10 +110,14 @@ class SeasonalCrommelinModel:
             The gamma_tilde parameter corresponding to the given time of year. Same shape as gamma_t.
         """
         cosine = np.cos(2*np.pi*t_abs/self.q["year_length"])
+        sine = np.sin(2*np.pi*t_abs/self.q["year_length"])
         gamma_t = np.outer(cosine, (self.q["gamma_limits"][1,:] - self.q["gamma_limits"][0,:])/2) + (self.q["gamma_limits"][0,:] + self.q["gamma_limits"][1,:])/2
+        gammadot_t = np.outer(-sine, (self.q["gamma_limits"][1,:] - self.q["gamma_limits"][0,:])/2)
         gamma_tilde_t = np.outer(cosine, (self.q["gamma_tilde_limits"][1,:] - self.q["gamma_tilde_limits"][0,:])/2) + (self.q["gamma_tilde_limits"][0,:] + self.q["gamma_tilde_limits"][1,:])/2
-        gamma_fpd_t = cosine * (self.q["gamma_limits_fpd"][1] - self.q["gamma_limits_fpd"][0])/2 + (self.q["gamma_limits_fpd"][0] + self.q["gamma_limits_fpd"][1])/2
-        return gamma_t,gamma_tilde_t,gamma_fpd_t
+        gammadot_tilde_t = np.outer(-sine, (self.q["gamma_tilde_limits"][1,:] - self.q["gamma_tilde_limits"][0,:])/2) + (self.q["gamma_tilde_limits"][0,:] + self.q["gamma_tilde_limits"][1,:])/2
+        gamma_fpd_t = cosine * (self.q["gamma_limits_fpd"][1] - self.q["gamma_limits_fpd"][0])/2 
+        gammadot_fpd_t = -sine * (self.q["gamma_limits_fpd"][1] - self.q["gamma_limits_fpd"][0])/2
+        return gamma_t,gamma_tilde_t,gamma_fpd_t,gammadot_t,gammadot_tilde_t,gammadot_fpd_t
     def calendar_day(self,t_abs):
         """
         Parameters
@@ -170,7 +174,7 @@ class SeasonalCrommelinModel:
         diss = np.zeros((Nx,xdim))
         diss[:,:-1] = x[:,:-1].dot(self.q["linear_term"].T)
         # Modify the time-dependent components
-        gamma_t,gamma_tilde_t,gamma_fpd_t = self.orography_cycle(x[:,6])
+        gamma_t,gamma_tilde_t,gamma_fpd_t,gammadot_t,gammadot_tilde_t,gammadot_fpd_t = self.orography_cycle(x[:,6])
         diss[:,0] += gamma_tilde_t[:,0]*x[:,2]
         diss[:,2] -= gamma_t[:,0]*x[:,0]
         diss[:,3] += gamma_tilde_t[:,1]*x[:,5]
@@ -188,7 +192,8 @@ class SeasonalCrommelinModel:
         return xdot
     def energy_tendency_dissipation(self,x):
         energy,_ = self.energy_enstrophy(x)
-        return -2*self.q["C"]*energy["total"]
+        Edot_autonomous = -2*self.q["C"]*energy["total"]
+        return Edot_autonomous 
     def energy_tendency_forcing(self,x):
         return self.q["C"]*(x[:,0]*self.q["xstar"][0] + 4*x[:,3]*self.q["xstar"][3])
     def energy_enstrophy(self,x):
@@ -283,9 +288,12 @@ class SeasonalCrommelinModel:
                 data_vars={"X": xr.DataArray(coords={'member': np.arange(x.shape[0]), 't_sim': t_save, 'feature': [f"x{i}" for i in range(1,self.xdim)] + ["t_abs"]}, data=x),}
                 )
         # Add the fundamental parameters as attrs
-        ds.attrs = {key: self.fundamental_param_dict[key] for key in self.fundamental_param_dict.keys()}
-        ds.attrs["xstar"] = self.q["xstar"]
+        keys2save = [key for key in self.q.keys()]
+        for key in ["forcing_term","linear_term","bilinear_term"]:
+            keys2save.remove(key)
+        ds.attrs = {key: self.q[key] for key in keys2save}
         ds.to_netcdf(traj_filename)
+        # TODO: pickle dump the parameter file for reading
         return 
     def split_long_integration(self,traj_filename,savefolder,szn_start,szn_length):
         """
@@ -354,7 +362,7 @@ class SeasonalCrommelinModel:
         ax[0].set_ylabel(r"$x_1$")
         ax[1].plot(ds['X'].sel(feature='t_abs').data.flatten()[ti0:ti1],ds['X'].sel(feature='x4').data.flatten()[ti0:ti1],color='black')
         ax[1].set_ylabel(r"$x_4$")
-        gamma_t,gamma_tilde_t,gamma_fpd_t = self.orography_cycle(ds['X'].sel(feature='t_abs',member=0).data.flatten())
+        gamma_t,gamma_tilde_t,gamma_fpd_t,_,_,_ = self.orography_cycle(ds['X'].sel(feature='t_abs',member=0).data.flatten())
         ax[2].plot(ds['X'].sel(feature='t_abs').data.flatten()[ti0:ti1],gamma_fpd_t[ti0:ti1],color='black')
         ax[2].set_ylabel(r"$\gamma(t)$")
         fig.savefig(join(savefolder,"t_x1x4gamma"))

@@ -302,18 +302,71 @@ class SeasonalCrommelinModelFeatures:
         print("Finishing featurization")
         return
     # ------------------- Below is a collection of observable functions ----------------
+    def orography_cycle(self,ds):
+        """
+        Parameters
+        ----------
+        t_abs: numpy.ndarray
+            The absolute time. Shape should be (Nx,) where Nx is the number of ensemble members running in parallel. 
+
+        Returns 
+        -------
+        gamma_t: numpy.ndarray
+            The gamma parameter corresponding to the given time of year. It varies sinusoidaly. Same is (Nx,m_max) where m_max is the maximum zonal wavenumber.
+        gamma_tilde_t: numpy.ndarray
+            The gamma_tilde parameter corresponding to the given time of year. Same shape as gamma_t.
+        """
+        t_abs = ds["X"].sel(feature="t_abs")
+        gamma = xr.DataArray(
+                coords={
+                    "member": ds.coords['member'],
+                    "t_sim": ds.coords['t_sim'],
+                    "feature": ["g","g_dot"],
+                    "tilde": [0,1], # 0 is for gamma; 1 is for gamma_tilde
+                    "m": [1,2],
+                    },
+                data = np.zeros((ds['member'].size, ds['t_sim'].size, 2, 2, 2)),
+                dims = ["member","t_sim","feature","tilde","m"],
+                )
+        cosine = np.cos(2*np.pi*t_abs/ds.attrs["year_length"])
+        sine = np.sin(2*np.pi*t_abs/ds.attrs["year_length"])
+        for i_m in range(gamma["m"].size):
+            for tilde in [0,1]:
+                limits = ds.attrs["gamma_tilde_limits"][:,i_m] if tilde else ds.attrs["gamma_limits"]
+                amplitude = (limits[1] - limits[0])/2
+                offset = (limits[1] + limits[0])/2
+                gamma.loc[dict(feature="g",tilde=tilde,m=gamma["m"][i_m])] = cosine * amplitude + offset
+                gamma.loc[dict(feature="g_dot",tilde=tilde,m=gamma["m"][i_m])] = -sine * amplitude
+        return gamma
+    def energy_enstrophy_coeffs(self,ds):
+        # Return the coefficients for each energy and enstrophy reservoir given a dataset's attributes
+        b = ds.attrs["b"]
+        coeffs_energy = dict({
+            "E01": 0.5,
+            "E02": 2.0,
+            "E11": (b**2 + 1)/2,
+            "E12": (b**2 + 4)/2,
+            })
+        coeffs_enstrophy = dict({
+            "Om01": 1.0/(2*b**2),
+            "Om02": 8.0/b**2,
+            "Om11": (b**2 + 1)**2/(2*b**2),
+            "Om12": (b**2 + 4)**2/(2*b**2),
+            })
+        return coeffs_energy,coeffs_enstrophy
     def energy_observable(self,ds):
         # ds is the dataset, including metadata
         # Return a dataarray with all the energy components
+        cE,_ = self.energy_enstrophy_coeffs(ds)
         da_E = xr.DataArray(
                 coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["E01","E02","E11","E12","Etot",]},
                 data = np.zeros((ds["member"].size, ds["t_sim"].size, 5)),
                 dims = ["member","t_sim","feature"],
                 )
-        da_E.loc[dict(feature="E01")] = 0.5*ds["X"].sel(feature="x1")**2
-        da_E.loc[dict(feature="E02")] = 2.0*ds["X"].sel(feature="x4")**2
-        da_E.loc[dict(feature="E11")] = (ds.attrs["b"]**2 + 1)/2*(ds["X"].sel(feature=["x2","x3"])**2).sum(dim=["feature"])
-        da_E.loc[dict(feature="E12")] = (ds.attrs["b"]**2 + 4)/2*(ds["X"].sel(feature=["x5","x6"])**2).sum(dim=["feature"])
+        da_E.loc[dict(feature="E01")] = cE["E01"]*ds["X"].sel(feature="x1")**2
+        da_E.loc[dict(feature="E02")] = cE["E02"]*ds["X"].sel(feature="x4")**2
+        da_E.loc[dict(feature="E11")] = cE["E11"]*(ds["X"].sel(feature=["x2","x3"])**2).sum(dim=["feature"])
+        da_E.loc[dict(feature="E12")] = cE["E12"]*(ds["X"].sel(feature=["x5","x6"])**2).sum(dim=["feature"])
         da_E.loc[dict(feature="Etot")] = da_E.sel(feature=["E01","E02","E11","E12"]).sum(dim=["feature"])
         return da_E
     def energy_tendency_observable(self,ds,da_E=None):
@@ -339,18 +392,51 @@ class SeasonalCrommelinModelFeatures:
             da_E = self.energy_observable(ds)
         da_Edot_findiff = da_E.differentiate('t_sim')
         return da_Edot_findiff
+    def energy_exchange_observable(self,ds,da_E=None):
+        # Compute the energy transfers 
+        if da_E is None:
+            da_E = self.energy_observable(ds)
+        da_Ex = xr.DataArray(
+                coords = {
+                    "member": ds.coords["member"], 
+                    "t_sim": ds.coords["t_sim"], 
+                    "source": ["E01","E02","E11","E12","forcing","dissipation",],
+                    "sink": ["E01","E02","E11","E12","forcing","dissipation",],
+                    },
+                data = np.zeros((ds["member"].size, ds["t_sim"].size, 6, 6)),
+                dims = ["member","t_sim","source","sink"],
+                )
+        gamma = self.orography_cycle(ds)
+        # First, the input from forcing
+        da_Ex.loc[dict(source="forcing",sink="E01")] = 2*cE["E01"]*ds.attrs["C"]*ds.sel(feature="x1")*ds.attrs["xstar"][0]
+        da_Ex.loc[dict(source="forcing",sink="E02")] = 2*cE["E02"]*ds.attrs["C"]*ds.sel(feature="x4")*ds.attrs["xstar"][3]
+        # Second, the leakage due to dissipation 
+        for key in ["E01","E02","E11","E12"]:
+            da_Ex.loc[dict(source=key,sink="dissipation")] = 2*ds.attrs["C"]*da_E.sel(feature=key)
+        da_Ex.loc[dict(source="E11",sink="dissipation")] += 2*gamma.sel(tilde=0,m=1,feature="g")*ds.sel(feature="x1")*ds.sel(feature="x3")*cE["E11"]
+        da_Ex.loc[dict(source="E12",sink="dissipation")] += 2*gamma.sel(tilde=0,m=2,feature="g")*ds.sel(feature="x4")*ds.sel(feature="x6")*cE["E12"]
+        da_Ex.loc[dict(source="E11",sink="E02")] += 2*ds.attrs["epsilon"]*cE["E02"]*ds.sel(feature="x4")*(
+                ds.sel(feature="x2")*ds.sel(feature="x6") - 
+                ds.sel(feature="x3")*ds.sel(feature="x5")
+                )
+        da_Ex.loc[dict(source="E11",sink="E12")] += 2*ds.attrs["delta"][1]*cE["E12"]*ds.sel(feature="x4")*(
+                ds.sel(feature="x2")*ds.sel(feature="x6") - 
+                ds.sel(feature="x3")*ds.sel(feature="x5")
+                )
+        return da_Ex
     def enstrophy_observable(self,ds):
         # ds is the dataset, including metadata
         # Return a dataarray with all the energy components
+        _,cOm = self.energy_enstrophy_coeffs(ds)
         dsOm = xr.DataArray(
                 coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["Om01","Om02","Om11","Om12","Omtot"]},
                 data = np.zeros((ds["member"].size, ds["t_sim"].size, 5)),
                 dims = ["member","t_sim","feature"],
                 )
-        dsOm.loc[dict(feature="Om01")] = 1.0/(2*ds.attrs["b"]**2)*ds["X"].sel(feature="x1")**2
-        dsOm.loc[dict(feature="Om02")] = 8.0/ds.attrs["b"]**2*ds["X"].sel(feature="x4")**2
-        dsOm.loc[dict(feature="Om11")] = (ds.attrs["b"]**2 + 1)/(2*ds.attrs["b"]**2)*(ds["X"].sel(feature=["x2","x3"])**2).sum(dim=["feature"])
-        dsOm.loc[dict(feature="Om12")] = (ds.attrs["b"]**2 + 4)/(2*ds.attrs["b"]**2)*(ds["X"].sel(feature=["x5","x6"])**2).sum(dim=["feature"])
+        dsOm.loc[dict(feature="Om01")] = cOm["Om01"]*ds["X"].sel(feature="x1")**2
+        dsOm.loc[dict(feature="Om02")] = cOm["Om02"]*ds["X"].sel(feature="x4")**2
+        dsOm.loc[dict(feature="Om11")] = cOm["Om11"]*(ds["X"].sel(feature=["x2","x3"])**2).sum(dim=["feature"])
+        dsOm.loc[dict(feature="Om12")] = cOm["Om12"]*(ds["X"].sel(feature=["x5","x6"])**2).sum(dim=["feature"])
         dsOm.loc[dict(feature="Omtot")] = dsOm.sel(feature=["Om01","Om02","Om11","Om12"]).sum(dim=["feature"])
         return dsOm
     def phase_observable(self,ds):
