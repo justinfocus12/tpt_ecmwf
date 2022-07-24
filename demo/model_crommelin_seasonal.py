@@ -2,7 +2,7 @@
 
 import numpy as np
 import matplotlib
-matplotlib.use('AGG')
+#matplotlib.use('AGG')
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 matplotlib.rcParams['font.size'] = 12
@@ -25,7 +25,8 @@ class SeasonalCrommelinModel:
     def __init__(self,fundamental_param_dict):
         self.xdim = 7 # six standard dimensions plus time 
         self.dt_sim = 0.1
-        self.set_params(fundamental_param_dict)
+        self.fundamental_param_dict = fundamental_param_dict
+        self.set_params(self.fundamental_param_dict)
         return
     def set_params(self,fpd):
         """
@@ -40,6 +41,7 @@ class SeasonalCrommelinModel:
         self.q["year_length"] = fpd["year_length"]
         self.q["epsilon"] = 16*np.sqrt(2)/(5*np.pi)
         self.q["C"] = fpd["C"]
+        self.q["b"] = fpd["b"]
         self.q["gamma_limits_fpd"] = fpd["gamma_limits"]
         self.q["xstar"] = np.array([fpd["x1star"],0,0,fpd["r"]*fpd["x1star"],0,0])
         self.q["alpha"] = np.zeros(m_max)
@@ -55,6 +57,34 @@ class SeasonalCrommelinModel:
             for j in range(2):
                 self.q["gamma_tilde_limits"][j,i_m] = fpd["gamma_limits"][j]*4*m/(4*m**2 - 1)*np.sqrt(2)*fpd["b"]/np.pi
                 self.q["gamma_limits"][j,i_m] = fpd["gamma_limits"][j]*4*m**3/(4*m**2 - 1)*np.sqrt(2)*fpd["b"]/(np.pi*(fpd["b"]**2 + m**2))
+        # Construct the forcing, linear matrix, and quadratic matrix, but leaving out the time-dependent parts 
+        # 1. Constant term
+        F = self.q["C"]*self.q["xstar"]
+        # 2. Matrix for linear term
+        L = -self.q["C"]*np.eye(self.xdim-1)
+        #L[0,2] = self.q["gamma_tilde"][0]
+        L[1,2] = self.q["beta"][0]
+        #L[2,0] = -self.q["gamma"][0]
+        L[2,1] = -self.q["beta"][0]
+        #L[3,5] = self.q["gamma_tilde"][1]
+        L[4,5] = self.q["beta"][1]
+        L[5,4] = -self.q["beta"][1]
+        #L[5,3] = -self.q["gamma"][1]
+        # 3. Matrix for bilinear term
+        B = np.zeros((self.xdim-1,self.xdim-1,self.xdim-1))
+        B[1,0,2] = -self.q["alpha"][0]
+        B[1,3,5] = -self.q["delta"][0]
+        B[2,0,1] = self.q["alpha"][0]
+        B[2,3,4] = self.q["delta"][0]
+        B[3,1,5] = self.q["epsilon"]
+        B[3,2,4] = -self.q["epsilon"]
+        B[4,0,5] = -self.q["alpha"][1]
+        B[4,3,2] = -self.q["delta"][1]
+        B[5,0,4] = self.q["alpha"][1]
+        B[5,3,1] = self.q["delta"][1]
+        self.q["forcing_term"] = F
+        self.q["linear_term"] = L
+        self.q["bilinear_term"] = B
         return
     def date_format(self,t_abs,decimal=False):
         # Given a single time t_abs, format the date.
@@ -114,20 +144,71 @@ class SeasonalCrommelinModel:
         Nx = x.shape[0]
         xdot = np.zeros((Nx,self.xdim))
         # ------------ Do the calculation as written -----------------
-        gamma_t,gamma_tilde_t,gamma_fpd_t = self.orography_cycle(x[:,6])
-        xdot[:,0] = gamma_tilde_t[:,0]*x[:,2] - self.q["C"]*(x[:,0] - self.q["xstar"][0])
-        xdot[:,1] = -(self.q["alpha"][0]*x[:,0] - self.q["beta"][0])*x[:,2] - self.q["C"]*x[:,1] - self.q["delta"][0]*x[:,3]*x[:,5]
-        xdot[:,2] = (self.q["alpha"][0]*x[:,0] - self.q["beta"][0])*x[:,1] - gamma_t[:,0]*x[:,0] - self.q["C"]*x[:,2] + self.q["delta"][0]*x[:,3]*x[:,4]
-        xdot[:,3] = gamma_tilde_t[:,1]*x[:,5] - self.q["C"]*(x[:,3] - self.q["xstar"][3]) + self.q["epsilon"]*(x[:,1]*x[:,5] - x[:,2]*x[:,4])
-        xdot[:,4] = -(self.q["alpha"][1]*x[:,0] - self.q["beta"][1])*x[:,5] - self.q["C"]*x[:,4] - self.q["delta"][1]*x[:,3]*x[:,2]
-        xdot[:,5] = (self.q["alpha"][1]*x[:,0] - self.q["beta"][1])*x[:,4] - gamma_t[:,1]*x[:,3] - self.q["C"]*x[:,5] + self.q["delta"][1]*x[:,3]*x[:,1]
-        xdot[:,6] = 1.0 # Time 
+        xdot = self.tendency_forcing(x) + self.tendency_dissipation(x) + self.tendency_quadratic(x)
+        #gamma_t,gamma_tilde_t,gamma_fpd_t = self.orography_cycle(x[:,6])
+        #xdot[:,0] = gamma_tilde_t[:,0]*x[:,2] - self.q["C"]*(x[:,0] - self.q["xstar"][0])
+        #xdot[:,1] = -(self.q["alpha"][0]*x[:,0] - self.q["beta"][0])*x[:,2] - self.q["C"]*x[:,1] - self.q["delta"][0]*x[:,3]*x[:,5]
+        #xdot[:,2] = (self.q["alpha"][0]*x[:,0] - self.q["beta"][0])*x[:,1] - gamma_t[:,0]*x[:,0] - self.q["C"]*x[:,2] + self.q["delta"][0]*x[:,3]*x[:,4]
+        #xdot[:,3] = gamma_tilde_t[:,1]*x[:,5] - self.q["C"]*(x[:,3] - self.q["xstar"][3]) + self.q["epsilon"]*(x[:,1]*x[:,5] - x[:,2]*x[:,4])
+        #xdot[:,4] = -(self.q["alpha"][1]*x[:,0] - self.q["beta"][1])*x[:,5] - self.q["C"]*x[:,4] - self.q["delta"][1]*x[:,3]*x[:,2]
+        #xdot[:,5] = (self.q["alpha"][1]*x[:,0] - self.q["beta"][1])*x[:,4] - gamma_t[:,1]*x[:,3] - self.q["C"]*x[:,5] + self.q["delta"][1]*x[:,3]*x[:,1]
+        #xdot[:,6] = 1.0 # Time 
         # ----------- Do the calculation with the precomputed terms -------------
         #xdot[:,1:] += self.q["forcing_term"] 
         #xdot[:,1:] += x.dot(self.q["linear_term"].T)
         #for j in range(self.xdim):
         #    xdot[:,j] += np.sum(x * (x.dot(self.q["bilinear_term"][j].T)), axis=1)
         return xdot
+    def tendency_forcing(self,x):
+        Nx,xdim = x.shape
+        xdot = np.zeros((Nx,xdim))
+        xdot[:,:-1] = np.outer(np.ones(Nx),self.q["forcing_term"])
+        xdot[:,-1] = 1.0
+        return xdot 
+    def tendency_dissipation(self,x):
+        Nx,xdim = x.shape
+        diss = np.zeros((Nx,xdim))
+        diss[:,:-1] = x[:,:-1].dot(self.q["linear_term"].T)
+        # Modify the time-dependent components
+        gamma_t,gamma_tilde_t,gamma_fpd_t = self.orography_cycle(x[:,6])
+        diss[:,0] += gamma_tilde_t[:,0]*x[:,2]
+        diss[:,2] -= gamma_t[:,0]*x[:,0]
+        diss[:,3] += gamma_tilde_t[:,1]*x[:,5]
+        diss[:,5] -= gamma_t[:,1]*x[:,3]
+        return diss
+    def tendency_quadratic(self,x):
+        """
+        Compute the tendency according to only the nonlinear terms, in order to check conservation of energy and enstrophy.
+        """
+        Nx = x.shape[0]
+        xdot = np.zeros((Nx,self.xdim))
+        # ----------- Do the calculation with the precomputed terms -------------
+        for j in range(self.xdim-1):
+            xdot[:,j] += np.sum(x[:,:-1] * (x[:,:-1].dot(self.q["bilinear_term"][j].T)), axis=1)
+        return xdot
+    def energy_tendency_dissipation(self,x):
+        energy,_ = self.energy_enstrophy(x)
+        return -2*self.q["C"]*energy["total"]
+    def energy_tendency_forcing(self,x):
+        return self.q["C"]*(x[:,0]*self.q["xstar"][0] + 4*x[:,3]*self.q["xstar"][3])
+    def energy_enstrophy(self,x):
+        # Compute the energy and enstrophy (normalized by area) of a given state.
+        xsq = x**2
+        energy = dict({
+            "01": 0.5*xsq[:,0],
+            "02": 2*xsq[:,3],
+            "11": (self.q["b"]**2 + 1)/2*(xsq[:,1] + xsq[:,2]),
+            "12": (self.q["b"]**2 + 4)/2*(xsq[:,4] + xsq[:,5]),
+            })
+        energy["total"] = energy["01"] + energy["02"] + energy["11"] + energy["12"]
+        enstrophy = dict({
+            "01": xsq[:,0]/(2*self.q["b"]**2),
+            "02": xsq[:,3]*8/(self.q["b"]**2),
+            "11": (self.q["b"]**2 + 1)**2/(2*self.q["b"]**2)*(xsq[:,1] + xsq[:,2]),
+            "12": (self.q["b"]**2 + 4)**2/(2*self.q["b"]**2)*(xsq[:,4] + xsq[:,5]),
+            })
+        enstrophy["total"] = enstrophy["01"] + enstrophy["02"] + enstrophy["11"] + enstrophy["12"]
+        return energy,enstrophy
     def integrate(self,x0,t_save):
         """
         Parameters
@@ -201,6 +282,9 @@ class SeasonalCrommelinModel:
         ds = xr.Dataset(
                 data_vars={"X": xr.DataArray(coords={'member': np.arange(x.shape[0]), 't_sim': t_save, 'feature': [f"x{i}" for i in range(1,self.xdim)] + ["t_abs"]}, data=x),}
                 )
+        # Add the fundamental parameters as attrs
+        ds.attrs = {key: self.fundamental_param_dict[key] for key in self.fundamental_param_dict.keys()}
+        ds.attrs["xstar"] = self.q["xstar"]
         ds.to_netcdf(traj_filename)
         return 
     def split_long_integration(self,traj_filename,savefolder,szn_start,szn_length):

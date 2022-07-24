@@ -50,14 +50,18 @@ cluster_flag =               0
 # ------------------------------------------------------------
 
 # ----------- Set some physical parameters -----
-dt_samp = 0.5
-dt_szn = 0.74
-szn_start = 300.0
-szn_length = 250.0
-year_length = 400.0
-Nt_szn = int(szn_length / dt_szn)
-szn_avg_window = 5.0
-burnin_time = 500.0 
+simulation_params_dict = dict(
+    dt_samp = 0.5
+    burnin_time = 500.0 
+)
+event_param_dict = dict(
+    dt_szn = 0.74
+    szn_start = 300.0
+    szn_length = 250.0
+    year_length = 400.0
+    Nt_szn = int(szn_length / dt_szn)
+    szn_avg_window = 5.0
+)
 
 
 ndelay = 3
@@ -97,8 +101,7 @@ if generate_hc_flag:
 # -----------------------------------------------------
 
 
-featspec_filename = join(featspec_dir,"featspec")
-feat_crom = feature_crommelin.SeasonalCrommelinModelFeatures(featspec_filename,szn_start,szn_length,year_length,Nt_szn,szn_avg_window,dt_szn,delaytime=0)
+feat_crom = feature_crommelin.SeasonalCrommelinModelFeatures(szn_start,szn_length,year_length,Nt_szn,szn_avg_window,dt_szn,delaytime=0)
 # ------- Evaluate TPT features on reanalysis  --------
 if featurize_ra_flag:
     rafiles = os.listdir(ra_dir_seasonal)

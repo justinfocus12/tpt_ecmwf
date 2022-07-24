@@ -1,14 +1,13 @@
 # Code to run the model from Crommelin 2003, adapted from Charney & Devore 1979
 
 import numpy as np
-import matplotlib
-matplotlib.use('AGG')
-import matplotlib.colors as colors
-import matplotlib.pyplot as plt
-matplotlib.rcParams['font.size'] = 12
-matplotlib.rcParams['font.family'] = 'serif'
-matplotlib.rcParams['savefig.bbox'] = 'tight'
-matplotlib.rcParams['savefig.pad_inches'] = 0.2
+#import matplotlib
+#import matplotlib.colors as colors
+#import matplotlib.pyplot as plt
+#matplotlib.rcParams['font.size'] = 12
+#matplotlib.rcParams['font.family'] = 'serif'
+#matplotlib.rcParams['savefig.bbox'] = 'tight'
+#matplotlib.rcParams['savefig.pad_inches'] = 0.2
 smallfont = {'family': 'serif', 'size': 12}
 font = {'family': 'serif', 'size': 18}
 bigfont = {'family': 'serif', 'size': 40}
@@ -39,6 +38,7 @@ class CrommelinModel:
         self.q = dict({})
         self.q["epsilon"] = 16*np.sqrt(2)/(5*np.pi)
         self.q["C"] = fpd["C"]
+        self.q["b"] = fpd["b"]
         self.q["xstar"] = np.array([fpd["x1star"],0,0,fpd["r"]*fpd["x1star"],0,0])
         self.q["alpha"] = np.zeros(m_max)
         self.q["beta"] = np.zeros(m_max)
@@ -102,6 +102,49 @@ class CrommelinModel:
         for j in range(self.xdim):
             xdot[:,j] += np.sum(x * (x.dot(self.q["bilinear_term"][j].T)), axis=1)
         return xdot
+    def tendency_quadratic(self,x):
+        """
+        Compute the tendency according to only the nonlinear terms, in order to check conservation of energy and enstrophy.
+        """
+        Nx = x.shape[0]
+        xdot = np.zeros((Nx,self.xdim))
+        # ----------- Do the calculation with the precomputed terms -------------
+        for j in range(self.xdim):
+            xdot[:,j] += np.sum(x * (x.dot(self.q["bilinear_term"][j].T)), axis=1)
+        return xdot
+    def tendency_dissipation(self,x):
+        """
+        Compute the tendency according only to the linear dissipation terms
+        """
+        return x.dot(self.q["linear_term"].T)
+    def tendency_forcing(self,x):
+        """
+        Compute the tendency according only to the forcing term
+        """
+        return self.q["forcing_term"]
+    def energy_tendency_dissipation(self,x):
+        energy,_ = self.energy_enstrophy(x)
+        return -2*self.q["C"]*energy["total"]
+    def energy_tendency_forcing(self,x):
+        return self.q["C"]*(x[:,0]*self.q["xstar"][0] + 4*x[:,3]*self.q["xstar"][3])
+    def energy_enstrophy(self,x):
+        # Compute the energy and enstrophy (normalized by area) of a given state.
+        xsq = x**2
+        energy = dict({
+            "01": 0.5*xsq[:,0],
+            "02": 2*xsq[:,3],
+            "11": (self.q["b"]**2 + 1)/2*(xsq[:,1] + xsq[:,2]),
+            "12": (self.q["b"]**2 + 4)/2*(xsq[:,4] + xsq[:,5]),
+            })
+        energy["total"] = energy["01"] + energy["02"] + energy["11"] + energy["12"]
+        enstrophy = dict({
+            "01": xsq[:,0]/(2*self.q["b"]**2),
+            "02": xsq[:,3]*8/(self.q["b"]**2),
+            "11": (self.q["b"]**2 + 1)**2/(2*self.q["b"]**2)*(xsq[:,1] + xsq[:,2]),
+            "12": (self.q["b"]**2 + 4)**2/(2*self.q["b"]**2)*(xsq[:,4] + xsq[:,5]),
+            })
+        enstrophy["total"] = enstrophy["01"] + enstrophy["02"] + enstrophy["11"] + enstrophy["12"]
+        return energy,enstrophy
     def integrate(self,x0,t_save):
         """
         Parameters
@@ -136,10 +179,10 @@ class CrommelinModel:
             x_new = x_old + 1.0/6*self.dt_sim*(k1 + 2*k2 + 2*k3 + k4)
             t_new = t_old + self.dt_sim
             # If this timestep has crossed a save time, linearly interpolate to the save time. Use the equation
-            # (x_new - x_old) / self.dt_sim = (x[i_save+1] - x[i_save])/(t_save[i_save+1] - t_save[i_save])
+            # (x_new - x_old) / self.dt_sim = (x[i_save+1] - x_old)/(t_save[i_save+1] - t_old)
             # to solve for x[i_save+1].
             if (t_old <= t_save[i_save+1]) and (t_new >= t_save[i_save+1]):
-                x[:,i_save+1] = x[:,i_save] + (t_save[i_save+1]-t_save[i_save])*(x_new - x_old)/self.dt_sim
+                x[:,i_save+1] = x_old + (t_save[i_save+1]-t_old)*(x_new - x_old)/self.dt_sim
                 i_save += 1
             # Update new to old
             x_old = x_new

@@ -12,20 +12,18 @@ from abc import ABC,abstractmethod
 
 
 class SeasonalCrommelinModelFeatures:
-    def __init__(self,featspec_filename,szn_start,szn_length,year_length,Nt_szn,szn_avg_window,dt_samp,delaytime=0):
-        self.featspec_filename = featspec_filename 
-        self.dt_samp = dt_samp # For now assume a constant temporal resolution on all data. Will relax this in the future once we have sampling-interval-independent observables. 
-        self.delaytime = delaytime # The length of time-delay embedding to use as features in the model, in terms of time units (not time samples). Hopefully we can make time delay embedding features independent of the sampling rate. 
-        self.ndelay = int(round(self.delaytime/self.dt_samp)) + 1
-        self.szn_start = szn_start 
-        self.szn_length = szn_length 
-        self.year_length = year_length
-        self.Nt_szn = Nt_szn # Number of time windows within the season (for example, days). Features will be averaged over each time interval to construct the MSM. 
+    def __init__(self):
+        return
+    def set_event_params(self,epd):
+        # epd = event parameter dictionary
+        self.szn_start = epd["szn_start"] 
+        self.szn_length = epd["szn_length"] 
+        self.year_length = epd["year_length"]
+        self.Nt_szn = epd["Nt_szn"] # Number of time windows within the season (for example, days). Features will be averaged over each time interval to construct the MSM. 
+        self.szn_avg_window = epd["szn_avg_window"]
         self.dt_szn = self.szn_length/self.Nt_szn
         self.t_szn_edge =  np.linspace(0,self.szn_length,self.Nt_szn+1) #+ self.szn_start
         self.t_szn_cent = 0.5*(self.t_szn_edge[:-1] + self.t_szn_edge[1:])
-        self.szn_avg_window = szn_avg_window
-        return
     def time_conversion_from_absolute(self,t_abs):
         year = (t_abs / self.year_length).astype(int)
         t_cal = t_abs - year*self.year_length
@@ -204,7 +202,7 @@ class SeasonalCrommelinModelFeatures:
             Xszn += (ti_szn == i_tszn) * rhs * (modified_flag == 0)
             modified_flag += (ti_szn == i_tszn)
         # Correct the time coordinate, which should be the same as X
-        Xszn.sel(feature='t_abs')[:] = X.sel(feature='t_abs').data
+        Xszn.loc[dict(feature='t_abs')] = X.sel(feature='t_abs').data
         return Xszn
     def evaluate_features_for_dga(self,in_file,out_file,clim_file,ndelay,inverse=False):
         """
@@ -279,13 +277,86 @@ class SeasonalCrommelinModelFeatures:
         print(f"traj = \n{traj}")
         X_list = []
         for f in raw_filename_list:
-            Xnew = xr.open_dataset(f)['X']
+            da_new = xr.open_dataset(f)['X']
+            # Here we perform the data reduction. For this model, transfer the information to magnitude and phase. 
+            Xnew = xr.DataArray(
+                    coords = {
+                        "member": da_new.coords["member"],
+                        "t_sim": da_new.coords['t_sim'], 
+                        "feature": ["E01","E02","E11","ph11","E12","ph12","t_abs"],
+                        },
+                    data = np.zeros((da_new.member.size,da_new.t_sim.size,7)),
+                    dims = ["member","t_sim","feature"],
+                    )
+            Xnew.loc[dict(feature="t_abs")] = da_new.sel(feature="t_abs")
+            Xnew.loc[dict(feature="E01")] = 0.5*da_new.sel(feature="x1")**2
+            Xnew.loc[dict(feature="E02")] = 2.0*da_new.sel(feature="x4")**2
+            Xnew.loc[dict(feature="E11")] = (da_new.sel(feature=["x2","x3"])**2).sum(dim="feature")
+            Xnew.loc[dict(feature="E12")] = (da_new.sel(feature=["x5","x6"])**2).sum(dim="feature")
+            Xnew.loc[dict(feature="ph11")] = np.arctan2(-da_new.sel(feature="x3"), da_new.sel(feature="x2"))
+            Xnew.loc[dict(feature="ph12")] = np.arctan2(-da_new.sel(feature="x6"), da_new.sel(feature="x5"))
             X_list += [Xnew]
         X = xr.concat(X_list, dim='ensemble')
         X.coords['ensemble'] = np.arange(len(raw_filename_list))
         X.to_netcdf(save_filename)
         print("Finishing featurization")
         return
+    # ------------------- Below is a collection of observable functions ----------------
+    def energy_observable(self,ds):
+        # ds is the dataset, including metadata
+        # Return a dataarray with all the energy components
+        ds_E = xr.DataArray(
+                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["E01","E02","E11","E12","Etot",]},
+                data = np.zeros((ds["member"].size, ds["t_sim"].size, 5)),
+                dims = ["member","t_sim","feature"],
+                )
+        ds_E.loc[dict(feature="E01")] = 0.5*ds["X"].sel(feature="x1")**2
+        ds_E.loc[dict(feature="E02")] = 2.0*ds["X"].sel(feature="x4")**2
+        ds_E.loc[dict(feature="E11")] = (ds.attrs["b"]**2 + 1)/2*(ds["X"].sel(feature=["x2","x3"])**2).sum(dim=["feature"])
+        ds_E.loc[dict(feature="E12")] = (ds.attrs["b"]**2 + 4)/2*(ds["X"].sel(feature=["x4","x5"])**2).sum(dim=["feature"])
+        ds_E.loc[dict(feature="Etot")] = ds_E.sel(feature=["E01","E02","E11","E12"]).sum(dim=["feature"])
+        return ds_E
+    def energy_tendency_observable(self,ds,ds_E=None):
+        # Compute the tendency of the total energy.
+        ds_Edot = xr.DataArray(
+                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["dissipation","forcing","quadratic","total"]},
+                data = np.zeros((ds["member"].size, ds["t_sim"].size, 4)),
+                dims = ["member","t_sim","feature"],
+                )
+        if ds_E is None:
+            ds_E = self.energy_observable(ds)
+        ds_Edot.loc[dict(feature="dissipation")] = -2*ds.attrs["C"]*ds_E.sel(feature="Etot")
+        ds_Edot.loc[dict(feature="forcing")] = ds.attrs["C"]*(
+                ds["X"].sel(feature="x1")*ds.attrs["xstar"][0] + 
+                4*ds["X"].sel(feature="x4")*ds.attrs["xstar"][3]
+                )
+        return ds_Edot
+        ds_Edot.loc[dict(feature="E02")] = 2.0*ds["X"].sel(feature="x4")**2
+        return ds_Edot
+    def enstrophy_observable(self,ds):
+        # ds is the dataset, including metadata
+        # Return a dataarray with all the energy components
+        dsOm = xr.DataArray(
+                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["Om01","Om02","Om11","Om12","Omtot"]},
+                data = np.zeros((ds["member"].size, ds["t_sim"].size, 5)),
+                dims = ["member","t_sim","feature"],
+                )
+        dsOm.loc[dict(feature="Om01")] = 1.0/(2*ds.attrs["b"]**2)*ds["X"].sel(feature="x1")**2
+        dsOm.loc[dict(feature="Om02")] = 8.0/ds.attrs["b"]**2*ds["X"].sel(feature="x4")**2
+        dsOm.loc[dict(feature="Om11")] = (ds.attrs["b"]**2 + 1)/(2*ds.attrs["b"]**2)*(ds["X"].sel(feature=["x2","x3"])**2).sum(dim=["feature"])
+        dsOm.loc[dict(feature="Om12")] = (ds.attrs["b"]**2 + 4)/(2*ds.attrs["b"]**2)*(ds["X"].sel(feature=["x4","x5"])**2).sum(dim=["feature"])
+        dsOm.loc[dict(feature="Omtot")] = dsOm.sel(feature=["Om01","Om02","Om11","Om12"]).sum(dim=["feature"])
+        return dsOm
+    def phase_observable(self,ds):
+        # Return the phases of waves 1 and 2
+        dsph = xr.DataArray(
+                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["ph11","ph12"]},
+                data = np.zeros((ds["member"].size, ds["t_sim"].size, 2)),
+                dims = ["member","t_sim","feature"],
+                )
+        dsph.loc[dict(feature="ph11")] = np.arctan2(-ds["X"].sel(feature="x3"), ds["X"].sel(feature="x2"))
+        dsph.loc[dict(feature="ph12")] = np.arctan2(-ds["X"].sel(feature="x6"), ds["X"].sel(feature="x5"))
+        return dsph
     def abtest(self,Y,featspec,tpt_bndy):
         """
         Parameters
