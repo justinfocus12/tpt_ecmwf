@@ -20,6 +20,7 @@ import sys
 import os
 from os import mkdir
 from os.path import join,exists
+import pickle
 
 class SeasonalCrommelinModel:
     def __init__(self,fundamental_param_dict):
@@ -37,7 +38,7 @@ class SeasonalCrommelinModel:
         """
         n_max = 1
         m_max = 2
-        self.q = dict({})
+        self.q = dict({"fpd": fpd})
         self.q["year_length"] = fpd["year_length"]
         self.q["epsilon"] = 16*np.sqrt(2)/(5*np.pi)
         self.q["C"] = fpd["C"]
@@ -259,13 +260,15 @@ class SeasonalCrommelinModel:
             x_old = x_new
             t_old = t_new
         return x
-    def integrate_and_save(self,x0,t_save,traj_filename,burnin_time=0):
+    def integrate_and_save(self,x0,t_save,traj_filename,metadata_filename=None,burnin_time=0):
         """
         Parameters
         ----------
         x0,t_save: same as in self.integrate
         traj_filename: str
             Filename (including full path, and .nc extension) in which to save the final output of self.integrate as an Xarray database
+        metadata_filename: str
+            Filename (including full path) in which to save the physical parameters
         burnin_time: float
             Time to clip off the beginning of the trajectory to allow it to approach its attractor
 
@@ -287,12 +290,9 @@ class SeasonalCrommelinModel:
         ds = xr.Dataset(
                 data_vars={"X": xr.DataArray(coords={'member': np.arange(x.shape[0]), 't_sim': t_save, 'feature': [f"x{i}" for i in range(1,self.xdim)] + ["t_abs"]}, data=x),}
                 )
-        # Add the fundamental parameters as attrs
-        keys2save = [key for key in self.q.keys()]
-        for key in ["forcing_term","linear_term","bilinear_term"]:
-            keys2save.remove(key)
-        ds.attrs = {key: self.q[key] for key in keys2save}
         ds.to_netcdf(traj_filename)
+        if metadata_filename is not None:
+            pickle.dump(self.q, open(metadata_filename, "wb"))
         # TODO: pickle dump the parameter file for reading
         return 
     def split_long_integration(self,traj_filename,savefolder,szn_start,szn_length):

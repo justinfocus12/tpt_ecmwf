@@ -302,7 +302,7 @@ class SeasonalCrommelinModelFeatures:
         print("Finishing featurization")
         return
     # ------------------- Below is a collection of observable functions ----------------
-    def orography_cycle(self,ds):
+    def orography_cycle(self,ds,q):
         """
         Parameters
         ----------
@@ -328,19 +328,21 @@ class SeasonalCrommelinModelFeatures:
                 data = np.zeros((ds['member'].size, ds['t_sim'].size, 2, 2, 2)),
                 dims = ["member","t_sim","feature","tilde","m"],
                 )
-        cosine = np.cos(2*np.pi*t_abs/ds.attrs["year_length"])
-        sine = np.sin(2*np.pi*t_abs/ds.attrs["year_length"])
+        cosine = np.cos(2*np.pi*t_abs/q["year_length"])
+        print(f"cosine.shape = {cosine.shape}")
+        sine = np.sin(2*np.pi*t_abs/q["year_length"])
         for i_m in range(gamma["m"].size):
             for tilde in [0,1]:
-                limits = ds.attrs["gamma_tilde_limits"][:,i_m] if tilde else ds.attrs["gamma_limits"]
+                limits = q["gamma_tilde_limits"][:,i_m] if tilde else q["gamma_limits"][:,i_m]
+                print(f"limits = {limits}")
                 amplitude = (limits[1] - limits[0])/2
                 offset = (limits[1] + limits[0])/2
                 gamma.loc[dict(feature="g",tilde=tilde,m=gamma["m"][i_m])] = cosine * amplitude + offset
                 gamma.loc[dict(feature="g_dot",tilde=tilde,m=gamma["m"][i_m])] = -sine * amplitude
         return gamma
-    def energy_enstrophy_coeffs(self,ds):
+    def energy_enstrophy_coeffs(self,ds,q):
         # Return the coefficients for each energy and enstrophy reservoir given a dataset's attributes
-        b = ds.attrs["b"]
+        b = q["b"]
         coeffs_energy = dict({
             "E01": 0.5,
             "E02": 2.0,
@@ -354,10 +356,10 @@ class SeasonalCrommelinModelFeatures:
             "Om12": (b**2 + 4)**2/(2*b**2),
             })
         return coeffs_energy,coeffs_enstrophy
-    def energy_observable(self,ds):
+    def energy_observable(self,ds,q):
         # ds is the dataset, including metadata
         # Return a dataarray with all the energy components
-        cE,_ = self.energy_enstrophy_coeffs(ds)
+        cE,_ = self.energy_enstrophy_coeffs(ds,q)
         da_E = xr.DataArray(
                 coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["E01","E02","E11","E12","Etot",]},
                 data = np.zeros((ds["member"].size, ds["t_sim"].size, 5)),
@@ -369,7 +371,7 @@ class SeasonalCrommelinModelFeatures:
         da_E.loc[dict(feature="E12")] = cE["E12"]*(ds["X"].sel(feature=["x5","x6"])**2).sum(dim=["feature"])
         da_E.loc[dict(feature="Etot")] = da_E.sel(feature=["E01","E02","E11","E12"]).sum(dim=["feature"])
         return da_E
-    def energy_tendency_observable(self,ds,da_E=None):
+    def energy_tendency_observable(self,ds,q,da_E=None):
         # Compute the tendency of the total energy.
         da_Edot = xr.DataArray(
                 coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["dissipation","forcing","quadratic","Etot"]},
@@ -378,24 +380,26 @@ class SeasonalCrommelinModelFeatures:
                 )
         if da_E is None:
             da_E = self.energy_observable(ds)
-        da_Edot.loc[dict(feature="dissipation")] = -2*ds.attrs["C"]*da_E.sel(feature="Etot")
-        da_Edot.loc[dict(feature="forcing")] = ds.attrs["C"]*(
-                ds["X"].sel(feature="x1")*ds.attrs["xstar"][0] + 
-                4*ds["X"].sel(feature="x4")*ds.attrs["xstar"][3]
+        da_Edot.loc[dict(feature="dissipation")] = -2*q["C"]*da_E.sel(feature="Etot")
+        da_Edot.loc[dict(feature="forcing")] = q["C"]*(
+                ds["X"].sel(feature="x1")*q["xstar"][0] + 
+                4*ds["X"].sel(feature="x4")*q["xstar"][3]
                 )
         da_Edot.loc[dict(feature="quadratic")] = 0.0
         da_Edot.loc[dict(feature="Etot")] = da_Edot.sel(feature=["dissipation","forcing","quadratic"]).sum(dim=["feature"])
         return da_Edot
-    def energy_tendency_observable_findiff(self,ds,da_E=None):
+    def energy_tendency_observable_findiff(self,ds,q,da_E=None):
         # Approximate the tendency of energy by taking a finite difference. The dataset must be time-ordered.
         if da_E is None:
-            da_E = self.energy_observable(ds)
+            da_E = self.energy_observable(ds,q)
         da_Edot_findiff = da_E.differentiate('t_sim')
         return da_Edot_findiff
-    def energy_exchange_observable(self,ds,da_E=None):
+    def energy_exchange_observable(self,ds,q,da_E=None):
         # Compute the energy transfers 
+        # q is the metadata
+        cE,_ = self.energy_enstrophy_coeffs(ds,q)
         if da_E is None:
-            da_E = self.energy_observable(ds)
+            da_E = self.energy_observable(ds,q)
         da_Ex = xr.DataArray(
                 coords = {
                     "member": ds.coords["member"], 
@@ -406,28 +410,28 @@ class SeasonalCrommelinModelFeatures:
                 data = np.zeros((ds["member"].size, ds["t_sim"].size, 6, 6)),
                 dims = ["member","t_sim","source","sink"],
                 )
-        gamma = self.orography_cycle(ds)
+        gamma = self.orography_cycle(ds,q)
         # First, the input from forcing
-        da_Ex.loc[dict(source="forcing",sink="E01")] = 2*cE["E01"]*ds.attrs["C"]*ds.sel(feature="x1")*ds.attrs["xstar"][0]
-        da_Ex.loc[dict(source="forcing",sink="E02")] = 2*cE["E02"]*ds.attrs["C"]*ds.sel(feature="x4")*ds.attrs["xstar"][3]
+        da_Ex.loc[dict(source="forcing",sink="E01")] = 2*cE["E01"]*q["C"]*ds["X"].sel(feature="x1")*q["xstar"][0]
+        da_Ex.loc[dict(source="forcing",sink="E02")] = 2*cE["E02"]*q["C"]*ds["X"].sel(feature="x4")*q["xstar"][3]
         # Second, the leakage due to dissipation 
         for key in ["E01","E02","E11","E12"]:
-            da_Ex.loc[dict(source=key,sink="dissipation")] = 2*ds.attrs["C"]*da_E.sel(feature=key)
-        da_Ex.loc[dict(source="E11",sink="dissipation")] += 2*gamma.sel(tilde=0,m=1,feature="g")*ds.sel(feature="x1")*ds.sel(feature="x3")*cE["E11"]
-        da_Ex.loc[dict(source="E12",sink="dissipation")] += 2*gamma.sel(tilde=0,m=2,feature="g")*ds.sel(feature="x4")*ds.sel(feature="x6")*cE["E12"]
-        da_Ex.loc[dict(source="E11",sink="E02")] += 2*ds.attrs["epsilon"]*cE["E02"]*ds.sel(feature="x4")*(
-                ds.sel(feature="x2")*ds.sel(feature="x6") - 
-                ds.sel(feature="x3")*ds.sel(feature="x5")
+            da_Ex.loc[dict(source=key,sink="dissipation")] = 2*q["C"]*da_E.sel(feature=key)
+        da_Ex.loc[dict(source="E11",sink="dissipation")] += 2*gamma.sel(tilde=0,m=1,feature="g")*ds["X"].sel(feature="x1")*ds["X"].sel(feature="x3")*cE["E11"]
+        da_Ex.loc[dict(source="E12",sink="dissipation")] += 2*gamma.sel(tilde=0,m=2,feature="g")*ds["X"].sel(feature="x4")*ds["X"].sel(feature="x6")*cE["E12"]
+        da_Ex.loc[dict(source="E11",sink="E02")] += 2*q["epsilon"]*cE["E02"]*ds["X"].sel(feature="x4")*(
+                ds["X"].sel(feature="x2")*ds["X"].sel(feature="x6") - 
+                ds["X"].sel(feature="x3")*ds["X"].sel(feature="x5")
                 )
-        da_Ex.loc[dict(source="E11",sink="E12")] += 2*ds.attrs["delta"][1]*cE["E12"]*ds.sel(feature="x4")*(
-                ds.sel(feature="x2")*ds.sel(feature="x6") - 
-                ds.sel(feature="x3")*ds.sel(feature="x5")
+        da_Ex.loc[dict(source="E11",sink="E12")] += 2*q["delta"][1]*cE["E12"]*ds["X"].sel(feature="x4")*(
+                ds["X"].sel(feature="x2")*ds["X"].sel(feature="x6") - 
+                ds["X"].sel(feature="x3")*ds["X"].sel(feature="x5")
                 )
         return da_Ex
-    def enstrophy_observable(self,ds):
+    def enstrophy_observable(self,ds,q):
         # ds is the dataset, including metadata
         # Return a dataarray with all the energy components
-        _,cOm = self.energy_enstrophy_coeffs(ds)
+        _,cOm = self.energy_enstrophy_coeffs(ds,q)
         dsOm = xr.DataArray(
                 coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["Om01","Om02","Om11","Om12","Omtot"]},
                 data = np.zeros((ds["member"].size, ds["t_sim"].size, 5)),
