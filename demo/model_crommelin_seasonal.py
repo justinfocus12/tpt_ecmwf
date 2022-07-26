@@ -390,7 +390,7 @@ class SeasonalCrommelinModel:
         fig.savefig(join(savefolder,"gamma_x1"))
         plt.close(fig)
         return
-    def generate_hindcast_dataset(self,ra_filename,hc_dir,t_abs_range,dt_samp,ens_size=10,ens_duration=47,ens_gap=3,pert_scale=0.01):
+    def generate_hindcast_dataset(self,ra_filename_list,hc_dir,t_abs_range,dt_samp,ens_size=10,ens_duration=47,ens_gap=3,pert_scale=0.01):
         """
         Parameters
         ----------
@@ -408,28 +408,30 @@ class SeasonalCrommelinModel:
         ens_gap: float
             Length of time between each successive ensemble (3.5 on average for biweekly forecasts)
         """
-        ra = xr.open_dataset(ra_filename)
-        t_sim_ra = ra.coords['t_sim'].data
-        t_abs_ra = ra['X'].sel(feature='t_abs',member=0).data.flatten()
-        if not (t_abs_range[0] >= t_abs_ra[0] and t_abs_range[1] <= t_abs_ra[-1]):
-            raise Exception("You gave me a time range that falls outside the simulation time: t_abs_range = {t_abs_range}, whilst the simulation time ranges from {t_abs_ra[0]} to {t_abs_ra[-1]}")
-        # Each hindcast ensemble will be stored in a different file. 
-        t_abs = t_abs_range[0]
-        while t_abs < t_abs_range[1]:
-            i_time_ra = np.where(t_abs_ra >= t_abs)[0][0]
-            x0_ra = ra['X'].isel(t_sim=i_time_ra,member=0).data
-            x0 = np.outer(np.ones(ens_size),x0_ra)
-            # Add perturbations to the non-time variables
-            pert = pert_scale * np.random.randn(ens_size,self.xdim-1)
-            x0[:,:-1] += pert
-            # Integrate 
-            t0_str,t0_year = self.date_format(t_abs)
-            t1_str,t1_year = self.date_format(t_abs+ens_duration)
-            ens_filename = join(hc_dir,f"hc{t0_str}_to_{t1_str}.nc")
-            t_ens = np.arange(0,ens_duration,dt_samp)
-            self.integrate_and_save(x0,t_ens,ens_filename)
-            # Advance the initialization time
-            t_abs = t_abs_ra[i_time_ra] + ens_gap
-            if int(t_abs/1000) > (t_abs_ra[i_time_ra]/1000):
-                print(f"Hindcast integration {(t_abs - t_abs_range[0])/np.ptp(t_abs_range)*100} percent done")
+        # TODO: allow the reanalysis to be spread over multiple files. 
+        for ra_filename in ra_filename_list:
+            ra = xr.open_dataset(ra_filename)
+            t_sim_ra = ra.coords['t_sim'].data
+            t_abs_ra = ra['X'].sel(feature='t_abs',member=0).data.flatten()
+            if not (t_abs_range[0] >= t_abs_ra[0] and t_abs_range[1] <= t_abs_ra[-1]):
+                raise Exception("You gave me a time range that falls outside the simulation time: t_abs_range = {t_abs_range}, whilst the simulation time ranges from {t_abs_ra[0]} to {t_abs_ra[-1]}")
+            # Each hindcast ensemble will be stored in a different file. 
+            t_abs = t_abs_range[0]
+            while t_abs < t_abs_range[1]:
+                i_time_ra = np.where(t_abs_ra >= t_abs)[0][0]
+                x0_ra = ra['X'].isel(t_sim=i_time_ra,member=0).data
+                x0 = np.outer(np.ones(ens_size),x0_ra)
+                # Add perturbations to the non-time variables
+                pert = pert_scale * np.random.randn(ens_size,self.xdim-1)
+                x0[:,:-1] += pert
+                # Integrate 
+                t0_str,t0_year = self.date_format(t_abs)
+                t1_str,t1_year = self.date_format(t_abs+ens_duration)
+                ens_filename = join(hc_dir,f"hc{t0_str}_to_{t1_str}.nc")
+                t_ens = np.arange(0,ens_duration,dt_samp)
+                self.integrate_and_save(x0,t_ens,ens_filename)
+                # Advance the initialization time
+                t_abs = t_abs_ra[i_time_ra] + ens_gap
+                if int(t_abs/1000) > (t_abs_ra[i_time_ra]/1000):
+                    print(f"Hindcast integration {(t_abs - t_abs_range[0])/np.ptp(t_abs_range)*100} percent done")
         return

@@ -302,6 +302,9 @@ class SeasonalCrommelinModelFeatures:
         print("Finishing featurization")
         return
     # ------------------- Below is a collection of observable functions ----------------
+    def identity_observable(self,ds,q):
+        da = ds["X"]
+        return da
     def orography_cycle(self,ds,q):
         """
         Parameters
@@ -321,24 +324,22 @@ class SeasonalCrommelinModelFeatures:
                 coords={
                     "member": ds.coords['member'],
                     "t_sim": ds.coords['t_sim'],
-                    "feature": ["g","g_dot"],
+                    "param": ["g","g_dot"],
                     "tilde": [0,1], # 0 is for gamma; 1 is for gamma_tilde
                     "m": [1,2],
                     },
                 data = np.zeros((ds['member'].size, ds['t_sim'].size, 2, 2, 2)),
-                dims = ["member","t_sim","feature","tilde","m"],
+                dims = ["member","t_sim","param","tilde","m"],
                 )
         cosine = np.cos(2*np.pi*t_abs/q["year_length"])
-        print(f"cosine.shape = {cosine.shape}")
         sine = np.sin(2*np.pi*t_abs/q["year_length"])
         for i_m in range(gamma["m"].size):
             for tilde in [0,1]:
                 limits = q["gamma_tilde_limits"][:,i_m] if tilde else q["gamma_limits"][:,i_m]
-                print(f"limits = {limits}")
                 amplitude = (limits[1] - limits[0])/2
                 offset = (limits[1] + limits[0])/2
-                gamma.loc[dict(feature="g",tilde=tilde,m=gamma["m"][i_m])] = cosine * amplitude + offset
-                gamma.loc[dict(feature="g_dot",tilde=tilde,m=gamma["m"][i_m])] = -sine * amplitude
+                gamma.loc[dict(param="g",tilde=tilde,m=gamma["m"][i_m])] = cosine * amplitude + offset
+                gamma.loc[dict(param="g_dot",tilde=tilde,m=gamma["m"][i_m])] = -sine * amplitude
         return gamma
     def energy_enstrophy_coeffs(self,ds,q):
         # Return the coefficients for each energy and enstrophy reservoir given a dataset's attributes
@@ -361,32 +362,32 @@ class SeasonalCrommelinModelFeatures:
         # Return a dataarray with all the energy components
         cE,_ = self.energy_enstrophy_coeffs(ds,q)
         da_E = xr.DataArray(
-                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["E01","E02","E11","E12","Etot",]},
+                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "reservoir": ["E01","E02","E11","E12","Etot",]},
                 data = np.zeros((ds["member"].size, ds["t_sim"].size, 5)),
-                dims = ["member","t_sim","feature"],
+                dims = ["member","t_sim","reservoir"],
                 )
-        da_E.loc[dict(feature="E01")] = cE["E01"]*ds["X"].sel(feature="x1")**2
-        da_E.loc[dict(feature="E02")] = cE["E02"]*ds["X"].sel(feature="x4")**2
-        da_E.loc[dict(feature="E11")] = cE["E11"]*(ds["X"].sel(feature=["x2","x3"])**2).sum(dim=["feature"])
-        da_E.loc[dict(feature="E12")] = cE["E12"]*(ds["X"].sel(feature=["x5","x6"])**2).sum(dim=["feature"])
-        da_E.loc[dict(feature="Etot")] = da_E.sel(feature=["E01","E02","E11","E12"]).sum(dim=["feature"])
+        da_E.loc[dict(reservoir="E01")] = cE["E01"]*ds["X"].sel(feature="x1")**2
+        da_E.loc[dict(reservoir="E02")] = cE["E02"]*ds["X"].sel(feature="x4")**2
+        da_E.loc[dict(reservoir="E11")] = cE["E11"]*(ds["X"].sel(feature=["x2","x3"])**2).sum(dim=["feature"])
+        da_E.loc[dict(reservoir="E12")] = cE["E12"]*(ds["X"].sel(feature=["x5","x6"])**2).sum(dim=["feature"])
+        da_E.loc[dict(reservoir="Etot")] = da_E.sel(reservoir=["E01","E02","E11","E12"]).sum(dim=["reservoir"])
         return da_E
     def energy_tendency_observable(self,ds,q,da_E=None):
         # Compute the tendency of the total energy.
         da_Edot = xr.DataArray(
-                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["dissipation","forcing","quadratic","Etot"]},
+                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "reservoir": ["dissipation","forcing","quadratic","Etot"]},
                 data = np.zeros((ds["member"].size, ds["t_sim"].size, 4)),
-                dims = ["member","t_sim","feature"],
+                dims = ["member","t_sim","reservoir"],
                 )
         if da_E is None:
-            da_E = self.energy_observable(ds)
-        da_Edot.loc[dict(feature="dissipation")] = -2*q["C"]*da_E.sel(feature="Etot")
-        da_Edot.loc[dict(feature="forcing")] = q["C"]*(
+            da_E = self.energy_observable(ds,q)
+        da_Edot.loc[dict(reservoir="dissipation")] = -2*q["C"]*da_E.sel(reservoir="Etot")
+        da_Edot.loc[dict(reservoir="forcing")] = q["C"]*(
                 ds["X"].sel(feature="x1")*q["xstar"][0] + 
                 4*ds["X"].sel(feature="x4")*q["xstar"][3]
                 )
-        da_Edot.loc[dict(feature="quadratic")] = 0.0
-        da_Edot.loc[dict(feature="Etot")] = da_Edot.sel(feature=["dissipation","forcing","quadratic"]).sum(dim=["feature"])
+        da_Edot.loc[dict(reservoir="quadratic")] = 0.0
+        da_Edot.loc[dict(reservoir="Etot")] = da_Edot.sel(reservoir=["dissipation","forcing","quadratic"]).sum(dim=["reservoir"])
         return da_Edot
     def energy_tendency_observable_findiff(self,ds,q,da_E=None):
         # Approximate the tendency of energy by taking a finite difference. The dataset must be time-ordered.
@@ -416,9 +417,9 @@ class SeasonalCrommelinModelFeatures:
         da_Ex.loc[dict(source="forcing",sink="E02")] = 2*cE["E02"]*q["C"]*ds["X"].sel(feature="x4")*q["xstar"][3]
         # Second, the leakage due to dissipation 
         for key in ["E01","E02","E11","E12"]:
-            da_Ex.loc[dict(source=key,sink="dissipation")] = 2*q["C"]*da_E.sel(feature=key)
-        da_Ex.loc[dict(source="E11",sink="dissipation")] += 2*gamma.sel(tilde=0,m=1,feature="g")*ds["X"].sel(feature="x1")*ds["X"].sel(feature="x3")*cE["E11"]
-        da_Ex.loc[dict(source="E12",sink="dissipation")] += 2*gamma.sel(tilde=0,m=2,feature="g")*ds["X"].sel(feature="x4")*ds["X"].sel(feature="x6")*cE["E12"]
+            da_Ex.loc[dict(source=key,sink="dissipation")] = 2*q["C"]*da_E.sel(reservoir=key)
+        da_Ex.loc[dict(source="E11",sink="dissipation")] += 2*gamma.sel(tilde=0,m=1,param="g")*ds["X"].sel(feature="x1")*ds["X"].sel(feature="x3")*cE["E11"]
+        da_Ex.loc[dict(source="E12",sink="dissipation")] += 2*gamma.sel(tilde=0,m=2,param="g")*ds["X"].sel(feature="x4")*ds["X"].sel(feature="x6")*cE["E12"]
         da_Ex.loc[dict(source="E11",sink="E02")] += 2*q["epsilon"]*cE["E02"]*ds["X"].sel(feature="x4")*(
                 ds["X"].sel(feature="x2")*ds["X"].sel(feature="x6") - 
                 ds["X"].sel(feature="x3")*ds["X"].sel(feature="x5")
@@ -443,15 +444,15 @@ class SeasonalCrommelinModelFeatures:
         dsOm.loc[dict(feature="Om12")] = cOm["Om12"]*(ds["X"].sel(feature=["x5","x6"])**2).sum(dim=["feature"])
         dsOm.loc[dict(feature="Omtot")] = dsOm.sel(feature=["Om01","Om02","Om11","Om12"]).sum(dim=["feature"])
         return dsOm
-    def phase_observable(self,ds):
+    def phase_observable(self,ds,q):
         # Return the phases of waves 1 and 2
         dsph = xr.DataArray(
-                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "feature": ["ph11","ph12"]},
+                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "wavenumber": ["ph11","ph12"]},
                 data = np.zeros((ds["member"].size, ds["t_sim"].size, 2)),
-                dims = ["member","t_sim","feature"],
+                dims = ["member","t_sim","wavenumber"],
                 )
-        dsph.loc[dict(feature="ph11")] = np.arctan2(-ds["X"].sel(feature="x3"), ds["X"].sel(feature="x2"))
-        dsph.loc[dict(feature="ph12")] = np.arctan2(-ds["X"].sel(feature="x6"), ds["X"].sel(feature="x5"))
+        dsph.loc[dict(wavenumber="ph11")] = np.arctan2(-ds["X"].sel(feature="x3"), ds["X"].sel(feature="x2"))
+        dsph.loc[dict(wavenumber="ph12")] = np.arctan2(-ds["X"].sel(feature="x6"), ds["X"].sel(feature="x5"))
         return dsph
     def abtest(self,Y,featspec,tpt_bndy):
         """
