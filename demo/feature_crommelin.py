@@ -375,19 +375,19 @@ class SeasonalCrommelinModelFeatures:
     def energy_tendency_observable(self,ds,q,da_E=None):
         # Compute the tendency of the total energy.
         da_Edot = xr.DataArray(
-                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "reservoir": ["dissipation","forcing","quadratic","Etot"]},
+                coords = {"member": ds.coords["member"], "t_sim": ds.coords["t_sim"], "Eflow": ["dissipation","forcing","quadratic","Etot"]},
                 data = np.zeros((ds["member"].size, ds["t_sim"].size, 4)),
-                dims = ["member","t_sim","reservoir"],
+                dims = ["member","t_sim","Eflow"],
                 )
         if da_E is None:
             da_E = self.energy_observable(ds,q)
-        da_Edot.loc[dict(reservoir="dissipation")] = -2*q["C"]*da_E.sel(reservoir="Etot")
-        da_Edot.loc[dict(reservoir="forcing")] = q["C"]*(
+        da_Edot.loc[dict(Eflow="dissipation")] = -2*q["C"]*da_E.sel(reservoir="Etot")
+        da_Edot.loc[dict(Eflow="forcing")] = q["C"]*(
                 ds["X"].sel(feature="x1")*q["xstar"][0] + 
                 4*ds["X"].sel(feature="x4")*q["xstar"][3]
                 )
-        da_Edot.loc[dict(reservoir="quadratic")] = 0.0
-        da_Edot.loc[dict(reservoir="Etot")] = da_Edot.sel(reservoir=["dissipation","forcing","quadratic"]).sum(dim=["reservoir"])
+        da_Edot.loc[dict(Eflow="quadratic")] = 0.0
+        da_Edot.loc[dict(Eflow="Etot")] = da_Edot.sel(Eflow=["dissipation","forcing","quadratic"]).sum(dim=["Eflow"])
         return da_Edot
     def energy_tendency_observable_findiff(self,ds,q,da_E=None):
         # Approximate the tendency of energy by taking a finite difference. The dataset must be time-ordered.
