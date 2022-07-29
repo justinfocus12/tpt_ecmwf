@@ -19,9 +19,9 @@ def project_field(field, weights, features, shp=None, bounds=None):
     """
     Parameters
     ----------
-    field: numpy.array, shape (Nx,)
-        Function values to project
-    weights: numpy.array, shape (Nx,)
+    field: numpy.array, shape (Nx,Nf)
+        Function values to project. This does multiple functions at a time to save computation
+    weights: numpy.array, shape (Nx,Nf)
         Weights of the function values 
     features: numpy.array, shape (Nx, d)
         Coordinates in d-dimensional space 
@@ -30,12 +30,13 @@ def project_field(field, weights, features, shp=None, bounds=None):
     
     Returns 
     -------
-    field_projected: numpy.ndarray, shape (shp)
+    field_projected: numpy.ndarray, shape (Nf,shp)
         Weighted average (if avg == True) or weighted sum (if avg == False) of the field in each bin
     """
     # First, get rid of all nans in features
     Nx,dim = features.shape
-    if not (Nx == field.size == weights.size):
+    Nf = field.shape[1]
+    if not (Nx == field.shape[0] == weights.shape[0] and field.shape[1] == weights.shape[1]):
         raise Exception("Inconsistent shape inputs to project_field. shapes: field {field.shape}, weights {weights.shape}, features {features.shape}")
     if np.any(weights < 0):
         raise Exception("Some weights are negative.")
@@ -52,34 +53,34 @@ def project_field(field, weights, features, shp=None, bounds=None):
     # Determine which grid box each data point falls into
     goodidx = np.where(np.all(np.isnan(features)==0, axis=1))[0]
     grid_cell = ((features[goodidx] - bounds[0])/dx).astype(int)
-    print(f"grid_cell: \nmin = \n{np.min(grid_cell,axis=0)}\nmax={np.max(grid_cell,axis=0)}")
     grid_cell_flat = np.ravel_multi_index(tuple(grid_cell.T), shp)
     # TODO: fix this bug
     # Loop through the grid cells and average all the data with the corresponding index
     Ngrid = np.prod(shp)
-    field_proj_stats = dict({key: np.zeros(Ngrid) for key in ["weightsum","sum","mean","std","q25","q75","min","max"]})
+    field_proj_stats = dict({key: np.zeros((Ngrid,Nf)) for key in ["weightsum","sum","mean","std","q25","q75","min","max"]})
     for i_flat in range(Ngrid):
         idx, = np.where(grid_cell_flat == i_flat)
-        weights_idx = weights[goodidx[idx]]
-        field_idx = field[goodidx[idx]]
-        field_proj_stats["weightsum"][i_flat] = np.nansum(weights_idx)
-        field_proj_stats["sum"][i_flat] = np.nansum(field_idx*weights_idx)
-        if field_proj_stats["weightsum"][i_flat] == 0 or np.all(np.isnan(field_idx)):
-            for key in ["mean","std","q25","q75","min","max"]:
-                field_proj_stats[key][i_flat] = np.nan
-        else:
-            field_proj_stats["mean"][i_flat] = field_proj_stats["sum"][i_flat]/field_proj_stats["weightsum"][i_flat]
-            field_proj_stats["std"][i_flat] = np.sqrt(np.nansum((field_idx - field_proj_stats["mean"][i_flat])**2 * weights_idx) / field_proj_stats["weightsum"][i_flat])
-            field_proj_stats["min"][i_flat] = np.nanmin(field_idx)
-            field_proj_stats["max"][i_flat] = np.nanmax(field_idx)
+        weights_idx = weights[goodidx[idx],:]
+        field_idx = field[goodidx[idx],:]
+        field_proj_stats["weightsum"][i_flat,:] = np.nansum(weights_idx,axis=0)
+        field_proj_stats["sum"][i_flat,:] = np.nansum(field_idx*weights_idx,axis=0)
+        good_fun_idx = np.where((field_proj_stats["weightsum"][i_flat,:] != 0)*(np.all(np.isnan(field_idx),axis=0)==0))[0]
+        bad_fun_idx = np.setdiff1d(np.arange(Nf),good_fun_idx)
+        for key in ["mean","std","q25","q75","min","max"]:
+            field_proj_stats[key][i_flat,bad_fun_idx] = np.nan
+            field_proj_stats["mean"][i_flat,good_fun_idx] = field_proj_stats["sum"][i_flat,good_fun_idx]/field_proj_stats["weightsum"][i_flat,good_fun_idx]
+            field_proj_stats["std"][i_flat,good_fun_idx] = np.sqrt(np.nansum((field_idx[good_fun_idx] - field_proj_stats["mean"][i_flat,good_fun_idx])**2 * weights_idx, axis=0) / field_proj_stats["weightsum"][i_flat,good_fun_idx])
+            field_proj_stats["min"][i_flat] = np.nanmin(field_idx,good_fun_idx,axis=0)
+            field_proj_stats["max"][i_flat] = np.nanmax(field_idx,good_fun_idx,axis=0)
             # quantiles
-            order = np.argsort(field_idx)
-            cdf = np.cumsum(weights_idx[order])
-            cdf *= 1.0/cdf[-1]
-            field_proj_stats["q25"][i_flat] = field_idx[order[np.where(cdf >= 0.25)[0][0]]]
-            field_proj_stats["q75"][i_flat] = field_idx[order[np.where(cdf >= 0.75)[0][0]]]
+            order = np.argsort(field_idx[:,good_fun_idx],axis=0)
+            for i_fun in good_fun_idx:
+                cdf = np.cumsum(weights_idx[order[:,i_fun],i_fun])
+                cdf *= 1.0/cdf[-1]
+                field_proj_stats["q25"][i_flat,i_fun] = field_idx[order[np.where(cdf >= 0.25)[0][0],i_fun]]
+                field_proj_stats["q75"][i_flat,i_fun] = field_idx[order[np.where(cdf >= 0.75)[0][0],i_fun]]
     for key in ["weightsum","sum","mean","std","q25","q75","min","max"]:
-        field_proj_stats[key] = field_proj_stats[key].reshape(shp)
+        field_proj_stats[key] = field_proj_stats[key].reshape(np.concatenate((shp,Nf)))
     # Make a nice formatted grid, too
     edges = tuple([np.linspace(bounds[0,i],bounds[1,i],shp[i]+1) for i in range(dim)])
     centers = tuple([(edges[i][:-1] + edges[i][1:])/2 for i in range(dim)])
@@ -150,7 +151,6 @@ def plot_field_2d(
     if shp is None: 
         shp = np.array([20,20])
     field_proj,edges,centers = project_field(field, weights, features, shp=shp, bounds=bounds)
-    print(f"field_proj shape = {field_proj['mean'].shape}")
     # Plot in 2d
     xy,yx = np.meshgrid(edges[0], edges[1], indexing='ij')
     im = ax.pcolormesh(xy,yx,field_proj['mean'],cmap=plt.cm.coolwarm)
