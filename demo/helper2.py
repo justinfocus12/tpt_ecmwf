@@ -50,8 +50,13 @@ def project_field(field, weights, features, shp=None, bounds=None):
         bounds[1] += padding
     # Determine grid box size
     dx = (bounds[1] - bounds[0])/shp
+    # Take only the indices for which the following three conditions hold
+    goodidx = np.where(
+            np.all(np.isnan(features)==0, axis=1) *  # All features are defined
+            np.all(features >= bounds[0], axis=1) *  # The features are above the lower boundary
+            np.all(features < bounds[1], axis=1)     # The features are below the upper boundary
+            )[0]
     # Determine which grid box each data point falls into
-    goodidx = np.where(np.all(np.isnan(features)==0, axis=1))[0]
     grid_cell = ((features[goodidx] - bounds[0])/dx).astype(int)
     grid_cell_flat = np.ravel_multi_index(tuple(grid_cell.T), shp)
     # TODO: fix this bug
@@ -69,18 +74,19 @@ def project_field(field, weights, features, shp=None, bounds=None):
         for key in ["mean","std","q25","q75","min","max"]:
             field_proj_stats[key][i_flat,bad_fun_idx] = np.nan
             field_proj_stats["mean"][i_flat,good_fun_idx] = field_proj_stats["sum"][i_flat,good_fun_idx]/field_proj_stats["weightsum"][i_flat,good_fun_idx]
-            field_proj_stats["std"][i_flat,good_fun_idx] = np.sqrt(np.nansum((field_idx[good_fun_idx] - field_proj_stats["mean"][i_flat,good_fun_idx])**2 * weights_idx, axis=0) / field_proj_stats["weightsum"][i_flat,good_fun_idx])
-            field_proj_stats["min"][i_flat] = np.nanmin(field_idx,good_fun_idx,axis=0)
-            field_proj_stats["max"][i_flat] = np.nanmax(field_idx,good_fun_idx,axis=0)
-            # quantiles
-            order = np.argsort(field_idx[:,good_fun_idx],axis=0)
-            for i_fun in good_fun_idx:
-                cdf = np.cumsum(weights_idx[order[:,i_fun],i_fun])
-                cdf *= 1.0/cdf[-1]
-                field_proj_stats["q25"][i_flat,i_fun] = field_idx[order[np.where(cdf >= 0.25)[0][0],i_fun]]
-                field_proj_stats["q75"][i_flat,i_fun] = field_idx[order[np.where(cdf >= 0.75)[0][0],i_fun]]
+            field_proj_stats["std"][i_flat,good_fun_idx] = np.sqrt(np.nansum((field_idx[:,good_fun_idx] - field_proj_stats["mean"][i_flat,good_fun_idx])**2 * weights_idx[:,good_fun_idx], axis=0) / field_proj_stats["weightsum"][i_flat,good_fun_idx])
+            if len(field_idx) > 0 and len(good_fun_idx) > 0:
+                field_proj_stats["min"][i_flat,good_fun_idx] = np.nanmin(field_idx[:,good_fun_idx],axis=0)
+                field_proj_stats["max"][i_flat,good_fun_idx] = np.nanmax(field_idx[:,good_fun_idx],axis=0)
+                # quantiles
+                order = np.argsort(field_idx[:,good_fun_idx],axis=0)
+                for i_fun in good_fun_idx:
+                    cdf = np.cumsum(weights_idx[order[:,i_fun],i_fun])
+                    cdf *= 1.0/cdf[-1]
+                    field_proj_stats["q25"][i_flat,i_fun] = field_idx[order[np.where(cdf >= 0.25)[0][0],i_fun],i_fun]
+                    field_proj_stats["q75"][i_flat,i_fun] = field_idx[order[np.where(cdf >= 0.75)[0][0],i_fun],i_fun]
     for key in ["weightsum","sum","mean","std","q25","q75","min","max"]:
-        field_proj_stats[key] = field_proj_stats[key].reshape(np.concatenate((shp,Nf)))
+        field_proj_stats[key] = field_proj_stats[key].reshape(np.concatenate((shp,[Nf])))
     # Make a nice formatted grid, too
     edges = tuple([np.linspace(bounds[0,i],bounds[1,i],shp[i]+1) for i in range(dim)])
     centers = tuple([(edges[i][:-1] + edges[i][1:])/2 for i in range(dim)])
@@ -109,25 +115,24 @@ def plot_field_1d(
     if nbins is None:
         nbins = 20
     shp = np.array((nbins,))
-    print(f"shapes: field = {field.shape}, weights = {weights.shape}, features = {features.shape}")
-    field_proj,edges,centers = project_field(field, weights, features, shp=shp, bounds=bounds_proj)
+    field_proj,edges,centers = project_field(field.reshape(-1,1), weights.reshape(-1,1), features, shp=shp, bounds=bounds_proj)
     # Now plot it
     if fig is None or ax is None:
         fig,ax = plt.subplots()
     if orientation == "horizontal":
-        ax.plot(centers[0],field_proj["mean"],marker='.',color='black')
+        ax.plot(centers[0],field_proj["mean"][:,0],marker='.',color='black')
         if quantile_flag:
-            ax.fill_between(centers[0],field_proj["q25"],field_proj["q75"],color=plt.cm.binary(0.6),zorder=-1)
-            ax.fill_between(centers[0],field_proj["min"],field_proj["max"],color=plt.cm.binary(0.3),zorder=-2)
+            ax.fill_between(centers[0],field_proj["q25"][:,0],field_proj["q75"][:,0],color=plt.cm.binary(0.6),zorder=-1)
+            ax.fill_between(centers[0],field_proj["min"][:,0],field_proj["max"][:,0],color=plt.cm.binary(0.3),zorder=-2)
         if feat_name is not None:
             ax.set_xlabel(feat_name)
         if field_name is not None:
             ax.set_ylabel(field_name)
     else:
-        ax.plot(field_proj["mean"].flatten(),centers[0],marker='.',color='black')
+        ax.plot(field_proj["mean"][:,0],centers[0],marker='.',color='black')
         if quantile_flag:
-            ax.fill_betweenx(centers[0],field_proj["q25"],field_proj["q75"],color=plt.cm.binary(0.6),zorder=-1)
-            ax.fill_betweenx(centers[0],field_proj["min"],field_proj["max"],color=plt.cm.binary(0.3),zorder=-2)
+            ax.fill_betweenx(centers[0],field_proj["q25"][:,0],field_proj["q75"][:,0],color=plt.cm.binary(0.6),zorder=-1)
+            ax.fill_betweenx(centers[0],field_proj["min"][:,0],field_proj["max"][:,0],color=plt.cm.binary(0.3),zorder=-2)
         if feat_name is not None:
             ax.set_ylabel(feat_name)
         if field_name is not None:
@@ -143,17 +148,17 @@ def plot_field_2d(
     if not (
             (field.ndim == weights.ndim == 1) and 
             (features.ndim == 2) and 
-            (field.size == weights.size == features.shape[0])
+            (field.shape[0] == weights.shape[0] == features.shape[0])
             ):
         raise Exception(f"Inconsistent shapes. field: ({field.shape}), features: ({features.shape}), weights: ({weights.shape})")
     if (fig is None or ax is None):
         fig,ax = plt.subplots()
     if shp is None: 
         shp = np.array([20,20])
-    field_proj,edges,centers = project_field(field, weights, features, shp=shp, bounds=bounds)
+    field_proj,edges,centers = project_field(field.reshape(-1,1), weights.reshape(-1,1), features, shp=shp, bounds=bounds)
     # Plot in 2d
     xy,yx = np.meshgrid(edges[0], edges[1], indexing='ij')
-    im = ax.pcolormesh(xy,yx,field_proj['mean'],cmap=plt.cm.coolwarm)
+    im = ax.pcolormesh(xy,yx,field_proj['mean'][:,:,0],cmap=plt.cm.coolwarm)
     if feat_names is not None:
         ax.set_xlabel(feat_names[0])
         ax.set_ylabel(feat_names[1])
