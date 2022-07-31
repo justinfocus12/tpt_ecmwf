@@ -144,6 +144,7 @@ def plot_field_2d(
         shp=None, bounds=None, 
         fig=None, ax=None,
         field_name=None, feat_names=None,
+        stat_name="mean",
         ):
     if not (
             (field.ndim == weights.ndim == 1) and 
@@ -158,7 +159,7 @@ def plot_field_2d(
     field_proj,edges,centers = project_field(field.reshape(-1,1), weights.reshape(-1,1), features, shp=shp, bounds=bounds)
     # Plot in 2d
     xy,yx = np.meshgrid(edges[0], edges[1], indexing='ij')
-    im = ax.pcolormesh(xy,yx,field_proj['mean'][:,:,0],cmap=plt.cm.coolwarm)
+    im = ax.pcolormesh(xy,yx,field_proj[stat_name][:,:,0],cmap=plt.cm.coolwarm)
     if feat_names is not None:
         ax.set_xlabel(feat_names[0])
         ax.set_ylabel(feat_names[1])
