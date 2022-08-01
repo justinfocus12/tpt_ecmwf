@@ -11,30 +11,8 @@ from os.path import join,exists
 import sys
 from abc import ABC,abstractmethod
 
-class TPTFeatures(ABC):
-    def __init__(self,featspec_file,szn_start,szn_length,Nt_szn,szn_avg_window):
-        """
-        Parameters
-        ----------
-        featspec_file: str 
-            Full file path (with .nc extension) in which to store any parameters needed to compute features. It will be stored as an Xarray database.
-        szn_start: float or int
-            Starting time of the universe for this model. In case the data come from a periodic process, szn_start might be a calendar day. 
-        szn_length: float 
-            Duration of the universe for this model. In case szn_start + szn_length > (length of year), as is the case for the winter season, the season is understood to wrap around from one year to the next. 
-        Nt_szn: int
-            The number of time windows into which the model is divided. 
-        szn_avg_window: float 
-            The time window over which to average when computing a seasonal cycle.
-        """
-        self.featspec_file = featspec_file
-        self.szn_start = szn_start 
-        self.szn_length = szn_length 
-        self.Nt_szn = Nt_szn # Number of time windows within the season (for example, days). Features will be averaged over each time interval to construct the MSM. 
-        self.dt_szn = self.szn_length/self.Nt_szn
-        self.t_szn_edge = self.szn_start + np.linspace(0,self.szn_length,self.Nt_szn+1)
-        self.t_szn_cent = 0.5*(self.t_szn_edge[:-1] + self.t_szn_edge[1:])
-        self.szn_avg_window = szn_avg_window
+class SeasonalFeatures(ABC):
+    def __init__(self):
         super().__init__()
         return
     # For abtest, Y should be an xarray DataSet. Each component array has dimensions (member,simtime). One of the observables will be physical time.

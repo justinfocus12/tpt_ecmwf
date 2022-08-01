@@ -35,6 +35,13 @@ def abtest(Xtpt, tpt_bndy):
     )
     return ab_tag
 
+def cotton_eye_joe(Xtpt, tpt_bndy, ab_tag, mode):
+    if mode == "timechunks":
+        return cotton_eye_joe_timechunks(Xtpt, tpt_bndy, ab_tag)
+    elif mode == "timesteps":
+        return cotton_eye_joe_timesteps(Xtpt, tpt_bndy, ab_tag)
+    else:
+        raise Exception(f"You asked for a mode of {mode}, but I only accept 'timechunks' or 'timesteps'")
 
 def cotton_eye_joe_timesteps(Xtpt, tpt_bndy, ab_tag):
     sintil = xr.DataArray(
@@ -128,10 +135,3 @@ def cotton_eye_joe_timechunks(Xtpt, tpt_bndy, ab_tag):
                 sintil.loc[dict(ensemble=ensemble,member=member,state=state,sense="until")] = tuntil
     return sintil
 
-def cotton_eye_joe(Xtpt, tpt_bndy, ab_tag, mode):
-    if mode == "timechunks":
-        return cotton_eye_joe_timechunks(Xtpt, tpt_bndy, ab_tag)
-    elif mode == "timesteps":
-        return cotton_eye_joe_timesteps(Xtpt, tpt_bndy, ab_tag)
-    else:
-        raise Exception(f"You asked for a mode of {mode}, but I only accept 'timechunks' or 'timesteps'")

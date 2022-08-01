@@ -9,10 +9,12 @@ from os import mkdir
 from os.path import join,exists
 import sys
 from abc import ABC,abstractmethod
+from feature_template import SeasonalFeatures
 
 
-class SeasonalCrommelinModelFeatures:
+class SeasonalCrommelinModelFeatures(SeasonalFeatures):
     def __init__(self):
+        super().__init__()
         return
     def set_event_params(self,epd):
         # epd = event parameter dictionary
