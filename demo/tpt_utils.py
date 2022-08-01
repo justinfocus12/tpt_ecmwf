@@ -1,137 +1,171 @@
-# This file contains the core functions to do TPT analysis
-# Mostly having to do with manipulating MSMs to get quantities of interest
-
+# All new set of functions to take statistics of multi-dimensional data
 import numpy as np
-import xarray as xr
-import netCDF4 as nc
-import model_crommelin_seasonal
-import feature_crommelin 
-from importlib import reload
-import sys 
-import os
-from os import mkdir, makedirs
-from os.path import join,exists
-from importlib import reload
-import pickle
-import helper2
-from sklearn.cluster import KMeans, MiniBatchKMeans
-from datetime import datetime
+import matplotlib
+import matplotlib.colors as colors
+matplotlib.rcParams['font.size'] = 18
+matplotlib.rcParams['font.family'] = 'monospace'
+matplotlib.rcParams['savefig.bbox'] = 'tight'
+matplotlib.rcParams['savefig.pad_inches'] = 0.2
+smallfont = {'family': 'serif', 'size': 12}
+font = {'family': 'serif', 'size': 18}
+bigfont = {'family': 'serif', 'size': 40}
+giantfont = {'family': 'serif', 'size': 80}
+ggiantfont = {'family': 'serif', 'size': 120}
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+import sys
 
-def abtest(Xtpt, tpt_bndy):
-    # Given a snapshot of an instance of the feat_tpt data structure, return ab_tag:
-    # 0 means in A, 1 means in B, and 2 means neither.
-    # The definition of A and B will be parameterized by a dictionary, tpt_bndy, which specifies
-    # the time of season when blockings can happen as well as the thresholds for A and B.
-    time_window_flag = 1.0*(
-        Xtpt.sel(feature="t_szn") >= tpt_bndy["tthresh"][0])*(
-        Xtpt.sel(feature="t_szn") <= tpt_bndy["tthresh"][1]
-    )
-    blocked_flag = 1.0*(Xtpt.sel(feature="x1") <= tpt_bndy["x1thresh"][0])
-    zonal_flag = 1.0*(Xtpt.sel(feature="x1") >= tpt_bndy["x1thresh"][1])
-    ab_tag = (
-        abcode["A"]*((1*(time_window_flag == 0) + 1*zonal_flag) > 0) +
-        abcode["B"]*(time_window_flag*blocked_flag) +
-        abcode["D"]*(time_window_flag*(blocked_flag==0)*(zonal_flag==0))
-    )
-    return ab_tag
+def project_field(field, weights, features, shp=None, bounds=None):
+    """
+    Parameters
+    ----------
+    field: numpy.array, shape (Nx,Nf)
+        Function values to project. This does multiple functions at a time to save computation
+    weights: numpy.array, shape (Nx,Nf)
+        Weights of the function values 
+    features: numpy.array, shape (Nx, d)
+        Coordinates in d-dimensional space 
+    shp: numpy.array of int, shape (d,)
+        Number of bins in each dimension
+    
+    Returns 
+    -------
+    field_projected: numpy.ndarray, shape (Nf,shp)
+        Weighted average (if avg == True) or weighted sum (if avg == False) of the field in each bin
+    """
+    # First, get rid of all nans in features
+    Nx,dim = features.shape
+    Nf = field.shape[1]
+    if not (Nx == field.shape[0] == weights.shape[0] and field.shape[1] == weights.shape[1]):
+        raise Exception("Inconsistent shape inputs to project_field. shapes: field {field.shape}, weights {weights.shape}, features {features.shape}")
+    if np.any(weights < 0):
+        raise Exception("Some weights are negative.")
+    if shp is None: shp = 20*np.ones(dim,dtype=int) # number of INTERIOR
+    if bounds is None:
+        bounds = np.array([np.nanmin(features,0),np.nanmax(features,0)])
+        if np.any(bounds[1] <= bounds[0]):
+            raise Exception("The bounding box is zero along some dimension: bounds=\n{bounds}")
+        padding = 0.01*(bounds[1] - bounds[0])
+        bounds[0] -= padding
+        bounds[1] += padding
+    # Determine grid box size
+    dx = (bounds[1] - bounds[0])/shp
+    # Take only the indices for which the following three conditions hold
+    goodidx = np.where(
+            np.all(np.isnan(features)==0, axis=1) *  # All features are defined
+            np.all(features >= bounds[0], axis=1) *  # The features are above the lower boundary
+            np.all(features < bounds[1], axis=1)     # The features are below the upper boundary
+            )[0]
+    # Determine which grid box each data point falls into
+    grid_cell = ((features[goodidx] - bounds[0])/dx).astype(int)
+    grid_cell_flat = np.ravel_multi_index(tuple(grid_cell.T), shp)
+    # TODO: fix this bug
+    # Loop through the grid cells and average all the data with the corresponding index
+    Ngrid = np.prod(shp)
+    field_proj_stats = dict({key: np.zeros((Ngrid,Nf)) for key in ["weightsum","sum","mean","std","q25","q75","min","max"]})
+    for i_flat in range(Ngrid):
+        idx, = np.where(grid_cell_flat == i_flat)
+        weights_idx = weights[goodidx[idx],:]
+        field_idx = field[goodidx[idx],:]
+        field_proj_stats["weightsum"][i_flat,:] = np.nansum(weights_idx,axis=0)
+        field_proj_stats["sum"][i_flat,:] = np.nansum(field_idx*weights_idx,axis=0)
+        good_fun_idx = np.where((field_proj_stats["weightsum"][i_flat,:] != 0)*(np.all(np.isnan(field_idx),axis=0)==0))[0]
+        bad_fun_idx = np.setdiff1d(np.arange(Nf),good_fun_idx)
+        for key in ["mean","std","q25","q75","min","max"]:
+            field_proj_stats[key][i_flat,bad_fun_idx] = np.nan
+            field_proj_stats["mean"][i_flat,good_fun_idx] = field_proj_stats["sum"][i_flat,good_fun_idx]/field_proj_stats["weightsum"][i_flat,good_fun_idx]
+            field_proj_stats["std"][i_flat,good_fun_idx] = np.sqrt(np.nansum((field_idx[:,good_fun_idx] - field_proj_stats["mean"][i_flat,good_fun_idx])**2 * weights_idx[:,good_fun_idx], axis=0) / field_proj_stats["weightsum"][i_flat,good_fun_idx])
+            if len(field_idx) > 0 and len(good_fun_idx) > 0:
+                field_proj_stats["min"][i_flat,good_fun_idx] = np.nanmin(field_idx[:,good_fun_idx],axis=0)
+                field_proj_stats["max"][i_flat,good_fun_idx] = np.nanmax(field_idx[:,good_fun_idx],axis=0)
+                # quantiles
+                order = np.argsort(field_idx[:,good_fun_idx],axis=0)
+                for i_fun in good_fun_idx:
+                    cdf = np.cumsum(weights_idx[order[:,i_fun],i_fun])
+                    cdf *= 1.0/cdf[-1]
+                    field_proj_stats["q25"][i_flat,i_fun] = field_idx[order[np.where(cdf >= 0.25)[0][0],i_fun],i_fun]
+                    field_proj_stats["q75"][i_flat,i_fun] = field_idx[order[np.where(cdf >= 0.75)[0][0],i_fun],i_fun]
+    for key in ["weightsum","sum","mean","std","q25","q75","min","max"]:
+        field_proj_stats[key] = field_proj_stats[key].reshape(np.concatenate((shp,[Nf])))
+    # Make a nice formatted grid, too
+    edges = tuple([np.linspace(bounds[0,i],bounds[1,i],shp[i]+1) for i in range(dim)])
+    centers = tuple([(edges[i][:-1] + edges[i][1:])/2 for i in range(dim)])
+    return field_proj_stats, edges, centers
 
-def cotton_eye_joe(Xtpt, tpt_bndy, ab_tag, mode):
-    if mode == "timechunks":
-        return cotton_eye_joe_timechunks(Xtpt, tpt_bndy, ab_tag)
-    elif mode == "timesteps":
-        return cotton_eye_joe_timesteps(Xtpt, tpt_bndy, ab_tag)
+def plot_field_1d(
+        field, weights, feature, 
+        nbins=None, bounds=None, orientation="horizontal", 
+        fig=None, ax=None, 
+        field_name=None, feat_name=None,
+        quantile_flag=True,
+        ):
+    # TODO: draw standard deviation (and more) envelopes around the 1D plot, to illustrate some of the uncertainty.
+    if not (
+            field.ndim == weights.ndim == feature.ndim == 1 and 
+            field.size == weights.size == feature.size
+            ):
+        raise Exception(f"field, weights, and feature all must be 1D. But their shapes are {field.shape}, {weights.shape}, and {feature.shape}")
+    if bounds is None:
+        bounds = np.array([np.nanmin(feature), np.nanmax(feature)])
+        padding = 0.01*(bounds[1] - bounds[0])
+        bounds[0] -= padding
+        bounds[1] += padding
+    bounds_proj = bounds.reshape((2,1))
+    features = feature.reshape((feature.size,1))
+    if nbins is None:
+        nbins = 20
+    shp = np.array((nbins,))
+    field_proj,edges,centers = project_field(field.reshape(-1,1), weights.reshape(-1,1), features, shp=shp, bounds=bounds_proj)
+    # Now plot it
+    if fig is None or ax is None:
+        fig,ax = plt.subplots()
+    if orientation == "horizontal":
+        ax.plot(centers[0],field_proj["mean"][:,0],marker='.',color='black')
+        if quantile_flag:
+            ax.fill_between(centers[0],field_proj["q25"][:,0],field_proj["q75"][:,0],color=plt.cm.binary(0.6),zorder=-1)
+            ax.fill_between(centers[0],field_proj["min"][:,0],field_proj["max"][:,0],color=plt.cm.binary(0.3),zorder=-2)
+        if feat_name is not None:
+            ax.set_xlabel(feat_name)
+        if field_name is not None:
+            ax.set_ylabel(field_name)
     else:
-        raise Exception(f"You asked for a mode of {mode}, but I only accept 'timechunks' or 'timesteps'")
-
-def cotton_eye_joe_timesteps(Xtpt, tpt_bndy, ab_tag):
-    sintil = xr.DataArray(
-        coords = dict({
-            "ensemble": Xtpt.coords["ensemble"],
-            "member": Xtpt.coords["member"],
-            "t_sim": Xtpt.coords["t_sim"],
-            "sense": ["since","until"],
-            "state": ["A","B"]
-        }),
-        data = np.nan*np.ones((Xtpt["ensemble"].size, Xtpt["member"].size, Xtpt["t_sim"].size, 2, 2)),
-        dims = ["ensemble","member","t_sim","sense","state"],
-    )
-    # Forward pass through time
-    for i_time in np.arange(sintil["t_sim"].size):
-        if i_time % 200 == 0:
-            print(f"Forward pass: through time {i_time} out of {sintil['t_sim'].size}")
-        for state in ["A","B"]:
-            if i_time > 0:
-                sintil[dict(t_sim=i_time)].loc[dict(sense="since",state=state)] = (
-                    sintil.isel(t_sim=i_time-1).sel(sense="since",state=state).data +
-                    sintil["t_sim"][i_time].data - sintil["t_sim"][i_time-1].data
-                )
-            state_flag = (ab_tag.isel(t_sim=i_time) == abcode[state])
-            # Wherever the state is achieved at this time slice, set the time since to zero
-            sintil[dict(t_sim=i_time)].loc[dict(sense="since",state=state)] = (
-                (xr.zeros_like(sintil.isel(t_sim=i_time).sel(sense="since",state=state))).where(
-                state_flag, sintil.isel(t_sim=i_time).sel(sense="since",state=state))
-            )
-    # Backward pass through time
-    for i_time in np.arange(sintil["t_sim"].size-1,-1,-1):
-        if i_time % 200 == 0:
-            print(f"Backward pass: through time {i_time} out of {sintil['t_sim'].size}")
-        for state in ["A","B"]:
-            if i_time < sintil["t_sim"].size-1:
-                sintil[dict(t_sim=i_time)].loc[dict(sense="until",state=state)] = (
-                    sintil.isel(t_sim=i_time+1).sel(sense="until",state=state).data +
-                    sintil["t_sim"][i_time+1].data - sintil["t_sim"][i_time].data
-                )
-            state_flag = (ab_tag.isel(t_sim=i_time) == abcode[state])
-            sintil[dict(t_sim=i_time)].loc[dict(sense="until",state=state)] = (
-                (xr.zeros_like(sintil.isel(t_sim=i_time).sel(sense="until",state=state))).where(
-                state_flag, sintil.isel(t_sim=i_time).sel(sense="until",state=state))
-            )
-    return sintil
+        ax.plot(field_proj["mean"][:,0],centers[0],marker='.',color='black')
+        if quantile_flag:
+            ax.fill_betweenx(centers[0],field_proj["q25"][:,0],field_proj["q75"][:,0],color=plt.cm.binary(0.6),zorder=-1)
+            ax.fill_betweenx(centers[0],field_proj["min"][:,0],field_proj["max"][:,0],color=plt.cm.binary(0.3),zorder=-2)
+        if feat_name is not None:
+            ax.set_ylabel(feat_name)
+        if field_name is not None:
+            ax.set_xlable(field_name)
+    return fig,ax
+        
+def plot_field_2d(
+        field, weights, features,
+        shp=None, bounds=None, 
+        fig=None, ax=None,
+        field_name=None, feat_names=None,
+        stat_name="mean",
+        ):
+    if not (
+            (field.ndim == weights.ndim == 1) and 
+            (features.ndim == 2) and 
+            (field.shape[0] == weights.shape[0] == features.shape[0])
+            ):
+        raise Exception(f"Inconsistent shapes. field: ({field.shape}), features: ({features.shape}), weights: ({weights.shape})")
+    if (fig is None or ax is None):
+        fig,ax = plt.subplots()
+    if shp is None: 
+        shp = np.array([20,20])
+    field_proj,edges,centers = project_field(field.reshape(-1,1), weights.reshape(-1,1), features, shp=shp, bounds=bounds)
+    # Plot in 2d
+    xy,yx = np.meshgrid(edges[0], edges[1], indexing='ij')
+    im = ax.pcolormesh(xy,yx,field_proj[stat_name][:,:,0],cmap=plt.cm.coolwarm)
+    if feat_names is not None:
+        ax.set_xlabel(feat_names[0])
+        ax.set_ylabel(feat_names[1])
+    if field_name is not None:
+        ax.set_title(field_name)
+    return fig,ax
 
 
-# Function to find the time since and until hitting A and B
-def cotton_eye_joe_timechunks(Xtpt, tpt_bndy, ab_tag):
-    sintil = xr.DataArray(
-        coords = dict({
-            "ensemble": Xtpt.coords["ensemble"],
-            "member": Xtpt.coords["member"],
-            "t_sim": Xtpt.coords["t_sim"],
-            "sense": ["since","until"],
-            "state": ["A","B"]
-        }),
-        data = np.nan*np.ones((Xtpt["ensemble"].size, Xtpt["member"].size, Xtpt["t_sim"].size, 2, 2)),
-        dims = ["ensemble","member","t_sim","sense","state"],
-    )
-    t_sim = Xtpt["t_sim"].data
-    print(f"t_sim.shape = {t_sim.shape}")
-    Nt = t_sim.size
-    # Forward pass through time
-    for ensemble in Xtpt.coords["ensemble"]:
-        for member in Xtpt.coords["member"]:
-            for state in ["A","B"]:
-                indicator = (ab_tag.sel(ensemble=ensemble,member=member) == abcode[state]).data.astype(int)
-                tsince = np.nan*np.ones(Nt)
-                tuntil = np.nan*np.ones(Nt)
-                # Fill in zeros inside the set
-                tsince[indicator==1] = 0.0
-                tuntil[indicator==1] = 0.0
-                # Find the crossover points
-                idx_exit = np.where(np.diff(indicator) == -1)[0] + 1 # First step outside of state
-                idx_entry = np.where(np.diff(indicator) == 1)[0] + 1 # First entry to state
-                # Take care of boundary cases
-                if (not indicator[0]) and len(idx_entry) > 0:
-                    tuntil[:idx_entry[0]] = t_sim[idx_entry[0]] - t_sim[:idx_entry[0]]
-                    idx_entry = idx_entry[1:]
-                if (not indicator[Nt-1]) and len(idx_exit) > 0:
-                    tsince[idx_exit[-1]:] = t_sim[idx_exit[-1]:] - t_sim[idx_exit[-1]-1]
-                    idx_exit = idx_exit[:-1]
-                # Now the middle components: time intervals between exits and entries
-                if len(idx_entry) > 0 and len(idx_exit) > 0:
-                    for k in range(len(idx_exit)):
-                        i0,i1 = idx_exit[k],idx_entry[k]
-                        tsince[i0:i1] = t_sim[i0:i1] - t_sim[i0-1]
-                        tuntil[i0:i1] = t_sim[i1] - t_sim[i0:i1]
-                sintil.loc[dict(ensemble=ensemble,member=member,state=state,sense="since")] = tsince
-                sintil.loc[dict(ensemble=ensemble,member=member,state=state,sense="until")] = tuntil
-    return sintil
 
