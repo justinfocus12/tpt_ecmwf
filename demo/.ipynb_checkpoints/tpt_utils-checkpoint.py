@@ -73,18 +73,18 @@ def project_field(field, weights, features, shp=None, bounds=None):
         bad_fun_idx = np.setdiff1d(np.arange(Nf),good_fun_idx)
         for key in ["mean","std","q25","q75","min","max"]:
             field_proj_stats[key][i_flat,bad_fun_idx] = np.nan
-        field_proj_stats["mean"][i_flat,good_fun_idx] = field_proj_stats["sum"][i_flat,good_fun_idx]/field_proj_stats["weightsum"][i_flat,good_fun_idx]
-        field_proj_stats["std"][i_flat,good_fun_idx] = np.sqrt(np.nansum((field_idx[:,good_fun_idx] - field_proj_stats["mean"][i_flat,good_fun_idx])**2 * weights_idx[:,good_fun_idx], axis=0) / field_proj_stats["weightsum"][i_flat,good_fun_idx])
-        if len(field_idx) > 0 and len(good_fun_idx) > 0:
-            field_proj_stats["min"][i_flat,good_fun_idx] = np.nanmin(field_idx[:,good_fun_idx],axis=0)
-            field_proj_stats["max"][i_flat,good_fun_idx] = np.nanmax(field_idx[:,good_fun_idx],axis=0)
-            # quantiles
-            order = np.argsort(field_idx[:,good_fun_idx],axis=0)
-            for i_fun in good_fun_idx:
-                cdf = np.cumsum(weights_idx[order[:,i_fun],i_fun])
-                cdf *= 1.0/cdf[-1]
-                field_proj_stats["q25"][i_flat,i_fun] = field_idx[order[np.where(cdf >= 0.25)[0][0],i_fun],i_fun]
-                field_proj_stats["q75"][i_flat,i_fun] = field_idx[order[np.where(cdf >= 0.75)[0][0],i_fun],i_fun]
+            field_proj_stats["mean"][i_flat,good_fun_idx] = field_proj_stats["sum"][i_flat,good_fun_idx]/field_proj_stats["weightsum"][i_flat,good_fun_idx]
+            field_proj_stats["std"][i_flat,good_fun_idx] = np.sqrt(np.nansum((field_idx[:,good_fun_idx] - field_proj_stats["mean"][i_flat,good_fun_idx])**2 * weights_idx[:,good_fun_idx], axis=0) / field_proj_stats["weightsum"][i_flat,good_fun_idx])
+            if len(field_idx) > 0 and len(good_fun_idx) > 0:
+                field_proj_stats["min"][i_flat,good_fun_idx] = np.nanmin(field_idx[:,good_fun_idx],axis=0)
+                field_proj_stats["max"][i_flat,good_fun_idx] = np.nanmax(field_idx[:,good_fun_idx],axis=0)
+                # quantiles
+                order = np.argsort(field_idx[:,good_fun_idx],axis=0)
+                for i_fun in good_fun_idx:
+                    cdf = np.cumsum(weights_idx[order[:,i_fun],i_fun])
+                    cdf *= 1.0/cdf[-1]
+                    field_proj_stats["q25"][i_flat,i_fun] = field_idx[order[np.where(cdf >= 0.25)[0][0],i_fun],i_fun]
+                    field_proj_stats["q75"][i_flat,i_fun] = field_idx[order[np.where(cdf >= 0.75)[0][0],i_fun],i_fun]
     for key in ["weightsum","sum","mean","std","q25","q75","min","max"]:
         field_proj_stats[key] = field_proj_stats[key].reshape(np.concatenate((shp,[Nf])))
     # Make a nice formatted grid, too
