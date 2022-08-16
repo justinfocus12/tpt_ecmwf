@@ -58,10 +58,10 @@ class WinterStratosphereFeatures(SeasonalFeatures):
     def set_ab_code(self):
         self.ab_code = {"A": 0, "B": 1, "D": 2}
         return
-    def set_ab_boundaries(self, t_thresh0, t_thresh1, ubar1060_thresh):
+    def set_ab_boundaries(self, t_thresh0, t_thresh1, ubar_10_60_thresh):
         self.tpt_bndy = dict({
             "t_thresh": [t_thresh0,t_thresh1],
-            "ubar1060_thresh": ubar1060_thresh,
+            "ubar_10_60_thresh": ubar_10_60_thresh,
         })
         # The time thresholds are in days since the beginning of the season.
         return
@@ -73,19 +73,32 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         self.t_szn_edge = np.linspace(0, self.szn_length, self.Nt_szn+1)
         return 
     # ---------------- Observables -------------------------
-    # TODO: for all the following, augment coordinates of observables to include multiple members
+    # TODO: for all the following, augment coordinates of observables to include multiple members. In fact, require every dataset input to include (time,ensemble,member) as coordinates. The calling function must expand dimensions accordingly. 
+    def prepare_blank_observable(self, ds, feature_dim_name, feature_coord_names):
+        # A general method to create a blank DataArray that replaces the coordinates "longitude" and "latitude" in the input dataset (ds) with a dimension "feature" with coordinates feature_names
+        F_coords = {key: ds.coords[key].to_numpy() for key in list(ds.coords.keys())}
+        for spatial_coord in ["longitude","latitude","level"]:
+            F_coords.pop(spatial_coord)
+        F_coords[feature_dim_name] = feature_coord_names
+        F = xr.DataArray(
+                coords = F_coords, 
+                dims = list(F_coords.keys())
+                )
+        return F
     def ubar_observable(self, ds):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
-        return
+        ubar_features = ["ubar_10_60", "ubar_100_60", "ubar_500_60", "ubar_850_60"] #ds.coords['level'].to_numpy()
+        ubar = self.prepare_blank_observable(ds, "ubar_60", ubar_features)
+        for level in [10, 100, 500, 850]:
+            ubar.loc[dict(ubar_60=f"ubar_{level}_60")] = ds['u'].sel(latitude=60,level=level).mean(dim="longitude")
+        return ubar
     def time_observable(self, ds): 
         # Return all the possible kinds of time we might need from this object. The basic unit will be DAYS 
-        tda = xr.DataArray(
-                coords = {
-                    "t_sim": (ds['time'].data - ds['time'].data[0]) / self.time_unit, 
-                    "time_type": ["t_abs", "t_cal", "t_szn", "year_cal"],
-                    },   
-                dims = ["t_sim","time_type"],
-                )    
+        time_types = ["t_dt64", "t_abs", "t_cal", "t_szn", "year_cal"]
+        tda = self.prepare_blank_observable(ds, "time_type", time_types)
+        Nt = ds["time"].size
+        # Regular time 
+        tda.loc[dict(time_type="t_dt64")] = ds["time"].data
         # Absolute time
         tda.loc[dict(time_type="t_abs")] = (ds["time"].data - self.time_origin) / self.time_unit
         # Calendar year
@@ -96,7 +109,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             np.datetime64(
                 datetime.datetime(year_cal[i_t], 1, 1)
                 ) 
-            for i_t in range(tda["t_sim"].size)
+            for i_t in range(Nt)
             ])
         tda.loc[dict(time_type="t_cal")] = (ds["time"] - year_start) / self.time_unit  # TODO: make this agnostic to time units 
         # Time since most recent season start
@@ -104,7 +117,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             np.datetime64(
                 datetime.datetime(year_cal[i_t], self.szn_start["month"], self.szn_start["day"])
             ) 
-            for i_t in range(tda["t_sim"].size)
+            for i_t in range(Nt)
         ])
         print(f"szn_start_same_year[0] = {szn_start_same_year[0]}")
         szn_start_year = year_cal - 1*(ds["time"] < szn_start_same_year).to_numpy()
@@ -112,7 +125,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             np.datetime64(
                 datetime.datetime(szn_start_year[i_t], self.szn_start["month"], self.szn_start["day"])
             ) 
-            for i_t in range(tda["t_sim"].size)
+            for i_t in range(Nt)
         ])
         tda.loc[dict(time_type="t_szn")] = (ds["time"].data - szn_start_most_recent) / self.time_unit
         return tda
@@ -121,7 +134,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 (Xtpt.sel(feature="t_szn") >= self.tpt_bndy["t_thresh"][0]) &  
                 (Xtpt.sel(feature="t_szn") <= self.tpt_bndy["t_thresh"][1])
                 )
-        weak_vortex_flag = (Xtpt.sel(feature="ubar1060") <= self.tpt_bndy["ubar1060_thresh"])
+        weak_vortex_flag = (Xtpt.sel(feature="ubar_10_60") <= self.tpt_bndy["ubar_10_60_thresh"])
         ab_tag = (
                 self.ab_code["A"]*(~time_window_flag) + 
                 self.ab_code["B"]*(time_window_flag & weak_vortex_flag) + 
