@@ -85,19 +85,19 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 dims = list(F_coords.keys())
                 )
         return F
-    def pc_observable(self, ds, eofs, monclim):
+    def pc_observable(self, ds, ds_eofs, ds_monclim):
         # Project the geopotential height fields onto the EOFs 
         pc_features = []
         for level in [10, 100, 500, 850]:
             for i_pc in [1, 2, 3, 4]:
                 pc_features += [f"pc_{level}_{i_pc}"]
+        pc_all = (
+                (ds["z"].groupby("time.month") - ds_monclim["z"]) * ds_eofs["eofs"] * np.sqrt(np.maximum(0, np.cos(ds_eofs["latitude"] * np.pi/180)))
+                ).sum(dim=["latitude","longitude"]) / np.sqrt(ds_eofs["variance_fraction"])
         pc = self.prepare_blank_observable(ds, "pc", pc_features)
         for level in [10, 100, 500, 850]:
             for i_pc in [1, 2, 3, 4]:
-                pc.loc[dict(pc_feature=f"pc_{level}_{i_pc}")] = (
-                        (ds["z"].sel(level=level).groupby("time.month") - monclim["z"].sel(level=level)) * 
-                        (eofs.sel(level=level, mode=i_pc))
-                        ).sum()
+                pc.loc[dict(pc=f"pc_{level}_{i_pc}")] = pc_all.sel(level=level, mode=i_pc)
         return pc
     def ubar_observable(self, ds):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
