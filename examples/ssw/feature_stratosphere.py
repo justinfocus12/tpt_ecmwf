@@ -119,7 +119,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             ) 
             for i_t in range(Nt)
         ])
-        print(f"szn_start_same_year[0] = {szn_start_same_year[0]}")
         szn_start_year = year_cal - 1*(ds["time"] < szn_start_same_year).to_numpy()
         szn_start_most_recent = np.array([
             np.datetime64(

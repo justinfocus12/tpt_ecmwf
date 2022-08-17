@@ -13,7 +13,7 @@ import cdsapi
 c = cdsapi.Client()
 
 # Download data one month at a time
-year_list = np.arange(2010,2020)
+year_list = np.arange(1970,1980)
 month_list = np.arange(1,13)
 
 for year in year_list:
