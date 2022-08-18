@@ -153,7 +153,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 (Xtpt.sel(feature="t_szn") >= self.tpt_bndy["t_thresh"][0]) &  
                 (Xtpt.sel(feature="t_szn") <= self.tpt_bndy["t_thresh"][1])
                 )
-        weak_vortex_flag = (Xtpt.sel(feature="ubar_10_60") <= self.tpt_bndy["ubar_10_60_thresh"])
+        weak_vortex_flag = (Xtpt.sel(feature="ubar_10_60_delay0") <= self.tpt_bndy["ubar_10_60_thresh"])
         ab_tag = (
                 self.ab_code["A"]*(~time_window_flag) + 
                 self.ab_code["B"]*(time_window_flag & weak_vortex_flag) + 
