@@ -85,15 +85,20 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 dims = list(F_coords.keys())
                 )
         return F
-    def pc_observable(self, ds, ds_eofs, ds_monclim):
+    def pc_observable(self, ds, ds_eofs, ds_monclim, subtract_monthly_mean=False):
         # Project the geopotential height fields onto the EOFs 
         pc_features = []
         for level in [10, 100, 500, 850]:
             for i_pc in [1, 2, 3, 4]:
                 pc_features += [f"pc_{level}_{i_pc}"]
-        pc_all = (
-                (ds["z"].groupby("time.month") - ds_monclim["z"]) * ds_eofs["eofs"] * np.sqrt(np.maximum(0, np.cos(ds_eofs["latitude"] * np.pi/180)))
-                ).sum(dim=["latitude","longitude"]) / np.sqrt(ds_eofs["variance_fraction"])
+        if subtract_monthly_mean:
+            pc_all = (
+                    (ds["z"].groupby("time.month") - ds_monclim["z"]) * ds_eofs["eofs"] * np.sqrt(np.maximum(0, np.cos(ds_eofs["latitude"] * np.pi/180)))
+                    ).sum(dim=["latitude","longitude"]) / np.sqrt(ds_eofs["variance_fraction"])
+        else:
+            pc_all = (
+                    ds["z"] * ds_eofs["eofs"] * np.sqrt(np.maximum(0, np.cos(ds_eofs["latitude"] * np.pi/180)))
+                    ).sum(dim=["latitude","longitude"]) / np.sqrt(ds_eofs["variance_fraction"])
         pc = self.prepare_blank_observable(ds, "pc", pc_features)
         for level in [10, 100, 500, 850]:
             for i_pc in [1, 2, 3, 4]:
@@ -108,7 +113,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return ubar
     def time_observable(self, ds): 
         # Return all the possible kinds of time we might need from this object. The basic unit will be DAYS 
-        time_types = ["t_dt64", "t_abs", "t_cal", "t_szn", "year_cal"]
+        time_types = ["t_dt64", "t_abs", "t_cal", "t_szn", "year_cal", "year_szn_start"]
         tda = self.prepare_blank_observable(ds, "time_type", time_types)
         Nt = ds["time"].size
         # Regular time 
@@ -133,10 +138,11 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             ) 
             for i_t in range(Nt)
         ])
-        szn_start_year = year_cal - 1*(ds["time"] < szn_start_same_year).to_numpy()
+        year_szn_start = year_cal - 1*(ds["time"] < szn_start_same_year).to_numpy()
+        tda.loc[dict(time_type="year_szn_start")] = year_szn_start
         szn_start_most_recent = np.array([
             np.datetime64(
-                datetime.datetime(szn_start_year[i_t], self.szn_start["month"], self.szn_start["day"])
+                datetime.datetime(year_szn_start[i_t], self.szn_start["month"], self.szn_start["day"])
             ) 
             for i_t in range(Nt)
         ])
