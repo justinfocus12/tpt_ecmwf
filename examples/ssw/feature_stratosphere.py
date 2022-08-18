@@ -104,6 +104,15 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             for i_pc in [1, 2, 3, 4]:
                 pc.loc[dict(pc=f"pc_{level}_{i_pc}")] = pc_all.sel(level=level, mode=i_pc)
         return pc
+    def temperature_observable(self, ds):
+        #zonal-mean zonal wind at a range of latitudes, and all altitudes
+        temp_features = ["Tcap_10_60to90", "Tcap_100_60to90", "Tcap_500_60to90", "Tcap_850_60to90"] #ds.coords['level'].to_numpy()
+        Tcap = self.prepare_blank_observable(ds, "Tcap_60to90", ubar_features)
+        cos_weight = np.cos(ds['latitude'])
+        for level in [10, 100, 500, 850]:
+            Tcap.loc[dict(Tcap_60to90=f"Tcap_{level}_60to90")] = (
+                    ds['t'].sel(latitude=slice(60,90),level=level).mean(dim="longitude")
+        return ubar
     def ubar_observable(self, ds):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
         ubar_features = ["ubar_10_60", "ubar_100_60", "ubar_500_60", "ubar_850_60"] #ds.coords['level'].to_numpy()
