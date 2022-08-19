@@ -118,28 +118,37 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return Tcap
     def heatflux_observable(self, ds):
         # Heat flux at various wavenumbers between 45 and 75 degrees N. 
-        min_lat = 45
-        max_lat = 76
+        min_lat = 45 
+        max_lat = 75 
+        Nlon = ds.longitude.size 
+        max_mode = 3
         lat_idx = np.sort(np.where((ds.latitude >= min_lat)*(ds.latitude < max_lat))[0])
-        T = ds['t'].isel(latitude=lat_idx).mean(dim="latitude")
-        v = ds['v'].isel(latitude=lat_idx).mean(dim="latitude")
-        # Which axis is longitude?
+        cos_weight = np.cos(ds.latitude[lat_idx]) 
+        cos_weight *= 1.0/cos_weight.sum()
+        T = (ds['t'].isel(latitude=lat_idx) * cos_weight).sum(dim="latitude")
+        v = (ds['v'].isel(latitude=lat_idx) * cos_weight).sum(dim="latitude")
         ax_lon = T.dims.index("longitude") 
-        vhat = xr.zeros_like(v, dtype=complex)
-        That = xr.zeros_like(T, dtype=complex)
+        vhat = xr.zeros_like(v, dtype=complex).rename(longitude="mode").assign_coords(mode=np.arange(Nlon))
+        That = xr.zeros_like(T, dtype=complex).rename(longitude="mode").assign_coords(mode=np.arange(Nlon))
         vhat[:] = np.fft.fft(v.to_numpy(), axis=ax_lon)
         That[:] = np.fft.fft(T.to_numpy(), axis=ax_lon) 
+        vT_wavenumbers = 1/Nlon**2 * vhat.conj()*That
+        #vT_wavenumbers.loc[dict(mode=slice(1,None))] *= 2
+        # TODO: assert that the wavenumbers add up correctly
+        vT_mean_space = (v*T).mean(dim="longitude")
+        vT_mean_freq = vT_wavenumbers.sum(dim="mode")
+        print(f"max parseval error = {np.max(np.abs(vT_mean_space - vT_mean_freq))}")
         vT_features = []
         for level in [10, 100, 500, 850]:
-            for mode in [1, 2, 3]:
+            for mode in range(max_mode+1):
                 vT_features += [f"vT_{level}_{mode}"]
         vT = self.prepare_blank_observable(ds, "vT_feature", vT_features)
         for level in [10, 100, 500, 850]:
-            for mode in [1, 2, 3]:
+            for mode in range(max_mode+1):
+                factor = 1.0 if mode == 0 else 2.0 # We only looked at the first half of the spectrum.
                 vT.loc[dict(vT_feature=f"vT_{level}_{mode}")] = (
-                        vhat.sel(level=level).isel(longitude=mode).real * That.sel(level=level).isel(longitude=mode).real + 
-                        vhat.sel(level=level).isel(longitude=mode).imag * That.sel(level=level).isel(longitude=mode).imag 
-                        )
+                        vT_wavenumbers.sel(level=level, mode=mode).real
+                        ) * factor
         return vT
     def ubar_observable(self, ds):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
