@@ -107,12 +107,40 @@ class WinterStratosphereFeatures(SeasonalFeatures):
     def temperature_observable(self, ds):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
         temp_features = ["Tcap_10_60to90", "Tcap_100_60to90", "Tcap_500_60to90", "Tcap_850_60to90"] #ds.coords['level'].to_numpy()
-        Tcap = self.prepare_blank_observable(ds, "Tcap_60to90", ubar_features)
+        Tcap = self.prepare_blank_observable(ds, "Tcap_60to90", temp_features)
         cos_weight = np.cos(ds['latitude'])
+        cos_weight *= 1.0/(np.sum(cos_weight) * ds.longitude.size)
         for level in [10, 100, 500, 850]:
             Tcap.loc[dict(Tcap_60to90=f"Tcap_{level}_60to90")] = (
-                    ds['t'].sel(latitude=slice(60,90),level=level).mean(dim="longitude")
-        return ubar
+                    (ds['t'].sel(latitude=slice(60,90),level=level) * cos_weight)
+                    .sum(dim=["longitude","latitude"])
+                    )
+        return Tcap
+    def heatflux_observable(self, ds):
+        # Heat flux at various wavenumbers between 45 and 75 degrees N. 
+        min_lat = 45
+        max_lat = 76
+        lat_idx = np.sort(np.where((ds.latitude >= min_lat)*(ds.latitude < max_lat))[0])
+        T = ds['t'].isel(latitude=lat_idx).mean(dim="latitude")
+        v = ds['v'].isel(latitude=lat_idx).mean(dim="latitude")
+        # Which axis is longitude?
+        ax_lon = T.dims.index("longitude") 
+        vhat = xr.zeros_like(v, dtype=complex)
+        That = xr.zeros_like(T, dtype=complex)
+        vhat[:] = np.fft.fft(v.to_numpy(), axis=ax_lon)
+        That[:] = np.fft.fft(T.to_numpy(), axis=ax_lon) 
+        vT_features = []
+        for level in [10, 100, 500, 850]:
+            for mode in [1, 2, 3]:
+                vT_features += [f"vT_{level}_{mode}"]
+        vT = self.prepare_blank_observable(ds, "vT_feature", vT_features)
+        for level in [10, 100, 500, 850]:
+            for mode in [1, 2, 3]:
+                vT.loc[dict(vT_feature=f"vT_{level}_{mode}")] = (
+                        vhat.sel(level=level).isel(longitude=mode).real * That.sel(level=level).isel(longitude=mode).real + 
+                        vhat.sel(level=level).isel(longitude=mode).imag * That.sel(level=level).isel(longitude=mode).imag 
+                        )
+        return vT
     def ubar_observable(self, ds):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
         ubar_features = ["ubar_10_60", "ubar_100_60", "ubar_500_60", "ubar_850_60"] #ds.coords['level'].to_numpy()
