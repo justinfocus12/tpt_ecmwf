@@ -74,12 +74,12 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return 
     # ---------------- Observables -------------------------
     # TODO: for all the following, augment coordinates of observables to include multiple members. In fact, require every dataset input to include (time,ensemble,member) as coordinates. The calling function must expand dimensions accordingly. 
-    def prepare_blank_observable(self, ds, feature_dim_name, feature_coord_names):
+    def prepare_blank_observable(self, ds, feature_coord_names):
         # A general method to create a blank DataArray that replaces the coordinates "longitude" and "latitude" in the input dataset (ds) with a dimension "feature" with coordinates feature_names
         F_coords = {key: ds.coords[key].to_numpy() for key in list(ds.coords.keys())}
         for spatial_coord in ["longitude","latitude","level"]:
             F_coords.pop(spatial_coord)
-        F_coords[feature_dim_name] = feature_coord_names
+        F_coords["feature"] = feature_coord_names 
         F = xr.DataArray(
                 coords = F_coords, 
                 dims = list(F_coords.keys())
@@ -99,20 +99,21 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             pc_all = (
                     ds["z"] * ds_eofs["eofs"] * np.sqrt(np.maximum(0, np.cos(ds_eofs["latitude"] * np.pi/180)))
                     ).sum(dim=["latitude","longitude"]) / np.sqrt(ds_eofs["variance_fraction"])
-        pc = self.prepare_blank_observable(ds, "pc", pc_features)
+        pc = self.prepare_blank_observable(ds, pc_features)
         for level in [10, 100, 500, 850]:
             for i_pc in [1, 2, 3, 4]:
-                pc.loc[dict(pc=f"pc_{level}_{i_pc}")] = pc_all.sel(level=level, mode=i_pc)
+                pc.loc[dict(feature=f"pc_{level}_{i_pc}")] = pc_all.sel(level=level, mode=i_pc)
         return pc
     def temperature_observable(self, ds):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
         temp_features = ["Tcap_10_60to90", "Tcap_100_60to90", "Tcap_500_60to90", "Tcap_850_60to90"] #ds.coords['level'].to_numpy()
-        Tcap = self.prepare_blank_observable(ds, "Tcap_60to90", temp_features)
-        cos_weight = np.cos(ds['latitude'])
+        Tcap = self.prepare_blank_observable(ds, temp_features)
+        lat_idx = np.sort(np.where((ds.latitude >= 60)*(ds.latitude < 90))[0])
+        cos_weight = np.cos(ds.latitude[lat_idx] * np.pi/180) 
         cos_weight *= 1.0/(np.sum(cos_weight) * ds.longitude.size)
         for level in [10, 100, 500, 850]:
-            Tcap.loc[dict(Tcap_60to90=f"Tcap_{level}_60to90")] = (
-                    (ds['t'].sel(latitude=slice(60,90),level=level) * cos_weight)
+            Tcap.loc[dict(feature=f"Tcap_{level}_60to90")] = (
+                    (ds['t'].isel(latitude=lat_idx).sel(level=level) * cos_weight)
                     .sum(dim=["longitude","latitude"])
                     )
         return Tcap
@@ -123,7 +124,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         Nlon = ds.longitude.size 
         max_mode = 3
         lat_idx = np.sort(np.where((ds.latitude >= min_lat)*(ds.latitude < max_lat))[0])
-        cos_weight = np.cos(ds.latitude[lat_idx]) 
+        cos_weight = np.cos(ds.latitude[lat_idx] * np.pi/180) 
         cos_weight *= 1.0/cos_weight.sum()
         T = (ds['t'].isel(latitude=lat_idx) * cos_weight).sum(dim="latitude")
         v = (ds['v'].isel(latitude=lat_idx) * cos_weight).sum(dim="latitude")
@@ -134,41 +135,40 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         That[:] = np.fft.fft(T.to_numpy(), axis=ax_lon) 
         vT_wavenumbers = 1/Nlon**2 * vhat.conj()*That
         #vT_wavenumbers.loc[dict(mode=slice(1,None))] *= 2
-        # TODO: assert that the wavenumbers add up correctly
         vT_mean_space = (v*T).mean(dim="longitude")
         vT_mean_freq = vT_wavenumbers.sum(dim="mode")
-        print(f"max parseval error = {np.max(np.abs(vT_mean_space - vT_mean_freq))}")
+        #print(f"max parseval error = {np.max(np.abs(vT_mean_space - vT_mean_freq))}")
         vT_features = []
         for level in [10, 100, 500, 850]:
             for mode in range(max_mode+1):
                 vT_features += [f"vT_{level}_{mode}"]
-        vT = self.prepare_blank_observable(ds, "vT_feature", vT_features)
+        vT = self.prepare_blank_observable(ds, vT_features)
         for level in [10, 100, 500, 850]:
             for mode in range(max_mode+1):
                 factor = 1.0 if mode == 0 else 2.0 # We only looked at the first half of the spectrum.
-                vT.loc[dict(vT_feature=f"vT_{level}_{mode}")] = (
+                vT.loc[dict(feature=f"vT_{level}_{mode}")] = (
                         vT_wavenumbers.sel(level=level, mode=mode).real
                         ) * factor
         return vT
     def ubar_observable(self, ds):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
         ubar_features = ["ubar_10_60", "ubar_100_60", "ubar_500_60", "ubar_850_60"] #ds.coords['level'].to_numpy()
-        ubar = self.prepare_blank_observable(ds, "ubar_60", ubar_features)
+        ubar = self.prepare_blank_observable(ds, ubar_features)
         for level in [10, 100, 500, 850]:
-            ubar.loc[dict(ubar_60=f"ubar_{level}_60")] = ds['u'].sel(latitude=60,level=level).mean(dim="longitude")
+            ubar.loc[dict(feature=f"ubar_{level}_60")] = ds['u'].sel(latitude=60,level=level).mean(dim="longitude")
         return ubar
     def time_observable(self, ds): 
         # Return all the possible kinds of time we might need from this object. The basic unit will be DAYS 
         time_types = ["t_dt64", "t_abs", "t_cal", "t_szn", "year_cal", "year_szn_start"]
-        tda = self.prepare_blank_observable(ds, "time_type", time_types)
+        tda = self.prepare_blank_observable(ds, time_types)
         Nt = ds["time"].size
         # Regular time 
-        tda.loc[dict(time_type="t_dt64")] = ds["time"].data
+        tda.loc[dict(feature="t_dt64")] = ds["time"].data
         # Absolute time
-        tda.loc[dict(time_type="t_abs")] = (ds["time"].data - self.time_origin) / self.time_unit
+        tda.loc[dict(feature="t_abs")] = (ds["time"].data - self.time_origin) / self.time_unit
         # Calendar year
         year_cal = ds['time'].dt.year.to_numpy()
-        tda.loc[dict(time_type="year_cal")] = year_cal
+        tda.loc[dict(feature="year_cal")] = year_cal
         # Calendar time
         year_start = np.array([
             np.datetime64(
@@ -176,7 +176,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 ) 
             for i_t in range(Nt)
             ])
-        tda.loc[dict(time_type="t_cal")] = (ds["time"] - year_start) / self.time_unit  # TODO: make this agnostic to time units 
+        tda.loc[dict(feature="t_cal")] = (ds["time"] - year_start) / self.time_unit  # TODO: make this agnostic to time units 
         # Time since most recent season start
         szn_start_same_year = np.array([
             np.datetime64(
@@ -185,14 +185,14 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             for i_t in range(Nt)
         ])
         year_szn_start = year_cal - 1*(ds["time"] < szn_start_same_year).to_numpy()
-        tda.loc[dict(time_type="year_szn_start")] = year_szn_start
+        tda.loc[dict(feature="year_szn_start")] = year_szn_start
         szn_start_most_recent = np.array([
             np.datetime64(
                 datetime.datetime(year_szn_start[i_t], self.szn_start["month"], self.szn_start["day"])
             ) 
             for i_t in range(Nt)
         ])
-        tda.loc[dict(time_type="t_szn")] = (ds["time"].data - szn_start_most_recent) / self.time_unit
+        tda.loc[dict(feature="t_szn")] = (ds["time"].data - szn_start_most_recent) / self.time_unit
         return tda
     def ab_test(self, Xtpt):
         time_window_flag = (
