@@ -1,0 +1,212 @@
+date_rt = 2017-05-27 00:00:00; date_rt_str = 2017-05-27
+date_rt = 2017-05-28 00:00:00; date_rt_str = 2017-05-28
+date_rt = 2017-05-29 00:00:00; date_rt_str = 2017-05-29
+2022-08-20 16:08:52 ECMWF API python library 1.6.3
+2022-08-20 16:08:52 ECMWF API at https://api.ecmwf.int/v1
+2022-08-20 16:08:53 Welcome Justin Finkel
+2022-08-20 16:08:54 In case of problems, please check https://confluence.ecmwf.int/display/WEBAPI/Web+API+FAQ or contact servicedesk@ecmwf.int
+2022-08-20 16:08:54 Request submitted
+2022-08-20 16:08:54 Request id: 63013f561ee00693f487c790
+2022-08-20 16:08:54 Req2022-08-20 16:09:11 Request is active
+2022-08-20 16:10:22022-08-20 16:10:39 Request is active
+2022-08-20 16:11:45 Calling 'nice mars /tmp/20220820-2010/69/tmp-_marsybkcMN.req'
+2022-08-20 16:11:45 mars - WARN -
+2022-08-20 16:11:45 mars - WARN - Due to the migration of our meteorological archive, there will be no or
+2022-08-20 16:11:45 mars - WARN - degraded access to the archive at times between June 2022 and October 2022.
+2022-08-20 16:11:45 mars - WARN - Please visit our dedicated confluence space for more information.
+2022-08-20 16:11:45 mars - WARN - https://confluence.ecmwf.int/x/qv9CDQ
+2022-08-20 16:11:45 mars - WARN -
+2022-08-20 16:11:45 MIR environment variables:
+2022-08-20 16:11:45 MIR_CACHE_PATH=/data/ec_coeff
+2022-08-20 16:11:45 Using MARS binary: /usr/local/apps/mars/versions/20220411095548/bin/mars.bin
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - Welcome to MARS
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - MARS Client build stamp: 20220411095548
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - MARS Client bundle version: 6.33.9.0
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - package mars-client version: 6.33.9
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - package mir version: 1.12.1
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - package odc version: 1.4.4
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - package fdb version: 5.10.7
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - package metkit version: 1.9.1
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - package eckit version: 1.19.0
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - package eccodes version: 2.25.1
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - Maximum retrieval size is 50.00 G
+2022-08-20 16:11:45 retrieve,origin=ecmf,hdate=1997-03-30,stream=enfh,levelist=10/100/500/850,levtype=pl,number=1/2/3/4/5/6/7/8/9/10,expver=prod,padding=0,step=0/24/48/72/96/120/144/168/192/216/240/264/288/312/336/360/384/408/432/456/480/504/528/552/576/600/624/648/672/696/720/744/768/792/816/840/864/888/912/936/960/984/1008/1032/1056/1080/1104,grid=2.5/2.5,param=130/131/132/156,time=00:00:00,date=2017-03-30,model=glob,type=pf,class=s2mars - INFO   - 20220820.201024 - Automatic split by date is on
+2022-08-20 16:11:45 
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - Processing request 1
+2022-08-20 16:11:45 sh: /usr/bin/mailx: No such file or directory
+2022-08-20 16:11:45 
+2022-08-20 16:11:45 RETRIEVE,
+2022-08-20 16:11:45     CLASS      = S2,
+2022-08-20 16:11:45     TYPE       = PF,
+2022-08-20 16:11:45     STREAM     = ENFH,
+2022-08-20 16:11:45     EXPVER     = prod,
+2022-08-20 16:11:45     MODEL      = GLOB,
+2022-08-20 16:11:45     REPRES     = SH,
+2022-08-20 16:11:45     LEVTYPE    = PL,
+2022-08-20 16:11:45     LEVELIST   = 10/100/500/850,
+2022-08-20 16:11:45     PARAM      = 130/131/132/156,
+2022-08-20 16:11:45     HDATE      = 1997-03-30,
+2022-08-20 16:11:45     TIME       = 0000,
+2022-08-20 16:11:45     STEP       = 0/24/48/72/96/120/144/168/192/216/240/264/288/312/336/360/384/408/432/456/480/504/528/552/576/600/624/648/672/696/720/744/768/792/816/840/864/888/912/936/960/984/1008/1032/1056/1080/1104,
+2022-08-20 16:11:45     NUMBER     = 1/2/3/4/5/6/7/8/9/10,
+2022-08-20 16:11:45     ORIGIN     = ECMF,
+2022-08-20 16:11:45     RESOL      = AUTO,
+2022-08-20 16:11:45     GRID       = 2.5/2.5,
+2022-08-20 16:11:45     PADDING    = 0,
+2022-08-20 16:11:45     PROCESS    = LOCAL,
+2022-08-20 16:11:45     DATE       = 20170330
+2022-08-20 16:11:45 
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - Web API request id: 63013f181ee00693f487c78e
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - Requesting 7520 fields
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - Setting SO_SNDBUF to 33554432 (32.00 M)
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - Current value is 8192 (8.00 K)
+2022-08-20 16:11:45 mars - WARN   - 20220820.201024 - SO_SNDBUF limited by kernel to 212992 (208.00 K)
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - Setting SO_RCVBUF to 33554432 (32.00 M)
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - Current value is 43690 (42.67 K)
+2022-08-20 16:11:45 mars - WARN   - 20220820.201024 - SO_RCVBUF limited by kernel to 212992 (208.00 K)
+2022-08-20 16:11:45 mars - INFO   - 20220820.201024 - Calling mars on 'marsth', local port is 33138
+2022-08-20 16:11:45 mars - INFO   - 20220820.201025 - Server task is 739 [marsth]
+2022-08-20 16:11:45 mars - INFO   - 20220820.201025 - Request cost: 7,520 fields, 417.884 Mbytes online, nodes: mvr01 [marsth]
+2022-08-20 16:11:45 mars - INFO   - 20220820.201025 - The efficiency of your requests in the last 12 hours is 100% [marsth]
+2022-08-20 16:11:45 mars - INFO   - 20220820.201025 - Transfering 438182880 bytes
+2022-08-20 16:11:45 mars - INFO   - 20220820.201114 - 7520 fields retrieved from 'marsth'
+2022-08-20 16:11:45 mars - INFO   - 20220820.201114 - 7520 fields have been interpolated
+2022-08-20 16:11:45 mars - INFO   - 20220820.201114 - Request time:  wall: 50 sec  cpu: 44 sec
+2022-08-20 16:11:45 mars - INFO   - 20220820.201114 -   Read from network: 417.88 Mbyte(s) in 5 sec  [87.43 Mbyte/sec]
+2022-08-20 16:11:45 mars - INFO   - 20220820.201114 -   Visiting marsth: wall: 49 sec
+2022-08-20 16:11:45 mars - INFO   - 20220820.201114 -   Post-processing: wall: 31 sec cpu: 31 sec
+2022-08-20 16:11:45 mars - INFO   - 20220820.201114 -   Writing to target file: 152.13 Mbyte(s) in < 1 sec [429.67 Mbyte/sec]
+2022-08-20 16:11:45 mars - INFO   - 20220820.201114 - Memory used: 46.45 Mbyte(s)
+2022-08-20 16:11:45 mars - INFO   - 20220820.201114 - No errors reported
+2022-08-20 16:11:45 Process '['nice', 'mars', '/tmp/20220820-2010/69/tmp-_marsybkcMN.req']' finished
+2022-08-20 16:11:45 Calling 'nice grib_to_netcdf /data/scratch/20220820-2010/61/_mars-webmars-public-svc-blue-000-6fe5cac1a363ec1525f54343b6cc9fd8-zhi3lU.grib -o /data/scratch/20220820-2010/b0/_grib2netcdf-webmars-public-svc-blue-001-6fe5cac1a363ec1525f54343b6cc9fd8-idiLbX.nc -utime'
+2022-08-20 16:11:45 grib_to_netcdf: Version 2.26.0
+2022-08-20 16:11:45 grib_to_netcdf: Processing input file '/data/scratch/20220820-2010/61/_mars-webmars-public-svc-blue-000-6fe5cac1a363ec1525f54343b6cc9fd8-zhi3lU.grib'.
+2022-08-20 16:11:45 grib_to_netcdf: Found 7520 GRIB fields in 1 file.
+2022-08-20 16:11:45 grib_to_netcdf: Ignoring key(s): method, type, stream, refdate, hdate
+2022-08-20 16:11:45 grib_to_netcdf: Creating netCDF file '/data/scratch/20220820-2010/b0/_grib2netcdf-webmars-public-svc-blue-001-6fe5cac1a363ec1525f54343b6cc9fd8-idiLbX.nc'
+2022-08-20 16:11:45 grib_to_netcdf: NetCDF library version: 4.3.3.1 of Dec 10 2015 16:44:18 $
+2022-08-20 16:11:45 grib_to_netcdf: Creating large (64 bit) file format.
+2022-08-20 16:11:45 grib_to_netcdf: Defining variable 't'.
+2022-08-20 16:11:45 grib_to_netcdf: Defining variable 'u'.
+2022-08-20 16:11:45 grib_to_netcdf: Defining variable 'v'.
+2022-08-20 16:11:45 grib_to_netcdf: Defining variable 'gh'.
+2022-08-20 16:11:45 grib_to_netcdf: Done.
+2022-08-20 16:11:45 Process '['nice', 'grib_to_netcdf', '/data/scratch/20220820-2010/61/_mars-webmars-public-svc-blue-000-6fe5cac1a363ec1525f54343b6cc9fd8-zhi3lU.grib', '-o', '/data/scratch/20220820-2010/b0/_grib2netcdf-webmars-public-svc-blue-001-6fe5cac1a363ec1525f54343b6cc9fd8-idiLbX.nc', '-utime']' finished
+2022-08-20 16:11:45 Request is complete
+2022-08-20 16:11:45 Transfering 150.78 Mbytes into /scratch/jf4241/ecmwf_data/s2s_data/raw_data/2022-08-20/hc1997-03-30_rt2017-03-30.nc
+2022-08-20 16:11:45 From https://stream.ecmwf.int/data/webmars-public-svc-blue-001/data/scratch/20220820-2010/b0/_grib2netcdf-webmars-public-svc-blue-001-6fe5cac1a363ec1525f54343b6cc9fd8-idiLbX.nc
+363ec1525f54343b6cc9fd8-4ZeoWM.nc
+2022-08-20 16:11:01 Transfer rate 4.19925 Mbytes/s
+date_rt = 2017-02-28 00:00:00; date_rt_str = 2017-02-28
+date_rt = 2017-03-01 00:00:00; date_rt_str = 2017-03-01
+date_rt = 2017-03-02 00:00:00; date_rt_str = 2017-03-02
+2022-08-20 16:11:02 ECMWF API python library 1.6.3
+2022-08-20 16:11:02 ECMWF API at https://api.ecmwf.int/v1
+2022-08-20 16:11:02 Welcome Justin Finkel
+2022-08-20 16:11:03 In case of problems, please check https://confluence.ecmwf.int/display/WEBAPI/Web+API+FAQ or contact servicedesk@ecmwf.int
+2022-08-20 16:11:04 Request submitted
+2022-08-20 16:11:04 Request id: 63013fd81943f204cd1e11bc
+2022-08-20 16:11:04 Request is submitted
+2022-08-20 16:11:05 Request is queued
+tive
+2022-08-20 16:11:51 Calling 'nice mars /tmp/20220820-2010/d8/tmp-_mars7n4AMI.req'
+2022-08-20 16:11:51 mars - WARN -
+2022-08-20 16:11:51 mars - WARN - Due to the migration of our meteorological archive, there will be no or
+2022-08-20 16:11:51 mars - WARN - degraded access to the archive at times between June 2022 and October 2022.
+2022-08-20 16:11:51 mars - WARN - Please visit our dedicated confluence space for more information.
+2022-08-20 16:11:51 mars - WARN - https://confluence.ecmwf.int/x/qv9CDQ
+2022-08-20 16:11:51 mars - WARN -
+2022-08-20 16:11:51 MIR environment variables:
+2022-08-20 16:11:51 MIR_CACHE_PATH=/data/ec_coeff
+2022-08-20 16:11:51 Using MARS binary: /usr/local/apps/mars/versions/20220411095548/bin/mars.bin
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - Welcome to MARS
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - MARS Client build stamp: 20220411095548
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - MARS Client bundle version: 6.33.9.0
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - package mars-client version: 6.33.9
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - package mir version: 1.12.1
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - package odc version: 1.4.4
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - package fdb version: 5.10.7
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - package metkit version: 1.9.1
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - package eckit version: 1.19.0
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - package eccodes version: 2.25.1
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - Maximum retrieval size is 50.00 G
+2022-08-20 16:11:51 retrieve,origin=ecmf,hdate=1996-11-03,stream=enfh,levelist=10/100/500/850,levtype=pl,number=1/2/3/4/5/6/7/8/9/10,expver=prod,padding=0,step=0/24/48/72/96/120/144/168/192/216/240/264/288/312/336/360/384/408/432/456/480/504/528/552/576/600/624/648/672/696/720/744/768/792/816/840/864/888/912/936/960/984/1008/1032/1056/1080/1104,grid=2.5/2.5,param=130/131/132/156,time=00:00:00,date=2016-11-03,model=glob,type=pf,class=s2mars - INFO   - 20220820.201047 - Automatic split by date is on
+2022-08-20 16:11:51 
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - Processing request 1
+2022-08-20 16:11:51 sh: /usr/bin/mailx: No such file or directory
+2022-08-20 16:11:51 
+2022-08-20 16:11:51 RETRIEVE,
+2022-08-20 16:11:51     CLASS      = S2,
+2022-08-20 16:11:51     TYPE       = PF,
+2022-08-20 16:11:51     STREAM     = ENFH,
+2022-08-20 16:11:51     EXPVER     = prod,
+2022-08-20 16:11:51     MODEL      = GLOB,
+2022-08-20 16:11:51     REPRES     = SH,
+2022-08-20 16:11:51     LEVTYPE    = PL,
+2022-08-20 16:11:51     LEVELIST   = 10/100/500/850,
+2022-08-20 16:11:51     PARAM      = 130/131/132/156,
+2022-08-20 16:11:51     HDATE      = 1996-11-03,
+2022-08-20 16:11:51     TIME       = 0000,
+2022-08-20 16:11:51     STEP       = 0/24/48/72/96/120/144/168/192/216/240/264/288/312/336/360/384/408/432/456/480/504/528/552/576/600/624/648/672/696/720/744/768/792/816/840/864/888/912/936/960/984/1008/1032/1056/1080/1104,
+2022-08-20 16:11:51     NUMBER     = 1/2/3/4/5/6/7/8/9/10,
+2022-08-20 16:11:51     ORIGIN     = ECMF,
+2022-08-20 16:11:51     RESOL      = AUTO,
+2022-08-20 16:11:51     GRID       = 2.5/2.5,
+2022-08-20 16:11:51     PADDING    = 0,
+2022-08-20 16:11:51     PROCESS    = LOCAL,
+2022-08-20 16:11:51     DATE       = 20161103
+2022-08-20 16:11:51 
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - Web API request id: 63013f287e2b150cbc87c791
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - Requesting 7520 fields
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - Setting SO_SNDBUF to 33554432 (32.00 M)
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - Current value is 8192 (8.00 K)
+2022-08-20 16:11:51 mars - WARN   - 20220820.201047 - SO_SNDBUF limited by kernel to 212992 (208.00 K)
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - Setting SO_RCVBUF to 33554432 (32.00 M)
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - Current value is 43690 (42.67 K)
+2022-08-20 16:11:51 mars - WARN   - 20220820.201047 - SO_RCVBUF limited by kernel to 212992 (208.00 K)
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - Calling mars on 'marsth', local port is 48874
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - Server task is 31 [marsth]
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - Request cost: 7,520 fields, 417.884 Mbytes online, nodes: mvr01 [marsth]
+2022-08-20 16:11:51 mars - INFO   - 20220820.201047 - The efficiency of your requests in the last 12 hours is 100% [marsth]
+2022-08-20 16:11:51 mars - INFO   - 20220820.201048 - Transfering 438182880 bytes
+2022-08-20 16:11:51 mars - INFO   - 20220820.201131 - 7520 fields retrieved from 'marsth'
+2022-08-20 16:11:51 mars - INFO   - 20220820.201131 - 7520 fields have been interpolated
+2022-08-20 16:11:51 mars - INFO   - 20220820.201131 - Request time:  wall: 44 sec  cpu: 41 sec
+2022-08-20 16:11:51 mars - INFO   - 20220820.201131 -   Read from network: 417.88 Mbyte(s) in 1 sec  [314.54 Mbyte/sec]
+2022-08-20 16:11:51 mars - INFO   - 20220820.201131 -   Visiting marsth: wall: 44 sec
+2022-08-20 16:11:51 mars - INFO   - 20220820.201131 -   Post-processing: wall: 29 sec cpu: 29 sec
+2022-08-20 16:11:51 mars - INFO   - 20220820.201131 -   Writing to target file: 152.13 Mbyte(s) in < 1 sec [571.84 Mbyte/sec]
+2022-08-20 16:11:51 mars - INFO   - 20220820.201131 - Memory used: 46.45 Mbyte(s)
+2022-08-20 16:11:51 mars - INFO   - 20220820.201131 - No errors reported
+2022-08-20 16:11:51 Process '['nice', 'mars', '/tmp/20220820-2010/d8/tmp-_mars7n4AMI.req']' finished
+2022-08-20 16:11:51 Calling 'nice grib_to_netcdf /data/scratch/20220820-2010/a8/_mars-webmars-public-svc-blue-006-6fe5cac1a363ec1525f54343b6cc9fd8-NA03Rv.grib -o /data/scratch/20220820-2010/57/_grib2netcdf-webmars-public-svc-blue-005-6fe5cac1a363ec1525f54343b6cc9fd8-uf7nRU.nc -utime'
+2022-08-20 16:11:51 grib_to_netcdf: Version 2.26.0
+2022-08-20 16:11:51 grib_to_netcdf: Processing input file '/data/scratch/20220820-2010/a8/_mars-webmars-public-svc-blue-006-6fe5cac1a363ec1525f54343b6cc9fd8-NA03Rv.grib'.
+2022-08-20 16:11:51 grib_to_netcdf: Found 7520 GRIB fields in 1 file.
+2022-08-20 16:11:51 grib_to_netcdf: Ignoring key(s): method, type, stream, refdate, hdate
+2022-08-20 16:11:51 grib_to_netcdf: Creating netCDF file '/data/scratch/20220820-2010/57/_grib2netcdf-webmars-public-svc-blue-005-6fe5cac1a363ec1525f54343b6cc9fd8-uf7nRU.nc'
+2022-08-20 16:11:51 grib_to_netcdf: NetCDF library version: 4.3.3.1 of Dec 10 2015 16:44:18 $
+2022-08-20 16:11:51 grib_to_netcdf: Creating large (64 bit) file format.
+2022-08-20 16:11:51 grib_to_netcdf: Defining variable 't'.
+2022-08-20 16:11:51 grib_to_netcdf: Defining variable 'u'.
+2022-08-20 16:11:51 grib_to_netcdf: Defining variable 'v'.
+2022-08-20 16:11:51 grib_to_netcdf: Defining variable 'gh'.
+2022-08-20 16:11:51 grib_to_netcdf: Done.
+2022-08-20 16:11:51 Process '['nice', 'grib_to_netcdf', '/data/scratch/20220820-2010/a8/_mars-webmars-public-svc-blue-006-6fe5cac1a363ec1525f54343b6cc9fd8-NA03Rv.grib', '-o', '/data/scratch/20220820-2010/57/_grib2netcdf-webmars-public-svc-blue-005-6fe5cac1a363ec1525f54343b6cc9fd8-uf7nRU.nc', '-utime']' finished
+2022-08-20 16:11:51 Request is complete
+2022-08-20 16:11:51 Transfering 150.78 Mbytes into /scratch/jf4241/ecmwf_data/s2s_data/raw_data/2022-08-20/hc1996-11-03_rt2016-11-03.nc
+2022-08-20 16:11:51 From https://stream.ecmwf.int/data/webmars-public-svc-blue-005/data/scratch/20220820-2010/57/_grib2netcdf-webmars-public-svc-blue-005-6fe5cac1a363ec1525f54343b6cc9fd8-uf7nRU.nc
+63ec1525f54343b6cc9fd8-sqHOjy.nc
+2022-08-20 16:11:27 Transfer rate 4.16716 Mbytes/s
+date_rt = 2016-10-04 00:00:00; date_rt_str = 2016-10-04
+date_rt = 2016-10-05 00:00:00; date_rt_str = 2016-10-05
+date_rt = 2016-10-06 00:00:00; date_rt_str = 2016-10-06
+2022-08-20 16:11:27 ECMWF API python library 1.6.3
+2022-08-20 16:11:27 ECMWF API at https://api.ecmwf.int/v1
+2022-08-20 16:11:27 Welcome Justin Finkel
+2022-08-20 16:11:29 In case of problems, please check https://confluence.ecmwf.int/display/WEBAPI/Web+API+FAQ or contact servicedesk@ecmwf.int
+2022-08-20 16:11:29 Request submitted
+2022-08-20 16:11:29 Request id: 63013ff178ae2e48c81e11be
+2022-08-20 16:11:29 Request is submitted
+2022-08-20 16:11:30 Request is queued
