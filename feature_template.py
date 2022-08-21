@@ -86,7 +86,7 @@ class SeasonalFeatures(ABC):
             raise Exception(f"You asked for a mode of {mode}, but I only accept 'timechunks' or 'timesteps'")
     
     def cotton_eye_joe_timesteps(self, Xtpt, ab_tag):
-        sintil = xr.DataArray(
+        cej = xr.DataArray(
             coords = dict({
                 "ensemble": Xtpt.coords["ensemble"],
                 "member": Xtpt.coords["member"],
@@ -98,40 +98,40 @@ class SeasonalFeatures(ABC):
             dims = ["ensemble","member","t_sim","sense","state"],
         )
         # Forward pass through time
-        for i_time in np.arange(sintil["t_sim"].size):
+        for i_time in np.arange(cej["t_sim"].size):
             if i_time % 200 == 0:
-                print(f"Forward pass: through time {i_time} out of {sintil['t_sim'].size}")
+                print(f"Forward pass: through time {i_time} out of {cej['t_sim'].size}")
             for state in ["A","B"]:
                 if i_time > 0:
-                    sintil[dict(t_sim=i_time)].loc[dict(sense="since",state=state)] = (
-                        sintil.isel(t_sim=i_time-1).sel(sense="since",state=state).data +
-                        sintil["t_sim"][i_time].data - sintil["t_sim"][i_time-1].data
+                    cej[dict(t_sim=i_time)].loc[dict(sense="since",state=state)] = (
+                        cej.isel(t_sim=i_time-1).sel(sense="since",state=state).data +
+                        cej["t_sim"][i_time].data - cej["t_sim"][i_time-1].data
                     )
                 state_flag = (ab_tag.isel(t_sim=i_time) == self.ab_code[state])
                 # Wherever the state is achieved at this time slice, set the time since to zero
-                sintil[dict(t_sim=i_time)].loc[dict(sense="since",state=state)] = (
-                    (xr.zeros_like(sintil.isel(t_sim=i_time).sel(sense="since",state=state))).where(
-                    state_flag, sintil.isel(t_sim=i_time).sel(sense="since",state=state))
+                cej[dict(t_sim=i_time)].loc[dict(sense="since",state=state)] = (
+                    (xr.zeros_like(cej.isel(t_sim=i_time).sel(sense="since",state=state))).where(
+                    state_flag, cej.isel(t_sim=i_time).sel(sense="since",state=state))
                 )
         # Backward pass through time
-        for i_time in np.arange(sintil["t_sim"].size-1,-1,-1):
+        for i_time in np.arange(cej["t_sim"].size-1,-1,-1):
             if i_time % 200 == 0:
-                print(f"Backward pass: through time {i_time} out of {sintil['t_sim'].size}")
+                print(f"Backward pass: through time {i_time} out of {cej['t_sim'].size}")
             for state in ["A","B"]:
-                if i_time < sintil["t_sim"].size-1:
-                    sintil[dict(t_sim=i_time)].loc[dict(sense="until",state=state)] = (
-                        sintil.isel(t_sim=i_time+1).sel(sense="until",state=state).data +
-                        sintil["t_sim"][i_time+1].data - sintil["t_sim"][i_time].data
+                if i_time < cej["t_sim"].size-1:
+                    cej[dict(t_sim=i_time)].loc[dict(sense="until",state=state)] = (
+                        cej.isel(t_sim=i_time+1).sel(sense="until",state=state).data +
+                        cej["t_sim"][i_time+1].data - cej["t_sim"][i_time].data
                     )
                 state_flag = (ab_tag.isel(t_sim=i_time) == self.ab_code[state])
-                sintil[dict(t_sim=i_time)].loc[dict(sense="until",state=state)] = (
-                    (xr.zeros_like(sintil.isel(t_sim=i_time).sel(sense="until",state=state))).where(
-                    state_flag, sintil.isel(t_sim=i_time).sel(sense="until",state=state))
+                cej[dict(t_sim=i_time)].loc[dict(sense="until",state=state)] = (
+                    (xr.zeros_like(cej.isel(t_sim=i_time).sel(sense="until",state=state))).where(
+                    state_flag, cej.isel(t_sim=i_time).sel(sense="until",state=state))
                 )
-        return sintil
+        return cej
     # Function to find the time since and until hitting A and B
     def cotton_eye_joe_timechunks(self, Xtpt, ab_tag):
-        sintil = xr.DataArray(
+        cej = xr.DataArray(
             coords = dict({
                 "ensemble": Xtpt.coords["ensemble"],
                 "member": Xtpt.coords["member"],
@@ -171,9 +171,9 @@ class SeasonalFeatures(ABC):
                             i0,i1 = idx_exit[k],idx_entry[k]
                             tsince[i0:i1] = t_sim[i0:i1] - t_sim[i0-1]
                             tuntil[i0:i1] = t_sim[i1] - t_sim[i0:i1]
-                    sintil.loc[dict(ensemble=ensemble,member=member,state=state,sense="since")] = tsince
-                    sintil.loc[dict(ensemble=ensemble,member=member,state=state,sense="until")] = tuntil
-        return sintil
+                    cej.loc[dict(ensemble=ensemble,member=member,state=state,sense="since")] = tsince
+                    cej.loc[dict(ensemble=ensemble,member=member,state=state,sense="until")] = tuntil
+        return cej
 
 
 

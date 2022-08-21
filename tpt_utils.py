@@ -123,7 +123,7 @@ def plot_field_1d(
         ax.plot(centers[0],field_proj["mean"][:,0],marker='.',color='black')
         if quantile_flag:
             ax.fill_between(centers[0],field_proj["q25"][:,0],field_proj["q75"][:,0],color=plt.cm.binary(0.6),zorder=-1)
-            ax.fill_between(centers[0],field_proj["min"][:,0],field_proj["max"][:,0],color=plt.cm.binary(0.3),zorder=-2)
+            #ax.fill_between(centers[0],field_proj["min"][:,0],field_proj["max"][:,0],color=plt.cm.binary(0.3),zorder=-2)
         if feat_name is not None:
             ax.set_xlabel(feat_name)
         if field_name is not None:
