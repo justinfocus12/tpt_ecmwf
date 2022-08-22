@@ -174,6 +174,16 @@ class SeasonalFeatures(ABC):
                     cej.loc[dict(ensemble=ensemble,member=member,state=state,sense="since")] = tsince
                     cej.loc[dict(ensemble=ensemble,member=member,state=state,sense="until")] = tuntil
         return cej
+    def estimate_empirical_committor(self, cej):
+        # Make points NaN if hanging endpoints
+        comm_emp = 1.0*(cej.sel(state="B") < cej.sel(state="A"))
+        comm_emp.loc[dict(sense="since")] = 1 - comm_emp.sel(sense="since")
+        return comm_emp
+    def estimate_rate(self, cej, comm_emp):
+        # This will be a lower bound on the rate, because of hanging endpoints. 
+        a2b_flag = 1.0 * (comm_emp.sel(sense="since") == self.ab_code["A"]) * (comm_emp.sel(sense="until") == self.ab_code["B"])
+        rate_lowerbound = (1.0*a2b_flag.diff(dim="t_sim")==1).sum(dim="t_sim") / (a2b_flag["t_sim"][-1] - a2b_flag["t_sim"][0])
+        return rate_lowerbound
 
 
 

@@ -150,6 +150,14 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                         vT_wavenumbers.sel(level=level, mode=mode).real
                         ) * factor
         return vT
+    def qbo_observable(self, ds):
+        # Zonal-mean zonal wind at 10 hPa in a region near the equator
+        qbo_features = ["ubar_10_0pm5", "ubar_100_0pm5"]
+        qbo = self.prepare_blank_observable(ds, qbo_features)
+        lat_idx, = np.where((ds['latitude'].to_numpy() >= -5)*(ds['latitude'].to_numpy() <= 5))
+        for level in [10, 100]:
+            qbo.loc[dict(feature=f"ubar_{level}_0pm5")] = ds['u'].isel(latitude=lat_idx).sel(level=level).mean(dim=["longitude","latitude"])
+        return qbo
     def ubar_observable(self, ds):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
         ubar_features = ["ubar_10_60", "ubar_100_60", "ubar_500_60", "ubar_850_60"] #ds.coords['level'].to_numpy()
