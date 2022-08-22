@@ -57,12 +57,12 @@ num_days_rt = 366
 weekdays_rt = [0,3] # Monday and Thursday
 hc_back_extent = 20 # years in past 
 
-for k in np.arange(330,360)[::-1]:
+for k in np.arange(158,175):
     date_rt = date_rt_first + datetime.timedelta(days = int(k))
     date_rt_str = f"{date_rt.year:04}-{date_rt.month:02}-{date_rt.day:02}"
     print(f"date_rt = {date_rt}; date_rt_str = {date_rt_str}")
     if date_rt.weekday() in weekdays_rt:
-        for year_hc in np.arange(date_rt.year-hc_back_extent, date_rt.year)[2:]:
+        for year_hc in np.arange(date_rt.year-hc_back_extent, date_rt.year)[::-1]:
             valid_date = None
             try:
                 date_hc = datetime.datetime(year_hc,date_rt.month,date_rt.day)

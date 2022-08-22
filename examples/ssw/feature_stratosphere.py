@@ -85,8 +85,16 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 dims = list(F_coords.keys())
                 )
         return F
-    def pc_observable(self, ds, ds_eofs, ds_monclim, subtract_monthly_mean=False):
+    def preprocess_netcdf(self, ds, src):
+        # Depending on what dataset the netcdf came from, rename some dimensions 
+        if src == "s2": 
+            ds = ds.rename({"number": "member"})
+        #elif src == "e5": 
+        #    ds = ds.expand_dims({"member": np.arange(1,2)})
+        return ds
+    def pc_observable(self, ds, src, ds_eofs, ds_monclim, subtract_monthly_mean=False):
         # Project the geopotential height fields onto the EOFs 
+        ds = self.preprocess_netcdf(ds, src)
         pc_features = []
         for level in [10, 100, 500, 850]:
             for i_pc in [1, 2, 3, 4]:
@@ -104,8 +112,9 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             for i_pc in [1, 2, 3, 4]:
                 pc.loc[dict(feature=f"pc_{level}_{i_pc}")] = pc_all.sel(level=level, mode=i_pc)
         return pc
-    def temperature_observable(self, ds):
+    def temperature_observable(self, ds, src):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
+        ds = self.preprocess_netcdf(ds, src)
         temp_features = ["Tcap_10_60to90", "Tcap_100_60to90", "Tcap_500_60to90", "Tcap_850_60to90"] #ds.coords['level'].to_numpy()
         Tcap = self.prepare_blank_observable(ds, temp_features)
         lat_idx = np.sort(np.where((ds.latitude >= 60)*(ds.latitude < 90))[0])
@@ -117,8 +126,9 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                     .sum(dim=["longitude","latitude"])
                     )
         return Tcap
-    def heatflux_observable(self, ds):
+    def heatflux_observable(self, ds, src):
         # Heat flux at various wavenumbers between 45 and 75 degrees N. 
+        ds = self.preprocess_netcdf(ds, src)
         min_lat = 45 
         max_lat = 75 
         Nlon = ds.longitude.size 
@@ -150,23 +160,26 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                         vT_wavenumbers.sel(level=level, mode=mode).real
                         ) * factor
         return vT
-    def qbo_observable(self, ds):
+    def qbo_observable(self, ds, src):
         # Zonal-mean zonal wind at 10 hPa in a region near the equator
+        ds = self.preprocess_netcdf(ds, src)
         qbo_features = ["ubar_10_0pm5", "ubar_100_0pm5"]
         qbo = self.prepare_blank_observable(ds, qbo_features)
         lat_idx, = np.where((ds['latitude'].to_numpy() >= -5)*(ds['latitude'].to_numpy() <= 5))
         for level in [10, 100]:
             qbo.loc[dict(feature=f"ubar_{level}_0pm5")] = ds['u'].isel(latitude=lat_idx).sel(level=level).mean(dim=["longitude","latitude"])
         return qbo
-    def ubar_observable(self, ds):
+    def ubar_observable(self, ds, src):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
+        ds = self.preprocess_netcdf(ds, src)
         ubar_features = ["ubar_10_60", "ubar_100_60", "ubar_500_60", "ubar_850_60"] #ds.coords['level'].to_numpy()
         ubar = self.prepare_blank_observable(ds, ubar_features)
         for level in [10, 100, 500, 850]:
             ubar.loc[dict(feature=f"ubar_{level}_60")] = ds['u'].sel(latitude=60,level=level).mean(dim="longitude")
         return ubar
-    def time_observable(self, ds): 
+    def time_observable(self, ds, src): 
         # Return all the possible kinds of time we might need from this object. The basic unit will be DAYS 
+        ds = self.preprocess_netcdf(ds, src)
         time_types = ["t_dt64", "t_abs", "t_cal", "t_szn", "year_cal", "year_szn_start"]
         tda = self.prepare_blank_observable(ds, time_types)
         Nt = ds["time"].size
@@ -202,6 +215,104 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         ])
         tda.loc[dict(feature="t_szn")] = (ds["time"].data - szn_start_most_recent) / self.time_unit
         return tda
+    # -----------------------------------------------
+    # ------------ Assemble feat_all -------------------
+    def assemble_all_features(self, src, input_dir, input_file_list, output_dir, featdef, obs2compute=None):
+        if obs2compute is None:
+            obs2compute = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
+        obs_dict = dict({obsname: [] for obsname in obs2compute})
+        for i_filename,filename in enumerate(input_file_list):
+            ds = xr.open_dataset(join(input_dir, filename)).resample(time="1D").mean()
+            if i_filename % 12 == 0:
+                print(f"Starting file number {i_filename} out of {len(input_file_list)}")
+            if "time_observable" in obs2compute:
+                obs_dict["time_observable"] += [self.time_observable(ds, src)]
+            if "ubar_observable" in obs2compute:
+                obs_dict["ubar_observable"] += [self.ubar_observable(ds, src)]
+            if "heatflux_observable" in obs2compute:
+                obs_dict["heatflux_observable"] += [self.heatflux_observable(ds, src)]
+            if "temperature_observable" in obs2compute:
+                obs_dict["temperature_observable"] += [self.temperature_observable(ds, src)]
+            if "pc_observable" in obs2compute:
+                obs_dict["pc_observable"] += [self.pc_observable(ds, src, featdef["ds_eofs"], featdef["ds_monclim"])]
+            if "qbo_observable" in obs2compute:
+                obs_dict["qbo_observable"] += [self.qbo_observable(ds, src)]
+            ds.close()
+        concat_dim = "time" if src in ["e5","e2","ei"] else "ensemble"
+        for obsname in obs2compute:
+            ds_obs = xr.concat(obs_dict[obsname], dim=concat_dim).sortby("time")
+            ds_obs.to_netcdf(join(output_dir, f"{obsname}.nc"))
+            ds_obs.close()
+        return ds_obs
+    # --------------------------------------------------
+    # ------------ Assemble feat_tpt dictionary ------------
+    def assemble_tpt_features(self, feat_all, filedict):
+        # List the features to put into feat_tpt
+        # First, the features needed to define A and B: the time, the x1 coordinate, and its running mean, min, and max
+        # over some time horizon. 
+        num_time_delays = 20 # Units are days
+        levels = [10, 100, 500, 850]
+        pcs = [1, 2, 3, 4]
+        modes = np.arange(4)
+        feat_tpt_list = (
+            ["t_abs","t_szn","year_szn_start","t_cal",] + 
+            [f"ubar_{level}_60_delay{delay}" for level in levels for delay in range(num_time_delays+1)] + 
+            [f"pc_{level}_{i_pc}" for level in levels for i_pc in pcs] + 
+            [f"Tcap_{level}_60to90" for level in levels] + 
+            [f"vT_{level}_{mode}_runavg{delay}" for level in levels for mode in modes for delay in range(num_time_delays+1)] + 
+            [f"ubar_{level}_0pm5" for level in [10, 100]]
+        )
+        t_abs = feat_all["time_observable"].sel(feature="t_abs").to_numpy()
+        t_sim = t_abs - t_abs[0]
+        feat_tpt = xr.DataArray(
+            coords = {
+                "ensemble": np.arange(1),
+                "member": np.arange(1,2),
+                "t_sim":  t_sim,
+                "feature": feat_tpt_list,
+            },
+            dims = ["ensemble","member","t_sim","feature"],
+        )
+        print(feat_tpt[src].coords)
+        # Time observables
+        t_names = ["t_abs","t_szn","year_szn_start","t_cal"]
+        feat_tpt[src].loc[dict(feature=t_names)] = (
+            feat_all[src]["time_observable"].sel(feature=t_names)
+        )
+        # PC observables
+        pc_names = [f"pc_{level}_{i_pc}" for level in levels for i_pc in pcs]
+        feat_tpt[src].loc[dict(feature=pc_names)] = (
+            feat_all[src]["pc_observable"].sel(feature=pc_names)
+        )
+        # Time-delayed zonal wind observables
+        for i_delay in range(num_time_delays+1):
+            tidx_in = np.arange(num_time_delays-i_delay,len(t_abs)-i_delay)
+            tidx_out = np.arange(num_time_delays,len(t_abs))
+            ubar_names_in = [f"ubar_{level}_60" for level in levels]
+            ubar_names_out = [f"ubar_{level}_60_delay{i_delay}" for level in levels]
+            feat_tpt[src].loc[dict(feature=ubar_names_out,t_sim=t_sim[tidx_out])] = (
+                feat_all[src]["ubar_observable"].sel(feature=ubar_names_in)
+                .isel(time=tidx_in).to_numpy()
+            )
+        # Temperature observables 
+        temp_names = [f"Tcap_{level}_60to90" for level in levels]
+        feat_tpt[src].loc[dict(feature=temp_names)] = (
+            feat_all[src]["temperature_observable"].sel(feature=temp_names)
+        )
+        # Heat flux observables
+        for i_delay in range(num_time_delays+1):
+            vT_names_in = [f"vT_{level}_{mode}" for level in levels for mode in modes]
+            vT_names_out = [f"vT_{level}_{mode}_runavg{i_delay}" for level in levels for mode in modes]
+            feat_tpt[src].loc[dict(feature=vT_names_out)] = (
+                feat_all[src]["heatflux_observable"].sel(feature=vT_names_in)
+                .rolling(time=i_delay+1, center=False).mean().to_numpy()
+            )
+        # QBO observable
+        qbo_names = [f"ubar_{level}_0pm5" for level in [10, 100]]
+        feat_tpt[src].loc[dict(feature=qbo_names)] = (
+            feat_all[src]["qbo_observable"].sel(feature=qbo_names)
+        )
+        return feat_tpt
     def ab_test(self, Xtpt):
         time_window_flag = (
                 (Xtpt.sel(feature="t_szn") >= self.tpt_bndy["t_thresh"][0]) &  
