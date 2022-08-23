@@ -83,6 +83,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         F = xr.DataArray(
                 coords = F_coords, 
                 dims = list(F_coords.keys())
+                data = 0 # This is necessary to assign later by broadcasting 
                 )
         return F
     def preprocess_netcdf(self, ds, src):
@@ -179,12 +180,16 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return ubar
     def time_observable(self, ds, src): 
         # Return all the possible kinds of time we might need from this object. The basic unit will be DAYS 
+        print(f"Before preprocessing, ds.coords = \n{ds.coords}")
         ds = self.preprocess_netcdf(ds, src)
+        print(f"After preprocessing, ds.coords = \n{ds.coords}")
         time_types = ["t_dt64", "t_abs", "t_cal", "t_szn", "year_cal", "year_szn_start"]
         tda = self.prepare_blank_observable(ds, time_types)
+        print(f"tda.coords = \n{tda.coords}")
         Nt = ds["time"].size
         # Regular time 
-        tda.loc[dict(feature="t_dt64")] = ds["time"].data
+        print(f"About to process regular time. \n LHS.coords = \n{tda.loc[dict(feature='t_dt64')].coords}\n and RHS.coords = \n{ds['time'].coords}")
+        tda.loc[dict(feature="t_dt64")] = ds["time"]
         # Absolute time
         tda.loc[dict(feature="t_abs")] = (ds["time"].data - self.time_origin) / self.time_unit
         # Calendar year
@@ -222,6 +227,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             obs2compute = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
         obs_dict = dict({obsname: [] for obsname in obs2compute})
         for i_filename,filename in enumerate(input_file_list):
+            print(f"Beginning file {filename}")
             ds = xr.open_dataset(join(input_dir, filename)).resample(time="1D").mean()
             if i_filename % 12 == 0:
                 print(f"Starting file number {i_filename} out of {len(input_file_list)}")
