@@ -36,42 +36,51 @@ def dullda():
     da = xr.DataArray(coords={"x": [0,1,2], "y": [-10.5,-9.5,-8.6,2.3]}, dims=["x","y"], data=np.arange(12).reshape((3,4)))
     return da
 
-def compute_eofs(file_list, num_modes=10, months_of_interest=None):
+def preprocess_netcdf(ds, src):
+    # Depending on what dataset the netcdf came from, rename some dimensions 
+    if src == "s2": 
+        ds = ds.rename({"number": "member"})
+    if src == "e5":
+        ds = ds.rename({"z": "gh"})
+        ds["gh"] *= 1.0/9.806 # convert to geopotential height
+    return ds
+
+def compute_eofs(file_list, src, num_modes=10, months_of_interest=None):
     # Compute some EOFs of monthly mean data 
     # Each file must contain an integer number of whole months
     if months_of_interest is None:
         months_of_interest = np.arange(1, 13)
-    z_list = []
+    gh_list = []
     for i_f,f in enumerate(file_list):
         if i_f % 20 == 0:
             print(f"starting file {i_f} out of {len(file_list)}")
-        zmean = xr.open_dataset(f)['z'].resample(time="1M").mean()
-        z_list += [zmean] # Using the fact that each file is a whole month
-    zm = xr.concat(z_list, dim="time").sortby("time")
-    zm_climatology = zm.groupby("time.month").mean(dim="time")
-    zma = zm.groupby("time.month") - zm_climatology # Anomaly
+        ghmean = preprocess_netcdf(xr.open_dataset(f), src)['gh'].resample(time="1M").mean()
+        gh_list += [ghmean] # Using the fact that each file is a whole month
+    ghm = xr.concat(gh_list, dim="time").sortby("time")
+    ghm_climatology = ghm.groupby("time.month").mean(dim="time")
+    ghma = ghm.groupby("time.month") - ghm_climatology # Anomaly
     # Restrict to latitudes 20 degrees and northward
-    zm_20N_w = zma.where(
-        (zma.latitude >= 20) *
-        zma.month.isin(months_of_interest),
+    ghm_20N_w = ghma.where(
+        (ghma.latitude >= 20) *
+        ghma.month.isin(months_of_interest),
         drop=True
     ) 
-    zm_20N_w *= np.sqrt(np.maximum(0, np.cos(zm_20N_w.latitude*np.pi/180)))
-    X = zm_20N_w.transpose("level","time","latitude","longitude").to_numpy().reshape((
-        zm_20N_w.level.size, zm_20N_w.time.size, zm_20N_w.latitude.size*zm_20N_w.longitude.size, 
+    ghm_20N_w *= np.sqrt(np.maximum(0, np.cos(ghm_20N_w.latitude*np.pi/180)))
+    X = ghm_20N_w.transpose("level","time","latitude","longitude").to_numpy().reshape((
+        ghm_20N_w.level.size, ghm_20N_w.time.size, ghm_20N_w.latitude.size*ghm_20N_w.longitude.size, 
     ))
     
     num_modes = 10
     eofs = xr.DataArray(
         coords = {
-            "level": zm_20N_w.level, 
-            "latitude": zm_20N_w.latitude, 
-            "longitude": zm_20N_w.longitude, 
+            "level": ghm_20N_w.level, 
+            "latitude": ghm_20N_w.latitude, 
+            "longitude": ghm_20N_w.longitude, 
             "mode": 1 + np.arange(num_modes)},
         dims = ["level", "latitude", "longitude", "mode"],
         )
     variance_fraction = xr.DataArray(
-        coords = {"level": zm_20N_w.level, "mode": 1 + np.arange(num_modes),},
+        coords = {"level": ghm_20N_w.level, "mode": 1 + np.arange(num_modes),},
         dims = ["level","mode"],
         )
     for i_lev in range(eofs.level.size):
@@ -82,6 +91,6 @@ def compute_eofs(file_list, num_modes=10, months_of_interest=None):
         data_vars = {"eofs": eofs, "variance_fraction": variance_fraction,},
         )
     ds_monclim = xr.Dataset(
-        data_vars = {"z": zm_climatology}
+        data_vars = {"gh": ghm_climatology}
         )
     return ds_eofs, ds_monclim 

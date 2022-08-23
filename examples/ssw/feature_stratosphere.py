@@ -34,6 +34,7 @@ from cartopy import crs as ccrs
 import pickle
 import itertools
 from feature_template import SeasonalFeatures
+import xr_utils
 
 def pca_several_levels(gh,Nsamp,Nlat,Nlon,Npc,arr_eof,arr_singvals,arr_totvar,lev_subset):
     # Perform PCA on one level of geopotential height and fill in the results 
@@ -82,54 +83,47 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         F_coords["feature"] = feature_coord_names 
         F = xr.DataArray(
                 coords = F_coords, 
-                dims = list(F_coords.keys())
-                data = 0 # This is necessary to assign later by broadcasting 
+                dims = list(F_coords.keys()),
+                data = 0.0, # This is necessary to assign later by broadcasting 
                 )
         return F
-    def preprocess_netcdf(self, ds, src):
-        # Depending on what dataset the netcdf came from, rename some dimensions 
-        if src == "s2": 
-            ds = ds.rename({"number": "member"})
-        #elif src == "e5": 
-        #    ds = ds.expand_dims({"member": np.arange(1,2)})
-        return ds
     def pc_observable(self, ds, src, ds_eofs, ds_monclim, subtract_monthly_mean=False):
         # Project the geopotential height fields onto the EOFs 
-        ds = self.preprocess_netcdf(ds, src)
+        ds = xr_utils.preprocess_netcdf(ds, src)
         pc_features = []
         for level in [10, 100, 500, 850]:
             for i_pc in [1, 2, 3, 4]:
                 pc_features += [f"pc_{level}_{i_pc}"]
         if subtract_monthly_mean:
             pc_all = (
-                    (ds["z"].groupby("time.month") - ds_monclim["z"]) * ds_eofs["eofs"] * np.sqrt(np.maximum(0, np.cos(ds_eofs["latitude"] * np.pi/180)))
+                    (ds["gh"].groupby("time.month") - ds_monclim["gh"]) * ds_eofs["eofs"] * np.sqrt(np.maximum(0, np.cos(ds_eofs["latitude"] * np.pi/180)))
                     ).sum(dim=["latitude","longitude"]) / np.sqrt(ds_eofs["variance_fraction"])
         else:
             pc_all = (
-                    ds["z"] * ds_eofs["eofs"] * np.sqrt(np.maximum(0, np.cos(ds_eofs["latitude"] * np.pi/180)))
+                    ds["gh"] * ds_eofs["eofs"] * np.sqrt(np.maximum(0, np.cos(ds_eofs["latitude"] * np.pi/180)))
                     ).sum(dim=["latitude","longitude"]) / np.sqrt(ds_eofs["variance_fraction"])
         pc = self.prepare_blank_observable(ds, pc_features)
         for level in [10, 100, 500, 850]:
             for i_pc in [1, 2, 3, 4]:
-                pc.loc[dict(feature=f"pc_{level}_{i_pc}")] = pc_all.sel(level=level, mode=i_pc)
+                pc.loc[dict(feature=f"pc_{level}_{i_pc}")] += pc_all.sel(level=level, mode=i_pc)
         return pc
     def temperature_observable(self, ds, src):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
-        ds = self.preprocess_netcdf(ds, src)
+        ds = xr_utils.preprocess_netcdf(ds, src)
         temp_features = ["Tcap_10_60to90", "Tcap_100_60to90", "Tcap_500_60to90", "Tcap_850_60to90"] #ds.coords['level'].to_numpy()
         Tcap = self.prepare_blank_observable(ds, temp_features)
         lat_idx = np.sort(np.where((ds.latitude >= 60)*(ds.latitude < 90))[0])
         cos_weight = np.cos(ds.latitude[lat_idx] * np.pi/180) 
         cos_weight *= 1.0/(np.sum(cos_weight) * ds.longitude.size)
         for level in [10, 100, 500, 850]:
-            Tcap.loc[dict(feature=f"Tcap_{level}_60to90")] = (
+            Tcap.loc[dict(feature=f"Tcap_{level}_60to90")] += (
                     (ds['t'].isel(latitude=lat_idx).sel(level=level) * cos_weight)
                     .sum(dim=["longitude","latitude"])
                     )
         return Tcap
     def heatflux_observable(self, ds, src):
         # Heat flux at various wavenumbers between 45 and 75 degrees N. 
-        ds = self.preprocess_netcdf(ds, src)
+        ds = xr_utils.preprocess_netcdf(ds, src)
         min_lat = 45 
         max_lat = 75 
         Nlon = ds.longitude.size 
@@ -157,44 +151,40 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         for level in [10, 100, 500, 850]:
             for mode in range(max_mode+1):
                 factor = 1.0 if mode == 0 else 2.0 # We only looked at the first half of the spectrum.
-                vT.loc[dict(feature=f"vT_{level}_{mode}")] = (
+                vT.loc[dict(feature=f"vT_{level}_{mode}")] += (
                         vT_wavenumbers.sel(level=level, mode=mode).real
                         ) * factor
         return vT
     def qbo_observable(self, ds, src):
         # Zonal-mean zonal wind at 10 hPa in a region near the equator
-        ds = self.preprocess_netcdf(ds, src)
+        ds = xr_utils.preprocess_netcdf(ds, src)
         qbo_features = ["ubar_10_0pm5", "ubar_100_0pm5"]
         qbo = self.prepare_blank_observable(ds, qbo_features)
         lat_idx, = np.where((ds['latitude'].to_numpy() >= -5)*(ds['latitude'].to_numpy() <= 5))
         for level in [10, 100]:
-            qbo.loc[dict(feature=f"ubar_{level}_0pm5")] = ds['u'].isel(latitude=lat_idx).sel(level=level).mean(dim=["longitude","latitude"])
+            qbo.loc[dict(feature=f"ubar_{level}_0pm5")] += ds['u'].isel(latitude=lat_idx).sel(level=level).mean(dim=["longitude","latitude"])
         return qbo
     def ubar_observable(self, ds, src):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
-        ds = self.preprocess_netcdf(ds, src)
+        ds = xr_utils.preprocess_netcdf(ds, src)
         ubar_features = ["ubar_10_60", "ubar_100_60", "ubar_500_60", "ubar_850_60"] #ds.coords['level'].to_numpy()
         ubar = self.prepare_blank_observable(ds, ubar_features)
         for level in [10, 100, 500, 850]:
-            ubar.loc[dict(feature=f"ubar_{level}_60")] = ds['u'].sel(latitude=60,level=level).mean(dim="longitude")
+            ubar.loc[dict(feature=f"ubar_{level}_60")] += ds['u'].sel(latitude=60,level=level).mean(dim="longitude")
         return ubar
     def time_observable(self, ds, src): 
         # Return all the possible kinds of time we might need from this object. The basic unit will be DAYS 
-        print(f"Before preprocessing, ds.coords = \n{ds.coords}")
-        ds = self.preprocess_netcdf(ds, src)
-        print(f"After preprocessing, ds.coords = \n{ds.coords}")
+        ds = xr_utils.preprocess_netcdf(ds, src)
         time_types = ["t_dt64", "t_abs", "t_cal", "t_szn", "year_cal", "year_szn_start"]
         tda = self.prepare_blank_observable(ds, time_types)
-        print(f"tda.coords = \n{tda.coords}")
         Nt = ds["time"].size
         # Regular time 
-        print(f"About to process regular time. \n LHS.coords = \n{tda.loc[dict(feature='t_dt64')].coords}\n and RHS.coords = \n{ds['time'].coords}")
-        tda.loc[dict(feature="t_dt64")] = ds["time"]
+        tda.loc[dict(feature="t_dt64")] += ds["time"].astype('float64')
         # Absolute time
-        tda.loc[dict(feature="t_abs")] = (ds["time"].data - self.time_origin) / self.time_unit
+        tda.loc[dict(feature="t_abs")] += (ds["time"] - self.time_origin) / self.time_unit
         # Calendar year
-        year_cal = ds['time'].dt.year.to_numpy()
-        tda.loc[dict(feature="year_cal")] = year_cal
+        year_cal = ds['time'].dt.year
+        tda.loc[dict(feature="year_cal")] += year_cal.astype('float64')
         # Calendar time
         year_start = np.array([
             np.datetime64(
@@ -202,7 +192,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 ) 
             for i_t in range(Nt)
             ])
-        tda.loc[dict(feature="t_cal")] = (ds["time"] - year_start) / self.time_unit  # TODO: make this agnostic to time units 
+        tda.loc[dict(feature="t_cal")] += (ds["time"] - year_start) / self.time_unit  # TODO: make this agnostic to time units 
         # Time since most recent season start
         szn_start_same_year = np.array([
             np.datetime64(
@@ -210,15 +200,15 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             ) 
             for i_t in range(Nt)
         ])
-        year_szn_start = year_cal - 1*(ds["time"] < szn_start_same_year).to_numpy()
-        tda.loc[dict(feature="year_szn_start")] = year_szn_start
+        year_szn_start = year_cal - 1*(ds["time"] < szn_start_same_year) #.to_numpy()
+        tda.loc[dict(feature="year_szn_start")] += year_szn_start
         szn_start_most_recent = np.array([
             np.datetime64(
                 datetime.datetime(year_szn_start[i_t], self.szn_start["month"], self.szn_start["day"])
             ) 
             for i_t in range(Nt)
         ])
-        tda.loc[dict(feature="t_szn")] = (ds["time"].data - szn_start_most_recent) / self.time_unit
+        tda.loc[dict(feature="t_szn")] += (ds["time"] - szn_start_most_recent) / self.time_unit
         return tda
     # -----------------------------------------------
     # ------------ Assemble feat_all -------------------
@@ -226,10 +216,10 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         if obs2compute is None:
             obs2compute = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
         obs_dict = dict({obsname: [] for obsname in obs2compute})
+        # TODO: break this loop into chunks and open each in parallel with open_mfdataset. Will need a `preprocess' function that operates differently for ERA5 and S2S
         for i_filename,filename in enumerate(input_file_list):
-            print(f"Beginning file {filename}")
             ds = xr.open_dataset(join(input_dir, filename)).resample(time="1D").mean()
-            if i_filename % 12 == 0:
+            if i_filename % 1 == 0:
                 print(f"Starting file number {i_filename} out of {len(input_file_list)}")
             if "time_observable" in obs2compute:
                 obs_dict["time_observable"] += [self.time_observable(ds, src)]
@@ -407,8 +397,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             else:
                 raise Exception("The dssource you gave me, %s, is not recognized"%(dssource))
         time,fall_year = self.time_since_oct1(ds['time'])
-        #print(f"dstime = {ds['time'][:]}")
-        #print(f"time = {time}")
         return gh,u,time,ds['plev'][:],ds['lat'][:],ds['lon'][:],fall_year,ghflag
     def compute_geostrophic_wind(self,gh,lat,lon):
         # gh shape should be (Nx,Nlev,Nlat,Nlon). 
