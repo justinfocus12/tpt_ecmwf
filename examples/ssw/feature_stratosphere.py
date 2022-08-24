@@ -212,15 +212,42 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return tda
     # -----------------------------------------------
     # ------------ Assemble feat_all -------------------
-    def compute_all_features(self, src, input_dir, input_file_list, output_dir, featdef, obs2compute=None):
+    def preprocess_s2(self, ds):
+        #ds = ds.expand_dims(ensemble=[np.datetime64(datetime.now())])
+        ds = ds.resample(time="1D").mean()
+        ds = ds.expand_dims(ensemble=[ds.encoding["source"],])
+        ds = ds.assign_coords({"time": (ds["time"] - ds["time"][0])/self.time_unit})
+        return ds
+    def preprocess_e5(self, ds):
+        #ds = ds.expand_dims(ensemble=[np.datetime64(datetime.now())])
+        ds = ds.resample(time="1D").mean()
+        return ds
+    def compute_all_features(self, src, input_dir, input_file_list, output_dir, featdef, obs2compute=None, chunk_size=1):
         if obs2compute is None:
             obs2compute = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
         obs_dict = dict({obsname: [] for obsname in obs2compute})
         # TODO: break this loop into chunks and open each in parallel with open_mfdataset. Will need a `preprocess' function that operates differently for ERA5 and S2S
-        for i_filename,filename in enumerate(input_file_list):
-            ds = xr.open_dataset(join(input_dir, filename)).resample(time="1D").mean()
-            if i_filename % 1 == 0:
-                print(f"Starting file number {i_filename} out of {len(input_file_list)}")
+        chunk_starts = np.arange(0, len(input_file_list), chunk_size)
+        if src == "s2":
+            preprocess = self.preprocess_s2
+            concat_dim = "ensemble"
+        elif src == "e5":
+            preprocess = self.preprocess_e5
+            concat_dim = "time"
+        for i_chunk in range(len(chunk_starts)):
+            chunk_files = [
+                    join(input_dir, input_file_list[j]) 
+                    for j in range(
+                        chunk_starts[i_chunk], 
+                        min(chunk_starts[i_chunk]+chunk_size, len(input_file_list))
+                        )
+                    ]
+            ds = xr.open_mfdataset(
+                chunk_files, preprocess=preprocess,
+                combine="nested", concat_dim=concat_dim
+                )
+            if i_chunk % 1 == 0:
+                print(f"Starting file number {chunk_starts[i_chunk]} out of {len(input_file_list)}")
             if "time_observable" in obs2compute:
                 obs_dict["time_observable"] += [self.time_observable(ds, src)]
             if "ubar_observable" in obs2compute:
@@ -234,7 +261,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             if "qbo_observable" in obs2compute:
                 obs_dict["qbo_observable"] += [self.qbo_observable(ds, src)]
             ds.close()
-        concat_dim = "time" if src in ["e5","e2","ei"] else "ensemble"
         for obsname in obs2compute:
             ds_obs = xr.concat(obs_dict[obsname], dim=concat_dim).sortby("time")
             ds_obs.to_netcdf(join(output_dir, f"{obsname}.nc"))

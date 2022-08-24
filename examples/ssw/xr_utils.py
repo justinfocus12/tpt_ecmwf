@@ -94,3 +94,4 @@ def compute_eofs(file_list, src, num_modes=10, months_of_interest=None):
         data_vars = {"gh": ghm_climatology}
         )
     return ds_eofs, ds_monclim 
+
