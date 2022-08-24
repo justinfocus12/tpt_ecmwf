@@ -226,15 +226,20 @@ class WinterStratosphereFeatures(SeasonalFeatures):
     # -----------------------------------------------
     # ------------ Assemble feat_all -------------------
     def preprocess_s2(self, ds):
-        #ds = ds.expand_dims(ensemble=[np.datetime64(datetime.now())])
-        ds = ds.resample(time="1D").mean()
-        ds = ds.expand_dims(ensemble=[ds.encoding["source"],])
-        ds = ds.assign_coords({"time": (ds["time"] - ds["time"][0])/self.time_unit})
+        ds = ds.expand_dims({"t_init": ds['time'][0:1]})
+        ds = ds.assign_coords({"time": (ds['time'] - ds['time'][0])/np.timedelta64(1,'D')})
+        ds = ds.rename({"time": "t_sim"})
         return ds
     def preprocess_e5(self, ds):
         #ds = ds.expand_dims(ensemble=[np.datetime64(datetime.now())])
         ds = ds.resample(time="1D").mean()
+        ds = ds.expand_dims({"t_init": ds['time'][0:1]})
+        ds = ds.assign_coords({"time": (ds['time'] - ds['time'][0])/np.timedelta64(1,'D')})
+        ds = ds.rename({"time": "t_sim"})
         return ds
+    def compute_all_features_in_chunk(self, src, input_dir, input_file_list, featdef, obs2compute=None):
+        # TODO
+        return
     def compute_all_features(self, src, input_dir, input_file_list, output_dir, featdef, obs2compute=None):
         if obs2compute is None:
             obs2compute = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
