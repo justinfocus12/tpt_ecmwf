@@ -5,6 +5,7 @@
 import numpy as np
 import netCDF4 as nc
 import xarray as xr
+import pandas
 import datetime
 import time as timelib
 from calendar import monthrange
@@ -87,6 +88,12 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 data = 0.0, # This is necessary to assign later by broadcasting 
                 )
         return F
+    def postprocess_observable(self, ds_obs, src):
+        # Depending on which dataset, rename some of the dimensions again
+        if src == "s2":
+            t0 = ds_obs["time"][0]
+            ds_obs = ds_obs.assign_coords({"time": (ds_obs["time"] - ds_obs["time"][0]) / self.time_unit})
+        return ds_obs
     def pc_observable(self, ds, src, ds_eofs, ds_monclim, subtract_monthly_mean=False):
         # Project the geopotential height fields onto the EOFs 
         ds = xr_utils.preprocess_netcdf(ds, src)
@@ -106,6 +113,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         for level in [10, 100, 500, 850]:
             for i_pc in [1, 2, 3, 4]:
                 pc.loc[dict(feature=f"pc_{level}_{i_pc}")] += pc_all.sel(level=level, mode=i_pc)
+        pc = self.postprocess_observable(pc, src)
         return pc
     def temperature_observable(self, ds, src):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
@@ -120,6 +128,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                     (ds['t'].isel(latitude=lat_idx).sel(level=level) * cos_weight)
                     .sum(dim=["longitude","latitude"])
                     )
+        Tcap = self.postprocess_observable(Tcap, src)
         return Tcap
     def heatflux_observable(self, ds, src):
         # Heat flux at various wavenumbers between 45 and 75 degrees N. 
@@ -154,6 +163,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 vT.loc[dict(feature=f"vT_{level}_{mode}")] += (
                         vT_wavenumbers.sel(level=level, mode=mode).real
                         ) * factor
+        vT = self.postprocess_observable(vT, src)
         return vT
     def qbo_observable(self, ds, src):
         # Zonal-mean zonal wind at 10 hPa in a region near the equator
@@ -163,6 +173,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         lat_idx, = np.where((ds['latitude'].to_numpy() >= -5)*(ds['latitude'].to_numpy() <= 5))
         for level in [10, 100]:
             qbo.loc[dict(feature=f"ubar_{level}_0pm5")] += ds['u'].isel(latitude=lat_idx).sel(level=level).mean(dim=["longitude","latitude"])
+        qbo = self.postprocess_observable(qbo, src)
         return qbo
     def ubar_observable(self, ds, src):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
@@ -171,6 +182,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         ubar = self.prepare_blank_observable(ds, ubar_features)
         for level in [10, 100, 500, 850]:
             ubar.loc[dict(feature=f"ubar_{level}_60")] += ds['u'].sel(latitude=60,level=level).mean(dim="longitude")
+        ubar = self.postprocess_observable(ubar, src)
         return ubar
     def time_observable(self, ds, src): 
         # Return all the possible kinds of time we might need from this object. The basic unit will be DAYS 
@@ -209,6 +221,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             for i_t in range(Nt)
         ])
         tda.loc[dict(feature="t_szn")] += (ds["time"] - szn_start_most_recent) / self.time_unit
+        tda = self.postprocess_observable(tda, src)
         return tda
     # -----------------------------------------------
     # ------------ Assemble feat_all -------------------
@@ -222,32 +235,19 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         #ds = ds.expand_dims(ensemble=[np.datetime64(datetime.now())])
         ds = ds.resample(time="1D").mean()
         return ds
-    def compute_all_features(self, src, input_dir, input_file_list, output_dir, featdef, obs2compute=None, chunk_size=1):
+    def compute_all_features(self, src, input_dir, input_file_list, output_dir, featdef, obs2compute=None):
         if obs2compute is None:
             obs2compute = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
         obs_dict = dict({obsname: [] for obsname in obs2compute})
-        # TODO: break this loop into chunks and open each in parallel with open_mfdataset. Will need a `preprocess' function that operates differently for ERA5 and S2S
-        chunk_starts = np.arange(0, len(input_file_list), chunk_size)
         if src == "s2":
-            preprocess = self.preprocess_s2
-            concat_dim = "ensemble"
+            concat_dim = pandas.Index(data=np.arange(len(input_file_list)), name="ensemble")
         elif src == "e5":
-            preprocess = self.preprocess_e5
             concat_dim = "time"
-        for i_chunk in range(len(chunk_starts)):
-            chunk_files = [
-                    join(input_dir, input_file_list[j]) 
-                    for j in range(
-                        chunk_starts[i_chunk], 
-                        min(chunk_starts[i_chunk]+chunk_size, len(input_file_list))
-                        )
-                    ]
-            ds = xr.open_mfdataset(
-                chunk_files, preprocess=preprocess,
-                combine="nested", concat_dim=concat_dim
-                )
-            if i_chunk % 1 == 0:
-                print(f"Starting file number {chunk_starts[i_chunk]} out of {len(input_file_list)}")
+        for i_file in range(len(input_file_list)):
+            filename = join(input_dir, input_file_list[i_file]) 
+            t0 = datetime.datetime.now()
+            ds = xr.open_dataset(filename).resample(time="1D").first()
+            t1 = datetime.datetime.now()
             if "time_observable" in obs2compute:
                 obs_dict["time_observable"] += [self.time_observable(ds, src)]
             if "ubar_observable" in obs2compute:
@@ -260,12 +260,16 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 obs_dict["pc_observable"] += [self.pc_observable(ds, src, featdef["ds_eofs"], featdef["ds_monclim"])]
             if "qbo_observable" in obs2compute:
                 obs_dict["qbo_observable"] += [self.qbo_observable(ds, src)]
+            t2 = datetime.datetime.now()
             ds.close()
+            t3 = datetime.datetime.now()
+            if i_file % 1 == 0:
+                print(f"File {i_file}/{len(input_file_list)}: {(t1-t0)} to open, {(t2-t1)} to compute, {(t3-t2)} to close")
         for obsname in obs2compute:
-            ds_obs = xr.concat(obs_dict[obsname], dim=concat_dim).sortby("time")
+            ds_obs = xr.concat(obs_dict[obsname], dim=concat_dim) #.sortby("time")
             ds_obs.to_netcdf(join(output_dir, f"{obsname}.nc"))
             ds_obs.close()
-        return ds_obs
+        return 
     # --------------------------------------------------
     def assemble_all_features(self, output_dir, obs2assemble=None):
         if obs2assemble is None:
