@@ -88,12 +88,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 data = 0.0, # This is necessary to assign later by broadcasting 
                 )
         return F
-    def postprocess_observable(self, ds_obs, src):
-        # Depending on which dataset, rename some of the dimensions again
-        if src == "s2":
-            t0 = ds_obs["time"][0]
-            ds_obs = ds_obs.assign_coords({"time": (ds_obs["time"] - ds_obs["time"][0]) / self.time_unit})
-        return ds_obs
     def pc_observable(self, ds, src, ds_eofs, ds_monclim, subtract_monthly_mean=False):
         # Project the geopotential height fields onto the EOFs 
         ds = xr_utils.preprocess_netcdf(ds, src)
@@ -112,8 +106,10 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         pc = self.prepare_blank_observable(ds, pc_features)
         for level in [10, 100, 500, 850]:
             for i_pc in [1, 2, 3, 4]:
-                pc.loc[dict(feature=f"pc_{level}_{i_pc}")] += pc_all.sel(level=level, mode=i_pc)
-        pc = self.postprocess_observable(pc, src)
+                pc.loc[dict(feature=f"pc_{level}_{i_pc}")] = (
+                        pc.sel(feature=f"pc_{level}_{i_pc}") +
+                        pc_all.sel(level=level, mode=i_pc)
+                        )
         return pc
     def temperature_observable(self, ds, src):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
@@ -123,12 +119,12 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         lat_idx = np.sort(np.where((ds.latitude >= 60)*(ds.latitude < 90))[0])
         cos_weight = np.cos(ds.latitude[lat_idx] * np.pi/180) 
         cos_weight *= 1.0/(np.sum(cos_weight) * ds.longitude.size)
+        Tcap_all_levels = (ds['t'].isel(latitude=lat_idx) * cos_weight).sum(dim=["longitude","latitude"])
         for level in [10, 100, 500, 850]:
-            Tcap.loc[dict(feature=f"Tcap_{level}_60to90")] += (
-                    (ds['t'].isel(latitude=lat_idx).sel(level=level) * cos_weight)
-                    .sum(dim=["longitude","latitude"])
+            Tcap.loc[dict(feature=f"Tcap_{level}_60to90")] = (
+                    Tcap.sel(feature=f"Tcap_{level}_60to90") + 
+                    Tcap_all_levels.sel(level=level)
                     )
-        Tcap = self.postprocess_observable(Tcap, src)
         return Tcap
     def heatflux_observable(self, ds, src):
         # Heat flux at various wavenumbers between 45 and 75 degrees N. 
@@ -160,118 +156,148 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         for level in [10, 100, 500, 850]:
             for mode in range(max_mode+1):
                 factor = 1.0 if mode == 0 else 2.0 # We only looked at the first half of the spectrum.
-                vT.loc[dict(feature=f"vT_{level}_{mode}")] += (
+                vT.loc[dict(feature=f"vT_{level}_{mode}")] = (
+                        vT.sel(feature=f"vT_{level}_{mode}") +
                         vT_wavenumbers.sel(level=level, mode=mode).real
                         ) * factor
-        vT = self.postprocess_observable(vT, src)
         return vT
-    def qbo_observable(self, ds, src):
+    def qbo_observable(self, ds_in, src):
         # Zonal-mean zonal wind at 10 hPa in a region near the equator
-        ds = xr_utils.preprocess_netcdf(ds, src)
+        ds = xr_utils.preprocess_netcdf(ds_in, src)
         qbo_features = ["ubar_10_0pm5", "ubar_100_0pm5"]
         qbo = self.prepare_blank_observable(ds, qbo_features)
         lat_idx, = np.where((ds['latitude'].to_numpy() >= -5)*(ds['latitude'].to_numpy() <= 5))
+        ubar_equatorial = ds['u'].isel(latitude=lat_idx).sel(level=[10,100]).mean(dim=["longitude","latitude"])
         for level in [10, 100]:
-            qbo.loc[dict(feature=f"ubar_{level}_0pm5")] += ds['u'].isel(latitude=lat_idx).sel(level=level).mean(dim=["longitude","latitude"])
-        qbo = self.postprocess_observable(qbo, src)
+            qbo.loc[dict(feature=f"ubar_{level}_0pm5")] = (
+                    qbo.sel(feature=f"ubar_{level}_0pm5") + 
+                    ubar_equatorial.sel(level=level)
+                    )
         return qbo
-    def ubar_observable(self, ds, src):
+    def ubar_observable(self, ds_in, src):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
-        ds = xr_utils.preprocess_netcdf(ds, src)
+        ds = xr_utils.preprocess_netcdf(ds_in, src)
         ubar_features = ["ubar_10_60", "ubar_100_60", "ubar_500_60", "ubar_850_60"] #ds.coords['level'].to_numpy()
         ubar = self.prepare_blank_observable(ds, ubar_features)
+        ubar_60 = ds['u'].sel(latitude=60).mean(dim='longitude')
         for level in [10, 100, 500, 850]:
-            ubar.loc[dict(feature=f"ubar_{level}_60")] += ds['u'].sel(latitude=60,level=level).mean(dim="longitude")
-        ubar = self.postprocess_observable(ubar, src)
+            ubar.loc[dict(feature=f"ubar_{level}_60")] = ubar.sel(feature=f"ubar_{level}_60") + ubar_60.sel(level=level)
         return ubar
-    def time_observable(self, ds, src): 
+    def time_observable(self, ds_in, src):
         # Return all the possible kinds of time we might need from this object. The basic unit will be DAYS 
-        ds = xr_utils.preprocess_netcdf(ds, src)
+        ds = xr_utils.preprocess_netcdf(ds_in, src) 
         time_types = ["t_dt64", "t_abs", "t_cal", "t_szn", "year_cal", "year_szn_start"]
         tda = self.prepare_blank_observable(ds, time_types)
-        Nt = ds["time"].size
+        Nt = ds["t_sim"].size
         # Regular time 
-        tda.loc[dict(feature="t_dt64")] += ds["time"].astype('float64')
+        treg = ds['t_init'] + self.time_unit * ds["t_sim"]
+        tda.loc[dict(feature="t_dt64")] += treg.astype('float64')
         # Absolute time
-        tda.loc[dict(feature="t_abs")] += (ds["time"] - self.time_origin) / self.time_unit
+        tda.loc[dict(feature="t_abs")] += ((treg - self.time_origin) / self.time_unit).astype('float64')
         # Calendar year
-        year_cal = ds['time'].dt.year
+        year_cal = treg.dt.year
         tda.loc[dict(feature="year_cal")] += year_cal.astype('float64')
         # Calendar time
-        year_start = np.array([
-            np.datetime64(
-                datetime.datetime(year_cal[i_t], 1, 1)
-                ) 
-            for i_t in range(Nt)
-            ])
-        tda.loc[dict(feature="t_cal")] += (ds["time"] - year_start) / self.time_unit  # TODO: make this agnostic to time units 
+        year_start = np.array(
+                [np.datetime64(f"{int(yc)}-01-01") for yc in year_cal.to_numpy().flat]
+                ).reshape(year_cal.shape)
+        
+        tda.loc[dict(feature="t_cal")] += (treg - year_start) / self.time_unit  # TODO: make this agnostic to time units 
         # Time since most recent season start
-        szn_start_same_year = np.array([
-            np.datetime64(
-                datetime.datetime(year_cal[i_t], self.szn_start["month"], self.szn_start["day"])
-            ) 
-            for i_t in range(Nt)
-        ])
-        year_szn_start = year_cal - 1*(ds["time"] < szn_start_same_year) #.to_numpy()
+        szn_start_same_year = np.array(
+                [np.datetime64(
+                    f"{int(yc)}-{self.szn_start['month']:02}-{self.szn_start['day']:02}"
+                    ) for yc in year_cal.to_numpy().flat]
+                ).reshape(year_cal.shape)
+        year_szn_start = year_cal - 1*(treg < szn_start_same_year) #.to_numpy()
         tda.loc[dict(feature="year_szn_start")] += year_szn_start
-        szn_start_most_recent = np.array([
-            np.datetime64(
-                datetime.datetime(year_szn_start[i_t], self.szn_start["month"], self.szn_start["day"])
-            ) 
-            for i_t in range(Nt)
-        ])
-        tda.loc[dict(feature="t_szn")] += (ds["time"] - szn_start_most_recent) / self.time_unit
-        tda = self.postprocess_observable(tda, src)
+        szn_start_most_recent = np.array(
+                [np.datetime64(
+                    f"{int(yss)}-{self.szn_start['month']:02}-{self.szn_start['day']:02}"
+                    ) for yss in year_szn_start.to_numpy().flat]
+                ).reshape(year_szn_start.shape)
+        tda.loc[dict(feature="t_szn")] += (treg - szn_start_most_recent) / self.time_unit
         return tda
     # -----------------------------------------------
-    # ------------ Assemble feat_all -------------------
-    def preprocess_s2(self, ds):
+    # ------------ feat_all -------------------
+    def preprocess_mfdataset(self, ds, src):
+        # Only sample the beginning of each day 
+        if src == "e5":
+            day_start_idx, = np.where(ds["time"].dt.hour == 0)
+            ds = ds.isel(time=day_start_idx)
         ds = ds.expand_dims({"t_init": ds['time'][0:1]})
         ds = ds.assign_coords({"time": (ds['time'] - ds['time'][0])/np.timedelta64(1,'D')})
         ds = ds.rename({"time": "t_sim"})
         return ds
-    def preprocess_e5(self, ds):
-        #ds = ds.expand_dims(ensemble=[np.datetime64(datetime.now())])
-        ds = ds.resample(time="1D").mean()
-        ds = ds.expand_dims({"t_init": ds['time'][0:1]})
-        ds = ds.assign_coords({"time": (ds['time'] - ds['time'][0])/np.timedelta64(1,'D')})
-        ds = ds.rename({"time": "t_sim"})
-        return ds
-    def compute_all_features_in_chunk(self, src, input_dir, input_file_list, featdef, obs2compute=None):
-        # TODO
-        return
-    def compute_all_features(self, src, input_dir, input_file_list, output_dir, featdef, obs2compute=None):
-        if obs2compute is None:
-            obs2compute = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
+    def compute_all_features_in_chunk(self, src, input_dir, input_file_list, featdef, obs2compute, dask_flag=False, print_timing_flag=False):
         obs_dict = dict({obsname: [] for obsname in obs2compute})
-        if src == "s2":
-            concat_dim = pandas.Index(data=np.arange(len(input_file_list)), name="ensemble")
-        elif src == "e5":
-            concat_dim = "time"
-        for i_file in range(len(input_file_list)):
-            filename = join(input_dir, input_file_list[i_file]) 
+        input_path_list = [join(input_dir, f) for f in input_file_list]
+        preprocess = lambda ds,src=src: self.preprocess_mfdataset(ds, src)
+        if dask_flag:
             t0 = datetime.datetime.now()
-            ds = xr.open_dataset(filename).resample(time="1D").first()
+            ds = xr.open_mfdataset(input_path_list, preprocess=preprocess, combine="nested", concat_dim="t_init")
             t1 = datetime.datetime.now()
             if "time_observable" in obs2compute:
                 obs_dict["time_observable"] += [self.time_observable(ds, src)]
+            t2 = datetime.datetime.now()
             if "ubar_observable" in obs2compute:
                 obs_dict["ubar_observable"] += [self.ubar_observable(ds, src)]
+            t3 = datetime.datetime.now()
             if "heatflux_observable" in obs2compute:
                 obs_dict["heatflux_observable"] += [self.heatflux_observable(ds, src)]
+            t4 = datetime.datetime.now()
             if "temperature_observable" in obs2compute:
                 obs_dict["temperature_observable"] += [self.temperature_observable(ds, src)]
+            t5 = datetime.datetime.now()
             if "pc_observable" in obs2compute:
                 obs_dict["pc_observable"] += [self.pc_observable(ds, src, featdef["ds_eofs"], featdef["ds_monclim"])]
+            t6 = datetime.datetime.now()
             if "qbo_observable" in obs2compute:
                 obs_dict["qbo_observable"] += [self.qbo_observable(ds, src)]
-            t2 = datetime.datetime.now()
-            ds.close()
-            t3 = datetime.datetime.now()
-            if i_file % 1 == 0:
-                print(f"File {i_file}/{len(input_file_list)}: {(t1-t0)} to open, {(t2-t1)} to compute, {(t3-t2)} to close")
+            t8 = datetime.datetime.now()
+        else: 
+            for i_path in range(len(input_path_list)):
+                t0 = datetime.datetime.now()
+                ds = preprocess(xr.open_dataset(input_path_list[i_path]))
+                t1 = datetime.datetime.now()
+                if "time_observable" in obs2compute:
+                    obs_dict["time_observable"] += [self.time_observable(ds, src)]
+                t2 = datetime.datetime.now()
+                if "ubar_observable" in obs2compute:
+                    obs_dict["ubar_observable"] += [self.ubar_observable(ds, src)]
+                t3 = datetime.datetime.now()
+                if "heatflux_observable" in obs2compute:
+                    obs_dict["heatflux_observable"] += [self.heatflux_observable(ds, src)]
+                t4 = datetime.datetime.now()
+                if "temperature_observable" in obs2compute:
+                    obs_dict["temperature_observable"] += [self.temperature_observable(ds, src)]
+                t5 = datetime.datetime.now()
+                if "pc_observable" in obs2compute:
+                    obs_dict["pc_observable"] += [self.pc_observable(ds, src, featdef["ds_eofs"], featdef["ds_monclim"])]
+                t6 = datetime.datetime.now()
+                if "qbo_observable" in obs2compute:
+                    obs_dict["qbo_observable"] += [self.qbo_observable(ds, src)]
+                t7 = datetime.datetime.now()
+        ds.close()
+        if print_timing_flag:
+            print(f"\t----Times--- \n\topening file {t1-t0}\n\ttime obs {t2-t1}\n\tubar obs {t3-t2}\n\tvT obs {t4-t3}\n\ttemp obs {t5-t4}\n\tpc obs {t6-t5}\n\tqbo obs {t7-t6}")
+        return obs_dict
+    def compute_all_features(self, src, input_dir, input_file_list, output_dir, featdef, obs2compute=None, chunk_size=25, print_every=5):
+        if obs2compute is None:
+            obs2compute = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
+        obs_dict = dict({obsname: [] for obsname in obs2compute})
+        # Separate the computation into chunks 
+        chunk_starts = np.arange(0, len(input_file_list), chunk_size)
+        for i_chunk in range(len(chunk_starts)):
+            print_flag = (i_chunk % print_every == 0)
+            if print_flag:
+                print(f"Beginning chunk {i_chunk}/{len(chunk_starts)}")
+            chunk_o_files = input_file_list[chunk_starts[i_chunk]:min(chunk_starts[i_chunk]+chunk_size, len(input_file_list))]
+            obs_dict_chunk = self.compute_all_features_in_chunk(src, input_dir, chunk_o_files, featdef, obs2compute, dask_flag=(chunk_size>1), print_timing_flag=print_flag)
+            for obsname in obs2compute:
+                obs_dict[obsname] += obs_dict_chunk[obsname]
         for obsname in obs2compute:
-            ds_obs = xr.concat(obs_dict[obsname], dim=concat_dim) #.sortby("time")
+            ds_obs = xr.concat(obs_dict[obsname], dim='t_init').sortby("t_init")
             ds_obs.to_netcdf(join(output_dir, f"{obsname}.nc"))
             ds_obs.close()
         return 
