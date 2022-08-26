@@ -37,6 +37,7 @@ def dullda():
     return da
 
 def preprocess_netcdf(ds_in, src):
+    # TODO: defunct
     # Depending on what dataset the netcdf came from, rename some dimensions 
     ds = ds_in.copy()
     if src == "s2": 
@@ -56,7 +57,7 @@ def compute_eofs(file_list, src, num_modes=10, months_of_interest=None):
         if i_f % 20 == 0:
             print(f"starting file {i_f} out of {len(file_list)}")
         ds = preprocess_netcdf(xr.open_dataset(f), src)
-        ghmean = preprocess_netcdf(xr.open_dataset(f), src)['gh'].resample(time="1M").mean()
+        ghmean = ds['gh'].resample(time="1M").mean()
         gh_list += [ghmean] # Using the fact that each file is a whole month
     ghm = xr.concat(gh_list, dim="time").sortby("time")
     ghm_climatology = ghm.groupby("time.month").mean(dim="time")

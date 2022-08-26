@@ -214,24 +214,31 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return tda
     # -----------------------------------------------
     # ------------ feat_all -------------------
-    def preprocess_mfdataset(self, ds, src):
+    def preprocess_netcdf(self, ds, src):
         # Only sample the beginning of each day 
         if src == "e5":
             day_start_idx, = np.where(ds["time"].dt.hour == 0)
             ds = ds.isel(time=day_start_idx)
+            ds["z"] *= 1.0/9.806
+            ds = ds.rename({"z": "gh"})
+        elif src == "s2":
+            ds = ds.rename({"number": "member"})
         ds = ds.expand_dims({"t_init": ds['time'][0:1]})
         ds = ds.assign_coords({"time": (ds['time'] - ds['time'][0])/np.timedelta64(1,'D')})
         ds = ds.rename({"time": "t_sim"})
         return ds
-    def compute_all_features_in_chunk(self, src, input_dir, input_file_list, featdef, obs2compute, dask_flag=False, print_timing_flag=False):
+    def compute_all_features(self, src, input_dir, input_file_list, output_dir, featdef, obs2compute=None, print_every=5):
+        if obs2compute is None:
+            obs2compute = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
         obs_dict = dict({obsname: [] for obsname in obs2compute})
-        input_path_list = [join(input_dir, f) for f in input_file_list]
-        preprocess = lambda ds,src=src: self.preprocess_mfdataset(ds, src)
         concat_dim = "t_init"
-        if dask_flag:
+        for i_file in range(len(input_file_list)):
+            print_flag = (i_file % print_every == 0)
+            if print_flag:
+                print(f"Beginning file {i_file}/{len(input_file_list)}")
             t0 = datetime.datetime.now()
-            ds = xr.open_mfdataset(input_path_list, preprocess=preprocess, combine="nested", concat_dim="t_init")
-            ds = xr_utils.preprocess_netcdf(ds, src)
+            ds = xr.open_dataset(join(input_dir, input_file_list[i_file]))
+            ds = self.preprocess_netcdf(ds, src)
             t1 = datetime.datetime.now()
             if "time_observable" in obs2compute:
                 obs_dict["time_observable"] += [self.time_observable(ds, src)]
@@ -250,52 +257,19 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             t6 = datetime.datetime.now()
             if "qbo_observable" in obs2compute:
                 obs_dict["qbo_observable"] += [self.qbo_observable(ds, src)]
-            t8 = datetime.datetime.now()
-        else: 
-            for i_path in range(len(input_path_list)):
-                t0 = datetime.datetime.now()
-                ds = xr.open_dataset(input_path_list[i_path])
-                ds = xr_utils.preprocess_netcdf(ds, src)
-                ds = preprocess(ds)
-                t1 = datetime.datetime.now()
-                if "time_observable" in obs2compute:
-                    obs_dict["time_observable"] += [self.time_observable(ds, src)]
-                t2 = datetime.datetime.now()
-                if "ubar_observable" in obs2compute:
-                    obs_dict["ubar_observable"] += [self.ubar_observable(ds, src)]
-                t3 = datetime.datetime.now()
-                if "heatflux_observable" in obs2compute:
-                    obs_dict["heatflux_observable"] += [self.heatflux_observable(ds, src)]
-                t4 = datetime.datetime.now()
-                if "temperature_observable" in obs2compute:
-                    obs_dict["temperature_observable"] += [self.temperature_observable(ds, src)]
-                t5 = datetime.datetime.now()
-                if "pc_observable" in obs2compute:
-                    obs_dict["pc_observable"] += [self.pc_observable(ds, src, featdef["ds_eofs"], featdef["ds_monclim"])]
-                t6 = datetime.datetime.now()
-                if "qbo_observable" in obs2compute:
-                    obs_dict["qbo_observable"] += [self.qbo_observable(ds, src)]
-                t7 = datetime.datetime.now()
-        ds.close()
-        if print_timing_flag:
-            print(f"\t----Times--- \n\topening file {t1-t0}\n\ttime obs {t2-t1}\n\tubar obs {t3-t2}\n\tvT obs {t4-t3}\n\ttemp obs {t5-t4}\n\tpc obs {t6-t5}\n\tqbo obs {t7-t6}")
-        return obs_dict
-    def compute_all_features(self, src, input_dir, input_file_list, output_dir, featdef, obs2compute=None, chunk_size=25, print_every=5):
-        if obs2compute is None:
-            obs2compute = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
-        obs_dict = dict({obsname: [] for obsname in obs2compute})
-        # Separate the computation into chunks 
-        chunk_starts = np.arange(0, len(input_file_list), chunk_size)
-        for i_chunk in range(len(chunk_starts)):
-            print_flag = (i_chunk % print_every == 0)
+            t7 = datetime.datetime.now()
+            ds.close()
             if print_flag:
-                print(f"Beginning chunk {i_chunk}/{len(chunk_starts)}")
-            chunk_o_files = input_file_list[chunk_starts[i_chunk]:min(chunk_starts[i_chunk]+chunk_size, len(input_file_list))]
-            obs_dict_chunk = self.compute_all_features_in_chunk(src, input_dir, chunk_o_files, featdef, obs2compute, dask_flag=(chunk_size>1), print_timing_flag=print_flag)
-            for obsname in obs2compute:
-                obs_dict[obsname] += obs_dict_chunk[obsname]
+                print(f"\t----Times--- \n\topening/processing file {t1-t0}\n\ttime obs {t2-t1}\n\tubar obs {t3-t2}\n\tvT obs {t4-t3}\n\ttemp obs {t5-t4}\n\tpc obs {t6-t5}\n\tqbo obs {t7-t6}")
         for obsname in obs2compute:
             ds_obs = xr.concat(obs_dict[obsname], dim=concat_dim).sortby("t_init")
+            # If ERA5, stack back into places
+            if src == "e5":
+                t_sim_offsets = (ds_obs["t_init"] - ds_obs["t_init"][0])/self.time_unit
+                t_sim_new = np.sort((t_sim_offsets + ds_obs["t_sim"]).to_numpy().flatten())
+                ds_obs = ds_obs.stack(t_new=('t_init','t_sim')).transpose('t_new','feature').assign_coords({"t_new": t_sim_new}).rename({"t_new": "t_sim"})
+                nonnan_idx, = np.where(np.isnan(ds_obs).sum(dim="feature") == 0)
+                ds_obs = ds_obs.isel(t_sim=nonnan_idx)
             ds_obs.to_netcdf(join(output_dir, f"{obsname}.nc"))
             ds_obs.close()
         return 
