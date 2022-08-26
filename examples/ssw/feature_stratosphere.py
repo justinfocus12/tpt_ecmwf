@@ -90,7 +90,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return F
     def pc_observable(self, ds, src, ds_eofs, ds_monclim, subtract_monthly_mean=False):
         # Project the geopotential height fields onto the EOFs 
-        ds = xr_utils.preprocess_netcdf(ds, src)
         pc_features = []
         for level in [10, 100, 500, 850]:
             for i_pc in [1, 2, 3, 4]:
@@ -113,7 +112,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return pc
     def temperature_observable(self, ds, src):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
-        ds = xr_utils.preprocess_netcdf(ds, src)
         temp_features = ["Tcap_10_60to90", "Tcap_100_60to90", "Tcap_500_60to90", "Tcap_850_60to90"] #ds.coords['level'].to_numpy()
         Tcap = self.prepare_blank_observable(ds, temp_features)
         lat_idx = np.sort(np.where((ds.latitude >= 60)*(ds.latitude < 90))[0])
@@ -128,7 +126,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return Tcap
     def heatflux_observable(self, ds, src):
         # Heat flux at various wavenumbers between 45 and 75 degrees N. 
-        ds = xr_utils.preprocess_netcdf(ds, src)
         min_lat = 45 
         max_lat = 75 
         Nlon = ds.longitude.size 
@@ -161,9 +158,8 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                         vT_wavenumbers.sel(level=level, mode=mode).real
                         ) * factor
         return vT
-    def qbo_observable(self, ds_in, src):
+    def qbo_observable(self, ds, src):
         # Zonal-mean zonal wind at 10 hPa in a region near the equator
-        ds = xr_utils.preprocess_netcdf(ds_in, src)
         qbo_features = ["ubar_10_0pm5", "ubar_100_0pm5"]
         qbo = self.prepare_blank_observable(ds, qbo_features)
         lat_idx, = np.where((ds['latitude'].to_numpy() >= -5)*(ds['latitude'].to_numpy() <= 5))
@@ -174,18 +170,16 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                     ubar_equatorial.sel(level=level)
                     )
         return qbo
-    def ubar_observable(self, ds_in, src):
+    def ubar_observable(self, ds, src):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
-        ds = xr_utils.preprocess_netcdf(ds_in, src)
         ubar_features = ["ubar_10_60", "ubar_100_60", "ubar_500_60", "ubar_850_60"] #ds.coords['level'].to_numpy()
         ubar = self.prepare_blank_observable(ds, ubar_features)
         ubar_60 = ds['u'].sel(latitude=60).mean(dim='longitude')
         for level in [10, 100, 500, 850]:
             ubar.loc[dict(feature=f"ubar_{level}_60")] = ubar.sel(feature=f"ubar_{level}_60") + ubar_60.sel(level=level)
         return ubar
-    def time_observable(self, ds_in, src):
+    def time_observable(self, ds, src):
         # Return all the possible kinds of time we might need from this object. The basic unit will be DAYS 
-        ds = xr_utils.preprocess_netcdf(ds_in, src) 
         time_types = ["t_dt64", "t_abs", "t_cal", "t_szn", "year_cal", "year_szn_start"]
         tda = self.prepare_blank_observable(ds, time_types)
         Nt = ds["t_sim"].size
@@ -233,9 +227,11 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         obs_dict = dict({obsname: [] for obsname in obs2compute})
         input_path_list = [join(input_dir, f) for f in input_file_list]
         preprocess = lambda ds,src=src: self.preprocess_mfdataset(ds, src)
+        concat_dim = "t_init"
         if dask_flag:
             t0 = datetime.datetime.now()
             ds = xr.open_mfdataset(input_path_list, preprocess=preprocess, combine="nested", concat_dim="t_init")
+            ds = xr_utils.preprocess_netcdf(ds, src)
             t1 = datetime.datetime.now()
             if "time_observable" in obs2compute:
                 obs_dict["time_observable"] += [self.time_observable(ds, src)]
@@ -258,7 +254,9 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         else: 
             for i_path in range(len(input_path_list)):
                 t0 = datetime.datetime.now()
-                ds = preprocess(xr.open_dataset(input_path_list[i_path]))
+                ds = xr.open_dataset(input_path_list[i_path])
+                ds = xr_utils.preprocess_netcdf(ds, src)
+                ds = preprocess(ds)
                 t1 = datetime.datetime.now()
                 if "time_observable" in obs2compute:
                     obs_dict["time_observable"] += [self.time_observable(ds, src)]
@@ -297,7 +295,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             for obsname in obs2compute:
                 obs_dict[obsname] += obs_dict_chunk[obsname]
         for obsname in obs2compute:
-            ds_obs = xr.concat(obs_dict[obsname], dim='t_init').sortby("t_init")
+            ds_obs = xr.concat(obs_dict[obsname], dim=concat_dim).sortby("t_init")
             ds_obs.to_netcdf(join(output_dir, f"{obsname}.nc"))
             ds_obs.close()
         return 
