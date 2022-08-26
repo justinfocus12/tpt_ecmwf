@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.random import Generator, PCG64
 import matplotlib
 #matplotlib.use('AGG')
 import matplotlib.colors as colors
@@ -21,36 +20,33 @@ from os import mkdir
 from os.path import join,exists
 import pickle
 
-class OscillatorModel:
+class OUModel:
     def __init__(self,fundamental_param_dict):
         self.xdim = 3 # position, velocity, and time 
         self.noise_dim = 2
-        self.dt_sim = 0.1
+        self.dt_sim = fundamental_param_dict["dt_sim"]
         self.fundamental_param_dict = fundamental_param_dict
         self.set_params(self.fundamental_param_dict)
-        self.rng = Generator(PCG64(seed=0))
+        self.rng = np.random.default_rng(12345)
         return
     def set_params(self,fpd):
         """
         Parameters
         ----------
         fpd: dict
-            fundamental parameter dictionary, with values for b, beta, gamma, x1star, r, and C
+            fundamental parameter dictionary
+            Potential well V(x,y) = -x**2/(2*Lx**2) - y**2/(2*Ly**2)
         """
         self.q = dict({"fpd": fpd})
-        self.q["period"] = fpd["period"]
-        self.q["omega"] = 2*np.pi/self.q["period"]
         # Linear matrix
         L = np.zeros((self.xdim-1,self.xdim-1))
-        L[0,1] = 1.0 # dx/dt = v
-        L[0,0] = -0.2
-        L[1,0] = -self.q["omega"]**2
-        L[1,1] = -0.2
+        L[0,0] = -1/self.q["fpd"]["Lx"]**2
+        L[1,1] = -1/self.q["fpd"]["Ly"]**2
         self.q["L"] = L
         # Diffusion matrix
         S = np.zeros((self.xdim,self.noise_dim))
-        S[0,0] = 1.0
-        S[1,1] = 1.0
+        S[0,0] = self.q["fpd"]["noise_amp"]
+        S[1,1] = self.q["fpd"]["noise_amp"]
         self.q["sigma"] = S
         return
     def tendency(self,x):
@@ -74,10 +70,10 @@ class OscillatorModel:
         return xdot
     def noise_term(self,x):
         Nx = x.shape[0]
-        eta = self.rng.standard_normal((Nx,self.noise_dim))
+        eta = self.rng.standard_normal(size=(Nx,self.noise_dim))
         sdw = eta.dot(self.q["sigma"].T)
         return sdw
-    def integrate(self,x0,t_save):
+    def integrate(self,x0,t_save,seed=None):
         """
         Parameters
         ----------
@@ -93,6 +89,8 @@ class OscillatorModel:
         """
         if not (t_save.ndim == 1 and t_save[0] == 0 and x0.ndim == 2 and x0.shape[1] == self.xdim):
             raise Exception(f"Shape problem: for integration from initial condition, you gave me x0.shape = {x0.shape} and t_save.shape = {t_save.shape}")
+        if seed is not None:
+            self.rng = np.random.default_rng(seed)
         Nt = t_save.size
         Nx = x0.shape[0] #Number of initial conditions
         dt_save_min = np.min(np.diff(t_save))
