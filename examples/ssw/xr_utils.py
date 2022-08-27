@@ -36,8 +36,7 @@ def dullda():
     da = xr.DataArray(coords={"x": [0,1,2], "y": [-10.5,-9.5,-8.6,2.3]}, dims=["x","y"], data=np.arange(12).reshape((3,4)))
     return da
 
-def preprocess_netcdf(ds_in, src):
-    # TODO: defunct
+def preprocess_netcdf_basic(ds_in, src):
     # Depending on what dataset the netcdf came from, rename some dimensions 
     ds = ds_in.copy()
     if src == "s2": 
@@ -56,7 +55,7 @@ def compute_eofs(file_list, src, num_modes=10, months_of_interest=None):
     for i_f,f in enumerate(file_list):
         if i_f % 20 == 0:
             print(f"starting file {i_f} out of {len(file_list)}")
-        ds = preprocess_netcdf(xr.open_dataset(f), src)
+        ds = preprocess_netcdf_basic(xr.open_dataset(f), src)
         ghmean = ds['gh'].resample(time="1M").mean()
         gh_list += [ghmean] # Using the fact that each file is a whole month
     ghm = xr.concat(gh_list, dim="time").sortby("time")
