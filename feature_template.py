@@ -66,14 +66,14 @@ class SeasonalFeatures(ABC):
         Parameters
         ----------
         Xtpt: xarray.DataArray
-            dimensions (ensemble, member, time, feature)
+            dimensions (t_init, member, time, feature)
         tpt_bndy: dict
             Parameters that specify the parameters in the definition of A and B
 
         Returns
         -------
         ab_tag: xarray.DataArray
-            dimensions (ensemble, member, time)
+            dimensions (t_init, member, time)
             The integer corresponding to the state space location of each coordinate. E.g., wherever the input data Xtpt is in A, ab_tag contains ab_code["A"]
         """
         pass
@@ -86,16 +86,14 @@ class SeasonalFeatures(ABC):
             raise Exception(f"You asked for a mode of {mode}, but I only accept 'timechunks' or 'timesteps'")
     
     def cotton_eye_joe_timesteps(self, Xtpt, ab_tag):
+        cej_coords = {key: Xtpt.coords[key].to_numpy() for key in list(Xtpt.coords.keys())}
+        cej_coords.pop("feature")
+        cej_coords["sense"] = ["since","until"]
+        cej_coords["state"] = ["A","B"]
         cej = xr.DataArray(
-            coords = dict({
-                "ensemble": Xtpt.coords["ensemble"],
-                "member": Xtpt.coords["member"],
-                "t_sim": Xtpt.coords["t_sim"],
-                "sense": ["since","until"],
-                "state": ["A","B"]
-            }),
-            data = np.nan*np.ones((Xtpt["ensemble"].size, Xtpt["member"].size, Xtpt["t_sim"].size, 2, 2)),
-            dims = ["ensemble","member","t_sim","sense","state"],
+            coords = cej_coords,
+            dims = list(cej_coords.keys()),
+            data = np.nan,
         )
         # Forward pass through time
         for i_time in np.arange(cej["t_sim"].size):
@@ -131,25 +129,24 @@ class SeasonalFeatures(ABC):
         return cej
     # Function to find the time since and until hitting A and B
     def cotton_eye_joe_timechunks(self, Xtpt, ab_tag):
+        # TODO: expand dims of E5 to include t_init and member
+        cej_coords = {key: Xtpt.coords[key].to_numpy() for key in list(Xtpt.coords.keys())}
+        cej_coords.pop("feature")
+        cej_coords["sense"] = ["since","until"]
+        cej_coords["state"] = ["A","B"]
         cej = xr.DataArray(
-            coords = dict({
-                "ensemble": Xtpt.coords["ensemble"],
-                "member": Xtpt.coords["member"],
-                "t_sim": Xtpt.coords["t_sim"],
-                "sense": ["since","until"],
-                "state": ["A","B"]
-            }),
-            data = np.nan*np.ones((Xtpt["ensemble"].size, Xtpt["member"].size, Xtpt["t_sim"].size, 2, 2)),
-            dims = ["ensemble","member","t_sim","sense","state"],
+            coords = cej_coords,
+            dims = list(cej_coords.keys()),
+            data = np.nan,
         )
         t_sim = Xtpt["t_sim"].data
         print(f"t_sim.shape = {t_sim.shape}")
         Nt = t_sim.size
         # Forward pass through time
-        for ensemble in Xtpt.coords["ensemble"]:
+        for t_init in Xtpt.coords["t_init"]:
             for member in Xtpt.coords["member"]:
                 for state in ["A","B"]:
-                    indicator = (ab_tag.sel(ensemble=ensemble,member=member) == self.ab_code[state]).data.astype(int)
+                    indicator = (ab_tag.sel(t_init=t_init,member=member) == self.ab_code[state]).data.astype(int)
                     tsince = np.nan*np.ones(Nt)
                     tuntil = np.nan*np.ones(Nt)
                     # Fill in zeros inside the set
@@ -171,8 +168,8 @@ class SeasonalFeatures(ABC):
                             i0,i1 = idx_exit[k],idx_entry[k]
                             tsince[i0:i1] = t_sim[i0:i1] - t_sim[i0-1]
                             tuntil[i0:i1] = t_sim[i1] - t_sim[i0:i1]
-                    cej.loc[dict(ensemble=ensemble,member=member,state=state,sense="since")] = tsince
-                    cej.loc[dict(ensemble=ensemble,member=member,state=state,sense="until")] = tuntil
+                    cej.loc[dict(t_init=t_init,member=member,state=state,sense="since")] = tsince
+                    cej.loc[dict(t_init=t_init,member=member,state=state,sense="until")] = tuntil
         return cej
     def estimate_empirical_committor(self, cej):
         # Make points NaN if hanging endpoints
