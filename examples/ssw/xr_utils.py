@@ -4,7 +4,7 @@ import xarray as xr
 from matplotlib import pyplot as plt
 from matplotlib import rcParams 
 from matplotlib import ticker
-rcParams["font.size"] = 40
+rcParams["font.size"] = 18
 rcParams["font.family"] = "monospace"
 import cartopy
 from cartopy import crs as ccrs

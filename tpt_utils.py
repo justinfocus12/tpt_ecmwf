@@ -145,6 +145,8 @@ def plot_field_2d(
         fig=None, ax=None,
         field_name=None, feat_names=None,
         stat_name="mean",
+        logscale=False, cmap=None, 
+        pcolor_flag=True, contour_flag=False,
         ):
     if not (
             (field.ndim == weights.ndim == 1) and 
@@ -156,10 +158,26 @@ def plot_field_2d(
         fig,ax = plt.subplots()
     if shp is None: 
         shp = np.array([20,20])
+    if cmap is None:
+        cmap = plt.cm.coolwarm
     field_proj,edges,centers = project_field(field.reshape(-1,1), weights.reshape(-1,1), features, shp=shp, bounds=bounds)
     # Plot in 2d
     xy,yx = np.meshgrid(edges[0], edges[1], indexing='ij')
-    im = ax.pcolormesh(xy,yx,field_proj[stat_name][:,:,0],cmap=plt.cm.coolwarm)
+    if logscale:
+        eps = 1e-15
+        field_proj[stat_name][np.where(field_proj[stat_name] < eps)] = np.nan
+        vmin = max(np.nanmin(field_proj[stat_name]), eps)
+        print(f"vmin = {vmin}")
+        vmax = np.nanmax(field_proj[stat_name])
+        im = ax.pcolormesh(
+                xy,yx,field_proj[stat_name][:,:,0],
+                norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax),
+                cmap=cmap
+                )
+        fig.colorbar(im, ax=ax)
+    else:
+        im = ax.pcolormesh(xy,yx,field_proj[stat_name][:,:,0],cmap=cmap)
+        fig.colorbar(im, ax=ax)
     if feat_names is not None:
         ax.set_xlabel(feat_names[0])
         ax.set_ylabel(feat_names[1])
