@@ -277,16 +277,22 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             ds_obs.close()
         return 
     # --------------------------------------------------
-    def assemble_all_features(self, output_dir, obs2assemble=None):
-        if obs2assemble is None:
-            obs2assemble = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
+    def assemble_all_features(self, src, output_dir):
+        obs2assemble = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
         feat_all = dict({
             obsname: xr.open_dataarray(join(output_dir, f"{obsname}.nc"))
-            for obsname in [
-                "time_observable", "ubar_observable", "pc_observable",
-                "temperature_observable", "heatflux_observable", "qbo_observable"
-                ]
+            for obsname in obs2assemble
             })
+        if src == "e5":
+            t_init = (
+                    feat_all["time_observable"]
+                    .sel(feature="t_dt64",drop=True)
+                    .isel(t_sim=0,drop=True)
+                    .to_numpy()
+                    .astype("datetime64[ns]")
+                    )
+            for obsname in obs2assemble:
+                feat_all[obsname] = feat_all[obsname].expand_dims(dim={"t_init": [t_init], "member": [1]})
         return feat_all
     # ------------ Assemble feat_tpt dictionary ------------
     def assemble_tpt_features(self, feat_all, savedir):
