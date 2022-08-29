@@ -33,7 +33,7 @@ def display_pole_field(field,lat,lon,u=None,v=None,vmin=None,vmax=None,fig=None,
     return fig,ax,data_crs
 
 def dullda():
-    da = xr.DataArray(coords={"x": [0,1,2], "y": [-10.5,-9.5,-8.6,2.3]}, dims=["x","y"], data=np.arange(12).reshape((3,4)))
+    da = xr.DataArray(coords={"x": [0,1,2], "y": [-10.5,-9.5,-8.6,2.3]}, dims=["x","y"], data=np.arange(12).astype('float64').reshape((3,4)))
     return da
 
 def preprocess_netcdf_basic(ds_in, src):
