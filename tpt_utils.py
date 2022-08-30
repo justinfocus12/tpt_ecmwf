@@ -94,10 +94,11 @@ def project_field(field, weights, features, shp=None, bounds=None):
 
 def plot_field_1d(
         field, weights, feature, 
+        density_flag = False,
         nbins=None, bounds=None, orientation="horizontal", 
         fig=None, ax=None, 
         field_name=None, feat_name=None,
-        quantile_flag=True,
+        quantile_flag=True, 
         ):
     # TODO: draw standard deviation (and more) envelopes around the 1D plot, to illustrate some of the uncertainty.
     if not (
@@ -116,11 +117,17 @@ def plot_field_1d(
         nbins = 20
     shp = np.array((nbins,))
     field_proj,edges,centers = project_field(field.reshape(-1,1), weights.reshape(-1,1), features, shp=shp, bounds=bounds_proj)
+    # pull out the field of interest
+    if density_flag:
+        field2plot = field_proj["weightsum"][:,0] 
+        field2plot *= 1.0/ np.sum(field2plot * (edges[0][1:] - edges[0][:-1]))
+    else:
+        field2plot = field_proj["mean"][:,0]
     # Now plot it
     if fig is None or ax is None:
         fig,ax = plt.subplots()
     if orientation == "horizontal":
-        ax.plot(centers[0],field_proj["mean"][:,0],marker='.',color='black')
+        ax.plot(centers[0],field2plot, marker='.',color='black')
         if quantile_flag:
             ax.fill_between(centers[0],field_proj["q25"][:,0],field_proj["q75"][:,0],color=plt.cm.binary(0.6),zorder=-1)
             #ax.fill_between(centers[0],field_proj["min"][:,0],field_proj["max"][:,0],color=plt.cm.binary(0.3),zorder=-2)
@@ -129,7 +136,7 @@ def plot_field_1d(
         if field_name is not None:
             ax.set_ylabel(field_name)
     else:
-        ax.plot(field_proj["mean"][:,0],centers[0],marker='.',color='black')
+        ax.plot(field2plot,centers[0],marker='.',color='black')
         if quantile_flag:
             ax.fill_betweenx(centers[0],field_proj["q25"][:,0],field_proj["q75"][:,0],color=plt.cm.binary(0.6),zorder=-1)
             ax.fill_betweenx(centers[0],field_proj["min"][:,0],field_proj["max"][:,0],color=plt.cm.binary(0.3),zorder=-2)
