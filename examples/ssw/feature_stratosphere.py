@@ -68,11 +68,14 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         # The time thresholds are in days since the beginning of the season.
         return
     def set_event_seasonal_params(self):
-        self.szn_start = {"month": 10, "day": 1}
-        self.szn_length = np.sum([monthrange(1901,month) for month in [10, 11, 12, 1 ,2, 3]])
-        self.Nt_szn = int(self.szn_length / 2) # Approximately two days per averaging window 
-        self.dt_szn = self.szn_length / self.Nt_szn
-        self.t_szn_edge = np.linspace(0, self.szn_length, self.Nt_szn+1)
+        self.szn_start = {"month": 9, "day": 1} # Note this is earlier than the earliest possible SSW
+        self.szn_length = np.sum([monthrange(1901,month) for month in [9, 10, 11, 12, 1 ,2, 3]])
+        self.t_szn_edge = np.arange(0, self.szn_length+0.5, 1).astype('float64')
+        self.Nt_szn = len(self.t_szn_edge) - 1
+        self.dt_szn = self.t_szn_edge[1] - self.t_szn_edge[0]
+        #self.Nt_szn = int(self.szn_length / 2) # Approximately two days per averaging window 
+        #self.dt_szn = self.szn_length / self.Nt_szn
+        #self.t_szn_edge = np.linspace(0, self.szn_length, self.Nt_szn+1)
         return 
     # ---------------- Observables -------------------------
     # TODO: for all the following, augment coordinates of observables to include multiple members. In fact, require every dataset input to include (time,ensemble,member) as coordinates. The calling function must expand dimensions accordingly. 

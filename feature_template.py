@@ -10,6 +10,7 @@ from os import mkdir
 from os.path import join,exists
 import sys
 from abc import ABC,abstractmethod
+import tpt_utils
 
 class SeasonalFeatures(ABC):
     def __init__(self):
@@ -182,7 +183,53 @@ class SeasonalFeatures(ABC):
         a2b_flag = 1.0 * (comm_emp.sel(sense="since") == self.ab_code["A"]) * (comm_emp.sel(sense="until") == self.ab_code["B"])
         rate_lowerbound = (1.0*a2b_flag.diff(dim="t_sim")==1).sum(dim="t_sim") / (a2b_flag["t_sim"][-1] - a2b_flag["t_sim"][0])
         return rate_lowerbound
-
+    def get_seasonal_statistics(self, feat_da, t_szn):
+        # Get the statistics in each box of the season. This will be used to normalize the dataset later.
+        szn_stats = dict()
+        field = feat_da.stack(sample=("t_init","member","t_sim")).transpose("sample","feature").to_numpy()
+        weights = np.ones_like(field)
+        features = t_szn.stack(sample=("t_init","member","t_sim")).to_numpy().reshape(-1,1)
+        szn_stats_dict,edges,centers = (
+            tpt_utils.project_field(
+                field, weights, features, 
+                bounds = self.t_szn_edge[[0,-1]].reshape((2,1)),
+                shp = (self.Nt_szn,)
+            )
+        )
+        szn_stats = xr.Dataset(
+            data_vars = dict({
+                key: xr.DataArray(
+                    coords={"t_szn_cent": centers[0], "feature": feat_da["feature"],},
+                    data=szn_stats_dict[key],
+                    dims=["t_szn_cent", "feature"],
+                ) 
+                for key in list(szn_stats_dict.keys())
+            }),
+        )
+        return szn_stats
+    def unseason(self, feat_da, szn_stats, t_obs, max_delay):
+        feat_da_normalized = np.nan*xr.ones_like(feat_da)
+        szn_window = (t_obs.sel(feature="t_szn")/self.dt_szn).astype(int)
+        szn_start_year = t_obs.sel(feature="year_szn_start").astype(int)
+        for i_win in range(self.Nt_szn):
+            feat_da_normalized = xr.where(
+                szn_window==i_win, 
+                (feat_da - szn_stats["mean"].isel(t_szn_cent=i_win,drop=True)) / szn_stats["std"].isel(t_szn_cent=i_win,drop=True), 
+                feat_da_normalized
+            )
+        # --------------- Mark the trajectories that originated in an earlier time window and will reach another time window ---------------
+        traj_ending_flag = (
+            (szn_window == szn_window.isel(t_sim=-1,drop=True)) *
+            (szn_start_year == szn_start_year.isel(t_sim=-1,drop=True))
+        ) > 0
+        traj_beginning_flag = (
+            (szn_window == szn_window.isel(t_sim=0,drop=True)) *
+            (szn_start_year == szn_start_year.isel(t_sim=0,drop=True)) +
+            (feat_da_normalized["t_sim"] < feat_da_normalized["t_sim"][max_delay+2]) # If a trajectory is not old enough yet, may as well be Nan
+        ) > 0
+        # -----------------------------------------------------------------------------------------------
+        return szn_window,szn_start_year,traj_beginning_flag,traj_ending_flag,feat_da_normalized
+        # 
 
 
 
