@@ -67,9 +67,17 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         })
         # The time thresholds are in days since the beginning of the season.
         return
+    def generate_seasonal_xticks(self, t_szn):
+        # Given some t_szn array, convert it to months and days 
+        idx = np.linspace(0,len(t_szn)-1,4).astype(int)
+        print(idx)
+        t_dt64_ticks = np.datetime64(f"1901-{self.szn_start['month']:02}-{self.szn_start['day']:02}") + self.time_unit * t_szn[idx]
+        xticks = t_szn[idx]
+        xticklabels = [t64.astype(datetime.datetime).strftime("%b %d") for t64 in t_dt64_ticks]
+        return xticks, xticklabels
     def set_event_seasonal_params(self):
         self.szn_start = {"month": 9, "day": 1} # Note this is earlier than the earliest possible SSW
-        self.szn_length = np.sum([monthrange(1901,month) for month in [9, 10, 11, 12, 1 ,2, 3]])
+        self.szn_length = np.sum([monthrange(1901,month) for month in [10, 11, 12, 1 ,2, 3]])
         self.t_szn_edge = np.arange(0, self.szn_length+0.5, 1).astype('float64')
         self.Nt_szn = len(self.t_szn_edge) - 1
         self.dt_szn = self.t_szn_edge[1] - self.t_szn_edge[0]
@@ -183,8 +191,10 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             ubar.loc[dict(feature=f"ubar_{level}_60")] = ubar.sel(feature=f"ubar_{level}_60") + ubar_60.sel(level=level)
         return ubar
     def time_observable(self, ds, src):
+        # TODO: get rid of stuff in here that uses all the externally imposed conventions from the event definition. That should come downstream. 
         # Return all the possible kinds of time we might need from this object. The basic unit will be DAYS 
-        time_types = ["t_dt64", "t_abs", "t_cal", "t_szn", "year_cal", "year_szn_start"]
+        time_types = ["t_dt64", "t_abs", "t_cal", "year_cal"]
+        # TODO: get rid of t_szn and year_szn_start. Compute those after the fact. 
         tda = self.prepare_blank_observable(ds, time_types)
         Nt = ds["t_sim"].size
         # Regular time 
@@ -200,22 +210,40 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 [np.datetime64(f"{int(yc)}-01-01") for yc in year_cal.to_numpy().flat]
                 ).reshape(year_cal.shape)
         
-        tda.loc[dict(feature="t_cal")] += (treg - year_start) / self.time_unit  # TODO: make this agnostic to time units 
-        # Time since most recent season start
-        szn_start_same_year = np.array(
-                [np.datetime64(
-                    f"{int(yc)}-{self.szn_start['month']:02}-{self.szn_start['day']:02}"
-                    ) for yc in year_cal.to_numpy().flat]
-                ).reshape(year_cal.shape)
-        year_szn_start = year_cal - 1*(treg < szn_start_same_year) #.to_numpy()
-        tda.loc[dict(feature="year_szn_start")] += year_szn_start
-        szn_start_most_recent = np.array(
-                [np.datetime64(
-                    f"{int(yss)}-{self.szn_start['month']:02}-{self.szn_start['day']:02}"
-                    ) for yss in year_szn_start.to_numpy().flat]
-                ).reshape(year_szn_start.shape)
-        tda.loc[dict(feature="t_szn")] += (treg - szn_start_most_recent) / self.time_unit
+        tda.loc[dict(feature="t_cal")] += (treg - year_start) / self.time_unit  
         return tda
+    def augment_time_observable(self, tda):
+        time_types_aug = list(tda["feature"].data) + ["year_szn_start","t_szn"]
+        tda_aug = self.prepare_blank_observable(tda, time_types_aug) 
+        # Recover the regular time 
+        treg = tda['t_init'] + self.time_unit * tda['t_sim']
+        treg = treg.expand_dims({"member": tda.member})
+        print(f"treg first few members = {treg.isel(member=slice(0,2),t_sim=0,t_init=0).data}")
+        print(f"treg dims = {treg.dims}")
+        print(f"treg shape = {treg.shape}")
+        #treg = tda.sel(feature="t_abs").astype(tda['t_init'].dtype)
+        print(f"treg dtype = {treg.dtype}")
+        year_cal = treg.dt.year #tda.sel(feature="year_cal")
+        print(f"year_cal first few members = {year_cal.isel(member=slice(0,2),t_sim=0,t_init=0).data}")
+        print(f"year_cal.dims = {year_cal.dims}")
+        ycflat = year_cal.to_numpy().flatten()
+        sssy = np.array([np.datetime64(f"{int(ycflat[i])}-{self.szn_start['month']:02}-{self.szn_start['day']:02}") for i in range(len(ycflat))])
+        szn_start_same_year = xr.DataArray(coords=year_cal.coords, dims=year_cal.dims, data=sssy.reshape(year_cal.shape))
+        print(f"sssy first few members = {szn_start_same_year.isel(member=slice(0,2),t_sim=0,t_init=0).data}")
+        print(f"szn_start_same_year.dims = {szn_start_same_year.dims}")
+        year_szn_start = year_cal - 1*(treg < szn_start_same_year) #.to_numpy()
+        yssflat = year_szn_start.to_numpy().flatten()
+        ssmr = np.array([np.datetime64(f"{int(yssflat[i])}-{self.szn_start['month']:02}-{self.szn_start['day']:02}") for i in range(len(yssflat))])
+        szn_start_most_recent = xr.DataArray(coords=year_cal.coords, dims=year_cal.dims, data=ssmr.reshape(year_cal.shape))
+        print(f"ssmr first few members = {szn_start_most_recent.isel(member=slice(0,2),t_sim=0,t_init=0).data}")
+        print(f"szn_start_most_recent.dims = {szn_start_most_recent.dims}")
+
+        #print(f"ssmr first few members = {szn_start_most_recent.isel(member=slice(0,2),t_sim=0,t_init=0).data}")
+        tda_aug.loc[dict(feature=tda["feature"].data)] += tda
+        tda_aug.loc[dict(feature="year_szn_start")] += year_szn_start
+        rhs = (treg - szn_start_most_recent) / self.time_unit
+        tda_aug.loc[dict(feature="t_szn")] += rhs
+        return tda_aug
     # -----------------------------------------------
     # ------------ feat_all -------------------
     def preprocess_netcdf(self, ds, src):
@@ -281,14 +309,16 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return 
     # --------------------------------------------------
     def assemble_all_features(self, src, output_dir):
-        obs2assemble = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
+        obs2assemble = [f"{obs}_observable" for obs in ["ubar", "pc", "temperature", "heatflux", "qbo"]]
         feat_all = dict({
             obsname: xr.open_dataarray(join(output_dir, f"{obsname}.nc"))
             for obsname in obs2assemble
             })
+        # Special case: time
+        t_obs = xr.open_dataarray(join(output_dir,"time_observable.nc"))
         if src == "e5":
             t_init = (
-                    feat_all["time_observable"]
+                    t_obs
                     .sel(feature="t_dt64",drop=True)
                     .isel(t_sim=0,drop=True)
                     .to_numpy()
@@ -296,6 +326,8 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                     )
             for obsname in obs2assemble:
                 feat_all[obsname] = feat_all[obsname].expand_dims(dim={"t_init": [t_init], "member": [1]})
+            t_obs = t_obs.expand_dims(dim={"t_init": [t_init], "member": [1]})
+        feat_all["time_observable"] = self.augment_time_observable(t_obs)
         return feat_all
     # ------------ Assemble feat_tpt dictionary ------------
     def assemble_tpt_features(self, feat_all, savedir):
