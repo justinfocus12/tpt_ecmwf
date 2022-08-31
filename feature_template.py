@@ -3,6 +3,7 @@
 import numpy as np
 import xarray as xr
 import netCDF4 as nc
+from sklearn.cluster import KMeans
 from numpy import save,load
 import matplotlib.pyplot as plt
 import os
@@ -207,15 +208,15 @@ class SeasonalFeatures(ABC):
             }),
         )
         return szn_stats
-    def unseason(self, feat_da, szn_stats, t_obs, max_delay):
-        feat_da_normalized = np.nan*xr.ones_like(feat_da)
+    def unseason(self, feat_msm, szn_stats, t_obs, max_delay):
+        feat_msm_normalized = np.nan*xr.ones_like(feat_msm)
         szn_window = (t_obs.sel(feature="t_szn")/self.dt_szn).astype(int)
         szn_start_year = t_obs.sel(feature="year_szn_start").astype(int)
         for i_win in range(self.Nt_szn):
-            feat_da_normalized = xr.where(
+            feat_msm_normalized = xr.where(
                 szn_window==i_win, 
-                (feat_da - szn_stats["mean"].isel(t_szn_cent=i_win,drop=True)) / szn_stats["std"].isel(t_szn_cent=i_win,drop=True), 
-                feat_da_normalized
+                (feat_msm - szn_stats["mean"].isel(t_szn_cent=i_win,drop=True)) / szn_stats["std"].isel(t_szn_cent=i_win,drop=True), 
+                feat_msm_normalized
             )
         # --------------- Mark the trajectories that originated in an earlier time window and will reach another time window ---------------
         traj_ending_flag = (
@@ -225,11 +226,111 @@ class SeasonalFeatures(ABC):
         traj_beginning_flag = (
             (szn_window == szn_window.isel(t_sim=0,drop=True)) *
             (szn_start_year == szn_start_year.isel(t_sim=0,drop=True)) +
-            (feat_da_normalized["t_sim"] < feat_da_normalized["t_sim"][max_delay+2]) # If a trajectory is not old enough yet, may as well be Nan
+            (feat_msm_normalized["t_sim"] < feat_msm_normalized["t_sim"][max_delay+2]) # If a trajectory is not old enough yet, may as well be Nan
         ) > 0
         # -----------------------------------------------------------------------------------------------
-        return szn_window,szn_start_year,traj_beginning_flag,traj_ending_flag,feat_da_normalized
-        # 
-
-
+        return szn_window,szn_start_year,traj_beginning_flag,traj_ending_flag,feat_msm_normalized
+    def cluster(self, feat_msm_normalized, t_obs, szn_window, traj_beginning_flag, traj_ending_flag, km_seed): 
+        km_assignment = -np.ones((t_obs["t_init"].size,t_obs["member"].size,t_obs["t_sim"].size), dtype=int)
+        km_centers = []
+        km_n_clusters = -np.ones(self.Nt_szn, dtype=int)
+        for i_win in range(self.Nt_szn):
+            if i_win % 10 == 0:
+                print(f"Starting K-means number {i_win} out of {self.Nt_szn}")
+            idx_in_window = np.where(
+                (szn_window.data==i_win) * 
+                (np.isnan(feat_msm_normalized).sum(dim="feature") == 0)
+            ) # All the data in this time window
+            # idx_for_clustering is all the data that we're allowed to use to build the KMeans object
+            if i_win == 0:
+                idx_for_clustering = np.where(
+                    (szn_window.data==i_win) *
+                    (traj_ending_flag.data == 0) *
+                    (np.isnan(feat_msm_normalized).sum(dim="feature") == 0)
+                )
+            elif i_win == self.Nt_szn-1:
+                idx_for_clustering = np.where(
+                    (szn_window.data==i_win)*
+                    (traj_beginning_flag.data == 0) *
+                    (np.isnan(feat_msm_normalized).sum(dim="feature") == 0)
+                )            
+            else:
+                idx_for_clustering = np.where(
+                    (szn_window.data==i_win)*
+                    (traj_ending_flag.data == 0)*
+                    (traj_beginning_flag.data == 0) * 
+                    (np.isnan(feat_msm_normalized).sum(dim="feature") == 0)
+                )
+            if len(idx_for_clustering[0]) == 0:
+                raise Exception(f"At window {i_win}, there are no indices fit to cluster")
+            km_n_clusters[i_win] = min(200,max(1,len(idx_for_clustering[0]//2)))
+            km = KMeans(n_clusters=km_n_clusters[i_win],random_state=km_seed).fit(
+                    feat_msm_normalized.data[idx_for_clustering])
+            km_assignment[idx_in_window] = km.predict(feat_msm_normalized.data[idx_in_window]) 
+            km_centers += [km.cluster_centers_]
+        km_assignment_da = xr.DataArray(
+            coords={"t_init": t_obs["t_init"], "member": t_obs["member"], "t_sim": t_obs["t_sim"]},
+            dims=["t_init","member","t_sim"],
+            data=km_assignment.copy()    #np.zeros((feat_tpt["ensemble"].size,feat_tpt["member"].size,feat_tpt["t_sim"].size), dtype=int)
+        )    
+        return km_assignment_da,km_centers,km_n_clusters
+    def construct_transition_matrices(self, km_assignment, km_n_clusters, szn_window, szn_start_year):
+        time_dim = list(szn_window.dims).index("t_sim")
+        nontime_dims = np.setdiff1d(np.arange(len(szn_window.dims)), [time_dim])
+        P_list = []
+        for i_win in range(self.Nt_szn-1):
+            if i_win % 10 == 0: print(f"i_win = {i_win}")
+            P = np.zeros((km_n_clusters[i_win],km_n_clusters[i_win+1]))
+            # Count the trajectories that passed through both box i during window i_win, and box j during window i_win+1. 
+            # Maybe some trajectories will be double counted. 
+            idx_pre = np.where(szn_window.data==i_win)
+            idx_post = np.where(szn_window.data==i_win+1)
+            overlap = np.where(
+                np.all(
+                    np.array([
+                        (np.subtract.outer(idx_pre[dim], idx_post[dim]) == 0) 
+                        for dim in nontime_dims
+                    ]), axis=0
+                ) * (
+                    np.subtract.outer(
+                        szn_start_year.data[idx_pre], szn_start_year.data[idx_post]
+                    ) == 0
+                )          
+            )
+            idx_pre_overlap = tuple([idx_pre[dim][overlap[0]] for dim in range(len(idx_pre))])
+            idx_post_overlap = tuple([idx_post[dim][overlap[1]] for dim in range(len(idx_pre))])
+            km_pre = km_assignment.data[idx_pre_overlap]
+            km_post = km_assignment.data[idx_post_overlap]
+            tinit_member_year_identifier = np.concatenate((
+                np.array(idx_pre_overlap)[nontime_dims,:], 
+                [szn_start_year.data[idx_pre_overlap]]
+            ), axis=0)
+            for i in range(P.shape[0]):
+                for j in range(P.shape[1]):
+                    traj_idx, = np.where((km_pre==i)*(km_post==j))
+                    P[i,j] = np.unique(tinit_member_year_identifier[:,traj_idx], axis=1).shape[1]
+            min_rowsum = np.min(np.sum(P, axis=1))
+            min_colsum = np.min(np.sum(P, axis=0))
+            if min_rowsum == 0 or min_colsum == 0:
+                raise Exception(f"Under-filled transition matrices between seasonal windows {i_win} and {i_win+1}. min_rowsum = {min_rowsum} and min_colsum = {min_colsum}")
+            # Normalize the matrix
+            P = np.diag(1.0/np.sum(P, axis=1)).dot(P)
+            P_list += [P]
+        return P_list
+    def broadcast_field_msm2dataarray(self, msm, field_msm, szn_stats, density_flag=False):
+        field_da = np.zeros(msm["szn_window"].shape)
+        for i_win in range(msm["Nt_szn"]):
+            idx_in_window = np.where(msm["szn_window"].data == i_win)
+            for i_clust in range(msm["km_n_clusters"][i_win]):
+                idx_in_cluster = np.where(msm["km_assignment"].data[idx_in_window] == i_clust)
+                idx_in_window_and_cluster = tuple([idx_in_window[dim][idx_in_cluster] for dim in range(len(idx_in_window))])
+                field_da[idx_in_window_and_cluster] = field_msm[i_win][i_clust]
+                if density_flag and (len(idx_in_window_and_cluster[0]) > 0):
+                    field_da[idx_in_window_and_cluster] *= 1.0/len(idx_in_window_and_cluster[0])
+        da_broadcast = xr.DataArray(
+            coords = msm["szn_window"].coords,
+            dims = msm["szn_window"].dims, 
+            data = field_da,
+        )
+        return da_broadcast
 
