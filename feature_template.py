@@ -211,6 +211,7 @@ class SeasonalFeatures(ABC):
     def unseason(self, feat_msm, szn_stats, t_obs, max_delay):
         feat_msm_normalized = np.nan*xr.ones_like(feat_msm)
         szn_window = (t_obs.sel(feature="t_szn")/self.dt_szn).astype(int)
+        print(f"szn_window: min={szn_window.min()}, max={szn_window.max()}")
         szn_start_year = t_obs.sel(feature="year_szn_start").astype(int)
         for i_win in range(self.Nt_szn):
             feat_msm_normalized = xr.where(
@@ -218,6 +219,8 @@ class SeasonalFeatures(ABC):
                 (feat_msm - szn_stats["mean"].isel(t_szn_cent=i_win,drop=True)) / szn_stats["std"].isel(t_szn_cent=i_win,drop=True), 
                 feat_msm_normalized
             )
+            # Debug: cound how many snapshots fall in that window
+            num_in_window = (szn_window==i_win).astype(int).isel(member=0,t_init=0).sum(dim="t_sim").data
         # --------------- Mark the trajectories that originated in an earlier time window and will reach another time window ---------------
         traj_ending_flag = (
             (szn_window == szn_window.isel(t_sim=-1,drop=True)) *
