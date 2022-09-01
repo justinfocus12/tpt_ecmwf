@@ -36,6 +36,7 @@ import pickle
 import itertools
 from feature_template import SeasonalFeatures
 import xr_utils
+import tpt_utils
 
 def pca_several_levels(gh,Nsamp,Nlat,Nlon,Npc,arr_eof,arr_singvals,arr_totvar,lev_subset):
     # Perform PCA on one level of geopotential height and fill in the results 
@@ -429,6 +430,52 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 self.ab_code["D"]*(time_window_flag & ~weak_vortex_flag)
                 )
         return ab_tag
+    def extreme_value_rates(self, Xtpt, t_thresh, src):
+        # Estimate rates from extreme value theory
+        # t_thresh should be an interval strictly within the seasonal bounds
+        cond = (
+            (Xtpt.sel(feature="t_szn") > t_thresh[0]) * 
+            (Xtpt.sel(feature="t_szn") < t_thresh[1]) 
+        )
+        field = (
+            Xtpt
+            .where(cond)
+            .sel(feature="ubar_10_60_delay0") # This is the parameter whose threshold determines A and B 
+            .to_numpy().reshape(-1,1)
+        ).copy()
+        weights = np.ones_like(field)
+        year_szn_start = (
+            Xtpt
+            .where(cond)
+            .sel(feature="year_szn_start",drop=True)
+            .to_numpy()
+            .reshape(-1,1) #.astype(int)
+        ).copy()
+        # Do a project_field call to calculate annual minimum and maximum with block sizes of one year 
+        bounds = np.array([[np.nanmin(year_szn_start)-0.5], [np.nanmax(year_szn_start)+0.5]])
+        shp = (np.round(bounds[1] - bounds[0])).astype(int)
+        ubar_yearly_stats, edges, centers = tpt_utils.project_field(  
+            field, weights, year_szn_start, shp=shp, bounds=bounds
+        )
+        # Compute return period for a list of block minima
+        umin = ubar_yearly_stats['min'].flatten()
+        umax = ubar_yearly_stats['max'].flatten()
+        order = np.argsort(-umin)
+        rank = np.argsort(order)
+        cdf_emp = rank / len(umin)
+        rate_emp = 1 - cdf_emp
+        # Adjust the lower-bound return time by dividing by the total number of ensemble members in a given year
+        rate_lower = rate_emp 
+        if src == "s2":
+            num_init_per_szn = ubar_yearly_stats["weightsum"].flatten() / (Xtpt.member.size * Xtpt.t_sim.size)
+            rate_lower *= 1.0 / num_init_per_szn
+        # Save the extreme value statistics
+        extval_stats = dict({
+            "umin": umin, "umax": umax, "rate_lower": rate_lower, "fall_years": centers[0].astype(int)
+        })
+        return extval_stats
+
+    # --------------------------- old stuff below --------------------------------------------
     def spherical_horizontal_laplacian(self,field,lat,lon):
         # Compute the spherical Laplacian of a field on a lat-lon grid. Assume unit sphere.
         Nx,Nlev,Nlat,Nlon = field.shape
