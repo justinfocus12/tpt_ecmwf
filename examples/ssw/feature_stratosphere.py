@@ -475,6 +475,26 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         })
         return extval_stats
 
+    def path_counting_rates(self, Xtpt, t_thresh):
+        # Get lower and upper bounds by combining weights of various magnitudes 
+        # TODO: finish this
+        e5idx = np.argmin(
+            np.abs(
+                np.subtract.outer(
+                    Xtpt["s2"]["time_observable"]["t_init"].astype("datetime64[ns]").to_numpy().flatten(),
+                    Xtpt["e5"]["time_observable"].sel(feature="t_dt64").astype("datetime64[ns]").to_numpy().flatten()
+                )
+            ), axis=1
+        )
+        t_szn_e5idx = Xtpt["e5"]["time_observable"].sel(feature="t_szn").isel(t_sim=e5idx).to_numpy().flatten()
+        rate_hybrid = xr.DataArray(
+            coords = {"u_thresh": np.arange(-52, 1, 4), "e5_weight": np.array([0.0, 0.25, 0.5, 0.75, 1.0]), "bound": ["lower","upper"]},
+            dims = ["u_thresh","e5_weight","bound"]
+        )
+        rate_e5 = xr.DataArray(
+            coords = {"u_thresh": rate_hybrid["u_thresh"],},
+            dims = ["u_thresh"],
+        )
     # --------------------------- old stuff below --------------------------------------------
     def spherical_horizontal_laplacian(self,field,lat,lon):
         # Compute the spherical Laplacian of a field on a lat-lon grid. Assume unit sphere.
