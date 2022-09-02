@@ -68,13 +68,17 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         })
         # The time thresholds are in days since the beginning of the season.
         return
-    def generate_seasonal_xticks(self, t_szn):
+    def generate_seasonal_xticks(self, t_szn, show_month_starts=True):
         # Given some t_szn array, convert it to months and days 
-        idx = np.linspace(0,len(t_szn)-1,4).astype(int)
+        t_dt64_equiv = np.datetime64(f"1901-{self.szn_start['month']:02}-{self.szn_start['day']:02}") + self.time_unit * t_szn
+        day_of_month = np.array([t64.astype(object).day for t64 in t_dt64_equiv])
+        if show_month_starts:
+            idx, = np.where(day_of_month == 1)
+        else:
+            idx = np.linspace(0,len(t_szn)-1,4).astype(int)
         print(idx)
-        t_dt64_ticks = np.datetime64(f"1901-{self.szn_start['month']:02}-{self.szn_start['day']:02}") + self.time_unit * t_szn[idx]
         xticks = t_szn[idx]
-        xticklabels = [t64.astype(datetime.datetime).strftime("%b %d") for t64 in t_dt64_ticks]
+        xticklabels = [t64.astype(datetime.datetime).strftime("%b") for t64 in t_dt64_equiv[idx]]
         return xticks, xticklabels
     def set_event_seasonal_params(self):
         self.szn_start = {"month": 9, "day": 1} # Note this is earlier than the earliest possible SSW
@@ -87,7 +91,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         #self.t_szn_edge = np.linspace(0, self.szn_length, self.Nt_szn+1)
         return 
     # ---------------- Observables -------------------------
-    # TODO: for all the following, augment coordinates of observables to include multiple members. In fact, require every dataset input to include (time,ensemble,member) as coordinates. The calling function must expand dimensions accordingly. 
     def prepare_blank_observable(self, ds, feature_coord_names):
         # A general method to create a blank DataArray that replaces the coordinates "longitude" and "latitude" in the input dataset (ds) with a dimension "feature" with coordinates feature_names
         F_coords = {key: ds.coords[key].to_numpy() for key in list(ds.coords.keys())}
@@ -192,10 +195,8 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             ubar.loc[dict(feature=f"ubar_{level}_60")] = ubar.sel(feature=f"ubar_{level}_60") + ubar_60.sel(level=level)
         return ubar
     def time_observable(self, ds, src):
-        # TODO: get rid of stuff in here that uses all the externally imposed conventions from the event definition. That should come downstream. 
         # Return all the possible kinds of time we might need from this object. The basic unit will be DAYS 
         time_types = ["t_dt64", "t_abs", "t_cal", "year_cal"]
-        # TODO: get rid of t_szn and year_szn_start. Compute those after the fact. 
         tda = self.prepare_blank_observable(ds, time_types)
         Nt = ds["t_sim"].size
         # Regular time 
@@ -375,7 +376,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         )
         print(f"Finished PC observable")
         # Time-delayed zonal wind observables
-        # TODO: fix
         for i_delay in range(num_time_delays+1):
             tidx_in = np.arange(0,len(t_sim)-i_delay)
             tidx_out = np.arange(i_delay,len(t_sim))
@@ -475,7 +475,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         })
         return extval_stats
 
-    def path_counting_rates(self, Xtpt, t_thresh):
+    def path_counting_rates(self, Xtpt, t_thresh, uthresh_list):
         # Get lower and upper bounds by combining weights of various magnitudes 
         # TODO: finish this
         e5idx = np.argmin(
@@ -488,13 +488,53 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         )
         t_szn_e5idx = Xtpt["e5"]["time_observable"].sel(feature="t_szn").isel(t_sim=e5idx).to_numpy().flatten()
         rate_hybrid = xr.DataArray(
-            coords = {"u_thresh": np.arange(-52, 1, 4), "e5_weight": np.array([0.0, 0.25, 0.5, 0.75, 1.0]), "bound": ["lower","upper"]},
+            coords = {"u_thresh": uthresh_list, "e5_weight": np.array([0.0, 0.25, 0.5, 0.75, 1.0]), "bound": ["lower","upper"]},
             dims = ["u_thresh","e5_weight","bound"]
         )
         rate_e5 = xr.DataArray(
             coords = {"u_thresh": rate_hybrid["u_thresh"],},
             dims = ["u_thresh"],
         )
+        for uth in rate_hybrid["u_thresh"].data:
+            print(f"---------- Starting u_thresh {uth} --------------")
+            self.set_ab_boundaries(t_thresh[0], t_thresh[1], uth)
+            ab_tag = dict()
+            cej = dict() # Hitting times (Cotton-eye Joe)
+            comm_emp = dict() # Empirical committor: to B in forward time, from A in backward time
+            rate_emp = dict() # Empirical rate estimate 
+            for src in ["e5","s2"]:
+                ab_tag[src] = self.ab_test(feat_tpt[src])
+                mode = "timechunks" if src == "e5" else "timesteps" # This determines the computation pattern for iterating through the dataset
+                cej[src] = self.cotton_eye_joe(feat_tpt[src],ab_tag[src],mode=mode)
+                comm_emp[src] = self.estimate_empirical_committor(cej[src])
+                rate_emp[src] = self.estimate_rate(cej[src], comm_emp[src])
+                # Save each item
+                #ab_tag[src].to_netcdf(join(filedict["results"]["dir"], f"ab_tag_{src}.nc"))    
+                #cej[src].to_netcdf(join(filedict["results"]["dir"], f"cej_{src}.nc"))    
+                #comm_emp[src].to_netcdf(join(filedict["results"]["dir"], f"comm_emp_{src}.nc"))
+                #rate_emp[src].to_netcdf(join(filedict["results"]["dir"], f"rate_emp_{src}.nc"))
+        
+            # To ge the ERA5 rate, use all the years
+            rate_e5.loc[dict(u_thresh=uth)] = self.estimate_rate(cej["e5"], comm_emp["e5"]).to_numpy().item() * 365.25
+            # To do the bounds, attach the past of reaanalysis to each initialization date 
+            comm_bwd_e5 = comm_emp["e5"].isel(t_sim=e5idx,t_init=0,member=0).sel(sense="since").to_numpy()
+            comm_fwd_e5 = comm_emp["e5"].isel(t_sim=e5idx,t_init=0,member=0).sel(sense="until").to_numpy()
+            comm_fwd_s2_lower = 1.0*(comm_emp["s2"].sel(sense="until").isel(t_sim=0) == 1).mean(dim="member").to_numpy()
+            comm_fwd_s2_upper = 1.0*(comm_emp["s2"].sel(sense="until").isel(t_sim=0) != 0).mean(dim="member").to_numpy()
+        
+            # Find the branches beginning outside of A and B 
+            domain_idx, = np.where(ab_tag["e5"].isel(t_sim=e5idx,t_init=0,member=0) == self.ab_code["D"])
+        
+            # Get a rate estimate for each individual branch point, to be linearly combined later
+            # Assign weights to the real world and to hindcasts
+            for e5_weight in rate_hybrid["e5_weight"].data: 
+                rate_hybrid.loc[dict(u_thresh=uth,e5_weight=e5_weight,bound="lower")] = (
+                    comm_bwd_e5 * (e5_weight * comm_fwd_e5 + (1-e5_weight) * comm_fwd_s2_lower)
+                )[domain_idx].mean()
+                rate_hybrid.loc[dict(u_thresh=uth,e5_weight=e5_weight,bound="upper")] = (
+                    comm_bwd_e5 * (e5_weight * comm_fwd_e5 + (1-e5_weight) * comm_fwd_s2_upper)
+                )[domain_idx].mean()
+        return rate_e5, rate_hybrid
     # --------------------------- old stuff below --------------------------------------------
     def spherical_horizontal_laplacian(self,field,lat,lon):
         # Compute the spherical Laplacian of a field on a lat-lon grid. Assume unit sphere.

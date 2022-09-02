@@ -98,7 +98,7 @@ def plot_field_1d(
         nbins=None, bounds=None, orientation="horizontal", 
         fig=None, ax=None, 
         field_name=None, feat_name=None,
-        quantile_flag=True, 
+        quantile_flag=True, minmax_flag=True,
         ):
     # TODO: draw standard deviation (and more) envelopes around the 1D plot, to illustrate some of the uncertainty.
     if not (
@@ -129,7 +129,9 @@ def plot_field_1d(
     if orientation == "horizontal":
         ax.plot(centers[0],field2plot, marker='.',color='black')
         if quantile_flag:
-            ax.fill_between(centers[0],field_proj["q25"][:,0],field_proj["q75"][:,0],color=plt.cm.binary(0.4),zorder=-1)
+            ax.fill_between(centers[0],field_proj["q25"][:,0],field_proj["q75"][:,0],color=plt.cm.binary(0.5),zorder=-1)
+        if minmax_flag:
+            ax.fill_between(centers[0],field_proj["min"][:,0],field_proj["max"][:,0],color=plt.cm.binary(0.25),zorder=-2)
             #ax.fill_between(centers[0],field_proj["min"][:,0],field_proj["max"][:,0],color=plt.cm.binary(0.3),zorder=-2)
         if feat_name is not None:
             ax.set_xlabel(feat_name)
@@ -138,8 +140,9 @@ def plot_field_1d(
     else:
         ax.plot(field2plot,centers[0],marker='.',color='black')
         if quantile_flag:
-            ax.fill_betweenx(centers[0],field_proj["q25"][:,0],field_proj["q75"][:,0],color=plt.cm.binary(0.6),zorder=-1)
-            ax.fill_betweenx(centers[0],field_proj["min"][:,0],field_proj["max"][:,0],color=plt.cm.binary(0.3),zorder=-2)
+            ax.fill_betweenx(centers[0],field_proj["q25"][:,0],field_proj["q75"][:,0],color=plt.cm.binary(0.5),zorder=-1)
+        if minmax_flag:
+            ax.fill_betweenx(centers[0],field_proj["min"][:,0],field_proj["max"][:,0],color=plt.cm.binary(0.25),zorder=-2)
         if feat_name is not None:
             ax.set_ylabel(feat_name)
         if field_name is not None:
