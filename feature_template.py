@@ -233,7 +233,7 @@ class SeasonalFeatures(ABC):
         ) > 0
         # -----------------------------------------------------------------------------------------------
         return szn_window,szn_start_year,traj_beginning_flag,traj_ending_flag,feat_msm_normalized
-    def cluster(self, feat_msm_normalized, t_obs, szn_window, traj_beginning_flag, traj_ending_flag, km_seed): 
+    def cluster(self, feat_msm_normalized, t_obs, szn_window, traj_beginning_flag, traj_ending_flag, km_seed, num_clusters): 
         km_assignment = -np.ones((t_obs["t_init"].size,t_obs["member"].size,t_obs["t_sim"].size), dtype=int)
         km_centers = []
         km_n_clusters = -np.ones(self.Nt_szn, dtype=int)
@@ -266,7 +266,7 @@ class SeasonalFeatures(ABC):
                 )
             if len(idx_for_clustering[0]) == 0:
                 raise Exception(f"At window {i_win}, there are no indices fit to cluster")
-            km_n_clusters[i_win] = min(200,max(1,len(idx_for_clustering[0]//2)))
+            km_n_clusters[i_win] = min(num_clusters,max(1,len(idx_for_clustering[0]//2)))
             km = KMeans(n_clusters=km_n_clusters[i_win],random_state=km_seed).fit(
                     feat_msm_normalized.data[idx_for_clustering])
             km_assignment[idx_in_window] = km.predict(feat_msm_normalized.data[idx_in_window]) 
