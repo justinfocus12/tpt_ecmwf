@@ -475,18 +475,18 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         })
         return extval_stats
 
-    def path_counting_rates(self, Xtpt, t_thresh, uthresh_list):
+    def path_counting_rates(self, Xall, Xtpt, t_thresh, uthresh_list):
         # Get lower and upper bounds by combining weights of various magnitudes 
         # TODO: finish this
         e5idx = np.argmin(
             np.abs(
                 np.subtract.outer(
-                    Xtpt["s2"]["time_observable"]["t_init"].astype("datetime64[ns]").to_numpy().flatten(),
-                    Xtpt["e5"]["time_observable"].sel(feature="t_dt64").astype("datetime64[ns]").to_numpy().flatten()
+                    Xall["s2"]["time_observable"]["t_init"].astype("datetime64[ns]").to_numpy().flatten(),
+                    Xall["e5"]["time_observable"].sel(feature="t_dt64").astype("datetime64[ns]").to_numpy().flatten()
                 )
             ), axis=1
         )
-        t_szn_e5idx = Xtpt["e5"]["time_observable"].sel(feature="t_szn").isel(t_sim=e5idx).to_numpy().flatten()
+        t_szn_e5idx = Xall["e5"]["time_observable"].sel(feature="t_szn").isel(t_sim=e5idx).to_numpy().flatten()
         rate_hybrid = xr.DataArray(
             coords = {"u_thresh": uthresh_list, "e5_weight": np.array([0.0, 0.25, 0.5, 0.75, 1.0]), "bound": ["lower","upper"]},
             dims = ["u_thresh","e5_weight","bound"]
@@ -503,16 +503,11 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             comm_emp = dict() # Empirical committor: to B in forward time, from A in backward time
             rate_emp = dict() # Empirical rate estimate 
             for src in ["e5","s2"]:
-                ab_tag[src] = self.ab_test(feat_tpt[src])
+                ab_tag[src] = self.ab_test(Xtpt[src])
                 mode = "timechunks" if src == "e5" else "timesteps" # This determines the computation pattern for iterating through the dataset
-                cej[src] = self.cotton_eye_joe(feat_tpt[src],ab_tag[src],mode=mode)
+                cej[src] = self.cotton_eye_joe(Xtpt[src],ab_tag[src],mode=mode)
                 comm_emp[src] = self.estimate_empirical_committor(cej[src])
                 rate_emp[src] = self.estimate_rate(cej[src], comm_emp[src])
-                # Save each item
-                #ab_tag[src].to_netcdf(join(filedict["results"]["dir"], f"ab_tag_{src}.nc"))    
-                #cej[src].to_netcdf(join(filedict["results"]["dir"], f"cej_{src}.nc"))    
-                #comm_emp[src].to_netcdf(join(filedict["results"]["dir"], f"comm_emp_{src}.nc"))
-                #rate_emp[src].to_netcdf(join(filedict["results"]["dir"], f"rate_emp_{src}.nc"))
         
             # To ge the ERA5 rate, use all the years
             rate_e5.loc[dict(u_thresh=uth)] = self.estimate_rate(cej["e5"], comm_emp["e5"]).to_numpy().item() * 365.25
