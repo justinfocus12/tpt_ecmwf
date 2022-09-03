@@ -430,7 +430,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 self.ab_code["D"]*(time_window_flag & ~weak_vortex_flag)
                 )
         return ab_tag
-    def extreme_value_rates(self, Xtpt, t_thresh, src):
+    def get_ubar_yearly_stats(self, Xtpt, t_thresh, src):
         # Estimate rates from extreme value theory
         # t_thresh should be an interval strictly within the seasonal bounds
         cond = (
@@ -457,24 +457,20 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         ubar_yearly_stats, edges, centers = tpt_utils.project_field(  
             field, weights, year_szn_start, shp=shp, bounds=bounds
         )
+        if src == "e5":
+            num_init_per_season = 1
+        elif src == "s2":
+            num_init_per_season = ubar_yearly_stats["weightsum"].flatten() / (Xtpt.member.size * Xtpt.t_sim.size)
+        return ubar_yearly_stats, centers, num_init_per_season
+    def extreme_value_rates(self, block_maxima, num_init_per_season):
         # Compute return period for a list of block minima
-        umin = ubar_yearly_stats['min'].flatten()
-        umax = ubar_yearly_stats['max'].flatten()
-        order = np.argsort(-umin)
+        order = np.argsort(block_maxima)
         rank = np.argsort(order)
-        cdf_emp = rank / len(umin)
+        cdf_emp = rank / len(block_maxima)
         rate_emp = 1 - cdf_emp
         # Adjust the lower-bound return time by dividing by the total number of ensemble members in a given year
-        rate_lower = rate_emp 
-        if src == "s2":
-            num_init_per_szn = ubar_yearly_stats["weightsum"].flatten() / (Xtpt.member.size * Xtpt.t_sim.size)
-            rate_lower *= 1.0 / num_init_per_szn
-        # Save the extreme value statistics
-        extval_stats = dict({
-            "umin": umin, "umax": umax, "rate_lower": rate_lower, "fall_years": centers[0].astype(int)
-        })
-        return extval_stats
-
+        rate_lower = rate_emp / num_init_per_season
+        return rate_lower
     def path_counting_rates(self, Xall, Xtpt, t_thresh, uthresh_list):
         # Get lower and upper bounds by combining weights of various magnitudes 
         # TODO: finish this
