@@ -189,10 +189,14 @@ class WinterStratosphereFeatures(SeasonalFeatures):
     def ubar_observable(self, ds, src):
         #zonal-mean zonal wind at a range of latitudes, and all altitudes
         ubar_features = ["ubar_10_60", "ubar_100_60", "ubar_500_60", "ubar_850_60"] #ds.coords['level'].to_numpy()
+        ubar_features += ["ubar_10_60S", "ubar_100_60S", "ubar_500_60S", "ubar_850_60S"]
         ubar = self.prepare_blank_observable(ds, ubar_features)
         ubar_60 = ds['u'].sel(latitude=60).mean(dim='longitude')
         for level in [10, 100, 500, 850]:
             ubar.loc[dict(feature=f"ubar_{level}_60")] = ubar.sel(feature=f"ubar_{level}_60") + ubar_60.sel(level=level)
+        ubar_60S = ds['u'].sel(latitude=-60).mean(dim='longitude')
+        for level in [10, 100, 500, 850]:
+            ubar.loc[dict(feature=f"ubar_{level}_60S")] = ubar.sel(feature=f"ubar_{level}_60S") + ubar_60S.sel(level=level)
         return ubar
     def time_observable(self, ds, src):
         # Return all the possible kinds of time we might need from this object. The basic unit will be DAYS 
@@ -460,7 +464,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         if src == "e5":
             num_init_per_season = 1
         elif src == "s2":
-            num_init_per_season = ubar_yearly_stats["weightsum"].flatten() / (Xtpt.member.size * Xtpt.t_sim.size)
+            num_init_per_season = ubar_yearly_stats["weightsum"].flatten() / Xtpt.t_sim.size #(Xtpt.member.size * Xtpt.t_sim.size)
         return ubar_yearly_stats, centers, num_init_per_season
     def extreme_value_rates(self, block_maxima, num_init_per_season):
         # Compute return period for a list of block minima
