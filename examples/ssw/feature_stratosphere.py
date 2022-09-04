@@ -517,7 +517,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             comm_fwd_s2_lower = 1.0*(comm_emp["s2"].sel(sense="until").isel(t_sim=0) == 1).mean(dim="member").to_numpy()
             comm_fwd_s2_upper = 1.0*(comm_emp["s2"].sel(sense="until").isel(t_sim=0) != 0).mean(dim="member").to_numpy()
         
-            # Find the branches beginning outside of A and B 
+            # Find the branches beginning or ending outside of A and B 
             domain_idx, = np.where(ab_tag["e5"].isel(t_sim=e5idx,t_init=0,member=0) == self.ab_code["D"])
         
             # Get a rate estimate for each individual branch point, to be linearly combined later
