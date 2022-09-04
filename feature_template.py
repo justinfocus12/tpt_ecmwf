@@ -320,7 +320,7 @@ class SeasonalFeatures(ABC):
             P = np.diag(1.0/np.sum(P, axis=1)).dot(P)
             P_list += [P]
         return P_list
-    def broadcast_field_msm2dataarray(self, msm, field_msm, szn_stats, density_flag=False):
+    def broadcast_field_msm2dataarray(self, msm, field_msm, density_flag=False):
         field_da = np.zeros(msm["szn_window"].shape)
         for i_win in range(msm["Nt_szn"]):
             idx_in_window = np.where(msm["szn_window"].data == i_win)
