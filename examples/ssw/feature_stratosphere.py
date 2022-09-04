@@ -83,7 +83,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return xticks, xticklabels
     def set_event_seasonal_params(self):
         self.szn_start = {"month": 9, "day": 1} # Note this is earlier than the earliest possible SSW
-        self.szn_length = np.sum([monthrange(1901,month) for month in [10, 11, 12, 1 ,2, 3]])
+        self.szn_length = np.sum([monthrange(1901,month) for month in [9, 10, 11, 12, 1 ,2, 3, 4]])
         self.t_szn_edge = np.arange(0, self.szn_length+0.5, 1).astype('float64')
         self.Nt_szn = len(self.t_szn_edge) - 1
         self.dt_szn = self.t_szn_edge[1] - self.t_szn_edge[0]
@@ -755,3 +755,40 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             fig.savefig(join(savedir,"vortex_qgpv_{}_day{}_yr{}".format(save_suffix,int(time[tidx[k]]/24.0),fall_year)))
             plt.close(fig)
         return
+    # ---------------------------- DGA pipeline --------------------------
+    def dga_pipeline(self, max_delay, feat_tpt, msm_feature_names, km_seed=43, num_clusters=170):
+        # Do this for both data sources 
+        feat_msm = dict()
+        for src in ["e5","s2"]:
+            feat_msm[src] = feat_tpt[src].sel(feature=msm_features)
+        szn_stats_e5 = feat_strat.get_seasonal_statistics(feat_msm["e5"], feat_tpt["e5"].sel(feature="t_szn"))
+        szn_stats_e5.to_netcdf(join(filedict["results"]["dir"], f"szn_stats_e5.nc"))        
+        # 
+        feat_msm_normalized = dict()
+        szn_window = dict()
+        szn_start_year = dict()
+        traj_beginning_flag = dict() # 1 if the sample is in the first seasonal time window where the trajectory started
+        traj_ending_flag = dict() # 1 if the sample is in the last seasonal time window occupied by the trajectory
+        for src in ["e5","s2"]:
+            szn_window,szn_start_year,traj_beginning_flag,traj_ending_flag,feat_msm_normalized = (
+                    feat_strat.unseason(feat_msm["s2"], szn_stats_e5, feat_all["s2"]["time_observable"], max_delay)
+                    )
+            badsum = (
+                    (np.isnan(feat_msm_normalized[src]).sum(dim="feature") > 0) * 
+                    #(szn_window[src] < feat_strat.Nt_szn) * 
+                    (feat_tpt[src].sel(feature="t_szn") < feat_strat.szn_length) * 
+                    (feat_tpt[src]["t_sim"] > feat_tpt[src]["t_sim"][max_delay])
+                    ).sum()
+            if badsum > 0:
+                raise Exception(f"The badsum is {badsum}, which means something is awry with the assignment of windows")
+        # Now the K-means part 
+        km_assignment = dict()
+        km_centers = dict()
+        km_n_clusters = dict()
+        
+        for src in ["e5","s2"]:
+            km_assignment[src],km_centers[src],km_n_clusters[src] = feat_strat.cluster(
+                feat_msm_normalized[src], feat_all[src]["time_observable"], szn_window[src], 
+                traj_beginning_flag[src], traj_ending_flag[src], km_seed, num_clusters
+            )
+        # TODO: finish this 
