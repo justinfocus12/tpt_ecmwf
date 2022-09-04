@@ -157,6 +157,7 @@ def plot_field_2d(
         stat_name="mean",
         logscale=False, cmap=None, 
         pcolor_flag=True, contour_flag=False,
+        vmin=None, vmax=None
         ):
     if not (
             (field.ndim == weights.ndim == 1) and 
@@ -176,9 +177,10 @@ def plot_field_2d(
     if logscale:
         eps = 1e-15
         field_proj[stat_name][np.where(field_proj[stat_name] < eps)] = np.nan
-        vmin = max(np.nanmin(field_proj[stat_name]), eps)
+        if vmin is None: vmin = eps
+        vmin = max(np.nanmin(field_proj[stat_name]), vmin)
         print(f"vmin = {vmin}")
-        vmax = np.nanmax(field_proj[stat_name])
+        if vmax is None: vmax = np.nanmax(field_proj[stat_name])
         im = ax.pcolormesh(
                 xy,yx,field_proj[stat_name][:,:,0],
                 norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax),
@@ -186,14 +188,14 @@ def plot_field_2d(
                 )
         fig.colorbar(im, ax=ax)
     else:
-        im = ax.pcolormesh(xy,yx,field_proj[stat_name][:,:,0],cmap=cmap)
+        im = ax.pcolormesh(xy,yx,field_proj[stat_name][:,:,0],cmap=cmap,vmin=vmin,vmax=vmax)
         fig.colorbar(im, ax=ax)
     if feat_names is not None:
         ax.set_xlabel(feat_names[0])
         ax.set_ylabel(feat_names[1])
     if field_name is not None:
         ax.set_title(field_name)
-    return fig,ax
+    return fig,ax,centers
 
 
 

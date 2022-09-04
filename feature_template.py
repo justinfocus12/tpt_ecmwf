@@ -208,15 +208,19 @@ class SeasonalFeatures(ABC):
             }),
         )
         return szn_stats
-    def unseason(self, feat_msm, szn_stats, t_obs, max_delay):
+    def unseason(self, feat_msm, szn_stats, t_obs, max_delay, divide_by_std_flag=False):
         feat_msm_normalized = np.nan*xr.ones_like(feat_msm)
         szn_window = (t_obs.sel(feature="t_szn")/self.dt_szn).astype(int)
         print(f"szn_window: min={szn_window.min()}, max={szn_window.max()}")
         szn_start_year = t_obs.sel(feature="year_szn_start").astype(int)
         for i_win in range(self.Nt_szn):
+            data_standardized = feat_msm - szn_stats["mean"].isel(t_szn_cent=i_win,drop=True)
+            if divide_by_std_flag:
+                data_standardized *= 1.0/szn_stats["std"].isel(t_szn_cent=i_win,drop=True)
             feat_msm_normalized = xr.where(
                 szn_window==i_win, 
-                (feat_msm - szn_stats["mean"].isel(t_szn_cent=i_win,drop=True)) / szn_stats["std"].isel(t_szn_cent=i_win,drop=True), 
+                data_standardized,
+                #(feat_msm - szn_stats["mean"].isel(t_szn_cent=i_win,drop=True)) / szn_stats["std"].isel(t_szn_cent=i_win,drop=True), 
                 feat_msm_normalized
             )
             # Debug: cound how many snapshots fall in that window

@@ -70,14 +70,15 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return
     def generate_seasonal_xticks(self, t_szn, show_month_starts=True):
         # Given some t_szn array, convert it to months and days 
-        t_dt64_equiv = np.datetime64(f"1901-{self.szn_start['month']:02}-{self.szn_start['day']:02}") + self.time_unit * t_szn
+        t_szn_resamp = np.arange(np.nanmin(t_szn), np.nanmax(t_szn), 1)
+        t_dt64_equiv = np.datetime64(f"1901-{self.szn_start['month']:02}-{self.szn_start['day']:02}") + self.time_unit * t_szn_resamp
         day_of_month = np.array([t64.astype(object).day for t64 in t_dt64_equiv])
         if show_month_starts:
             idx, = np.where(day_of_month == 1)
         else:
-            idx = np.linspace(0,len(t_szn)-1,4).astype(int)
+            idx = np.linspace(0,len(t_szn_resamp)-1,4).astype(int)
         print(idx)
-        xticks = t_szn[idx]
+        xticks = t_szn_resamp[idx]
         xticklabels = [t64.astype(datetime.datetime).strftime("%b") for t64 in t_dt64_equiv[idx]]
         return xticks, xticklabels
     def set_event_seasonal_params(self):
@@ -350,7 +351,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             [f"pc_{level}_{i_pc}" for level in levels for i_pc in pcs] + 
             [f"Tcap_{level}_60to90" for level in levels] + 
             [f"vT_{level}_{mode}_runavg{delay}" for level in levels for mode in modes for delay in range(num_time_delays+1)] + 
-            [f"ubar_{level}_0pm5" for level in [10, 100]]
+            [f"ubar_{level}_0pm5" for level in [10, 100]] 
         )
         t_sim = feat_all["time_observable"]["t_sim"].to_numpy() 
         print(f"t_sim: min diff = {np.min(np.diff(t_sim))}, max diff = {np.max(np.diff(t_sim))}")
@@ -373,12 +374,14 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             feat_all["time_observable"].sel(feature=t_names)
         )
         print(f"Finished time observable")
+        # -----------------------------
         # PC observables
         pc_names = [f"pc_{level}_{i_pc}" for level in levels for i_pc in pcs]
         feat_tpt.loc[dict(feature=pc_names)] += (
             feat_all["pc_observable"].sel(feature=pc_names)
         )
         print(f"Finished PC observable")
+        # -----------------------------
         # Time-delayed zonal wind observables
         for i_delay in range(num_time_delays+1):
             tidx_in = np.arange(0,len(t_sim)-i_delay)
@@ -397,12 +400,14 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             if i_delay > 0:
                 feat_tpt.loc[dict(feature=ubar_names_out,t_sim=t_sim[:tidx_out[0]])] = np.nan
         print(f"Finished zmzw observable")
+        # -----------------------------
         # Temperature observables 
         temp_names = [f"Tcap_{level}_60to90" for level in levels]
         feat_tpt.loc[dict(feature=temp_names)] += (
             feat_all["temperature_observable"].sel(feature=temp_names)
         )
         print(f"Finished temperature observable")
+        # -----------------------------
         # Heat flux observables
         for i_delay in range(num_time_delays+1):
             vT_names_in = [f"vT_{level}_{mode}" for level in levels for mode in modes]
@@ -413,12 +418,14 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                     .rolling(t_sim=i_delay+1, center=False).mean().assign_coords({"feature": vT_names_out})
                     )
         print(f"Finished heat flux observable")
+        # -----------------------------
         # QBO observable
         qbo_names = [f"ubar_{level}_0pm5" for level in [10, 100]]
         feat_tpt.loc[dict(feature=qbo_names)] += (
             feat_all["qbo_observable"].sel(feature=qbo_names)
         )
         print(f"Finished QBO observable")
+        # -----------------------------
         # Save
         feat_tpt.to_netcdf(join(savedir, "features_tpt.nc"))
         return feat_tpt
