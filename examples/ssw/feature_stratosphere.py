@@ -28,7 +28,7 @@ import sys
 import os
 from os import mkdir
 from os.path import join,exists
-from sklearn import linear_model
+from sklearn.linear_model import LinearRegression
 import helper
 import cartopy
 from cartopy import crs as ccrs
@@ -226,27 +226,14 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         # Recover the regular time 
         treg = tda['t_init'] + self.time_unit * tda['t_sim']
         treg = treg.expand_dims({"member": tda.member})
-        print(f"treg first few members = {treg.isel(member=slice(0,2),t_sim=0,t_init=0).data}")
-        print(f"treg dims = {treg.dims}")
-        print(f"treg shape = {treg.shape}")
-        #treg = tda.sel(feature="t_abs").astype(tda['t_init'].dtype)
-        print(f"treg dtype = {treg.dtype}")
         year_cal = treg.dt.year #tda.sel(feature="year_cal")
-        print(f"year_cal first few members = {year_cal.isel(member=slice(0,2),t_sim=0,t_init=0).data}")
-        print(f"year_cal.dims = {year_cal.dims}")
         ycflat = year_cal.to_numpy().flatten()
         sssy = np.array([np.datetime64(f"{int(ycflat[i])}-{self.szn_start['month']:02}-{self.szn_start['day']:02}") for i in range(len(ycflat))])
         szn_start_same_year = xr.DataArray(coords=year_cal.coords, dims=year_cal.dims, data=sssy.reshape(year_cal.shape))
-        print(f"sssy first few members = {szn_start_same_year.isel(member=slice(0,2),t_sim=0,t_init=0).data}")
-        print(f"szn_start_same_year.dims = {szn_start_same_year.dims}")
         year_szn_start = year_cal - 1*(treg < szn_start_same_year) #.to_numpy()
         yssflat = year_szn_start.to_numpy().flatten()
         ssmr = np.array([np.datetime64(f"{int(yssflat[i])}-{self.szn_start['month']:02}-{self.szn_start['day']:02}") for i in range(len(yssflat))])
         szn_start_most_recent = xr.DataArray(coords=year_cal.coords, dims=year_cal.dims, data=ssmr.reshape(year_cal.shape))
-        print(f"ssmr first few members = {szn_start_most_recent.isel(member=slice(0,2),t_sim=0,t_init=0).data}")
-        print(f"szn_start_most_recent.dims = {szn_start_most_recent.dims}")
-
-        #print(f"ssmr first few members = {szn_start_most_recent.isel(member=slice(0,2),t_sim=0,t_init=0).data}")
         tda_aug.loc[dict(feature=tda["feature"].data)] += tda
         tda_aug.loc[dict(feature="year_szn_start")] += year_szn_start
         rhs = (treg - szn_start_most_recent) / self.time_unit
@@ -483,6 +470,42 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         # Adjust the lower-bound return time by dividing by the total number of ensemble members in a given year
         rate_lower = rate_emp / num_init_per_season
         return rate_lower
+    def extreme_value_analysis(self, t_thresh_list, feat_tpt, savedir):
+        for t_thresh in t_thresh_list:
+            extval_stats = dict()
+            for src in ["e5","s2"]:
+                ubar_yearly_stats, centers, num_init_per_season = self.get_ubar_yearly_stats(feat_tpt[src], t_thresh, src)
+                umin = ubar_yearly_stats["min"].flatten()
+                empirical_rates = self.extreme_value_rates(-umin, num_init_per_season)
+                extval_stats[src] = dict({
+                    "umin": umin.copy(), "rate_lower": empirical_rates.copy(), 
+                    "fall_years": centers[0].copy(), "num_init_per_season": num_init_per_season
+                })
+            # Add the linear model version
+            fyidx = dict({
+                "e5": np.where(np.in1d(extval_stats["e5"]["fall_years"], extval_stats["s2"]["fall_years"]))[0],
+                "s2": np.where(np.in1d(extval_stats["s2"]["fall_years"], extval_stats["e5"]["fall_years"]))[0]
+            })
+            fy_common = extval_stats["s2"]["fall_years"][fyidx["s2"]]
+            # Sort by year
+            for src in ["e5","s2"]: 
+                order = np.argsort(extval_stats[src]["fall_years"][fyidx[src]])
+                fyidx[src] = fyidx[src][order]
+           # Perform the linear fit
+            linreg = LinearRegression().fit(
+                extval_stats["e5"]["umin"][fyidx["e5"]].reshape(-1,1), 
+                extval_stats["s2"]["umin"][fyidx["s2"]]
+            )
+            umin = linreg.intercept_ + linreg.coef_[0] * extval_stats["e5"]["umin"][fyidx["e5"]]
+            empirical_rates = self.extreme_value_rates(-umin, extval_stats["s2"]["num_init_per_season"][fyidx["s2"]])
+            extval_stats["linear_model"] = dict({
+                "umin": umin.copy(), "rate_lower": empirical_rates.copy(), 
+                "fall_years": extval_stats["s2"]["fall_years"][fyidx["s2"]], 
+                "num_init_per_season": extval_stats["s2"]["num_init_per_season"]
+            })
+            extval_stats["linear_model"]["coeffs"] = np.array([linreg.intercept_, linreg.coef_[0]])
+            pickle.dump(extval_stats, open(join(savedir, f"extval_stats_tth{t_thresh[0]}-{t_thresh[1]}"), "wb"))
+        return
     def path_counting_rates(self, Xall, Xtpt, t_thresh, uthresh_list):
         # Get lower and upper bounds by combining weights of various magnitudes 
         # TODO: finish this
@@ -757,13 +780,14 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             plt.close(fig)
         return
     # ---------------------------- DGA pipeline --------------------------
-    def build_msm(self, max_delay, feat_all, feat_tpt, msm_feature_names, km_seed=43, num_clusters=170):
+    def build_msm(self, max_delay, feat_all, feat_tpt, msm_feature_names, savedir, km_seed=43, num_clusters=170):
         # Do this for both data sources 
         feat_msm = dict()
         for src in ["e5","s2"]:
             feat_msm[src] = feat_tpt[src].sel(feature=msm_feature_names)
+            # TODO: construct new features using POPs. 
         szn_stats_e5 = self.get_seasonal_statistics(feat_msm["e5"], feat_tpt["e5"].sel(feature="t_szn"))
-        # 
+        szn_stats_e5.to_netcdf(join(savedir, f"szn_stats_e5.nc"))
         feat_msm_normalized = dict()
         szn_window = dict()
         szn_start_year = dict()
@@ -808,9 +832,9 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 "P_list": P_list[src],
                 "Nt_szn": len(km_centers[src])
             })
-        #pickle.dump(msm_info, open(join(resultsdir, "msm_info"), "wb"))
+        pickle.dump(msm_info, open(join(savedir, "msm_info"), "wb"))
         return szn_stats_e5, msm_info
-    def dga_from_msm(self, msm_info, feat_tpt, szn_stats_e5, t_thresh_list, u_thresh_list, savedir):
+    def dga_from_msm(self, msm_info, feat_tpt, szn_stats_e5, t_thresh_list, u_thresh_list, savedir, clust_bndy_choice):
         # Now perform DGA 
         for i_tth in range(len(t_thresh_list)):
             t_thresh = t_thresh_list[i_tth]
@@ -830,8 +854,15 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                         ab_tag_in_window = ab_tag.data[idx_in_window]
                         for i_clust in range(msm_info[src]["km_n_clusters"][i_win]):
                             idx_in_cluster = np.where(msm_info[src]["km_assignment"].data[idx_in_window]==i_clust)
-                            ina[i_win][i_clust] = 1.0*(np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["A"]) == 1.0)
-                            inb[i_win][i_clust] = 1.0*(np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["B"]) == 1.0)
+                            if clust_bndy_choice == "strict":
+                                ina[i_win][i_clust] = 1.0*(np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["A"]) == 1.0)
+                                inb[i_win][i_clust] = 1.0*(np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["B"]) == 1.0)
+                            elif clust_bndy_choice == "mean":
+                                ina[i_win][i_clust] = np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["A"]) 
+                                inb[i_win][i_clust] = np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["B"])
+                            elif clust_bndy_choice == "half":
+                                ina[i_win][i_clust] = 1.0*(np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["A"]) >= 0.5)
+                                inb[i_win][i_clust] = 1.0*(np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["B"]) >= 0.5)
 
                     # Instantiate the time-dependent Markov Chain class
                     mc = tdmc_obj.TimeDependentMarkovChain(msm_info[src]["P_list"], szn_stats_e5["t_szn_cent"])

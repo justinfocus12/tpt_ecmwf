@@ -282,6 +282,7 @@ class SeasonalFeatures(ABC):
         )    
         return km_assignment_da,km_centers,km_n_clusters
     def construct_transition_matrices(self, km_assignment, km_n_clusters, szn_window, szn_start_year):
+        # TODO: make a second list of matrices to test for memory...and maybe a third list, etc. etc.
         time_dim = list(szn_window.dims).index("t_sim")
         nontime_dims = np.setdiff1d(np.arange(len(szn_window.dims)), [time_dim])
         P_list = []
@@ -325,7 +326,7 @@ class SeasonalFeatures(ABC):
             P_list += [P]
         return P_list
     def broadcast_field_msm2dataarray(self, msm, field_msm, density_flag=False):
-        field_da = np.zeros(msm["szn_window"].shape)
+        field_da = np.nan*np.ones(msm["szn_window"].shape)
         for i_win in range(msm["Nt_szn"]):
             idx_in_window = np.where(msm["szn_window"].data == i_win)
             for i_clust in range(msm["km_n_clusters"][i_win]):
