@@ -37,6 +37,7 @@ import itertools
 from feature_template import SeasonalFeatures
 import xr_utils
 import tpt_utils
+import tdmc_obj
 
 def pca_several_levels(gh,Nsamp,Nlat,Nlon,Npc,arr_eof,arr_singvals,arr_totvar,lev_subset):
     # Perform PCA on one level of geopotential height and fill in the results 
@@ -756,13 +757,12 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             plt.close(fig)
         return
     # ---------------------------- DGA pipeline --------------------------
-    def dga_pipeline(self, max_delay, feat_tpt, msm_feature_names, km_seed=43, num_clusters=170):
+    def build_msm(self, max_delay, feat_all, feat_tpt, msm_feature_names, km_seed=43, num_clusters=170):
         # Do this for both data sources 
         feat_msm = dict()
         for src in ["e5","s2"]:
-            feat_msm[src] = feat_tpt[src].sel(feature=msm_features)
-        szn_stats_e5 = feat_strat.get_seasonal_statistics(feat_msm["e5"], feat_tpt["e5"].sel(feature="t_szn"))
-        szn_stats_e5.to_netcdf(join(filedict["results"]["dir"], f"szn_stats_e5.nc"))        
+            feat_msm[src] = feat_tpt[src].sel(feature=msm_feature_names)
+        szn_stats_e5 = self.get_seasonal_statistics(feat_msm["e5"], feat_tpt["e5"].sel(feature="t_szn"))
         # 
         feat_msm_normalized = dict()
         szn_window = dict()
@@ -770,13 +770,13 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         traj_beginning_flag = dict() # 1 if the sample is in the first seasonal time window where the trajectory started
         traj_ending_flag = dict() # 1 if the sample is in the last seasonal time window occupied by the trajectory
         for src in ["e5","s2"]:
-            szn_window,szn_start_year,traj_beginning_flag,traj_ending_flag,feat_msm_normalized = (
-                    feat_strat.unseason(feat_msm["s2"], szn_stats_e5, feat_all["s2"]["time_observable"], max_delay)
+            szn_window[src],szn_start_year[src],traj_beginning_flag[src],traj_ending_flag[src],feat_msm_normalized[src] = (
+                    self.unseason(feat_msm[src], szn_stats_e5, feat_all[src]["time_observable"], max_delay)
                     )
             badsum = (
                     (np.isnan(feat_msm_normalized[src]).sum(dim="feature") > 0) * 
-                    #(szn_window[src] < feat_strat.Nt_szn) * 
-                    (feat_tpt[src].sel(feature="t_szn") < feat_strat.szn_length) * 
+                    #(szn_window[src] < self.Nt_szn) * 
+                    (feat_tpt[src].sel(feature="t_szn") < self.szn_length) * 
                     (feat_tpt[src]["t_sim"] > feat_tpt[src]["t_sim"][max_delay])
                     ).sum()
             if badsum > 0:
@@ -787,8 +787,107 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         km_n_clusters = dict()
         
         for src in ["e5","s2"]:
-            km_assignment[src],km_centers[src],km_n_clusters[src] = feat_strat.cluster(
+            km_assignment[src],km_centers[src],km_n_clusters[src] = self.cluster(
                 feat_msm_normalized[src], feat_all[src]["time_observable"], szn_window[src], 
                 traj_beginning_flag[src], traj_ending_flag[src], km_seed, num_clusters
             )
-        # TODO: finish this 
+        P_list = dict()
+        for src in ["e5","s2"]:
+            P_list[src] = self.construct_transition_matrices(km_assignment[src], km_n_clusters[src], szn_window[src], szn_start_year[src])
+        # Save out the data relevant for clustering
+        msm_info = dict()
+        for src in ["e5","s2"]:
+            msm_info[src] = dict({
+                "szn_window": szn_window[src],
+                "szn_start_year": szn_start_year[src],
+                "traj_beginning_flag": traj_beginning_flag[src],
+                "traj_ending_flag": traj_ending_flag[src],
+                "km_centers": km_centers[src],
+                "km_assignment": km_assignment[src],
+                "km_n_clusters": km_n_clusters[src],
+                "P_list": P_list[src],
+                "Nt_szn": len(km_centers[src])
+            })
+        #pickle.dump(msm_info, open(join(resultsdir, "msm_info"), "wb"))
+        return szn_stats_e5, msm_info
+    def dga_from_msm(self, msm_info, feat_tpt, szn_stats_e5, t_thresh_list, u_thresh_list, savedir):
+        # Now perform DGA 
+        for i_tth in range(len(t_thresh_list)):
+            t_thresh = t_thresh_list[i_tth]
+            dga_rates = dict({src: np.nan*np.ones(len(u_thresh_list)) for src in ["s2"]})
+            for i_uth in range(len(u_thresh_list)):
+                uth = u_thresh_list[i_uth]
+                self.set_ab_boundaries(t_thresh[0], t_thresh[1], uth)
+                for src in ["s2"]:
+                    ab_tag = self.ab_test(feat_tpt[src])
+                    # Create a list of vectors to flag whether each cluster at each time is in A or is in B
+                    ina = []
+                    inb = []
+                    for i_win in range(msm_info[src]["Nt_szn"]):
+                        ina += [-np.ones(msm_info[src]["km_n_clusters"][i_win], dtype=float)]    
+                        inb += [-np.ones(msm_info[src]["km_n_clusters"][i_win], dtype=float)]
+                        idx_in_window = np.where(msm_info[src]["szn_window"].data==i_win)
+                        ab_tag_in_window = ab_tag.data[idx_in_window]
+                        for i_clust in range(msm_info[src]["km_n_clusters"][i_win]):
+                            idx_in_cluster = np.where(msm_info[src]["km_assignment"].data[idx_in_window]==i_clust)
+                            ina[i_win][i_clust] = 1.0*(np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["A"]) == 1.0)
+                            inb[i_win][i_clust] = 1.0*(np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["B"]) == 1.0)
+
+                    # Instantiate the time-dependent Markov Chain class
+                    mc = tdmc_obj.TimeDependentMarkovChain(msm_info[src]["P_list"], szn_stats_e5["t_szn_cent"])
+
+                    # Solve for the committor
+                    G = [] 
+                    F = [] 
+                    for i in range(mc.Nt):
+                        G += [1.0*inb[i]]
+                        if i < mc.Nt-1: F += [1.0*np.outer((ina[i]==0)*(inb[i]==0), np.ones(mc.Nx[i+1]))]
+                    qp = mc.dynamical_galerkin_approximation(F,G)
+
+                    # Solve for the time-dependent density -- TODO sensitivity analysis and/or direct counting. 
+                    init_dens = np.ones(msm_info[src]["km_n_clusters"][0]) 
+                    init_dens *= 1.0/np.sum(init_dens)
+                    dens = mc.propagate_density_forward(init_dens)
+
+                    # Solve for the backward committor
+                    P_list_bwd = []                                                        
+                    for i in np.arange(mc.Nt-2,-1,-1):
+                        P_list_bwd += [(msm_info[src]["P_list"][i] * np.outer(dens[i], 1.0/dens[i+1])).T]        
+                        rowsums = np.sum(P_list_bwd[-1],axis=1)                    
+                    G = []
+                    F = []
+                    for i in np.arange(mc.Nt-1,-1,-1):                             
+                        G += [1.0*ina[i]]                                          
+                        if i < mc.Nt-1: 
+                            Fnew = np.outer(1.0*(ina[i+1]==0)*(inb[i+1]==0), np.ones(len(inb[i]))) 
+                            F += [Fnew.copy()]
+                    mc = tdmc_obj.TimeDependentMarkovChain(P_list_bwd, szn_stats_e5["t_szn_cent"])
+                    qm = mc.dynamical_galerkin_approximation(F,G)                  
+                    qm.reverse()
+
+                    # Solve for the rate
+                    flux = []
+                    rate_froma = 0
+                    rate_tob = 0
+                    flux_froma = []
+                    flux_tob = []
+                    flux_dens_tob = np.zeros(msm_info[src]["Nt_szn"])
+                    for ti in range(msm_info[src]["Nt_szn"]-1):
+                        flux += [(msm_info[src]["P_list"][ti].T * dens[ti] * qm[ti]).T * qp[ti+1]]
+                        flux_froma += [(msm_info[src]["P_list"][ti].T * dens[ti] * ina[ti]).T * qp[ti+1]]
+                        flux_tob += [(msm_info[src]["P_list"][ti].T * dens[ti] * qm[ti]).T * inb[ti+1]]
+                        rate_froma += np.sum(flux_froma[-1])
+                        rate_tob += np.sum(flux_tob[-1])
+                        flux_dens_tob[ti] = np.sum(flux_tob[-1])
+
+                    # Save into the results
+                    dga_rates[src][i_uth] = rate_tob
+                    dga_results = dict({
+                        "rate_froma": rate_froma, "rate_tob": rate_tob, 
+                        "qm": qm, "qp": qp, "pi": dens, "flux": flux, 
+                        "flux_froma": flux_froma, "flux_tob": flux_tob, "flux_dens_tob": flux_dens_tob
+                    })
+                    pickle.dump(dga_results, open(join(savedir, f"dga_results_{src}_{t_thresh[0]}-{t_thresh[1]}_u{uth}"), "wb"))
+                    print(f"For uthresh {uth} and {src} data, rates are {rate_froma} from A, {rate_tob} to B")
+            pickle.dump(dga_rates, open(join(savedir, f"dga_rates_{t_thresh[0]}-{t_thresh[1]}"), "wb"))
+        return
