@@ -204,33 +204,70 @@ class SeasonalFeatures(ABC):
                 data=szn_stats_dict[key],
                 dims=["t_szn_cent", "feature"],
                 ) 
-            for key in list(szn_stats_dict.keys())
-            }),
+            for key in ["weightsum","sum","mean","std","q25","q75","min","max"]
+            })
         data_vars["cov_mat"] = xr.DataArray(
-                coords = {"t_szn_cent": centers[0], "feat0": feat_da["feature"], "feat1": feat_da["feature"],},
+                coords = {"t_szn_cent": centers[0], "feat0": feat_da["feature"].to_numpy(), "feat1": feat_da["feature"].to_numpy(),},
                 data = szn_stats_dict["cov_mat"],
                 dims = ["t_szn_cent", "feat0", "feat1"],
                 )
         szn_stats = xr.Dataset(data_vars=data_vars)
         return szn_stats
-    def unseason(self, feat_msm, szn_stats, t_obs, max_delay, divide_by_std_flag=False):
-        feat_msm_normalized = np.nan*xr.ones_like(feat_msm)
-        szn_window = (t_obs.sel(feature="t_szn")/self.dt_szn).astype(int)
-        print(f"szn_window: min={szn_window.min()}, max={szn_window.max()}")
-        szn_start_year = t_obs.sel(feature="year_szn_start").astype(int)
+    def unseason(self, feat_msm, szn_stats, t_obs, max_delay, divide_by_std_flag=False, whiten_flag=False):
+        Nfeat = feat_msm.feature.size
+        feat_msm_stacked = (
+                feat_msm
+                .stack({"sample": ("t_init","t_sim","member")})
+                #.transpose("sample","feature")
+                )
+        feat_msm_normalized = (
+                np.nan*xr.ones_like(feat_msm_stacked)
+                .rename({"feature": "feature_norm"})
+                .assign_coords({"feature_norm": np.arange(Nfeat)})
+                )
+        t_obs_stacked = (
+                t_obs 
+                .stack({"sample": ("t_init","t_sim","member")})
+                #.transpose("sample","feature")
+                )
+        szn_window = (t_obs_stacked.sel(feature="t_szn")/self.dt_szn).astype(int)
+        szn_start_year = t_obs_stacked.sel(feature="year_szn_start").astype(int)
+        # Construct a dataarray containing the normalizing matrix 
+        norm_mat = xr.DataArray(coords={"feature_norm": np.arange(Nfeat), "feature": feat_msm["feature"]}, dims=["feature_norm","feature"])
         for i_win in range(self.Nt_szn):
+            if i_win % 50 == 0:
+                print(f"i_win = {i_win} out of {self.Nt_szn}")
+            idx, = np.where(szn_window.to_numpy() == i_win)
+            if whiten_flag:
+                cov_mat = szn_stats["cov_mat"].isel(t_szn_cent=i_win,drop=True).to_numpy()
+                eigval,eigvec = np.linalg.eigh(cov_mat)
+                order = np.argsort(eigval)[::-1]
+                eigval = eigval[order]
+                eigvec = eigvec[:,order]
+                norm_mat[:] = np.diag(1/np.sqrt(eigval)).dot(eigvec.T)
+                demean = (feat_msm_stacked.isel(sample=idx) - szn_stats["mean"].isel(t_szn_cent=i_win))
+                data_standardized = xr.dot(norm_mat, demean)
+
             # TODO: modify data_standardized by whitening, so that we K-means cluster in an appropriate space. 
-            data_standardized = feat_msm - szn_stats["mean"].isel(t_szn_cent=i_win,drop=True)
-            if divide_by_std_flag:
-                data_standardized *= 1.0/szn_stats["std"].isel(t_szn_cent=i_win,drop=True)
-            feat_msm_normalized = xr.where(
-                szn_window==i_win, 
-                data_standardized,
-                #(feat_msm - szn_stats["mean"].isel(t_szn_cent=i_win,drop=True)) / szn_stats["std"].isel(t_szn_cent=i_win,drop=True), 
-                feat_msm_normalized
-            )
-            # Debug: cound how many snapshots fall in that window
-            num_in_window = (szn_window==i_win).astype(int).isel(member=0,t_init=0).sum(dim="t_sim").data
+            #print(f"feat_msm.shape = {feat_msm.shape}")
+            #print(f"szn_stats mean.shape = {szn_stats['mean'].shape}")
+            #print(f"ds shape = {data_standardized.shape}")
+            #elif divide_by_std_flag:
+            #    data_standardized = (feat_msm - szn_stats["mean"].isel(t_szn_cent=i_win,drop=True))/szn_stats["std"].isel(t_szn_cent=i_win,drop=True).rename({"feature": "feature_norm"}).assign_coords({"feature_norm": np.arange(Nfeat)})
+            feat_msm_normalized[dict(sample=idx)] = data_standardized
+            #feat_msm_normalized = xr.where(
+            #    szn_window==i_win, 
+            #    data_standardized,
+            #    #(feat_msm - szn_stats["mean"].isel(t_szn_cent=i_win,drop=True)) / szn_stats["std"].isel(t_szn_cent=i_win,drop=True), 
+            #    feat_msm_normalized
+            #)
+            #print(f"data standard dims = \n{data_standardized.dims}\n fmn dims = \n{feat_msm_normalized.dims}; fmn coords = \n{feat_msm_normalized.coords}")
+            num_in_window = np.sum(szn_window==i_win)
+        szn_window = szn_window.unstack(dim="sample").transpose("t_init","member","t_sim") #.transpose(dim_order_nofeat)
+        szn_start_year = szn_start_year.unstack(dim="sample").transpose("t_init","member","t_sim")
+        print(f"two")
+        feat_msm_normalized = feat_msm_normalized.rename({"feature_norm": "feature"}).unstack(dim="sample").transpose("t_init","member","t_sim","feature")
+        print(f"fmn coords = {feat_msm_normalized.coords}")
         # --------------- Mark the trajectories that originated in an earlier time window and will reach another time window ---------------
         traj_ending_flag = (
             (szn_window == szn_window.isel(t_sim=-1,drop=True)) *
@@ -244,6 +281,10 @@ class SeasonalFeatures(ABC):
         # -----------------------------------------------------------------------------------------------
         return szn_window,szn_start_year,traj_beginning_flag,traj_ending_flag,feat_msm_normalized
     def cluster(self, feat_msm_normalized, t_obs, szn_window, traj_beginning_flag, traj_ending_flag, km_seed, num_clusters): 
+        print(f"shapes: ")
+        print(f"feat_msm_normalized: {feat_msm_normalized.shape}")
+        print(f"t_obe: {t_obs.shape}")
+        print(f"szn_window: {szn_window.shape}")
         km_assignment = -np.ones((t_obs["t_init"].size,t_obs["member"].size,t_obs["t_sim"].size), dtype=int)
         km_centers = []
         km_n_clusters = -np.ones(self.Nt_szn, dtype=int)
@@ -254,6 +295,7 @@ class SeasonalFeatures(ABC):
                 (szn_window.data==i_win) * 
                 (np.isnan(feat_msm_normalized).sum(dim="feature") == 0)
             ) # All the data in this time window
+            print(f" num in_window) = {len(idx_in_window[0])}")
             # idx_for_clustering is all the data that we're allowed to use to build the KMeans object
             if i_win == 0:
                 idx_for_clustering = np.where(
@@ -274,13 +316,20 @@ class SeasonalFeatures(ABC):
                     (traj_beginning_flag.data == 0) * 
                     (np.isnan(feat_msm_normalized).sum(dim="feature") == 0)
                 )
+            print(f"num for clustering = {len(idx_for_clustering[0])}")
             if len(idx_for_clustering[0]) == 0:
                 raise Exception(f"At window {i_win}, there are no indices fit to cluster")
             km_n_clusters[i_win] = min(num_clusters,max(1,len(idx_for_clustering[0]//2)))
+            print(f"nclust = {km_n_clusters[i_win]}")
+            print(f"fmn shape = {feat_msm_normalized.shape}")
+            km_input = feat_msm_normalized.data[idx_for_clustering]
+            print(f"km_input shape = {km_input.shape}")
             km = KMeans(n_clusters=km_n_clusters[i_win],random_state=km_seed).fit(
-                    feat_msm_normalized.data[idx_for_clustering])
+                    km_input)
+            print(f"produced km")
             km_assignment[idx_in_window] = km.predict(feat_msm_normalized.data[idx_in_window]) 
             km_centers += [km.cluster_centers_]
+            print(f"appended to centers")
         km_assignment_da = xr.DataArray(
             coords={"t_init": t_obs["t_init"], "member": t_obs["member"], "t_sim": t_obs["t_sim"]},
             dims=["t_init","member","t_sim"],
@@ -299,6 +348,7 @@ class SeasonalFeatures(ABC):
             # Maybe some trajectories will be double counted. 
             idx_pre = np.where(szn_window.data==i_win)
             idx_post = np.where(szn_window.data==i_win+1)
+            print(f"lengths: idx_pre {len(idx_pre[0])}, idx_post {len(idx_post[0])}")
             overlap = np.where(
                 np.all(
                     np.array([

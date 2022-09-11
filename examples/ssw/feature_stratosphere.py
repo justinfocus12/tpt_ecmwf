@@ -797,14 +797,15 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             plt.close(fig)
         return
     # ---------------------------- DGA pipeline --------------------------
-    def build_msm(self, max_delay, feat_all, feat_tpt, msm_feature_names, savedir, km_seed=43, num_clusters=170):
+    def build_msm(self, max_delay, feat_all, feat_tpt, msm_feature_names, savedir, km_seed=43, num_clusters=170, write_szn_stats=False):
         # Do this for both data sources 
         feat_msm = dict()
         for src in ["e5","s2"]:
             feat_msm[src] = feat_tpt[src].sel(feature=msm_feature_names)
             # TODO: construct new features using POPs. 
         szn_stats_e5 = self.get_seasonal_statistics(feat_msm["e5"], feat_tpt["e5"].sel(feature="t_szn"))
-        szn_stats_e5.to_netcdf(join(savedir, f"szn_stats_e5.nc"))
+        if write_szn_stats:
+            szn_stats_e5.to_netcdf(join(savedir, f"szn_stats_e5.nc"))
         feat_msm_normalized = dict()
         szn_window = dict()
         szn_start_year = dict()
@@ -812,7 +813,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         traj_ending_flag = dict() # 1 if the sample is in the last seasonal time window occupied by the trajectory
         for src in ["e5","s2"]:
             szn_window[src],szn_start_year[src],traj_beginning_flag[src],traj_ending_flag[src],feat_msm_normalized[src] = (
-                    self.unseason(feat_msm[src], szn_stats_e5, feat_all[src]["time_observable"], max_delay)
+                    self.unseason(feat_msm[src], szn_stats_e5, feat_all[src]["time_observable"], max_delay, whiten_flag=True)
                     )
             badsum = (
                     (np.isnan(feat_msm_normalized[src]).sum(dim="feature") > 0) * 
@@ -832,6 +833,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 feat_msm_normalized[src], feat_all[src]["time_observable"], szn_window[src], 
                 traj_beginning_flag[src], traj_ending_flag[src], km_seed, num_clusters
             )
+            print(f"Did KMeans for src {src}")
         P_list = dict()
         for src in ["e5","s2"]:
             P_list[src] = self.construct_transition_matrices(km_assignment[src], km_n_clusters[src], szn_window[src], szn_start_year[src])

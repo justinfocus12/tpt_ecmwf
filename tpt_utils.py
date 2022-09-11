@@ -71,9 +71,9 @@ def project_field(field, weights, features, cov_mat_flag=False, shp=None, bounds
         field_proj_stats["weightsum"][i_flat,:] = np.nansum(weights_idx,axis=0)
         field_proj_stats["sum"][i_flat,:] = np.nansum(field_idx*weights_idx,axis=0)
         if cov_mat_flag:
-            cov_mat[i_flat] = np.ma.cov(
+            cov_mat[i_flat] = np.ma.getdata(np.ma.cov(
                     np.ma.masked_array(field_idx, mask=np.isnan(field_idx)), rowvar=False
-                    )
+                    ))
         good_fun_idx = np.where((field_proj_stats["weightsum"][i_flat,:] != 0)*(np.all(np.isnan(field_idx),axis=0)==0))[0]
         bad_fun_idx = np.setdiff1d(np.arange(Nf),good_fun_idx)
         for key in ["mean","std","q25","q75","min","max"]:
