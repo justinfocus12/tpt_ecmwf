@@ -193,20 +193,25 @@ class SeasonalFeatures(ABC):
         szn_stats_dict,edges,centers = (
             tpt_utils.project_field(
                 field, weights, features, 
+                cov_mat_flag = True,
                 bounds = self.t_szn_edge[[0,-1]].reshape((2,1)),
                 shp = (self.Nt_szn,)
+                )
             )
-        )
-        szn_stats = xr.Dataset(
-            data_vars = dict({
-                key: xr.DataArray(
-                    coords={"t_szn_cent": centers[0], "feature": feat_da["feature"],},
-                    data=szn_stats_dict[key],
-                    dims=["t_szn_cent", "feature"],
+        data_vars = dict({
+            key: xr.DataArray(
+                coords={"t_szn_cent": centers[0], "feature": feat_da["feature"],},
+                data=szn_stats_dict[key],
+                dims=["t_szn_cent", "feature"],
                 ) 
-                for key in list(szn_stats_dict.keys())
+            for key in list(szn_stats_dict.keys())
             }),
-        )
+        data_vars["cov_mat"] = xr.DataArray(
+                coords = {"t_szn_cent": centers[0], "feat0": feat_da["feature"], "feat1": feat_da["feature"],},
+                data = szn_stats_dict["cov_mat"],
+                dims = ["t_szn_cent", "feat0", "feat1"],
+                )
+        szn_stats = xr.Dataset(data_vars=data_vars)
         return szn_stats
     def unseason(self, feat_msm, szn_stats, t_obs, max_delay, divide_by_std_flag=False):
         feat_msm_normalized = np.nan*xr.ones_like(feat_msm)
@@ -214,6 +219,7 @@ class SeasonalFeatures(ABC):
         print(f"szn_window: min={szn_window.min()}, max={szn_window.max()}")
         szn_start_year = t_obs.sel(feature="year_szn_start").astype(int)
         for i_win in range(self.Nt_szn):
+            # TODO: modify data_standardized by whitening, so that we K-means cluster in an appropriate space. 
             data_standardized = feat_msm - szn_stats["mean"].isel(t_szn_cent=i_win,drop=True)
             if divide_by_std_flag:
                 data_standardized *= 1.0/szn_stats["std"].isel(t_szn_cent=i_win,drop=True)

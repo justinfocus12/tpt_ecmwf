@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import sys
 
-def project_field(field, weights, features, shp=None, bounds=None):
+def project_field(field, weights, features, cov_mat_flag=False, shp=None, bounds=None):
     """
     Parameters
     ----------
@@ -59,16 +59,21 @@ def project_field(field, weights, features, shp=None, bounds=None):
     # Determine which grid box each data point falls into
     grid_cell = ((features[goodidx] - bounds[0])/dx).astype(int)
     grid_cell_flat = np.ravel_multi_index(tuple(grid_cell.T), shp)
-    # TODO: fix this bug
     # Loop through the grid cells and average all the data with the corresponding index
     Ngrid = np.prod(shp)
     field_proj_stats = dict({key: np.zeros((Ngrid,Nf)) for key in ["weightsum","sum","mean","std","q25","q75","min","max"]})
+    if cov_mat_flag:
+        cov_mat = np.zeros((Ngrid, Nf, Nf))
     for i_flat in range(Ngrid):
         idx, = np.where(grid_cell_flat == i_flat)
         weights_idx = weights[goodidx[idx],:]
         field_idx = field[goodidx[idx],:]
         field_proj_stats["weightsum"][i_flat,:] = np.nansum(weights_idx,axis=0)
         field_proj_stats["sum"][i_flat,:] = np.nansum(field_idx*weights_idx,axis=0)
+        if cov_mat_flag:
+            cov_mat[i_flat] = np.ma.cov(
+                    np.ma.masked_array(field_idx, mask=np.isnan(field_idx)), rowvar=False
+                    )
         good_fun_idx = np.where((field_proj_stats["weightsum"][i_flat,:] != 0)*(np.all(np.isnan(field_idx),axis=0)==0))[0]
         bad_fun_idx = np.setdiff1d(np.arange(Nf),good_fun_idx)
         for key in ["mean","std","q25","q75","min","max"]:
@@ -92,6 +97,8 @@ def project_field(field, weights, features, shp=None, bounds=None):
                 field_proj_stats["q75"][i_flat,i_fun] = field_idx[order[np.where(cdf >= 0.75)[0][0],i_fun],i_fun]
     for key in ["weightsum","sum","mean","std","q25","q75","min","max"]:
         field_proj_stats[key] = field_proj_stats[key].reshape(np.concatenate((shp,[Nf])))
+    if cov_mat_flag:
+        field_proj_stats["cov_mat"] = cov_mat.reshape(np.concatenate((shp,[Nf,Nf])))
     # Make a nice formatted grid, too
     edges = tuple([np.linspace(bounds[0,i],bounds[1,i],shp[i]+1) for i in range(dim)])
     centers = tuple([(edges[i][:-1] + edges[i][1:])/2 for i in range(dim)])
