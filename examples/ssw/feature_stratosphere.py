@@ -508,7 +508,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return
     def path_counting_rates(self, Xall, Xtpt, t_thresh, uthresh_list):
         # Get lower and upper bounds by combining weights of various magnitudes 
-        # TODO: finish this
+        # Also get an estimate by assuming idependence of endpoints on trajectories
         e5idx = np.argmin(
             np.abs(
                 np.subtract.outer(
@@ -519,7 +519,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         )
         t_szn_e5idx = Xall["e5"]["time_observable"].sel(feature="t_szn").isel(t_sim=e5idx).to_numpy().flatten()
         rate_hybrid = xr.DataArray(
-            coords = {"u_thresh": uthresh_list, "e5_weight": np.array([0.0, 0.25, 0.5, 0.75, 1.0]), "bound": ["lower","upper"]},
+            coords = {"u_thresh": uthresh_list, "e5_weight": np.array([0.0, 0.25, 0.5, 0.75, 1.0]), "bound": ["lower","upper","ed"]},
             dims = ["u_thresh","e5_weight","bound"]
         )
         rate_e5 = xr.DataArray(
@@ -540,13 +540,13 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 comm_emp[src] = self.estimate_empirical_committor(cej[src])
                 rate_emp[src] = self.estimate_rate(cej[src], comm_emp[src])
         
-            # To ge the ERA5 rate, use all the years
+            # To get the ERA5 rate, use all the years
             rate_e5.loc[dict(u_thresh=uth)] = self.estimate_rate(cej["e5"], comm_emp["e5"]).to_numpy().item() * 365.25
             # To do the bounds, attach the past of reaanalysis to each initialization date 
             comm_bwd_e5 = comm_emp["e5"].isel(t_sim=e5idx,t_init=0,member=0).sel(sense="since").to_numpy()
             comm_fwd_e5 = comm_emp["e5"].isel(t_sim=e5idx,t_init=0,member=0).sel(sense="until").to_numpy()
-            comm_fwd_s2_lower = 1.0*(comm_emp["s2"].sel(sense="until").isel(t_sim=0) == 1).mean(dim="member").to_numpy()
-            comm_fwd_s2_upper = 1.0*(comm_emp["s2"].sel(sense="until").isel(t_sim=0) != 0).mean(dim="member").to_numpy()
+            comm_fwd_s2_lower_end = 1.0*(comm_emp["s2"].sel(sense="until").isel(t_sim=0) == 1).mean(dim="member").to_numpy()
+            comm_fwd_s2_upper_end = 1.0*(comm_emp["s2"].sel(sense="until").isel(t_sim=0) != 0).mean(dim="member").to_numpy()
         
             # Find the branches beginning or ending outside of A and B 
             domain_idx, = np.where(ab_tag["e5"].isel(t_sim=e5idx,t_init=0,member=0) == self.ab_code["D"])
@@ -555,11 +555,28 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             # Assign weights to the real world and to hindcasts
             for e5_weight in rate_hybrid["e5_weight"].data: 
                 rate_hybrid.loc[dict(u_thresh=uth,e5_weight=e5_weight,bound="lower")] = (
-                    comm_bwd_e5 * (e5_weight * comm_fwd_e5 + (1-e5_weight) * comm_fwd_s2_lower)
+                    comm_bwd_e5 * (e5_weight * comm_fwd_e5 + (1-e5_weight) * comm_fwd_s2_lower_end)
                 )[domain_idx].mean()
                 rate_hybrid.loc[dict(u_thresh=uth,e5_weight=e5_weight,bound="upper")] = (
-                    comm_bwd_e5 * (e5_weight * comm_fwd_e5 + (1-e5_weight) * comm_fwd_s2_upper)
+                    comm_bwd_e5 * (e5_weight * comm_fwd_e5 + (1-e5_weight) * comm_fwd_s2_upper_end)
                 )[domain_idx].mean()
+
+            # For Ed's estimate, step through the days of winter and count the fraction of endpoints that are undergoing transitions IN THAT SAME TIMESTEP. Exclude trajectories that already hit B
+            comm_bwd_s2_penult = 1.0*(comm_emp["s2"].sel(sense="since") != 1).isel(t_sim=slice(-2,-1),drop=True).max(dim="t_sim").to_numpy()
+            comm_fwd_s2_ult = 1.0*(comm_emp["s2"].sel(sense="until") == 1).isel(t_sim=-1,drop=True).to_numpy()
+            szn_window_s2_end = (Xall["s2"]["time_observable"].sel(feature="t_szn").isel(t_sim=-1,drop=True)/self.dt_szn).astype(int)
+            prob_ssw_per_window = np.nan*np.ones(self.Nt_szn)
+            for i_win in range(self.Nt_szn):
+                # Find the probability of SSW during each interval 
+                idx = np.where(szn_window_s2_end == i_win)
+                if len(idx[0]) > 0:
+                    prob_ssw_per_window[i_win] = np.nansum(comm_bwd_s2_penult[idx] * comm_fwd_s2_ult[idx]) / len(idx[0])
+            print(f"Probabilities per window:\n{prob_ssw_per_window}")
+            # Turn this into a total rate
+            i_tszn, = np.where((self.t_szn_edge < self.tpt_bndy["t_thresh"][1]) * (self.t_szn_edge >= self.tpt_bndy["t_thresh"][0]))
+            prob_ssw = 1 - np.exp(np.nansum(np.log(1-prob_ssw_per_window[i_tszn])))
+            print(f"prob_ssw = {prob_ssw}")
+            rate_hybrid.loc[dict(u_thresh=uth, bound="ed")] = prob_ssw
         return rate_e5, rate_hybrid
     # --------------------------- old stuff below --------------------------------------------
     def spherical_horizontal_laplacian(self,field,lat,lon):
