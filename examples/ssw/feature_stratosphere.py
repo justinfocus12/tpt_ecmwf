@@ -561,16 +561,20 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                     comm_bwd_e5 * (e5_weight * comm_fwd_e5 + (1-e5_weight) * comm_fwd_s2_upper_end)
                 )[domain_idx].mean()
 
-            # For Ed's estimate, step through the days of winter and count the fraction of endpoints that are undergoing transitions IN THAT SAME TIMESTEP. Exclude trajectories that already hit B
-            comm_bwd_s2_penult = 1.0*(comm_emp["s2"].sel(sense="since") != 1).isel(t_sim=slice(-2,-1),drop=True).max(dim="t_sim").to_numpy()
-            comm_fwd_s2_ult = 1.0*(comm_emp["s2"].sel(sense="until") == 1).isel(t_sim=-1,drop=True).to_numpy()
-            szn_window_s2_end = (Xall["s2"]["time_observable"].sel(feature="t_szn").isel(t_sim=-1,drop=True)/self.dt_szn).astype(int)
+            # ------------- Ed's estimate -----------------
+            froma_flag = 1.0*(comm_emp["s2"].sel(sense="since") != self.ab_code["B"])
+            crossing_flag = 1.0*froma_flag*(ab_tag["s2"].shift(t_sim=1) == self.ab_code["B"])
+            print(f"Computed crossing flag, shape {crossing_flag.shape}")
+            szn_window_s2 = (Xall["s2"]["time_observable"].sel(feature="t_szn")/self.dt_szn).astype(int)
+            print(f"szn_window_s2.shape = {szn_window_s2.shape}")
             prob_ssw_per_window = np.nan*np.ones(self.Nt_szn)
+            print(f"pssww.shape = {prob_ssw_per_window.shape}")
             for i_win in range(self.Nt_szn):
                 # Find the probability of SSW during each interval 
-                idx = np.where(szn_window_s2_end == i_win)
+                idx = np.where(szn_window_s2 == i_win)
                 if len(idx[0]) > 0:
-                    prob_ssw_per_window[i_win] = np.nansum(comm_bwd_s2_penult[idx] * comm_fwd_s2_ult[idx]) / len(idx[0])
+                    total_froma = np.sum(froma_flag.data[idx])
+                    prob_ssw_per_window[i_win] = np.sum(crossing_flag.data[idx])/(total_froma + 1.0*(total_froma==0)) #np.nansum(comm_bwd_s2_penult[idx] * comm_fwd_s2_ult[idx]) / len(idx[0])
             print(f"Probabilities per window:\n{prob_ssw_per_window}")
             # Turn this into a total rate
             i_tszn, = np.where((self.t_szn_edge < self.tpt_bndy["t_thresh"][1]) * (self.t_szn_edge >= self.tpt_bndy["t_thresh"][0]))
