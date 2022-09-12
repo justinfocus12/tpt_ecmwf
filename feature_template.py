@@ -316,20 +316,14 @@ class SeasonalFeatures(ABC):
                     (traj_beginning_flag.data == 0) * 
                     (np.isnan(feat_msm_normalized).sum(dim="feature") == 0)
                 )
-            print(f"num for clustering = {len(idx_for_clustering[0])}")
             if len(idx_for_clustering[0]) == 0:
                 raise Exception(f"At window {i_win}, there are no indices fit to cluster")
             km_n_clusters[i_win] = min(num_clusters,max(1,len(idx_for_clustering[0]//2)))
-            print(f"nclust = {km_n_clusters[i_win]}")
-            print(f"fmn shape = {feat_msm_normalized.shape}")
             km_input = feat_msm_normalized.data[idx_for_clustering]
-            print(f"km_input shape = {km_input.shape}")
             km = KMeans(n_clusters=km_n_clusters[i_win],random_state=km_seed).fit(
                     km_input)
-            print(f"produced km")
             km_assignment[idx_in_window] = km.predict(feat_msm_normalized.data[idx_in_window]) 
             km_centers += [km.cluster_centers_]
-            print(f"appended to centers")
         km_assignment_da = xr.DataArray(
             coords={"t_init": t_obs["t_init"], "member": t_obs["member"], "t_sim": t_obs["t_sim"]},
             dims=["t_init","member","t_sim"],
