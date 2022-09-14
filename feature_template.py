@@ -238,6 +238,7 @@ class SeasonalFeatures(ABC):
             if i_win % 50 == 0:
                 print(f"i_win = {i_win} out of {self.Nt_szn}")
             idx, = np.where(szn_window.to_numpy() == i_win)
+            demean = (feat_msm_stacked.isel(sample=idx) - szn_stats["mean"].isel(t_szn_cent=i_win))
             if whiten_flag:
                 cov_mat = szn_stats["cov_mat"].isel(t_szn_cent=i_win,drop=True).to_numpy()
                 eigval,eigvec = np.linalg.eigh(cov_mat)
@@ -245,15 +246,14 @@ class SeasonalFeatures(ABC):
                 eigval = eigval[order]
                 eigvec = eigvec[:,order]
                 norm_mat[:] = np.diag(1/np.sqrt(eigval)).dot(eigvec.T)
-                demean = (feat_msm_stacked.isel(sample=idx) - szn_stats["mean"].isel(t_szn_cent=i_win))
-                data_standardized = xr.dot(norm_mat, demean)
-
-            # TODO: modify data_standardized by whitening, so that we K-means cluster in an appropriate space. 
+            elif divide_by_std_flag:
+                norm_mat[:] = np.diag(1/szn_stats["std"].isel(t_szn_cent=i_win,drop=True).to_numpy())
+            else:
+                norm_mat[:] = np.eye(feat_msm['feature'].size)
+            data_standardized = xr.dot(norm_mat, demean)
             #print(f"feat_msm.shape = {feat_msm.shape}")
             #print(f"szn_stats mean.shape = {szn_stats['mean'].shape}")
             #print(f"ds shape = {data_standardized.shape}")
-            #elif divide_by_std_flag:
-            #    data_standardized = (feat_msm - szn_stats["mean"].isel(t_szn_cent=i_win,drop=True))/szn_stats["std"].isel(t_szn_cent=i_win,drop=True).rename({"feature": "feature_norm"}).assign_coords({"feature_norm": np.arange(Nfeat)})
             feat_msm_normalized[dict(sample=idx)] = data_standardized
             #feat_msm_normalized = xr.where(
             #    szn_window==i_win, 
@@ -289,13 +289,12 @@ class SeasonalFeatures(ABC):
         km_centers = []
         km_n_clusters = -np.ones(self.Nt_szn, dtype=int)
         for i_win in range(self.Nt_szn):
-            if i_win % 10 == 0:
+            if i_win % 30 == 0:
                 print(f"Starting K-means number {i_win} out of {self.Nt_szn}")
             idx_in_window = np.where(
                 (szn_window.data==i_win) * 
                 (np.isnan(feat_msm_normalized).sum(dim="feature") == 0)
             ) # All the data in this time window
-            print(f" num in_window) = {len(idx_in_window[0])}")
             # idx_for_clustering is all the data that we're allowed to use to build the KMeans object
             if i_win == 0:
                 idx_for_clustering = np.where(
@@ -330,19 +329,73 @@ class SeasonalFeatures(ABC):
             data=km_assignment.copy()    #np.zeros((feat_tpt["ensemble"].size,feat_tpt["member"].size,feat_tpt["t_sim"].size), dtype=int)
         )    
         return km_assignment_da,km_centers,km_n_clusters
-    def construct_transition_matrices(self, km_assignment, km_n_clusters, szn_window, szn_start_year):
+    def construct_transition_matrices_stacked(self, km_assignment, km_n_clusters, szn_window, szn_start_year):
         # TODO: make a second list of matrices to test for memory...and maybe a third list, etc. etc.
+        kmass = km_assignment.stack(traj=("t_init","member"))
+        swindow = szn_window.stack(traj=("t_init","member"))
+        ssy = szn_start_year.stack(traj=("t_init","member"))
+        P_list = []
+        for i_win in range(self.Nt_szn-1):
+            if i_win % 30 == 0: print(f"Starting transition matrix for i_win = {i_win}")
+            P = np.zeros((km_n_clusters[i_win],km_n_clusters[i_win+1]))
+            idx_pre = np.where(swindow.data==i_win)
+            idx_post = np.where(szn_window.data==i_win+1)
+
         time_dim = list(szn_window.dims).index("t_sim")
         nontime_dims = np.setdiff1d(np.arange(len(szn_window.dims)), [time_dim])
         P_list = []
         for i_win in range(self.Nt_szn-1):
-            if i_win % 10 == 0: print(f"i_win = {i_win}")
+            if i_win % 30 == 0: print(f"Starting transition matrix for i_win = {i_win}")
             P = np.zeros((km_n_clusters[i_win],km_n_clusters[i_win+1]))
             # Count the trajectories that passed through both box i during window i_win, and box j during window i_win+1. 
             # Maybe some trajectories will be double counted. 
             idx_pre = np.where(szn_window.data==i_win)
             idx_post = np.where(szn_window.data==i_win+1)
-            print(f"lengths: idx_pre {len(idx_pre[0])}, idx_post {len(idx_post[0])}")
+            overlap = np.where(
+                np.all(
+                    np.array([
+                        (np.subtract.outer(idx_pre[dim], idx_post[dim]) == 0) 
+                        for dim in nontime_dims
+                    ]), axis=0
+                ) * (
+                    np.subtract.outer(
+                        szn_start_year.data[idx_pre], szn_start_year.data[idx_post]
+                    ) == 0
+                )          
+            )
+            idx_pre_overlap = tuple([idx_pre[dim][overlap[0]] for dim in range(len(idx_pre))])
+            idx_post_overlap = tuple([idx_post[dim][overlap[1]] for dim in range(len(idx_pre))])
+            km_pre = km_assignment.data[idx_pre_overlap]
+            km_post = km_assignment.data[idx_post_overlap]
+            tinit_member_year_identifier = np.concatenate((
+                np.array(idx_pre_overlap)[nontime_dims,:], 
+                [szn_start_year.data[idx_pre_overlap]]
+            ), axis=0)
+            for i in range(P.shape[0]):
+                for j in range(P.shape[1]):
+                    traj_idx, = np.where((km_pre==i)*(km_post==j))
+                    P[i,j] = np.unique(tinit_member_year_identifier[:,traj_idx], axis=1).shape[1]
+            min_rowsum = np.min(np.sum(P, axis=1))
+            min_colsum = np.min(np.sum(P, axis=0))
+            if min_rowsum == 0 or min_colsum == 0:
+                raise Exception(f"Under-filled transition matrices between seasonal windows {i_win} and {i_win+1}. min_rowsum = {min_rowsum} and min_colsum = {min_colsum}")
+            # Normalize the matrix
+            P = np.diag(1.0/np.sum(P, axis=1)).dot(P)
+            P_list += [P]
+        return P_list
+    def construct_transition_matrices(self, km_assignment, km_n_clusters, szn_window, szn_start_year):
+        # TODO: make a second list of matrices to test for memory...and maybe a third list, etc. etc.
+        # TODO: stack this dataset for faster identification of indices
+        time_dim = list(szn_window.dims).index("t_sim")
+        nontime_dims = np.setdiff1d(np.arange(len(szn_window.dims)), [time_dim])
+        P_list = []
+        for i_win in range(self.Nt_szn-1):
+            if i_win % 30 == 0: print(f"Starting transition matrix for i_win = {i_win}")
+            P = np.zeros((km_n_clusters[i_win],km_n_clusters[i_win+1]))
+            # Count the trajectories that passed through both box i during window i_win, and box j during window i_win+1. 
+            # Maybe some trajectories will be double counted. 
+            idx_pre = np.where(szn_window.data==i_win)
+            idx_post = np.where(szn_window.data==i_win+1)
             overlap = np.where(
                 np.all(
                     np.array([

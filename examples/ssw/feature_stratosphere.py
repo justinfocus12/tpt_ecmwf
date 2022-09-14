@@ -564,21 +564,18 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             # ------------- Ed's estimate -----------------
             froma_flag = 1.0*(comm_emp["s2"].sel(sense="since") != self.ab_code["B"])
             crossing_flag = 1.0*froma_flag*(ab_tag["s2"].shift(t_sim=1) == self.ab_code["B"])
-            print(f"Computed crossing flag, shape {crossing_flag.shape}")
             szn_window_s2 = (Xall["s2"]["time_observable"].sel(feature="t_szn")/self.dt_szn).astype(int)
-            print(f"szn_window_s2.shape = {szn_window_s2.shape}")
             prob_ssw_per_window = np.nan*np.ones(self.Nt_szn)
-            print(f"pssww.shape = {prob_ssw_per_window.shape}")
             for i_win in range(self.Nt_szn):
                 # Find the probability of SSW during each interval 
                 idx = np.where(szn_window_s2 == i_win)
                 if len(idx[0]) > 0:
                     total_froma = np.sum(froma_flag.data[idx])
                     prob_ssw_per_window[i_win] = np.sum(crossing_flag.data[idx])/(total_froma + 1.0*(total_froma==0)) #np.nansum(comm_bwd_s2_penult[idx] * comm_fwd_s2_ult[idx]) / len(idx[0])
-            print(f"Probabilities per window:\n{prob_ssw_per_window}")
+            #print(f"Probabilities per window:\n{prob_ssw_per_window}")
             # Turn this into a total rate
             i_tszn, = np.where((self.t_szn_edge < self.tpt_bndy["t_thresh"][1]) * (self.t_szn_edge >= self.tpt_bndy["t_thresh"][0]))
-            prob_ssw = 1 - np.exp(np.nansum(np.log(1-prob_ssw_per_window[i_tszn])))
+            prob_ssw = 1 - np.nanprod(1-prob_ssw_per_window[i_tszn]) #np.exp(np.nansum(np.log(1-prob_ssw_per_window[i_tszn])))
             print(f"prob_ssw = {prob_ssw}")
             rate_hybrid.loc[dict(u_thresh=uth, bound="ed")] = prob_ssw
         return rate_e5, rate_hybrid
@@ -817,7 +814,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         traj_ending_flag = dict() # 1 if the sample is in the last seasonal time window occupied by the trajectory
         for src in ["e5","s2"]:
             szn_window[src],szn_start_year[src],traj_beginning_flag[src],traj_ending_flag[src],feat_msm_normalized[src] = (
-                    self.unseason(feat_msm[src], szn_stats_e5, feat_all[src]["time_observable"], max_delay, whiten_flag=True)
+                    self.unseason(feat_msm[src], szn_stats_e5, feat_all[src]["time_observable"], max_delay, whiten_flag=False, divide_by_std_flag=False)
                     )
             badsum = (
                     (np.isnan(feat_msm_normalized[src]).sum(dim="feature") > 0) * 
@@ -870,13 +867,22 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                     # Create a list of vectors to flag whether each cluster at each time is in A or is in B
                     ina = []
                     inb = []
+                    emp_dens = []
                     for i_win in range(msm_info[src]["Nt_szn"]):
                         ina += [-np.ones(msm_info[src]["km_n_clusters"][i_win], dtype=float)]    
                         inb += [-np.ones(msm_info[src]["km_n_clusters"][i_win], dtype=float)]
-                        idx_in_window = np.where(msm_info[src]["szn_window"].data==i_win)
+                        emp_dens += [np.zeros(msm_info[src]["km_n_clusters"][i_win], dtype=float)]
+                        #idx_in_window = np.where(msm_info[src]["szn_window"].data==i_win)
+                        idx_in_window = np.where(
+                            (msm_info[src]["szn_window"].data==i_win) 
+                            #* (np.isnan(feat_tpt[src]).sum(dim="feature") == 0)
+                        ) # All the data in this time window
                         ab_tag_in_window = ab_tag.data[idx_in_window]
                         for i_clust in range(msm_info[src]["km_n_clusters"][i_win]):
                             idx_in_cluster = np.where(msm_info[src]["km_assignment"].data[idx_in_window]==i_clust)
+                            if len(idx_in_cluster[0]) == 0:
+                                raise Exception(f"There are no indices in cluster {i_clust}")
+                            emp_dens[i_win][i_clust] = len(idx_in_cluster[0]) #/len(idx_in_window[0]) 
                             if clust_bndy_choice == "strict":
                                 ina[i_win][i_clust] = 1.0*(np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["A"]) == 1.0)
                                 inb[i_win][i_clust] = 1.0*(np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["B"]) == 1.0)
@@ -886,6 +892,11 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                             elif clust_bndy_choice == "half":
                                 ina[i_win][i_clust] = 1.0*(np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["A"]) >= 0.5)
                                 inb[i_win][i_clust] = 1.0*(np.mean(ab_tag_in_window[idx_in_cluster]==self.ab_code["B"]) >= 0.5)
+                        # Check we have a proper density
+                        sum_dens = np.sum(emp_dens[i_win])
+                        #if np.sum(emp_dens[i_win]) != len(idx_in_window[0]):
+                        #    raise Exception(f"At window {i_win}, you have an empirical density summing to {np.sum(emp_dens[i_win])}, but {len(idx_in_window[0])} indices in the window. min emp_dens = {np.min(emp_dens[i_win])}")
+                        emp_dens[i_win] *= 1.0/sum_dens #len(idx_in_window[0])
 
                     # Instantiate the time-dependent Markov Chain class
                     mc = tdmc_obj.TimeDependentMarkovChain(msm_info[src]["P_list"], szn_stats_e5["t_szn_cent"])
@@ -901,7 +912,10 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                     # Solve for the time-dependent density -- TODO sensitivity analysis and/or direct counting. 
                     init_dens = np.ones(msm_info[src]["km_n_clusters"][0]) 
                     init_dens *= 1.0/np.sum(init_dens)
-                    dens = mc.propagate_density_forward(init_dens)
+                    solved_dens = mc.propagate_density_forward(init_dens)
+
+                    # ----------- Do we use the empirical or solved density? ---------------
+                    dens = solved_dens
 
                     # Solve for the backward committor
                     P_list_bwd = []                                                        
