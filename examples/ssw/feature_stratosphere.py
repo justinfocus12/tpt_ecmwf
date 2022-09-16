@@ -556,6 +556,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         
             # Find the branches beginning or ending outside of A and B 
             domain_idx, = np.where(ab_tag["e5"].isel(t_sim=e5idx,t_init=0,member=0) == self.ab_code["D"])
+            print("number in domain = {len(domain_idx)}")
         
             # Get a rate estimate for each individual branch point, to be linearly combined later
             rate_s2.loc[dict(u_thresh=uth,bound="lower")] = (
@@ -566,21 +567,37 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             )[domain_idx].mean()
 
             # ------------- Ed's estimate -----------------
+            print(f"comm_emp_s2 dims = {comm_emp['s2'].dims}")
             froma_flag = 1.0*(comm_emp["s2"].sel(sense="since") != 0)
-            crossing_flag = 1.0*froma_flag*(ab_tag["s2"].shift(t_sim=1) == self.ab_code["B"])
+            hitb_flag = 1.0*(ab_tag["s2"].shift(t_sim=-1) == self.ab_code["B"])
+            print(f"How many from A? {froma_flag.sum()}")
+            crossing_flag = 1.0*froma_flag*(ab_tag["s2"].shift(t_sim=-1) == self.ab_code["B"])
             szn_window_s2 = (Xall["s2"]["time_observable"].sel(feature="t_szn")/self.dt_szn).astype(int)
+            idx_froma = np.where(froma_flag.to_numpy() == 1)
+            idx_hitb = np.where(hitb_flag.to_numpy() == 1)
+            #print(f"where is crossing_flag nonzero? {cfnz}")
+            print(f"szn window where froma \n{szn_window_s2.to_numpy()[idx_froma]}")
+            print(f"szn_window where hitb: \n{szn_window_s2.to_numpy()[idx_hitb]}")
+            print(f"How many crossings? {crossing_flag.sum()}")
+            print(f"szn_window_s2 dims = {szn_window_s2.dims}")
+            print(f"crossing_flag dims = {crossing_flag.dims}")
             prob_ssw_per_window = np.nan*np.ones(self.Nt_szn)
             for i_win in range(self.Nt_szn):
                 # Find the probability of SSW during each interval 
-                idx = np.where(szn_window_s2 == i_win)
-                if len(idx[0]) > 0:
-                    total_froma = np.sum(froma_flag.data[idx])
-                    prob_ssw_per_window[i_win] = np.nansum(crossing_flag.data[idx])/(total_froma + 1.0*(total_froma==0)) #np.nansum(comm_bwd_s2_penult[idx] * comm_fwd_s2_ult[idx]) / len(idx[0])
-            #print(f"Probabilities per window:\n{prob_ssw_per_window}")
-            # Turn this into a total rate
+                total_froma = ((szn_window_s2==i_win)*froma_flag).sum()
+                total_cross = ((szn_window_s2==i_win)*crossing_flag).sum()
+                prob_ssw_per_window[i_win] = total_cross / (total_froma + 1.0*(total_froma == 0))
+                
+
+                #idx = np.where(szn_window_s2.to_numpy() == i_win)
+                #print(f"How many crossings in window {i_win}? {np.sum(crossing_flag.data[idx])}")
+                #if len(idx[0]) > 0:
+                #    total_froma = np.sum(froma_flag.to_numpy()[idx])
+                #    prob_ssw_per_window[i_win] = np.sum(crossing_flag.to_numpy()[idx])/(total_froma + 1.0*(total_froma==0))
             i_tszn, = np.where((self.t_szn_edge < self.tpt_bndy["t_thresh"][1]) * (self.t_szn_edge >= self.tpt_bndy["t_thresh"][0]))
             prob_ssw = 1 - np.nanprod(1-prob_ssw_per_window[i_tszn]) #np.exp(np.nansum(np.log(1-prob_ssw_per_window[i_tszn])))
             print(f"prob_ssw = {prob_ssw}")
+            print(f"prob_ssw_per_window[i_tszn] = {prob_ssw_per_window[i_tszn]}")
             rate_s2.loc[dict(u_thresh=uth, bound="ed")] = prob_ssw
         return rate_e5, rate_s2
     # --------------------------- old stuff below --------------------------------------------

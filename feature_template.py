@@ -175,7 +175,7 @@ class SeasonalFeatures(ABC):
         return cej
     def estimate_empirical_committor(self, cej):
         cej_infed = xr.where(np.isnan(cej)==0, cej, np.inf)
-        comm_emp = 1.0*(cej_infed.sel(state="B") < cej_infed.sel(state="A")) + 0.5*(cej_infed.sel(state="B") == cej_infed.sel(state="A"))
+        comm_emp = 1.0*(cej_infed.sel(state="B",drop=True) < cej_infed.sel(state="A",drop=True)) + 0.5*(cej_infed.sel(state="B",drop=True) == cej_infed.sel(state="A",drop=True))
         comm_emp.loc[dict(sense="since")] = 1 - comm_emp.sel(sense="since")
         return comm_emp
     def estimate_rate(self, ab_tag, comm_emp):
