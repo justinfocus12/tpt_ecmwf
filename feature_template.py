@@ -174,15 +174,20 @@ class SeasonalFeatures(ABC):
                     cej.loc[dict(t_init=t_init,member=member,state=state,sense="until")] = tuntil
         return cej
     def estimate_empirical_committor(self, cej):
-        # Make points NaN if hanging endpoints
         cej_infed = xr.where(np.isnan(cej)==0, cej, np.inf)
         comm_emp = 1.0*(cej_infed.sel(state="B") < cej_infed.sel(state="A")) + 0.5*(cej_infed.sel(state="B") == cej_infed.sel(state="A"))
         comm_emp.loc[dict(sense="since")] = 1 - comm_emp.sel(sense="since")
         return comm_emp
-    def estimate_rate(self, cej, comm_emp):
+    def estimate_rate(self, ab_tag, comm_emp):
         # This will be a lower bound on the rate, because of hanging endpoints. 
-        a2b_flag = 1.0 * (comm_emp.sel(sense="since") == self.ab_code["A"]) * (comm_emp.sel(sense="until") == self.ab_code["B"])
-        rate_lowerbound = (1.0*a2b_flag.diff(dim="t_sim")==1).sum(dim="t_sim") / (a2b_flag["t_sim"][-1] - a2b_flag["t_sim"][0])
+        a2b_flag = 1.0 * (comm_emp.sel(sense="since") == 1) * (comm_emp.sel(sense="until") == 1)
+        a2all_flag = 1.0 * (comm_emp.sel(sense="since") == 1) * (ab_tag == self.ab_code["D"]) 
+        # --- Old: divide by time --------`
+        #rate_lowerbound = (1.0*a2b_flag.diff(dim="t_sim")==1).sum(dim="t_sim") / (a2b_flag["t_sim"][-1] - a2b_flag["t_sim"][0])
+        # ---- New: divide by number of exits from A
+        num_a2b = ((1.0*a2b_flag).diff(dim="t_sim")==1).sum(dim="t_sim")
+        num_a2all = ((1.0*a2all_flag).diff(dim="t_sim")==1).sum(dim="t_sim")
+        rate_lowerbound =  num_a2b / num_a2all
         return rate_lowerbound
     def get_seasonal_statistics(self, feat_da, t_szn):
         # Get the statistics in each box of the season. This will be used to normalize the dataset later.

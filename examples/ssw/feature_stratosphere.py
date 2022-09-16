@@ -518,15 +518,16 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             ), axis=1
         )
         t_szn_e5idx = Xall["e5"]["time_observable"].sel(feature="t_szn").isel(t_sim=e5idx).to_numpy().flatten()
-        rate_hybrid = xr.DataArray(
-            coords = {"u_thresh": uthresh_list, "e5_weight": np.array([0.0, 0.25, 0.5, 0.75, 1.0]), "bound": ["lower","upper","ed"]},
-            dims = ["u_thresh","e5_weight","bound"]
+        rate_s2 = xr.DataArray(
+            coords = {"u_thresh": uthresh_list, "bound": ["lower","upper","ed"]},
+            dims = ["u_thresh","bound"]
         )
+        fall_subsets = dict({"1959-2019": [1959,2019], "1996-2015": [1996,2015]})
         rate_e5 = xr.DataArray(
-            coords = {"u_thresh": rate_hybrid["u_thresh"],},
-            dims = ["u_thresh"],
+            coords = {"u_thresh": rate_s2["u_thresh"], "falls": ["1959-2019","1996-2015"]},
+            dims = ["u_thresh","falls"],
         )
-        for uth in rate_hybrid["u_thresh"].data:
+        for uth in rate_s2["u_thresh"].data:
             print(f"---------- Starting u_thresh {uth} --------------")
             self.set_ab_boundaries(t_thresh[0], t_thresh[1], uth)
             ab_tag = dict()
@@ -538,10 +539,15 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 mode = "timechunks" if src == "e5" else "timesteps" # This determines the computation pattern for iterating through the dataset
                 cej[src] = self.cotton_eye_joe(Xtpt[src],ab_tag[src],mode=mode)
                 comm_emp[src] = self.estimate_empirical_committor(cej[src])
-                rate_emp[src] = self.estimate_rate(cej[src], comm_emp[src])
+                rate_emp[src] = self.estimate_rate(ab_tag[src], comm_emp[src])
         
             # To get the ERA5 rate, use all the years
-            rate_e5.loc[dict(u_thresh=uth)] = self.estimate_rate(cej["e5"], comm_emp["e5"]).to_numpy().item() * 365.25
+            for i_ff in range(len(rate_e5["falls"])):
+                cond = 1.0 * (
+                        (Xtpt["e5"].sel(feature="year_szn_start") >= fall_subsets[rate_e5["falls"].data[i_ff]][0]) 
+                        * (Xtpt["e5"].sel(feature="year_szn_start") <= fall_subsets[rate_e5["falls"].data[i_ff]][1]) 
+                        )
+                rate_e5.loc[dict(u_thresh=uth,falls=rate_e5["falls"].data[i_ff])] = self.estimate_rate(ab_tag["e5"].where(cond,drop=True), comm_emp["e5"].where(cond,drop=True)).to_numpy().item() #* 365.25
             # To do the bounds, attach the past of reaanalysis to each initialization date 
             comm_bwd_e5 = comm_emp["e5"].isel(t_sim=e5idx,t_init=0,member=0).sel(sense="since").to_numpy()
             comm_fwd_e5 = comm_emp["e5"].isel(t_sim=e5idx,t_init=0,member=0).sel(sense="until").to_numpy()
@@ -552,17 +558,15 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             domain_idx, = np.where(ab_tag["e5"].isel(t_sim=e5idx,t_init=0,member=0) == self.ab_code["D"])
         
             # Get a rate estimate for each individual branch point, to be linearly combined later
-            # Assign weights to the real world and to hindcasts
-            for e5_weight in rate_hybrid["e5_weight"].data: 
-                rate_hybrid.loc[dict(u_thresh=uth,e5_weight=e5_weight,bound="lower")] = (
-                    comm_bwd_e5 * (e5_weight * comm_fwd_e5 + (1-e5_weight) * comm_fwd_s2_lower_end)
-                )[domain_idx].mean()
-                rate_hybrid.loc[dict(u_thresh=uth,e5_weight=e5_weight,bound="upper")] = (
-                    comm_bwd_e5 * (e5_weight * comm_fwd_e5 + (1-e5_weight) * comm_fwd_s2_upper_end)
-                )[domain_idx].mean()
+            rate_s2.loc[dict(u_thresh=uth,bound="lower")] = (
+                comm_bwd_e5 * comm_fwd_s2_lower_end
+            )[domain_idx].mean()
+            rate_s2.loc[dict(u_thresh=uth,bound="upper")] = (
+                comm_bwd_e5 * comm_fwd_s2_upper_end
+            )[domain_idx].mean()
 
             # ------------- Ed's estimate -----------------
-            froma_flag = 1.0*(comm_emp["s2"].sel(sense="since") != self.ab_code["B"])
+            froma_flag = 1.0*(comm_emp["s2"].sel(sense="since") != 0)
             crossing_flag = 1.0*froma_flag*(ab_tag["s2"].shift(t_sim=1) == self.ab_code["B"])
             szn_window_s2 = (Xall["s2"]["time_observable"].sel(feature="t_szn")/self.dt_szn).astype(int)
             prob_ssw_per_window = np.nan*np.ones(self.Nt_szn)
@@ -571,14 +575,14 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 idx = np.where(szn_window_s2 == i_win)
                 if len(idx[0]) > 0:
                     total_froma = np.sum(froma_flag.data[idx])
-                    prob_ssw_per_window[i_win] = np.sum(crossing_flag.data[idx])/(total_froma + 1.0*(total_froma==0)) #np.nansum(comm_bwd_s2_penult[idx] * comm_fwd_s2_ult[idx]) / len(idx[0])
+                    prob_ssw_per_window[i_win] = np.nansum(crossing_flag.data[idx])/(total_froma + 1.0*(total_froma==0)) #np.nansum(comm_bwd_s2_penult[idx] * comm_fwd_s2_ult[idx]) / len(idx[0])
             #print(f"Probabilities per window:\n{prob_ssw_per_window}")
             # Turn this into a total rate
             i_tszn, = np.where((self.t_szn_edge < self.tpt_bndy["t_thresh"][1]) * (self.t_szn_edge >= self.tpt_bndy["t_thresh"][0]))
             prob_ssw = 1 - np.nanprod(1-prob_ssw_per_window[i_tszn]) #np.exp(np.nansum(np.log(1-prob_ssw_per_window[i_tszn])))
             print(f"prob_ssw = {prob_ssw}")
-            rate_hybrid.loc[dict(u_thresh=uth, bound="ed")] = prob_ssw
-        return rate_e5, rate_hybrid
+            rate_s2.loc[dict(u_thresh=uth, bound="ed")] = prob_ssw
+        return rate_e5, rate_s2
     # --------------------------- old stuff below --------------------------------------------
     def spherical_horizontal_laplacian(self,field,lat,lon):
         # Compute the spherical Laplacian of a field on a lat-lon grid. Assume unit sphere.
