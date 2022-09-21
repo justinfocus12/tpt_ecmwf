@@ -568,7 +568,9 @@ class WinterStratosphereFeatures(SeasonalFeatures):
 
             # ------------- Ed's estimate -----------------
             print(f"comm_emp_s2 dims = {comm_emp['s2'].dims}")
-            froma_flag = 1.0*(comm_emp["s2"].sel(sense="since") != 0)
+            froma_flag = 1.0*(comm_emp["e5"].isel(t_sim=e5idx,t_init=0,member=0,drop=True).sel(sense="since") == 1).rename({"t_sim": "t_init"}).assign_coords({"t_init": comm_emp["s2"]["t_init"]}) * (comm_emp["s2"].sel(sense="since") != 0)
+            #froma_flag = 1.0*(comm_emp["s2"].sel(sense="since") != 0)
+            print(f"froma_flag dims = {froma_flag.dims}")
             hitb_flag = 1.0*(ab_tag["s2"].shift(t_sim=-1) == self.ab_code["B"])
             print(f"How many from A? {froma_flag.sum()}")
             crossing_flag = 1.0*froma_flag*(ab_tag["s2"].shift(t_sim=-1) == self.ab_code["B"])
@@ -576,11 +578,11 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             idx_froma = np.where(froma_flag.to_numpy() == 1)
             idx_hitb = np.where(hitb_flag.to_numpy() == 1)
             #print(f"where is crossing_flag nonzero? {cfnz}")
-            print(f"szn window where froma \n{szn_window_s2.to_numpy()[idx_froma]}")
-            print(f"szn_window where hitb: \n{szn_window_s2.to_numpy()[idx_hitb]}")
-            print(f"How many crossings? {crossing_flag.sum()}")
-            print(f"szn_window_s2 dims = {szn_window_s2.dims}")
-            print(f"crossing_flag dims = {crossing_flag.dims}")
+            #print(f"szn window where froma \n{szn_window_s2.to_numpy()[idx_froma]}")
+            #print(f"szn_window where hitb: \n{szn_window_s2.to_numpy()[idx_hitb]}")
+            #print(f"How many crossings? {crossing_flag.sum()}")
+            #print(f"szn_window_s2 dims = {szn_window_s2.dims}")
+            #print(f"crossing_flag dims = {crossing_flag.dims}")
             prob_ssw_per_window = np.nan*np.ones(self.Nt_szn)
             for i_win in range(self.Nt_szn):
                 # Find the probability of SSW during each interval 
