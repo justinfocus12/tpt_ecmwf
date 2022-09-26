@@ -46,7 +46,52 @@ def preprocess_netcdf_basic(ds_in, src):
         ds = ds.rename({"z": "gh"})
     return ds
 
-def compute_eofs(file_list, src, num_modes=10, months_of_interest=None):
+def compute_eofs(ds, src, num_modes=10, months_of_interest=None):
+    # TODO: finish this in a robust way to feed into the new POP analysis. 
+    # Given a dask dataset ds, compute the EOFs of 10-day running average of each level separately. Also compute the seasonal mean and 
+# Go through each level and get EOFs and PCs for each. 
+    znm = (
+        ds["z"]
+        .isel(latitude=np.where(e5.latitude >= 20)[0])
+        #.rolling(dim={"t_szn": 5}, min_periods=1).mean()
+        .isel(t_szn=np.arange(0, szn_duration, 10).astype(int))
+    )
+    eofs_by_level = xr.DataArray(
+        coords = {"level": e5.level, "mode": np.arange(num_eofs), "latitude": znm.latitude, "longitude": znm.longitude},
+        dims = ["level","mode","latitude","longitude"],
+        data = np.nan,
+    )
+    eigval = xr.DataArray(
+        coords = {"level": e5.level, "mode": np.arange(num_eofs)}, dims=["level","mode"]
+    )
+    zmean = xr.DataArray(
+        coords={"level": e5.level, "latitude": znm.latitude, "longitude": znm.longitude}, 
+        dims=["level","latitude","longitude"]
+    )
+    zvariance = xr.DataArray(
+        coords={"level": e5.level}, dims=["level"]
+    )
+    for lev in znm.level.data:
+        print(f"Starting level {lev}")
+        zmean.loc[dict(level=lev)] = znm.sel(level=lev).mean(dim=["fall_year","t_szn"])
+        solver = Eof(
+            znm.sel(level=lev)
+            .stack({"time": ["fall_year","t_szn"]})
+            .transpose("time","latitude","longitude").load(),
+            weights=weights.transpose("latitude","longitude")
+        )
+        eofs_by_level.loc[dict(level=lev)] = solver.eofs().isel(mode=range(num_eofs))
+        eigval.loc[dict(level=lev)] = solver.eigenvalues().isel(mode=range(num_eofs))
+        zvariance.loc[dict(level=lev)] = solver.eigenvalues().sum()
+    
+    ds_eof = xr.Dataset({
+        "eofs": eofs_by_level,
+        "eigval": eigval,
+        "zmean": zmean,
+        "zvariance": zvariance,
+    })
+
+def old_compute_eofs(file_list, src, num_modes=10, months_of_interest=None):
     # Compute some EOFs of monthly mean data 
     # Each file must contain an integer number of whole months
     if months_of_interest is None:
