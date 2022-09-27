@@ -218,6 +218,51 @@ class SeasonalFeatures(ABC):
                 )
         szn_stats = xr.Dataset(data_vars=data_vars)
         return szn_stats
+    def build_lim(self, feat_lim, szn_stats_e5, t_obs, max_delay):
+        # Build a LIM for the timeseries. 
+        # First, move the 'feature' index to the end. All the slicing operations will use Numpy for this. 
+        feat_lim = feat_lim.transpose("t_init","member","t_sim","feature")
+        szn_window = (t_obs.sel(feature="t_szn")/self.dt_szn).astype(int)
+        szn_start_year = t_obs.sel(feature="year_szn_start").astype(int)
+        szn_mean = szn_stats_e5["mean"]
+        Glim = xr.DataArray( # Green's function for LIM
+                coords={"t_szn_cent": szn_mean["t_szn_cent"], "feature_new": feat_lim["feature"].values, "feature_old": feat_lim["feature"].values},
+                dims=["t_szn_cent","feature_new","feature_old"],
+                data=np.nan
+                )
+        Qlim = xr.DataArray( # Noise covariance matrix
+                coords={"t_szn_cent": szn_mean["t_szn_cent"], "feature_new": feat_lim["feature"].values, "feature_old": feat_lim["feature"].values},
+                dims=["t_szn_cent","feature_new","feature_old"],
+                data=np.nan
+                )
+        for i_win in range(self.Nt_szn-1):
+            print(f"Starting window {i_win} out of {self.Nt_szn}")
+            idx = np.where(((szn_window == i_win)*(szn_window.shift(t_sim=-1) == i_win+1)).data)
+            idx_lag = [idx[d].copy() for d in range(len(idx))]
+            idx_lag[feat_lim.dims.index("t_sim")] += 1
+            idx_lag = tuple(idx_lag)
+            # Construct the pair of data matrices, with mean subtracted (this works because `feature' is the last coordinate)
+            print(f"X shape = {feat_lim.values[idx].shape}")
+            print(f"szn mean iwin shape = {szn_mean.isel(t_szn_cent=i_win).shape}")
+            X = (feat_lim.values[idx] - szn_mean.isel(t_szn_cent=i_win).values).T
+            Y = (feat_lim.values[idx_lag] - szn_mean.isel(t_szn_cent=i_win+1).values).T 
+            nfeat,nsamp = X.shape
+            if not (nfeat == feat_lim.feature.size and nsamp == len(idx[0])):
+                raise Exception("Your dimensions are off for the data matrices. X.shape = {X.shape}")
+            # Replace nan with zero 
+            nsamp = np.all(np.isfinite(X), axis=0).sum()
+            X[np.isnan(X)] = 0
+            Y[np.isnan(Y)] = 0
+            # Construct the transition matrix
+            C_00 = X @ X.T / (nsamp - 1)
+            C_10 = Y @ X.T / (nsamp - 1)
+            G = C_10 @ np.linalg.inv(C_00)
+            residual = G @ X - Y
+            Q = residual @ residual.T / (nsamp - 1) # (feature_new, feature)
+            Glim[dict(t_szn_cent=i_win)] = G
+            Qlim[dict(t_szn_cent=i_win)] = Q
+        lim = xr.Dataset(data_vars={"szn_mean": szn_mean, "G": Glim, "Q": Qlim})
+        return lim
     def unseason(self, feat_msm, szn_stats, t_obs, max_delay, divide_by_std_flag=False, whiten_flag=False):
         Nfeat = feat_msm.feature.size
         feat_msm_stacked = (
