@@ -5,6 +5,7 @@ import xarray as xr
 import netCDF4 as nc
 from sklearn.cluster import KMeans
 from numpy import save,load
+from scipy.linalg import expm,logm
 import matplotlib.pyplot as plt
 import os
 from os import mkdir
@@ -218,8 +219,9 @@ class SeasonalFeatures(ABC):
                 )
         szn_stats = xr.Dataset(data_vars=data_vars)
         return szn_stats
-    def build_lim(self, feat_lim, szn_stats_e5, t_obs, max_delay, demean=True):
+    def build_lim(self, feat_lim, szn_stats_e5, t_obs, max_delay, demean=True, max_lag=3):
         # Build a LIM for the timeseries. 
+        lags = np.arange(1,max_lag+1) # Lags to average over
         # First, move the 'feature' index to the end. All the slicing operations will use Numpy for this. 
         feat_lim = feat_lim.transpose("t_init","member","t_sim","feature")
         szn_window = (t_obs.sel(feature="t_szn")/self.dt_szn).astype(int)
@@ -236,24 +238,36 @@ class SeasonalFeatures(ABC):
                 data=np.nan
                 )
         for i_win in range(self.Nt_szn-1):
-            idx = np.where(((szn_window == i_win)*(szn_window.shift(t_sim=-1) == i_win+1)).data)
-            idx_lag = [idx[d].copy() for d in range(len(idx))]
-            idx_lag[feat_lim.dims.index("t_sim")] += 1
-            idx_lag = tuple(idx_lag)
+            # To find idx for the LIM, restrict to indices where there are at least enough lags ahead.
+            window_flag = (szn_window == i_win)*(szn_window.shift(t_sim=-1) == i_win+1)
+            for i_lag in range(1,len(lags)):
+                window_flag = window_flag * np.isfinite(szn_window.shift(t_sim=-lags[i_lag]))
+            idx = np.where((window_flag).data)
             # Construct the pair of data matrices, with mean subtracted (this works because `feature' is the last coordinate)
             X = (feat_lim.values[idx] - (1*demean)*szn_mean.isel(t_szn_cent=i_win).values).T
-            Y = (feat_lim.values[idx_lag] - (1*demean)*szn_mean.isel(t_szn_cent=i_win+1).values).T 
             nfeat,nsamp = X.shape
             if not (nfeat == feat_lim.feature.size and nsamp == len(idx[0])):
                 raise Exception("Your dimensions are off for the data matrices. X.shape = {X.shape}")
             # Replace nan with zero 
             nsamp = np.all(np.isfinite(X), axis=0).sum()
             X[np.isnan(X)] = 0
-            Y[np.isnan(Y)] = 0
-            # Construct the transition matrix
             C_00 = X @ X.T / (nsamp - 1)
-            C_10 = Y @ X.T / (nsamp - 1)
-            G = C_10 @ np.linalg.inv(C_00)
+            # Loop over various lags
+            B = np.nan*np.ones((len(lags), Glim["feature_new"].size, Glim["feature_old"].size)).astype(complex)
+            for i_lag in range(len(lags)):
+                if i_win + lags[i_lag] < self.Nt_szn:
+                    idx_lag = [idx[d].copy() for d in range(len(idx))]
+                    idx_lag[feat_lim.dims.index("t_sim")] += lags[i_lag]
+                    idx_lag = tuple(idx_lag)
+                    Y = (feat_lim.values[idx_lag] - (1*demean)*szn_mean.isel(t_szn_cent=i_win+lags[i_lag]).values).T 
+                    Y[np.isnan(Y)] = 0
+                    # Construct the transition matrix
+                    C_10 = Y @ X.T / (nsamp - 1)
+                    G = C_10 @ np.linalg.inv(C_00)
+                    if len(lags) > 1: B[i_lag] = logm(G)/lags[i_lag]
+            # Average Green's function over the lags
+            if len(lags) > 1:
+                G = expm(np.nanmean(B, axis=0)).real
             residual = G @ X - Y
             Q = residual @ residual.T / (nsamp - 1) # (feature_new, feature)
             Glim[dict(t_szn_cent=i_win)] = G
