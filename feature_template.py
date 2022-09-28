@@ -218,7 +218,7 @@ class SeasonalFeatures(ABC):
                 )
         szn_stats = xr.Dataset(data_vars=data_vars)
         return szn_stats
-    def build_lim(self, feat_lim, szn_stats_e5, t_obs, max_delay):
+    def build_lim(self, feat_lim, szn_stats_e5, t_obs, max_delay, demean=True):
         # Build a LIM for the timeseries. 
         # First, move the 'feature' index to the end. All the slicing operations will use Numpy for this. 
         feat_lim = feat_lim.transpose("t_init","member","t_sim","feature")
@@ -236,16 +236,13 @@ class SeasonalFeatures(ABC):
                 data=np.nan
                 )
         for i_win in range(self.Nt_szn-1):
-            print(f"Starting window {i_win} out of {self.Nt_szn}")
             idx = np.where(((szn_window == i_win)*(szn_window.shift(t_sim=-1) == i_win+1)).data)
             idx_lag = [idx[d].copy() for d in range(len(idx))]
             idx_lag[feat_lim.dims.index("t_sim")] += 1
             idx_lag = tuple(idx_lag)
             # Construct the pair of data matrices, with mean subtracted (this works because `feature' is the last coordinate)
-            print(f"X shape = {feat_lim.values[idx].shape}")
-            print(f"szn mean iwin shape = {szn_mean.isel(t_szn_cent=i_win).shape}")
-            X = (feat_lim.values[idx] - szn_mean.isel(t_szn_cent=i_win).values).T
-            Y = (feat_lim.values[idx_lag] - szn_mean.isel(t_szn_cent=i_win+1).values).T 
+            X = (feat_lim.values[idx] - (1*demean)*szn_mean.isel(t_szn_cent=i_win).values).T
+            Y = (feat_lim.values[idx_lag] - (1*demean)*szn_mean.isel(t_szn_cent=i_win+1).values).T 
             nfeat,nsamp = X.shape
             if not (nfeat == feat_lim.feature.size and nsamp == len(idx[0])):
                 raise Exception("Your dimensions are off for the data matrices. X.shape = {X.shape}")
