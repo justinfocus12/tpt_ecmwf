@@ -237,6 +237,11 @@ class SeasonalFeatures(ABC):
                 dims=["t_szn_cent","feature_new","feature_old"],
                 data=np.nan
                 )
+        siglim = xr.DataArray( # Noise covariance matrix
+                coords={"t_szn_cent": szn_mean["t_szn_cent"], "feature_new": feat_lim["feature"].values, "feature_old": feat_lim["feature"].values},
+                dims=["t_szn_cent","feature_new","feature_old"],
+                data=np.nan
+                )
         for i_win in range(self.Nt_szn-1):
             # To find idx for the LIM, restrict to indices where there are at least enough lags ahead.
             window_flag = (szn_window == i_win)*(szn_window.shift(t_sim=-1) == i_win+1)
@@ -272,7 +277,10 @@ class SeasonalFeatures(ABC):
             Q = residual @ residual.T / (nsamp - 1) # (feature_new, feature)
             Glim[dict(t_szn_cent=i_win)] = G
             Qlim[dict(t_szn_cent=i_win)] = Q
-        lim = xr.Dataset(data_vars={"szn_mean": szn_mean, "G": Glim, "Q": Qlim})
+            # Take the matrix square root
+            Qeval,Qevec = np.linalg.eigh(Q)
+            siglim[dict(t_szn_cent=i_win)] = Qevec @ np.diag(np.sqrt(np.maximum(Qeval,0)))
+        lim = xr.Dataset(data_vars={"szn_mean": szn_mean, "G": Glim, "Q": Qlim, "sigma": siglim})
         return lim
     def unseason(self, feat_msm, szn_stats, t_obs, max_delay, divide_by_std_flag=False, whiten_flag=False):
         Nfeat = feat_msm.feature.size
