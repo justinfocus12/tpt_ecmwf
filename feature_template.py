@@ -448,8 +448,8 @@ class SeasonalFeatures(ABC):
             min_colsum = np.min(np.sum(P, axis=0))
             if min_rowsum == 0 or min_colsum == 0:
                 raise Exception(f"Under-filled transition matrices between seasonal windows {i_win} and {i_win+1}. min_rowsum = {min_rowsum} and min_colsum = {min_colsum}")
-            # Normalize the matrix
-            P = np.diag(1.0/np.sum(P, axis=1)).dot(P)
+            # Do not Normalize the matrix
+            #P = np.diag(1.0/np.sum(P, axis=1)).dot(P)
             P_list += [P]
         return P_list
     def construct_transition_matrices(self, km_assignment, km_n_clusters, szn_window, szn_start_year):

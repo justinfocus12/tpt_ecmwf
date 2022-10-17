@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from scipy.optimize import minimize
 from scipy import interpolate
+from scipy.stats import genextreme
 import sys
 import os
 from os import mkdir
@@ -34,6 +35,7 @@ import cartopy
 from cartopy import crs as ccrs
 import pickle
 import itertools
+import functools
 from feature_template import SeasonalFeatures
 import xr_utils
 import tpt_utils
@@ -106,6 +108,24 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 data = 0.0, # This is necessary to assign later by broadcasting 
                 )
         return F
+    def compound_observable(self, ds, src, obs2compute, combine_features=False):
+        obs_dict = dict()
+        if "time_observable" in obs2compute:
+            obs_dict["time_observable"] = self.time_observable(ds, src)
+        if "ubar_observable" in obs2compute:
+            obs_dict["ubar_observable"] = self.ubar_observable(ds, src)
+        if "heatflux_observable" in obs2compute:
+            obs_dict["heatflux_observable"] = self.heatflux_observable(ds, src)
+        if "temperature_observable" in obs2compute:
+            obs_dict["temperature_observable"] = self.temperature_observable(ds, src)
+        if "qbo_observable" in obs2compute:
+            obs_dict["qbo_observable"] = self.qbo_observable(ds, src)
+        # Concatenate them together
+        if combine_results:
+            obs_da = xr.concat(list(obs_dict.values()), dim="feature")
+        else:
+            obs_da = obs_dict
+        return obs_da
     def pc_observable(self, ds, src, ds_eofs, ds_monclim, subtract_monthly_mean=False):
         # Project the geopotential height fields onto the EOFs 
         pc_features = []
@@ -241,7 +261,63 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         return tda_aug
     # -----------------------------------------------
     # ------------ feat_all -------------------
-    def preprocess_netcdf(self, ds, src):
+    # Dask version: no good
+    def open_mfdataset_bysource(self, file_list, src):
+        # TODO: remove this. Does not work.
+        print(f"About to open_mfdataset for {src}")
+        if src == "e5":
+            # Open the files, concatenating by time 
+            ds = xr.decode_cf(xr.open_mfdataset(file_list, decode_cf=False))
+            print(f"Opened mfdataset")
+            print(f"dstime = {ds['time']}")
+            # Only sample the beginning of each day 
+            day_start_idx, = np.where(ds["time"].dt.hour == 0)
+            ds = ds.isel(time=day_start_idx)
+            print(f"Resampled by time")
+            # Convert geopotential to geopotential height
+            ds["z"] *= 1.0/9.806
+            ds = ds.rename({"z": "gh"})
+            print(f"Converted geopotential height")
+            # Convert times
+            ds = self.rearrange_times(ds)
+            print(f"Rearranged times")
+        elif src == "s2":
+            ds = xr.decode_cf(xr.open_mfdataset(file_list, preprocess=self.rearrange_times, decode_cf=False))
+            ds = ds.rename({"number": "member"})
+        return ds
+    def compute_all_features_dask(self, ds, src, output_dir, obs2compute=None, print_every=5):
+        # ds is a Dask xarray
+        # Load the files in chunks
+        # TODO: use Dask to open all the files at once and then preprocess. 
+        # use partial function for the preprocessing step
+        print(f"------------ Starting to compute all features for {src} -------------")
+        if obs2compute is None:
+            obs2compute = [f"{obs}_observable" for obs in ["time","ubar", "temperature", "heatflux", "qbo"]]
+        obs_da = self.compound_observable(ds, src, obs2compute).compute()
+        print(f"Finished computing the compound observable")
+
+        # Post-processing
+        for obsname in obs2compute:
+            ds_obs = xr.concat(obs_dict[obsname], dim=concat_dim).sortby("t_init")
+            # If ERA5, stack back into places
+            if src == "e5":
+                t_sim_offsets = (ds_obs["t_init"] - ds_obs["t_init"][0])/self.time_unit
+                print(f"t_sim_offsets[:24] = {t_sim_offsets[:24]}")
+                t_sim_new = (t_sim_offsets + ds_obs["t_sim"]).transpose('t_init','t_sim').to_numpy().flatten()
+                ds_obs = ds_obs.stack(t_new=('t_init','t_sim')).transpose('t_new','feature').assign_coords({"t_new": t_sim_new}).rename({"t_new": "t_sim"})
+                nonnan_idx, = np.where(np.isnan(ds_obs).sum(dim="feature") == 0)
+                ds_obs = ds_obs.isel(t_sim=nonnan_idx)
+            ds_obs.to_netcdf(join(output_dir, f"{obsname}.nc"))
+            ds_obs.close()
+        return
+    def rearrange_times(self, ds):
+        # Convert time to t_init + t_sim
+        ds = ds.expand_dims({"t_init": ds['time'][0:1]})
+        ds = ds.assign_coords({"time": (ds['time'] - ds['time'][0])/np.timedelta64(1,'D')})
+        ds = ds.rename({"time": "t_sim"})
+        return ds
+    # No-Dask version: good
+    def preprocess_nodask(self, ds, src):
         # Only sample the beginning of each day 
         if src == "e5":
             day_start_idx, = np.where(ds["time"].dt.hour == 0)
@@ -254,9 +330,18 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         ds = ds.assign_coords({"time": (ds['time'] - ds['time'][0])/np.timedelta64(1,'D')})
         ds = ds.rename({"time": "t_sim"})
         return ds
-    def compute_all_features(self, src, input_dir, input_file_list, output_dir, featdef, obs2compute=None, print_every=5):
+    def postprocess_nodask(self, ds_obs, src):
+        if src == "e5":
+            t_sim_offsets = (ds_obs["t_init"] - ds_obs["t_init"][0])/self.time_unit
+            print(f"t_sim_offsets[:24] = {t_sim_offsets[:24]}")
+            t_sim_new = (t_sim_offsets + ds_obs["t_sim"]).transpose('t_init','t_sim').to_numpy().flatten()
+            ds_obs = ds_obs.stack(t_new=('t_init','t_sim')).transpose('t_new','feature').assign_coords({"t_new": t_sim_new}).rename({"t_new": "t_sim"})
+            nonnan_idx, = np.where(np.isnan(ds_obs).sum(dim="feature") == 0)
+            ds_obs = ds_obs.isel(t_sim=nonnan_idx)
+        return ds_obs
+    def compute_all_features_nodask(self, src, input_file_list, output_dir, obs2compute=None, print_every=5):
         if obs2compute is None:
-            obs2compute = [f"{obs}_observable" for obs in ["time","ubar", "pc", "temperature", "heatflux", "qbo"]]
+            obs2compute = [f"{obs}_observable" for obs in ["time","ubar", "temperature", "heatflux", "qbo"]]
         obs_dict = dict({obsname: [] for obsname in obs2compute})
         concat_dim = "t_init"
         for i_file in range(len(input_file_list)):
@@ -264,8 +349,8 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             if print_flag:
                 print(f"Beginning file {i_file}/{len(input_file_list)}")
             t0 = datetime.datetime.now()
-            ds = xr.open_dataset(join(input_dir, input_file_list[i_file]))
-            ds = self.preprocess_netcdf(ds, src)
+            ds = xr.open_dataset(input_file_list[i_file])
+            ds = self.preprocess_nodask(ds, src)
             t1 = datetime.datetime.now()
             if "time_observable" in obs2compute:
                 obs_dict["time_observable"] += [self.time_observable(ds, src)]
@@ -279,32 +364,21 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             if "temperature_observable" in obs2compute:
                 obs_dict["temperature_observable"] += [self.temperature_observable(ds, src)]
             t5 = datetime.datetime.now()
-            if "pc_observable" in obs2compute:
-                obs_dict["pc_observable"] += [self.pc_observable(ds, src, featdef["ds_eofs"], featdef["ds_monclim"])]
-            t6 = datetime.datetime.now()
             if "qbo_observable" in obs2compute:
                 obs_dict["qbo_observable"] += [self.qbo_observable(ds, src)]
-            t7 = datetime.datetime.now()
+            t6 = datetime.datetime.now()
             ds.close()
             if print_flag:
-                print(f"\t----Times--- \n\topening/processing file {t1-t0}\n\ttime obs {t2-t1}\n\tubar obs {t3-t2}\n\tvT obs {t4-t3}\n\ttemp obs {t5-t4}\n\tpc obs {t6-t5}\n\tqbo obs {t7-t6}")
+                print(f"\t----Times--- \n\topening/processing file {t1-t0}\n\ttime obs {t2-t1}\n\tubar obs {t3-t2}\n\tvT obs {t4-t3}\n\ttemp obs {t5-t4}\n\tqbo obs {t6-t5}")
         for obsname in obs2compute:
             ds_obs = xr.concat(obs_dict[obsname], dim=concat_dim).sortby("t_init")
-            # If ERA5, stack back into places
-            # PROBLEM: some ERA5 units have the same time dimension
-            if src == "e5":
-                t_sim_offsets = (ds_obs["t_init"] - ds_obs["t_init"][0])/self.time_unit
-                print(f"t_sim_offsets[:24] = {t_sim_offsets[:24]}")
-                t_sim_new = (t_sim_offsets + ds_obs["t_sim"]).transpose('t_init','t_sim').to_numpy().flatten()
-                ds_obs = ds_obs.stack(t_new=('t_init','t_sim')).transpose('t_new','feature').assign_coords({"t_new": t_sim_new}).rename({"t_new": "t_sim"})
-                nonnan_idx, = np.where(np.isnan(ds_obs).sum(dim="feature") == 0)
-                ds_obs = ds_obs.isel(t_sim=nonnan_idx)
+            ds_obs = self.postprocess_nodask(ds_obs, src)
             ds_obs.to_netcdf(join(output_dir, f"{obsname}.nc"))
             ds_obs.close()
         return 
     # --------------------------------------------------
     def assemble_all_features(self, src, output_dir):
-        obs2assemble = [f"{obs}_observable" for obs in ["ubar", "pc", "temperature", "heatflux", "qbo"]]
+        obs2assemble = [f"{obs}_observable" for obs in ["ubar", "temperature", "heatflux", "qbo"]]
         feat_all = dict({
             obsname: xr.open_dataarray(join(output_dir, f"{obsname}.nc"))
             for obsname in obs2assemble
@@ -331,12 +405,10 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         # over some time horizon. 
         num_time_delays = 30 # Units are days
         levels = [10, 100, 500, 850]
-        pcs = [1, 2, 3, 4]
         modes = np.arange(4)
         feat_tpt_list = (
             ["t_abs","t_szn","year_szn_start","t_cal",] + 
             [f"ubar_{level}_60_delay{delay}" for level in levels for delay in range(num_time_delays+1)] + 
-            [f"pc_{level}_{i_pc}" for level in levels for i_pc in pcs] + 
             [f"Tcap_{level}_60to90" for level in levels] + 
             [f"vT_{level}_{mode}_runavg{delay}" for level in levels for mode in modes for delay in range(num_time_delays+1)] + 
             [f"ubar_{level}_0pm5" for level in [10, 100]] 
@@ -350,7 +422,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         # Check coordinates work out 
         print(f"feat_tpt.shape = {feat_tpt.shape}")
         print(f"feat_all['time_observable'].shape = {feat_all['time_observable'].shape}")
-        print(f"feat_all['pc_observable'].shape = {feat_all['pc_observable'].shape}")
 
         # --------------------
         # Time observables
@@ -362,13 +433,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             feat_all["time_observable"].sel(feature=t_names)
         )
         print(f"Finished time observable")
-        # -----------------------------
-        # PC observables
-        pc_names = [f"pc_{level}_{i_pc}" for level in levels for i_pc in pcs]
-        feat_tpt.loc[dict(feature=pc_names)] += (
-            feat_all["pc_observable"].sel(feature=pc_names)
-        )
-        print(f"Finished PC observable")
         # -----------------------------
         # Time-delayed zonal wind observables
         for i_delay in range(num_time_delays+1):
@@ -469,17 +533,24 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         rate_emp = 1 - cdf_emp
         # Adjust the lower-bound return time by dividing by the total number of ensemble members in a given year
         rate_lower = rate_emp / num_init_per_season
-        return rate_lower
+        # Fit a GEV 
+        shp,loc,scale = genextreme.fit(block_maxima)
+        gevpar = dict({"shp": shp, "loc": loc, "scale": scale})
+        print(f"rate_lower = {rate_lower}")
+        return rate_lower, gevpar
     def extreme_value_analysis(self, t_thresh_list, feat_tpt, savedir):
         for t_thresh in t_thresh_list:
             extval_stats = dict()
             for src in ["e5","s2"]:
                 ubar_yearly_stats, centers, num_init_per_season = self.get_ubar_yearly_stats(feat_tpt[src], t_thresh, src)
                 umin = ubar_yearly_stats["min"].flatten()
-                empirical_rates = self.extreme_value_rates(-umin, num_init_per_season)
+                empirical_rates,gevpar = self.extreme_value_rates(-umin, num_init_per_season)
+                print(f"src = {src}, umin={umin},") 
+                print(f"empirical rates = {empirical_rates}")
                 extval_stats[src] = dict({
                     "umin": umin.copy(), "rate_lower": empirical_rates.copy(), 
-                    "fall_years": centers[0].copy(), "num_init_per_season": num_init_per_season
+                    "fall_years": centers[0].copy(), "num_init_per_season": num_init_per_season,
+                    "gevpar": gevpar
                 })
             # Add the linear model version
             fyidx = dict({
@@ -497,16 +568,17 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 extval_stats["s2"]["umin"][fyidx["s2"]]
             )
             umin = linreg.intercept_ + linreg.coef_[0] * extval_stats["e5"]["umin"][fyidx["e5"]]
-            empirical_rates = self.extreme_value_rates(-umin, extval_stats["s2"]["num_init_per_season"][fyidx["s2"]])
+            empirical_rates,gevpar = self.extreme_value_rates(-umin, extval_stats["s2"]["num_init_per_season"][fyidx["s2"]])
             extval_stats["linear_model"] = dict({
                 "umin": umin.copy(), "rate_lower": empirical_rates.copy(), 
                 "fall_years": extval_stats["s2"]["fall_years"][fyidx["s2"]], 
-                "num_init_per_season": extval_stats["s2"]["num_init_per_season"]
+                "num_init_per_season": extval_stats["s2"]["num_init_per_season"],
+                "gevpar": gevpar
             })
             extval_stats["linear_model"]["coeffs"] = np.array([linreg.intercept_, linreg.coef_[0]])
             pickle.dump(extval_stats, open(join(savedir, f"extval_stats_tth{t_thresh[0]}-{t_thresh[1]}"), "wb"))
         return
-    def path_counting_rates(self, Xall, Xtpt, t_thresh, uthresh_list):
+    def path_counting_rates(self, Xall, Xtpt, t_thresh, uthresh_list, min_spread_time=0):
         # Get lower and upper bounds by combining weights of various magnitudes 
         # Also get an estimate by assuming idependence of endpoints on trajectories
         e5idx = np.argmin(
@@ -569,6 +641,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             # ------------- Ed's estimate -----------------
             print(f"comm_emp_s2 dims = {comm_emp['s2'].dims}")
             froma_flag = 1.0*(comm_emp["e5"].isel(t_sim=e5idx,t_init=0,member=0,drop=True).sel(sense="since") == 1).rename({"t_sim": "t_init"}).assign_coords({"t_init": comm_emp["s2"]["t_init"]}) * (comm_emp["s2"].sel(sense="since") != 0)
+            froma_flag *= 1*(froma_flag["t_sim"] > min_spread_time)
             #froma_flag = 1.0*(comm_emp["s2"].sel(sense="since") != 0)
             print(f"froma_flag dims = {froma_flag.dims}")
             hitb_flag = 1.0*(ab_tag["s2"].shift(t_sim=-1) == self.ab_code["B"])
@@ -597,9 +670,12 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 #    total_froma = np.sum(froma_flag.to_numpy()[idx])
                 #    prob_ssw_per_window[i_win] = np.sum(crossing_flag.to_numpy()[idx])/(total_froma + 1.0*(total_froma==0))
             i_tszn, = np.where((self.t_szn_edge < self.tpt_bndy["t_thresh"][1]) * (self.t_szn_edge >= self.tpt_bndy["t_thresh"][0]))
-            prob_ssw = 1 - np.nanprod(1-prob_ssw_per_window[i_tszn]) #np.exp(np.nansum(np.log(1-prob_ssw_per_window[i_tszn])))
+            # VERSION 1: PRETEND INDEPENDENT
+            #prob_ssw = 1 - np.nanprod(1-prob_ssw_per_window[i_tszn]) #np.exp(np.nansum(np.log(1-prob_ssw_per_window[i_tszn])))
+            # VERSION 2: ADD
+            prob_ssw = np.nansum(prob_ssw_per_window[i_tszn])
             print(f"prob_ssw = {prob_ssw}")
-            print(f"prob_ssw_per_window[i_tszn] = {prob_ssw_per_window[i_tszn]}")
+            #print(f"prob_ssw_per_window[i_tszn] = {prob_ssw_per_window[i_tszn]}")
             rate_s2.loc[dict(u_thresh=uth, bound="ed")] = prob_ssw
         return rate_e5, rate_s2
     # --------------------------- old stuff below --------------------------------------------
@@ -922,7 +998,10 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                         emp_dens[i_win] *= 1.0/sum_dens #len(idx_in_window[0])
 
                     # Instantiate the time-dependent Markov Chain class
-                    mc = tdmc_obj.TimeDependentMarkovChain(msm_info[src]["P_list"], szn_stats_e5["t_szn_cent"])
+                    P_list_normalized = msm_info[src]["P_list"]
+                    for i in range(len(P_list_normalized)):
+                        P_list_normalized[i] = np.diag(1.0/np.sum(P_list_normalized[i], axis=1)).dot(P_list_normalized[i])
+                    mc = tdmc_obj.TimeDependentMarkovChain(P_list_normalized, szn_stats_e5["t_szn_cent"])
 
                     # Solve for the committor
                     G = [] 
@@ -943,7 +1022,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                     # Solve for the backward committor
                     P_list_bwd = []                                                        
                     for i in np.arange(mc.Nt-2,-1,-1):
-                        P_list_bwd += [(msm_info[src]["P_list"][i] * np.outer(dens[i], 1.0/dens[i+1])).T]        
+                        P_list_bwd += [(P_list_normalized[i] * np.outer(dens[i], 1.0/dens[i+1])).T]        
                         rowsums = np.sum(P_list_bwd[-1],axis=1)                    
                     G = []
                     F = []
@@ -964,9 +1043,9 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                     flux_tob = []
                     flux_dens_tob = np.zeros(msm_info[src]["Nt_szn"])
                     for ti in range(msm_info[src]["Nt_szn"]-1):
-                        flux += [(msm_info[src]["P_list"][ti].T * dens[ti] * qm[ti]).T * qp[ti+1]]
-                        flux_froma += [(msm_info[src]["P_list"][ti].T * dens[ti] * ina[ti]).T * qp[ti+1]]
-                        flux_tob += [(msm_info[src]["P_list"][ti].T * dens[ti] * qm[ti]).T * inb[ti+1]]
+                        flux += [(P_list_normalized[ti].T * dens[ti] * qm[ti]).T * qp[ti+1]]
+                        flux_froma += [(P_list_normalized[ti].T * dens[ti] * ina[ti]).T * qp[ti+1]]
+                        flux_tob += [(P_list_normalized[ti].T * dens[ti] * qm[ti]).T * inb[ti+1]]
                         rate_froma += np.sum(flux_froma[-1])
                         rate_tob += np.sum(flux_tob[-1])
                         flux_dens_tob[ti] = np.sum(flux_tob[-1])
