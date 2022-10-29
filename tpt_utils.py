@@ -169,7 +169,7 @@ def plot_field_2d(
         stat_name="mean",
         logscale=False, cmap=None, 
         pcolor_flag=True, contour_flag=False,
-        vmin=None, vmax=None
+        vmin=None, vmax=None, cbar_flag=False, 
         ):
     if not (
             (field.ndim == weights.ndim == 1) and 
@@ -186,6 +186,7 @@ def plot_field_2d(
     field_proj,edges,centers = project_field(field.reshape(-1,1), weights.reshape(-1,1), features, shp=shp, bounds=bounds)
     # Plot in 2d
     xy,yx = np.meshgrid(edges[0], edges[1], indexing='ij')
+    xyc,yxc = np.meshgrid(centers[0], centers[1], indexing='ij')
     if logscale:
         eps = 1e-15
         field_proj[stat_name][np.where(field_proj[stat_name] < eps)] = np.nan
@@ -193,15 +194,34 @@ def plot_field_2d(
         vmin = max(np.nanmin(field_proj[stat_name]), vmin)
         print(f"vmin = {vmin}")
         if vmax is None: vmax = np.nanmax(field_proj[stat_name])
-        im = ax.pcolormesh(
-                xy,yx,field_proj[stat_name][:,:,0],
-                norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax),
-                cmap=cmap
-                )
-        fig.colorbar(im, ax=ax)
+        levels = np.exp(np.linspace(np.log(vmin),np.log(vmax),9))
+        if pcolor_flag:
+            im = ax.pcolormesh(
+                    xy,yx,field_proj[stat_name][:,:,0],
+                    norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax),
+                    cmap=cmap,levels=levels
+                    )
+        elif contour_flag:
+            im = ax.contourf(
+                    xyc,yxc,field_proj[stat_name][:,:,0],
+                    norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax),
+                    cmap=cmap,levels=levels
+                    )
     else:
-        im = ax.pcolormesh(xy,yx,field_proj[stat_name][:,:,0],cmap=cmap,vmin=vmin,vmax=vmax)
-        fig.colorbar(im, ax=ax)
+        levels=np.linspace(vmin,vmax,9)
+        if pcolor_flag:
+            im = ax.pcolormesh(xy,yx,field_proj[stat_name][:,:,0],cmap=cmap,vmin=vmin,vmax=vmax)
+        elif contour_flag:
+            im = ax.contourf(
+                    xyc,yxc,field_proj[stat_name][:,:,0],
+                    cmap=cmap,levels=levels
+                    )
+
+    print(f"levels = {levels}")
+    if cbar_flag:
+        fmt = "%.1e" if logscale else "%.2f"
+        cbar = fig.colorbar(im, ax=ax, format=fmt)
+        cbar.set_ticks(ticks=levels[[0,len(levels)//2,len(levels)-1]])
     if feat_names is not None:
         ax.set_xlabel(feat_names[0])
         ax.set_ylabel(feat_names[1])

@@ -1012,8 +1012,13 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                     qp = mc.dynamical_galerkin_approximation(F,G)
 
                     # Solve for the time-dependent density -- TODO sensitivity analysis and/or direct counting. 
-                    init_dens = np.ones(msm_info[src]["km_n_clusters"][0]) 
-                    init_dens *= 1.0/np.sum(init_dens)
+                    # Option 0: use a uniform density
+                    dens_option = 1
+                    if dens_option == 0:
+                        init_dens = np.ones(msm_info[src]["km_n_clusters"][0]) 
+                        init_dens *= 1.0/np.sum(init_dens)
+                    else:
+                        init_dens = emp_dens[0]
                     solved_dens = mc.propagate_density_forward(init_dens)
 
                     # ----------- Do we use the empirical or solved density? ---------------
@@ -1049,6 +1054,8 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                         rate_froma += np.sum(flux_froma[-1])
                         rate_tob += np.sum(flux_tob[-1])
                         flux_dens_tob[ti] = np.sum(flux_tob[-1])
+
+                    # --------------- TODO: solve for the lead time ----------------
 
                     # Save into the results
                     dga_rates[src][i_uth] = rate_tob
