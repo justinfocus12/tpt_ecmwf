@@ -1003,6 +1003,10 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                         P_list_normalized[i] = np.diag(1.0/np.sum(P_list_normalized[i], axis=1)).dot(P_list_normalized[i])
                     mc = tdmc_obj.TimeDependentMarkovChain(P_list_normalized, szn_stats_e5["t_szn_cent"])
 
+                    # Solve for the lead time PMF
+                    tau_pmf = mc.compute_leadtime_pmf(inb,50)
+
+
                     # Solve for the committor
                     G = [] 
                     F = [] 
@@ -1062,7 +1066,8 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                     dga_results = dict({
                         "rate_froma": rate_froma, "rate_tob": rate_tob, 
                         "qm": qm, "qp": qp, "pi": dens, "flux": flux, 
-                        "flux_froma": flux_froma, "flux_tob": flux_tob, "flux_dens_tob": flux_dens_tob
+                        "flux_froma": flux_froma, "flux_tob": flux_tob, "flux_dens_tob": flux_dens_tob,
+                        "tau_pmf": tau_pmf,
                     })
                     pickle.dump(dga_results, open(join(savedir, f"dga_results_{src}_{t_thresh[0]}-{t_thresh[1]}_u{uth}"), "wb"))
                     print(f"For uthresh {uth} and {src} data, rates are {rate_froma} from A, {rate_tob} to B")

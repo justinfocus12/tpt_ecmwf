@@ -199,7 +199,7 @@ def plot_field_2d(
             im = ax.pcolormesh(
                     xy,yx,field_proj[stat_name][:,:,0],
                     norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax),
-                    cmap=cmap,levels=levels
+                    cmap=cmap
                     )
         elif contour_flag:
             im = ax.contourf(

@@ -74,6 +74,21 @@ class TimeDependentMarkovChain:
         #print("taudens = {}".format(taudens))
         #print("taudens.size = {}, and k0 = {} out of {}".format(taudens.size, k0, self.Nt))
         return taudens
+    def compute_leadtime_pmf(self,bndy_indic,tau_max):
+        # For every initial condition, compute the probability that the hitting time is tau for a range of tau's from 0 to tau_max
+        pmf = [np.zeros((tau_max+1, self.Nx[t])) for t in range(self.Nt)]
+        # Set the boundary conditions 
+        for t in range(self.Nt):
+            pmf[t][0,:] = 1.0*bndy_indic[t]
+        for tau in range(1,tau_max):
+            for t in range(self.Nt-tau):
+                pmf[t][tau] = (self.P_list[t].T * (1-bndy_indic[t])).T @ pmf[t+1][tau-1]
+        return pmf
+
+        # 
+
+
+
 
 
 if __name__ == "__main__":
