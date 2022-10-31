@@ -80,9 +80,20 @@ class TimeDependentMarkovChain:
         # Set the boundary conditions 
         for t in range(self.Nt):
             pmf[t][0,:] = 1.0*bndy_indic[t]
+            if t < self.Nt-1:
+                rowsums = np.sum(self.P_list[t], axis=1)
+                if np.any(np.abs(rowsums-1) > 1e-9):
+                    raise Exception(f"The transition matrix from {t} to {t+1} rowsums are not all 1: {rowsums}")
+            if np.any((bndy_indic[t] != 0) & (bndy_indic[t] != 1)):
+                raise Exception(f"the boundary indicator at window {t} is out of bounds: {bndy_indic[t]}")
         for tau in range(1,tau_max):
             for t in range(self.Nt-tau):
                 pmf[t][tau] = (self.P_list[t].T * (1-bndy_indic[t])).T @ pmf[t+1][tau-1]
+        # Check that none of the sums exceed 1
+        max_tau_sums = np.array([np.max(np.sum(pmf[t], axis=0)) for t in range(self.Nt)])
+        print(f"max_tau_sums are all < {max_tau_sums.max()}")
+        if np.any(max_tau_sums > 1):
+            print(f"WARNING: Some leadtime PMFs exceed 1") #: {max_tau_sums}")
         return pmf
 
         # 
