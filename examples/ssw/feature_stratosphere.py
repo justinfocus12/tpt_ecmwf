@@ -642,7 +642,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             print(f"comm_emp_s2 dims = {comm_emp['s2'].dims}")
             froma_flag = 1.0*(comm_emp["e5"].isel(t_sim=e5idx,t_init=0,member=0,drop=True).sel(sense="since") == 1).rename({"t_sim": "t_init"}).assign_coords({"t_init": comm_emp["s2"]["t_init"]}) * (comm_emp["s2"].sel(sense="since") != 0)
             froma_flag *= 1*(froma_flag["t_sim"] > min_spread_time)
-            #froma_flag = 1.0*(comm_emp["s2"].sel(sense="since") != 0)
             print(f"froma_flag dims = {froma_flag.dims}")
             hitb_flag = 1.0*(ab_tag["s2"].shift(t_sim=-1) == self.ab_code["B"])
             print(f"How many from A? {froma_flag.sum()}")
