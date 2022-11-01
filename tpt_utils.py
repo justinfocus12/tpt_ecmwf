@@ -190,10 +190,11 @@ def plot_field_2d(
     if logscale:
         eps = 1e-15
         field_proj[stat_name][np.where(field_proj[stat_name] < eps)] = np.nan
-        if vmin is None: vmin = eps
-        vmin = max(np.nanmin(field_proj[stat_name]), vmin)
-        print(f"vmin = {vmin}")
+        #vmin = max(np.nanmin(field_proj[stat_name]), vmin)
+        if vmin is None: vmin = np.nanmin(field_proj[stat_name])
         if vmax is None: vmax = np.nanmax(field_proj[stat_name])
+        vmin = max(eps, vmin)
+        print(f"vmin = {vmin}")
         levels = np.exp(np.linspace(np.log(vmin),np.log(vmax),9))
         if pcolor_flag:
             im = ax.pcolormesh(
@@ -208,6 +209,8 @@ def plot_field_2d(
                     cmap=cmap,levels=levels
                     )
     else:
+        if vmin is None: vmin = np.nanmin(field_proj[stat_name])
+        if vmax is None: vmax = np.nanmax(field_proj[stat_name])
         levels=np.linspace(vmin,vmax,9)
         if pcolor_flag:
             im = ax.pcolormesh(xy,yx,field_proj[stat_name][:,:,0],cmap=cmap,vmin=vmin,vmax=vmax)
