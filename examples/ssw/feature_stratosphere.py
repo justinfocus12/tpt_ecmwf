@@ -658,8 +658,18 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             prob_ssw_per_window = np.nan*np.ones(self.Nt_szn)
             for i_win in range(self.Nt_szn):
                 # Find the probability of SSW during each interval 
-                total_froma = ((szn_window_s2==i_win)*froma_flag).sum()
-                total_cross = ((szn_window_s2==i_win)*crossing_flag).sum()
+                
+                # --------- Weighted -----------------
+                days_since_init = i_win - szn_window_s2.isel(t_sim=0)
+                split_weight = np.exp(0 * days_since_init/3.5 * np.log(szn_window_s2["member"].size))
+                total_froma = ((szn_window_s2==i_win)*froma_flag*split_weight).sum()
+                total_cross = ((szn_window_s2==i_win)*crossing_flag*split_weight).sum()
+                # -------------------------------------
+
+                # ----------- unweighted ---------------------
+                #total_froma = ((szn_window_s2==i_win)*froma_flag).sum()
+                #total_cross = ((szn_window_s2==i_win)*crossing_flag).sum()
+                # -----------------------------------------
                 prob_ssw_per_window[i_win] = total_cross / (total_froma + 1.0*(total_froma == 0))
                 
 
