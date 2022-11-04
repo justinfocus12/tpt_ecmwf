@@ -1045,8 +1045,8 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             cond_m2 = m2*(qp != 0)/(qp + 1.0*(qp == 0))
             cond_m2[qp == 0] = np.nan
             cond = (cond_m2 - cond_m1**2) #*(qp != 0)/(qp + 1.0*(qp == 0))
-            if np.min(cond) < 0: sys.exit("error: we got a negative variance. min = {}, max = {}".format(np.min(m2-m1**2),np.max(m2-m1**2)))
             cond[qp == 0] = np.nan
+            cond[cond < 0] = 0
             cond = np.sqrt(cond)
             int2b_cond['std'] = []
             int2b_cond['m2'] = []
@@ -1153,6 +1153,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                     fun2integrate = [np.ones(len(ina[t])) for t in range(len(ina))]
                     int2b = self.compute_integral_to_B(P_list_normalized, szn_stats_e5["t_szn_cent"], ina, inb, qp, fun2integrate, maxmom=2)
                     int2b_cond = self.conditionalize_int2b(P_list_normalized, szn_stats_e5["t_szn_cent"], int2b, qp)
+                    print(f"Solved for the lead time moments")
 
                     # Solve for the time-dependent density -- TODO sensitivity analysis and/or direct counting. 
                     # Option 0: use a uniform density
