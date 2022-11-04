@@ -664,13 +664,14 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 split_weight = np.exp(0 * days_since_init/3.5 * np.log(szn_window_s2["member"].size))
                 total_froma = ((szn_window_s2==i_win)*froma_flag*split_weight).sum()
                 total_cross = ((szn_window_s2==i_win)*crossing_flag*split_weight).sum()
+                total_mature = ((szn_window_s2==i_win)*(froma_flag["t_sim"] > min_spread_time)*split_weight).sum()
                 # -------------------------------------
 
                 # ----------- unweighted ---------------------
                 #total_froma = ((szn_window_s2==i_win)*froma_flag).sum()
                 #total_cross = ((szn_window_s2==i_win)*crossing_flag).sum()
                 # -----------------------------------------
-                prob_ssw_per_window[i_win] = total_cross / (total_froma + 1.0*(total_froma == 0))
+                prob_ssw_per_window[i_win] = total_cross / (total_mature + 1.0*(total_mature == 0))
                 
 
                 #idx = np.where(szn_window_s2.to_numpy() == i_win)
