@@ -962,6 +962,129 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             })
         pickle.dump(msm_info, open(join(savedir, "msm_info"), "wb"))
         return szn_stats_e5, msm_info
+    def compute_integral_to_B(self,P_list,time,ina,inb,qp,dam_centers,maxmom=2):
+        # For example, lead time. damfun must be a function of the full state space, but computable on cluster centers. 
+        # G = (1_B) * exp(lam*damfun)
+        # F = (1_D) * exp(lam*damfun)
+        nclust_list = [len(dam_centers[ti]) for ti in range(len(dam_centers))]
+        int2b = []
+        if maxmom >= 1:
+            mc = tdmc_obj.TimeDependentMarkovChain(P_list,time)
+            G = []
+            F = []
+            I = []
+            j = 0 # counts cluster
+            for i in range(mc.Nt):
+                ncl0 = nclust_list[i]
+                if i < mc.Nt-1: 
+                    ncl1 = nclust_list[i+1]
+                    F += [np.outer(1.0*(ina[i]==0)*(inb[i]==0), np.ones(mc.Nx[i+1]))]
+                    I += [0.5*np.add.outer(dam_centers[i], dam_centers[i+1])]
+                    G += [(P_list[i] * F[i] * I[i]) @ (qp[i+1])]
+                else:
+                    G += [np.zeros(ncl0)] #mc.Nx[mc.Nt-1])]
+                j += ncl0
+            int2b += [mc.dynamical_galerkin_approximation(F,G)]
+        if maxmom >= 2:
+            G = []
+            j = 0
+            for i in range(mc.Nt):
+                ncl0 = nclust_list[i]
+                if i < mc.Nt-1:
+                    ncl1 = nclust_list[i+1]
+                    G += [(P_list[i] * F[i] * I[i]**2) @ (qp[i+1]) + 2*(P_list[i] * F[i] * I[i]) @ (int2b[0][i+1])]
+                else:
+                    G += [np.zeros(ncl0)]
+            int2b += [mc.dynamical_galerkin_approximation(F,G)]
+        if maxmom >= 3:
+            G = []
+            j = 0
+            for i in range(mc.Nt):
+                ncl0 = nclust_list[i]
+                if i < mc.Nt-1:
+                    ncl1 = nclust_list[i+1]
+                    G += [(P_list[i] * F[i] * I[i]**3) @ (qp[i+1]) + 3*(P_list[i] * F[i] * I[i]**2) @ (int2b[0][i+1]) + 3*(P_list[i] * F[i] * I[i]) @ (int2b[1][i+1])]
+                else:
+                    G += [np.zeros(ncl0)]
+            int2b += [mc.dynamical_galerkin_approximation(F,G)]
+        if maxmom >= 4:
+            G = []
+            j = 0
+            for i in range(mc.Nt):
+                ncl0 = nclust_list[i]
+                if i < mc.Nt-1:
+                    ncl1 = nclust_list[i+1]
+                    G += [(P_list[i] * F[i] * I[i]**4) @ (qp[i+1]) + 4*(P_list[i] * F[i] * I[i]**3) @ (int2b[0][i+1]) + 6*(P_list[i] * F[i] * I[i]**2) @ (int2b[1][i+1]) + 4*(P_list[i] * F[i] * I[i]) @ (int2b[2][i+1])]
+                else:
+                    G += [np.zeros(ncl0)]
+            int2b += [mc.dynamical_galerkin_approximation(F,G)]
+        return int2b
+    def conditionalize_int2b(self,P_list,time,int2b,qp): #,damkey):
+        # Having already computed an integral, turn it conditional
+        int2b_cond = {}
+        nclust_list = [len(qp[ti]) for ti in range(len(qp))]
+        qp = np.concatenate(tuple(qp))
+        maxmom = len(int2b)
+        #print("maxmom = {}".format(maxmom))
+        #sys.exit()
+        if maxmom >= 1:
+            m1 = np.concatenate(tuple(int2b[0]))
+            cond_m1 = m1*(qp != 0)/(qp + 1.0*(qp == 0))
+            cond_m1[qp == 0] = np.nan
+            int2b_cond['mean'] = []
+            int2b_cond['m1'] = [] # This is pedantic: it's the same
+            j = 0
+            for k in range(len(time)):
+                nclust = nclust_list[k]
+                int2b_cond['mean'] += [cond_m1[j:j+nclust]]
+                int2b_cond['m1'] += [cond_m1[j:j+nclust]]
+                j += nclust
+        if maxmom >= 2:
+            m2 = np.concatenate(tuple(int2b[1]))
+            cond_m2 = m2*(qp != 0)/(qp + 1.0*(qp == 0))
+            cond_m2[qp == 0] = np.nan
+            cond = (cond_m2 - cond_m1**2) #*(qp != 0)/(qp + 1.0*(qp == 0))
+            if np.min(cond) < 0: sys.exit("error: we got a negative variance. min = {}, max = {}".format(np.min(m2-m1**2),np.max(m2-m1**2)))
+            cond[qp == 0] = np.nan
+            cond = np.sqrt(cond)
+            int2b_cond['std'] = []
+            int2b_cond['m2'] = []
+            j = 0
+            for k in range(len(time)):
+                nclust = nclust_list[k]
+                int2b_cond['std'] += [cond[j:j+nclust]]
+                int2b_cond['m2'] += [cond_m2[j:j+nclust]]
+                j += nclust
+        if maxmom >= 3:
+            m3 = np.concatenate(tuple(int2b[2]))
+            cond_m3 = m3*(qp != 0)/(qp + 1.0*(qp == 0))
+            cond_m3[qp == 0] = np.nan
+            cond = (cond_m3 - 3*cond_m1*(cond_m2 - cond_m1**2) - cond_m1**3) #*(qp != 0)/(qp + 1.0*(qp == 0))
+            cond[qp == 0] = np.nan
+            #cond = np.sign(cond)*np.abs(cond)**(1.0/3)
+            int2b_cond['skew'] = []
+            int2b_cond['m3'] = []
+            j = 0
+            for k in range(len(time)):
+                nclust = nclust_list[k]
+                int2b_cond['skew'] += [cond[j:j+nclust]]
+                int2b_cond['m3'] += [cond_m3[j:j+nclust]]
+                j += nclust
+        if maxmom >= 4:
+            m4 = np.concatenate(tuple(int2b[3]))
+            cond_m4 = m4*(qp != 0)/(qp + 1.0*(qp == 0))
+            cond_m4[qp == 0] = np.nan
+            cond = (cond_m4 - 4*cond_m3*cond_m1 + 6*cond_m2*cond_m1**2 - 3*cond_m1**4)/(cond_m2 - cond_m1**2)**2
+            cond[qp == 0] = np.nan
+            int2b_cond['kurt'] = []
+            int2b_cond['m4'] = []
+            j = 0
+            for k in range(len(time)):
+                nclust = nclust_list[k]
+                int2b_cond['kurt'] += [cond[j:j+nclust]]
+                int2b_cond['m4'] += [cond_m4[j:j+nclust]]
+                j += nclust
+        return int2b_cond 
     def dga_from_msm(self, msm_info, feat_tpt, szn_stats_e5, t_thresh_list, u_thresh_list, savedir, clust_bndy_choice):
         # Now perform DGA 
         for i_tth in range(len(t_thresh_list)):
@@ -1012,6 +1135,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                         P_list_normalized[i] = np.diag(1.0/np.sum(P_list_normalized[i], axis=1)).dot(P_list_normalized[i])
                     mc = tdmc_obj.TimeDependentMarkovChain(P_list_normalized, szn_stats_e5["t_szn_cent"])
 
+
                     # Solve for the lead time PMF
                     tau_pmf = mc.compute_leadtime_pmf(inb,50)
 
@@ -1023,6 +1147,11 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                         G += [1.0*inb[i]]
                         if i < mc.Nt-1: F += [1.0*np.outer((ina[i]==0)*(inb[i]==0), np.ones(mc.Nx[i+1]))]
                     qp = mc.dynamical_galerkin_approximation(F,G)
+
+                    # Solve for lead time moments
+                    fun2integrate = [np.ones(len(ina[t])) for t in range(len(ina))]
+                    int2b = self.compute_integral_to_B(P_list_normalized, szn_stats_e5["t_szn_cent"], ina, inb, qp, fun2integrate, maxmom=2)
+                    int2b_cond = self.conditionalize_int2b(P_list_normalized, szn_stats_e5["t_szn_cent"], int2b, qp)
 
                     # Solve for the time-dependent density -- TODO sensitivity analysis and/or direct counting. 
                     # Option 0: use a uniform density
@@ -1068,7 +1197,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                         rate_tob += np.sum(flux_tob[-1])
                         flux_dens_tob[ti] = np.sum(flux_tob[-1])
 
-                    # --------------- TODO: solve for the lead time ----------------
 
                     # Save into the results
                     dga_rates[src][i_uth] = rate_tob
@@ -1076,7 +1204,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                         "rate_froma": rate_froma, "rate_tob": rate_tob, 
                         "qm": qm, "qp": qp, "pi": dens, "flux": flux, 
                         "flux_froma": flux_froma, "flux_tob": flux_tob, "flux_dens_tob": flux_dens_tob,
-                        "tau_pmf": tau_pmf,
+                        "tau_pmf": tau_pmf, "leadtime": int2b_cond
                     })
                     pickle.dump(dga_results, open(join(savedir, f"dga_results_{src}_{t_thresh[0]}-{t_thresh[1]}_u{uth}"), "wb"))
                     print(f"For uthresh {uth} and {src} data, rates are {rate_froma} from A, {rate_tob} to B")
