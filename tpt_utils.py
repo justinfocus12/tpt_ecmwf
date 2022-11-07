@@ -168,8 +168,9 @@ def plot_field_2d(
         field_name=None, feat_names=None,
         stat_name="mean",
         logscale=False, cmap=None, 
-        pcolor_flag=True, contour_flag=False,
+        pcolor_flag=True, contour_flag=False, contour_empty_flag=False,
         vmin=None, vmax=None, cbar_flag=False, 
+        num_levels=9
         ):
     if not (
             (field.ndim == weights.ndim == 1) and 
@@ -195,7 +196,7 @@ def plot_field_2d(
         if vmax is None: vmax = np.nanmax(field_proj[stat_name])
         vmin = max(eps, vmin)
         print(f"vmin = {vmin}")
-        levels = np.exp(np.linspace(np.log(vmin),np.log(vmax),9))
+        levels = np.exp(np.linspace(np.log(vmin),np.log(vmax),num_levels))
         if pcolor_flag:
             im = ax.pcolormesh(
                     xy,yx,field_proj[stat_name][:,:,0],
@@ -208,10 +209,15 @@ def plot_field_2d(
                     norm=matplotlib.colors.LogNorm(vmin=vmin, vmax=vmax),
                     cmap=cmap,levels=levels
                     )
+        elif contour_empty_flag:
+            im = ax.contour(
+                    xyc,yxc,field_proj[stat_name][:,:,0],
+                    levels=levels, colors="black",
+                    )
     else:
         if vmin is None: vmin = np.nanmin(field_proj[stat_name])
         if vmax is None: vmax = np.nanmax(field_proj[stat_name])
-        levels=np.linspace(vmin,vmax,9)
+        levels=np.linspace(vmin,vmax,num_levels)
         if pcolor_flag:
             im = ax.pcolormesh(xy,yx,field_proj[stat_name][:,:,0],cmap=cmap,vmin=vmin,vmax=vmax)
         elif contour_flag:
@@ -219,7 +225,11 @@ def plot_field_2d(
                     xyc,yxc,field_proj[stat_name][:,:,0],
                     cmap=cmap,levels=levels
                     )
-
+        elif contour_empty_flag:
+            im = ax.contour(
+                    xyc,yxc,field_proj[stat_name][:,:,0],
+                    levels=levels, colors="black",
+                    )
     print(f"levels = {levels}")
     if cbar_flag:
         fmt = "%.1e" if logscale else "%.2f"

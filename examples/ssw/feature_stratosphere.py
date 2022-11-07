@@ -80,7 +80,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             idx, = np.where(day_of_month == 1)
         else:
             idx = np.linspace(0,len(t_szn_resamp)-1,4).astype(int)
-        print(idx)
         xticks = t_szn_resamp[idx]
         xticklabels = [t64.astype(datetime.datetime).strftime("%b") for t64 in t_dt64_equiv[idx]]
         return xticks, xticklabels
