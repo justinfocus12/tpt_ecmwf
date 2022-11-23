@@ -906,7 +906,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             plt.close(fig)
         return
     # ---------------------------- DGA pipeline --------------------------
-    def build_msm(self, max_delay, feat_all, feat_tpt, msm_feature_names, savedir, km_seed=43, num_clusters=170, write_szn_stats=False):
+    def build_msm(self, max_delay, feat_all, feat_tpt, year_subset, msm_feature_names, savedir, km_seed=43, num_clusters=170, write_szn_stats=False):
         # Do this for both data sources 
         feat_msm = dict()
         for src in ["e5","s2"]:
@@ -937,23 +937,40 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         km_centers = dict()
         km_n_clusters = dict()
         
+        # Assemble the list of t_init indices for the given sub-selection of years --- only applies to S2S
+        szn_start_year_endpoint = szn_start_year["s2"].isel(t_sim=-1,member=0,drop=True).to_numpy()
+        print(f"ysse shape = {szn_start_year_endpoint.shape}")
+        idx_t_init_s2 = []
+        for year in year_subset:
+            idx_t_init_s2 += list(np.where(szn_start_year_endpoint == year)[0])
+        idx_t_init = dict({"s2": np.sort(np.array(idx_t_init_s2)), "e5": np.array([0])})
+        idx_t_init_default = dict({"s2": np.arange(feat_tpt["s2"].t_init.size), "e5": np.array([0])})
+        print(f"total difference between default and exclusive: {np.setdiff1d(idx_t_init_default['s2'], idx_t_init['s2'])}")
+        print(f"total difference between exclusive and default: {np.setdiff1d(idx_t_init['s2'], idx_t_init_default['s2'])}")
+
         for src in ["e5","s2"]:
+            isel = dict({"t_init": idx_t_init[src]})
             km_assignment[src],km_centers[src],km_n_clusters[src] = self.cluster(
-                feat_msm_normalized[src], feat_all[src]["time_observable"], szn_window[src], 
-                traj_beginning_flag[src], traj_ending_flag[src], km_seed, num_clusters
+                feat_msm_normalized[src].isel(isel), 
+                feat_all[src]["time_observable"].isel(isel),
+                szn_window[src].isel(isel), 
+                traj_beginning_flag[src].isel(isel), traj_ending_flag[src].isel(isel), km_seed, num_clusters
             )
             print(f"Did KMeans for src {src}")
         P_list = dict()
         for src in ["e5","s2"]:
-            P_list[src] = self.construct_transition_matrices(km_assignment[src], km_n_clusters[src], szn_window[src], szn_start_year[src])
+            isel = dict(t_init=idx_t_init[src])
+            P_list[src] = self.construct_transition_matrices(km_assignment[src], km_n_clusters[src], szn_window[src].isel(isel), szn_start_year[src].isel(isel))
         # Save out the data relevant for clustering
         msm_info = dict()
         for src in ["e5","s2"]:
+            isel = dict(t_init=idx_t_init[src])
             msm_info[src] = dict({
-                "szn_window": szn_window[src],
-                "szn_start_year": szn_start_year[src],
-                "traj_beginning_flag": traj_beginning_flag[src],
-                "traj_ending_flag": traj_ending_flag[src],
+                "idx_t_init": idx_t_init[src],
+                "szn_window": szn_window[src].isel(isel),
+                "szn_start_year": szn_start_year[src].isel(isel),
+                "traj_beginning_flag": traj_beginning_flag[src].isel(isel),
+                "traj_ending_flag": traj_ending_flag[src].isel(isel),
                 "km_centers": km_centers[src],
                 "km_assignment": km_assignment[src],
                 "km_n_clusters": km_n_clusters[src],
@@ -1086,6 +1103,9 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 j += nclust
         return int2b_cond 
     def dga_from_msm(self, msm_info, feat_tpt, szn_stats_e5, t_thresh_list, u_thresh_list, savedir, clust_bndy_choice):
+        # Figure out the idx subset
+        idx_t_init_s2 = msm_info["s2"]["idx_t_init"]
+        idx_t_init = dict({"s2": idx_t_init_s2, "e5": np.array([0])})
         # Now perform DGA 
         for i_tth in range(len(t_thresh_list)):
             t_thresh = t_thresh_list[i_tth]
@@ -1094,7 +1114,8 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 uth = u_thresh_list[i_uth]
                 self.set_ab_boundaries(t_thresh[0], t_thresh[1], uth)
                 for src in ["s2"]:
-                    ab_tag = self.ab_test(feat_tpt[src])
+                    isel = dict(t_init=idx_t_init[src])
+                    ab_tag = self.ab_test(feat_tpt[src].isel(isel))
                     # Create a list of vectors to flag whether each cluster at each time is in A or is in B
                     ina = []
                     inb = []
