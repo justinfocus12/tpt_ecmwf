@@ -87,6 +87,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         self.szn_start = {"month": 9, "day": 1} # Note this is earlier than the earliest possible SSW
         self.szn_length = np.sum([monthrange(1901,month) for month in [9, 10, 11, 12, 1 ,2, 3, 4]])
         self.t_szn_edge = np.arange(0, self.szn_length+0.5, 1).astype('float64')
+        self.t_szn_cent = 0.5*(self.t_szn_edge[:-1] + self.t_szn_edge[1:])
         self.Nt_szn = len(self.t_szn_edge) - 1
         self.dt_szn = self.t_szn_edge[1] - self.t_szn_edge[0]
         #self.Nt_szn = int(self.szn_length / 2) # Approximately two days per averaging window 
@@ -598,7 +599,12 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             coords = {"u_thresh": rate_s2["u_thresh"], "falls": ["1959-2019","1996-2015"]},
             dims = ["u_thresh","falls"],
         )
-        for uth in rate_s2["u_thresh"].data:
+        prob_ssw_per_window = xr.DataArray(
+                # TODO: fill in the e5 part of this array
+                coords = {"u_thresh": rate_s2["u_thresh"], "t_szn_cent": self.t_szn_cent, "src": ["e5","s2"]}, 
+                dims = ["u_thresh","t_szn_cent"], data = np.nan
+                )
+        for i_uth,uth in enumerate(rate_s2["u_thresh"].data):
             print(f"---------- Starting u_thresh {uth} --------------")
             self.set_ab_boundaries(t_thresh[0], t_thresh[1], uth)
             ab_tag = dict()
@@ -637,7 +643,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 comm_bwd_e5 * comm_fwd_s2_upper_end
             )[domain_idx].mean()
 
-            # ------------- Ed's estimate -----------------
+            # ------------- Flux-counting estimate -----------------
             print(f"comm_emp_s2 dims = {comm_emp['s2'].dims}")
             froma_flag = 1.0*(comm_emp["e5"].isel(t_sim=e5idx,t_init=0,member=0,drop=True).sel(sense="since") == 1).rename({"t_sim": "t_init"}).assign_coords({"t_init": comm_emp["s2"]["t_init"]}) * (comm_emp["s2"].sel(sense="since") != 0)
             froma_flag *= 1*(froma_flag["t_sim"] > min_spread_time)
@@ -654,7 +660,6 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             #print(f"How many crossings? {crossing_flag.sum()}")
             #print(f"szn_window_s2 dims = {szn_window_s2.dims}")
             #print(f"crossing_flag dims = {crossing_flag.dims}")
-            prob_ssw_per_window = np.nan*np.ones(self.Nt_szn)
             for i_win in range(self.Nt_szn):
                 # Find the probability of SSW during each interval 
                 
@@ -670,7 +675,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 #total_froma = ((szn_window_s2==i_win)*froma_flag).sum()
                 #total_cross = ((szn_window_s2==i_win)*crossing_flag).sum()
                 # -----------------------------------------
-                prob_ssw_per_window[i_win] = total_cross / (total_mature + 1.0*(total_mature == 0))
+                prob_ssw_per_window[dict(u_thresh=i_uth,t_szn_cent=i_win)] = total_cross / (total_mature + 1.0*(total_mature == 0))
                 
 
                 #idx = np.where(szn_window_s2.to_numpy() == i_win)
@@ -682,11 +687,11 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             # VERSION 1: PRETEND INDEPENDENT
             #prob_ssw = 1 - np.nanprod(1-prob_ssw_per_window[i_tszn]) #np.exp(np.nansum(np.log(1-prob_ssw_per_window[i_tszn])))
             # VERSION 2: ADD
-            prob_ssw = np.nansum(prob_ssw_per_window[i_tszn])
+            prob_ssw = prob_ssw_per_window.isel(u_thresh=i_uth,t_szn_cent=i_tszn).sum(dim="t_szn_cent").item()
             print(f"prob_ssw = {prob_ssw}")
             #print(f"prob_ssw_per_window[i_tszn] = {prob_ssw_per_window[i_tszn]}")
             rate_s2.loc[dict(u_thresh=uth, bound="ed")] = prob_ssw
-        return rate_e5, rate_s2
+        return rate_e5, rate_s2, prob_ssw_per_window
     # --------------------------- old stuff below --------------------------------------------
     def spherical_horizontal_laplacian(self,field,lat,lon):
         # Compute the spherical Laplacian of a field on a lat-lon grid. Assume unit sphere.
