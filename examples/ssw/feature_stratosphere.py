@@ -601,8 +601,8 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         )
         prob_ssw_per_window = xr.DataArray(
                 # TODO: fill in the e5 part of this array
-                coords = {"u_thresh": rate_s2["u_thresh"], "t_szn_cent": self.t_szn_cent, "src": ["e5","s2"]}, 
-                dims = ["u_thresh","t_szn_cent"], data = np.nan
+                coords = {"u_thresh": rate_s2["u_thresh"], "t_szn_cent": self.t_szn_cent, "src": [f"e5_{rate_e5['falls'].data[0]}",f"e5_{rate_e5['falls'].data[1]}","s2"]}, 
+                dims = ["u_thresh","t_szn_cent","src"], data = np.nan
                 )
         for i_uth,uth in enumerate(rate_s2["u_thresh"].data):
             print(f"---------- Starting u_thresh {uth} --------------")
@@ -618,13 +618,30 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 comm_emp[src] = self.estimate_empirical_committor(cej[src])
                 rate_emp[src] = self.estimate_rate(ab_tag[src], comm_emp[src])
         
-            # To get the ERA5 rate, use all the years
+            # Get ERA5 rate for each year subset
+            # Estimate ERA5 flux density
+            szn_window_e5 = (Xall["e5"]["time_observable"].sel(feature="t_szn")/self.dt_szn).astype(int)
+            froma_flag_e5 = 1.0 * (comm_emp["e5"].sel(sense="since") == 1)
+            hitb_flag_e5 = 1.0*(ab_tag["e5"].shift(t_sim=-1) == self.ab_code["B"])
+            crossing_flag_e5 = 1.0*froma_flag_e5*hitb_flag_e5
             for i_ff in range(len(rate_e5["falls"])):
+                print(f"i_ff = {i_ff}")
                 cond = 1.0 * (
                         (Xtpt["e5"].sel(feature="year_szn_start") >= fall_subsets[rate_e5["falls"].data[i_ff]][0]) 
                         * (Xtpt["e5"].sel(feature="year_szn_start") <= fall_subsets[rate_e5["falls"].data[i_ff]][1]) 
                         )
                 rate_e5.loc[dict(u_thresh=uth,falls=rate_e5["falls"].data[i_ff])] = self.estimate_rate(ab_tag["e5"].where(cond,drop=True), comm_emp["e5"].where(cond,drop=True)).to_numpy().item() #* 365.25
+                src_key = f"e5_{rate_e5['falls'].data[i_ff]}"
+                print(f"src_key = {src_key}")
+                for i_win in range(self.Nt_szn):
+                    sel = dict(src=src_key,t_szn_cent=self.t_szn_cent[i_win],u_thresh=uth)
+                    prob_ssw_per_window.loc[sel] = (froma_flag_e5*hitb_flag_e5*(szn_window_e5 == i_win)*cond).sum().item() / ((szn_window_e5 == i_win) * cond).sum().item()
+                print(f"\te5 flux =\n\t{prob_ssw_per_window.sel(src=src_key,u_thresh=uth).to_numpy()}")
+                if i_uth > 1:
+                    print(f"\tPrevious e5 flux =\n\t{prob_ssw_per_window.sel(src=src_key,u_thresh=uth-4).to_numpy()}")
+                    
+
+                
             # To do the bounds, attach the past of reaanalysis to each initialization date 
             comm_bwd_e5 = comm_emp["e5"].isel(t_sim=e5idx,t_init=0,member=0).sel(sense="since").to_numpy()
             comm_fwd_e5 = comm_emp["e5"].isel(t_sim=e5idx,t_init=0,member=0).sel(sense="until").to_numpy()
@@ -652,6 +669,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             print(f"How many from A? {froma_flag.sum()}")
             crossing_flag = 1.0*froma_flag*(ab_tag["s2"].shift(t_sim=-1) == self.ab_code["B"])
             szn_window_s2 = (Xall["s2"]["time_observable"].sel(feature="t_szn")/self.dt_szn).astype(int)
+            szn_window_e5 = (Xall["e5"]["time_observable"].sel(feature="t_szn")/self.dt_szn).astype(int)
             idx_froma = np.where(froma_flag.to_numpy() == 1)
             idx_hitb = np.where(hitb_flag.to_numpy() == 1)
             #print(f"where is crossing_flag nonzero? {cfnz}")
@@ -675,7 +693,9 @@ class WinterStratosphereFeatures(SeasonalFeatures):
                 #total_froma = ((szn_window_s2==i_win)*froma_flag).sum()
                 #total_cross = ((szn_window_s2==i_win)*crossing_flag).sum()
                 # -----------------------------------------
-                prob_ssw_per_window[dict(u_thresh=i_uth,t_szn_cent=i_win)] = total_cross / (total_mature + 1.0*(total_mature == 0))
+                prob_ssw_per_window.loc[dict(src="s2",u_thresh=uth,t_szn_cent=self.t_szn_cent[i_win])] = total_cross / (total_mature + 1.0*(total_mature == 0))
+                # ERA5 flux density
+
                 
 
                 #idx = np.where(szn_window_s2.to_numpy() == i_win)
@@ -687,10 +707,11 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             # VERSION 1: PRETEND INDEPENDENT
             #prob_ssw = 1 - np.nanprod(1-prob_ssw_per_window[i_tszn]) #np.exp(np.nansum(np.log(1-prob_ssw_per_window[i_tszn])))
             # VERSION 2: ADD
-            prob_ssw = prob_ssw_per_window.isel(u_thresh=i_uth,t_szn_cent=i_tszn).sum(dim="t_szn_cent").item()
+            prob_ssw = prob_ssw_per_window.sel(src="s2",u_thresh=uth).isel(t_szn_cent=i_tszn).sum(dim="t_szn_cent").item()
             print(f"prob_ssw = {prob_ssw}")
             #print(f"prob_ssw_per_window[i_tszn] = {prob_ssw_per_window[i_tszn]}")
             rate_s2.loc[dict(u_thresh=uth, bound="ed")] = prob_ssw
+        print("for e5 20 years, pspw = \n{prob_ssw_per_window.sel(src='e5_1996-2015').to_numpy()}")
         return rate_e5, rate_s2, prob_ssw_per_window
     # --------------------------- old stuff below --------------------------------------------
     def spherical_horizontal_laplacian(self,field,lat,lon):
