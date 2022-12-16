@@ -3,6 +3,7 @@
 # the DGA_SSW object will have no knowledge of what year anything is; that will be implmented at a higher level. 
 # Maybe even have variable lag time?
 import numpy as np
+from numpy.random import default_rng
 import netCDF4 as nc
 import xarray as xr
 import pandas
@@ -578,7 +579,7 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             extval_stats["linear_model"]["coeffs"] = np.array([linreg.intercept_, linreg.coef_[0]])
             pickle.dump(extval_stats, open(join(savedir, f"extval_stats_tth{t_thresh[0]}-{t_thresh[1]}"), "wb"))
         return
-    def path_counting_rates(self, Xall, Xtpt, t_thresh, uthresh_list, min_spread_time=0):
+    def path_counting_rates(self, Xall, Xtpt, t_thresh, uthresh_list, min_spread_time=0,num_boot=20):
         # Get lower and upper bounds by combining weights of various magnitudes 
         # Also get an estimate by assuming idependence of endpoints on trajectories
         e5idx = np.argmin(
@@ -591,8 +592,8 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         )
         t_szn_e5idx = Xall["e5"]["time_observable"].sel(feature="t_szn").isel(t_sim=e5idx).to_numpy().flatten()
         rate_s2 = xr.DataArray(
-            coords = {"u_thresh": uthresh_list, "bound": ["lower","upper","ed"]},
-            dims = ["u_thresh","bound"]
+                coords = {"u_thresh": uthresh_list, "bound": ["lower","upper","ed"],"boot": np.arange(num_boot+1)},
+            dims = ["u_thresh","bound","boot"]
         )
         fall_subsets = dict({"1959-2019": [1959,2019], "1996-2015": [1996,2015]})
         rate_e5 = xr.DataArray(
@@ -601,8 +602,13 @@ class WinterStratosphereFeatures(SeasonalFeatures):
         )
         prob_ssw_per_window = xr.DataArray(
                 # TODO: fill in the e5 part of this array
-                coords = {"u_thresh": rate_s2["u_thresh"], "t_szn_cent": self.t_szn_cent, "src": [f"e5_{rate_e5['falls'].data[0]}",f"e5_{rate_e5['falls'].data[1]}","s2"]}, 
-                dims = ["u_thresh","t_szn_cent","src"], data = np.nan
+                coords = {
+                    "u_thresh": rate_s2["u_thresh"], 
+                    "t_szn_cent": self.t_szn_cent, 
+                    "src": [f"e5_{rate_e5['falls'].data[0]}",f"e5_{rate_e5['falls'].data[1]}","s2"],
+                    "boot": np.arange(num_boot+1),
+                    }, 
+                dims = ["u_thresh","t_szn_cent","src","boot"], data = np.nan
                 )
         for i_uth,uth in enumerate(rate_s2["u_thresh"].data):
             print(f"---------- Starting u_thresh {uth} --------------")
@@ -672,45 +678,34 @@ class WinterStratosphereFeatures(SeasonalFeatures):
             szn_window_e5 = (Xall["e5"]["time_observable"].sel(feature="t_szn")/self.dt_szn).astype(int)
             idx_froma = np.where(froma_flag.to_numpy() == 1)
             idx_hitb = np.where(hitb_flag.to_numpy() == 1)
-            #print(f"where is crossing_flag nonzero? {cfnz}")
-            #print(f"szn window where froma \n{szn_window_s2.to_numpy()[idx_froma]}")
-            #print(f"szn_window where hitb: \n{szn_window_s2.to_numpy()[idx_hitb]}")
-            #print(f"How many crossings? {crossing_flag.sum()}")
-            #print(f"szn_window_s2 dims = {szn_window_s2.dims}")
-            #print(f"crossing_flag dims = {crossing_flag.dims}")
+            # TODO bootstrap this bad boy 
+            all_years = np.arange(1996, 2016)
+            rng_resamp = default_rng(seed=1996)
+            fall_subsets_boot = [all_years] + [rng_resamp.choice(all_years, size=len(all_years)//2, replace=False) for i_boot in range(num_boot)]
             for i_win in range(self.Nt_szn):
+                print(f"\nStarting window {i_win}")
                 # Find the probability of SSW during each interval 
                 
                 # --------- Weighted -----------------
                 days_since_init = i_win - szn_window_s2.isel(t_sim=0)
                 split_weight = np.exp(0 * days_since_init/3.5 * np.log(szn_window_s2["member"].size))
-                total_froma = ((szn_window_s2==i_win)*froma_flag*split_weight).sum()
-                total_cross = ((szn_window_s2==i_win)*crossing_flag*split_weight).sum()
-                total_mature = ((szn_window_s2==i_win)*(froma_flag["t_sim"] > min_spread_time)*split_weight).sum()
+
+                for i_boot in range(num_boot+1):
+                    boot_flag = Xall["s2"]["time_observable"].sel(feature="year_szn_start").isin(fall_subsets_boot[i_boot])
+                    total_froma = (boot_flag*(szn_window_s2==i_win)*froma_flag*split_weight).sum()
+                    total_cross = (boot_flag*(szn_window_s2==i_win)*crossing_flag*split_weight).sum()
+                    total_mature = (boot_flag*(szn_window_s2==i_win)*(froma_flag["t_sim"] > min_spread_time)*split_weight).sum()
                 # -------------------------------------
 
-                # ----------- unweighted ---------------------
-                #total_froma = ((szn_window_s2==i_win)*froma_flag).sum()
-                #total_cross = ((szn_window_s2==i_win)*crossing_flag).sum()
-                # -----------------------------------------
-                prob_ssw_per_window.loc[dict(src="s2",u_thresh=uth,t_szn_cent=self.t_szn_cent[i_win])] = total_cross / (total_mature + 1.0*(total_mature == 0))
-                # ERA5 flux density
-
-                
-
-                #idx = np.where(szn_window_s2.to_numpy() == i_win)
-                #print(f"How many crossings in window {i_win}? {np.sum(crossing_flag.data[idx])}")
-                #if len(idx[0]) > 0:
-                #    total_froma = np.sum(froma_flag.to_numpy()[idx])
-                #    prob_ssw_per_window[i_win] = np.sum(crossing_flag.to_numpy()[idx])/(total_froma + 1.0*(total_froma==0))
+                    # Fill in the total rate per day
+                    # First
+                    prob_ssw_per_window.loc[dict(src="s2",u_thresh=uth,t_szn_cent=self.t_szn_cent[i_win],boot=i_boot)] = total_cross / (total_mature + 1.0*(total_mature == 0))
+                    print(f"i_boot={i_boot}", end=" ")
             i_tszn, = np.where((self.t_szn_edge < self.tpt_bndy["t_thresh"][1]) * (self.t_szn_edge >= self.tpt_bndy["t_thresh"][0]))
             # VERSION 1: PRETEND INDEPENDENT
             #prob_ssw = 1 - np.nanprod(1-prob_ssw_per_window[i_tszn]) #np.exp(np.nansum(np.log(1-prob_ssw_per_window[i_tszn])))
             # VERSION 2: ADD
-            prob_ssw = prob_ssw_per_window.sel(src="s2",u_thresh=uth).isel(t_szn_cent=i_tszn).sum(dim="t_szn_cent").item()
-            print(f"prob_ssw = {prob_ssw}")
-            #print(f"prob_ssw_per_window[i_tszn] = {prob_ssw_per_window[i_tszn]}")
-            rate_s2.loc[dict(u_thresh=uth, bound="ed")] = prob_ssw
+            rate_s2.loc[dict(u_thresh=uth, bound="ed")] = prob_ssw_per_window.sel(src="s2",u_thresh=uth).isel(t_szn_cent=i_tszn).sum(dim="t_szn_cent")
         print("for e5 20 years, pspw = \n{prob_ssw_per_window.sel(src='e5_1996-2015').to_numpy()}")
         return rate_e5, rate_s2, prob_ssw_per_window
     # --------------------------- old stuff below --------------------------------------------
