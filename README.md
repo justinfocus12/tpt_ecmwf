@@ -1,4 +1,4 @@
 # tpt_ecmwf
-TPT analysis of hindcasts and reanalysis
-2022-04-25: trying to merge in a commit on master branch, 5f32c82e
-    Update: seems to have worked with allow unrelated histories
+This repository contains code for the publication "Revealing the statistics of extreme events hidden in short weather forecast data" by Justin Finkel, Edwin P. Gerber, Dorian S. Abbot, and Jonathan Weare. The top-level directory has general modules that can theoretically be used for different kinds of seasonal extremes. The directory "examples/ssw" contains class instantiations to analyze the data in the transition path theory framework, along with a Jupyter notebook ("tpt_pipeline_new.ipynb") that produces all the figures. Also in "examples/crommelin" you can find a simpler demonstration with the model from Crommelin et al 2004, "A mechanism for atmospheric regime behavior" (JAS). Hopefully this will demonstrate the general workflow that can be transferred to to other datasets.
+
+To actually run the notebooks, you will have to start by creating or downloading your own "reanalysis" and "S2S" datasets. For help with this code, feel free to email me at justinfocus12 (at) gmail.com.

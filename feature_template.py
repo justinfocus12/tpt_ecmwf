@@ -81,6 +81,7 @@ class SeasonalFeatures(ABC):
         """
         pass
     def cotton_eye_joe(self, Xtpt, ab_tag, mode):
+        # Given a trajectory Xtpt, calculate both where it came from and where it is going
         if mode == "timechunks":
             return self.cotton_eye_joe_timechunks(Xtpt, ab_tag)
         elif mode == "timesteps":

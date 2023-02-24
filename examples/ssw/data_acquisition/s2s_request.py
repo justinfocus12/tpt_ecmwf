@@ -24,7 +24,7 @@ if not exists(datadir): mkdir(datadir)
 #if not exists(savedir): mkdir(savedir)
 
 
-# ----------- Try a normal request -------------
+# ----------- Dry run: one single request -------------
 if False:
     from ecmwfapi import ECMWFDataServer
     server = ECMWFDataServer()
@@ -93,8 +93,4 @@ for k in np.arange(143,144):
                     "target": target,
                 })
                 server.retrieve(retr)
-## Now convert to netcdf
-#cmd = "cdo -f nc copy %s %s.nc"%(target,target)
-#system(cmd)
-#cmd = "rm %s"%(target)
 
